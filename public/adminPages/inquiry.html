@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeppelin Suites Admin — Inquiry</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],mono:['DM Mono','monospace']}}}}</script>
+<style>
+* { font-family: 'DM Sans', sans-serif; }
+.sidebar { width:256px; transition:width 0.3s cubic-bezier(0.4,0,0.2,1),transform 0.3s cubic-bezier(0.4,0,0.2,1); background:rgba(255,255,255,0.92); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+.sidebar.collapsed { width:68px; }
+@media (max-width:767px) { .sidebar { transform:translateX(-100%); position:fixed; z-index:50; height:100vh; width:256px !important; } .sidebar.open { transform:translateX(0); } }
+.main-wrapper { margin-left:256px; transition:margin-left 0.3s cubic-bezier(0.4,0,0.2,1); }
+.main-wrapper.sidebar-collapsed { margin-left:68px; }
+@media (max-width:767px) { .main-wrapper { margin-left:0 !important; } }
+.overlay { display:none; pointer-events:none; }
+.overlay.show { display:block; pointer-events:auto; }
+.sidebar-logo { transition:opacity 0.2s ease,width 0.2s ease; }
+.sidebar.collapsed .sidebar-logo { opacity:0; width:0; overflow:hidden; pointer-events:none; }
+.sidebar-link { position:relative; transition:all 0.18s ease; white-space:nowrap; overflow:hidden; }
+.sidebar-link.active { background:#0f172a; color:#fff; }
+.sidebar-link.active .nav-icon { color:#60a5fa; }
+.sidebar-link:not(.active):hover { background:#eff6ff; color:#1d4ed8; }
+.sidebar-link:not(.active):hover .nav-icon { color:#3b82f6; }
+.sidebar.collapsed .nav-label,.sidebar.collapsed .nav-badge,.sidebar.collapsed .notice-section { display:none; }
+.sidebar.collapsed .sidebar-link { justify-content:center; padding-left:0; padding-right:0; }
+.sidebar.collapsed .collapse-icon { transform:rotate(180deg); }
+.sidebar.collapsed .sidebar-link:hover::after { content:attr(data-tooltip); position:absolute; left:calc(100% + 10px); top:50%; transform:translateY(-50%); background:#0f172a; color:#fff; font-size:12px; padding:5px 10px; border-radius:8px; white-space:nowrap; z-index:999; box-shadow:0 4px 16px rgba(0,0,0,0.18); pointer-events:none; }
+.collapse-icon { transition:transform 0.3s ease; }
+.notice-panel { max-height:0; overflow:hidden; opacity:0; transition:max-height 0.3s ease,opacity 0.3s ease; }
+.notice-panel.open { max-height:120px; opacity:1; }
+.notice-chevron { transition:transform 0.3s ease; }
+.notice-chevron.rotated { transform:rotate(180deg); }
+.profile-dropdown { opacity:0; visibility:hidden; transform:translateY(-6px); transition:all 0.2s cubic-bezier(0.4,0,0.2,1); }
+.profile-dropdown.open { opacity:1; visibility:visible; transform:translateY(0); }
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:#f1f5f9; }
+::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
+.btn-press { transition:all 0.15s ease; }
+.btn-press:active { transform:scale(0.95); }
+.zep-input:focus { outline:none; border-color:#0f172a; box-shadow:0 0 0 3px rgba(15,23,42,0.07); }
+.zep-select:focus { outline:none; border-color:#0f172a; box-shadow:0 0 0 3px rgba(15,23,42,0.07); }
+.glass-header { background:rgba(255,255,255,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+.main-scroll { height:calc(100vh - 65px); overflow-y:auto; }
+
+/* ── Inquiry card ──────────────────────────────────────── */
+.inq-card {
+  background: linear-gradient(135deg,#ffffff 0%,#f8fafc 100%);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  cursor: pointer;
+}
+.inq-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.10); border-color: #0f172a; }
+.inq-card.selected { border-color: #0f172a; box-shadow: 0 0 0 2px #0f172a; }
+
+/* ── Detail panel ──────────────────────────────────────── */
+.detail-panel {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  opacity: 0; transform: translateY(8px); pointer-events: none;
+}
+.detail-panel.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+/* ── Content split ─────────────────────────────────────── */
+.content-area { height:calc(100vh - 65px); display:flex; overflow:hidden; }
+.col-scroll { overflow-y:auto; height:100%; }
+@media (max-width:1023px) {
+  .content-area { display:block; height:auto; overflow:visible; }
+  .col-scroll { overflow-y:visible; height:auto; }
+  .mobile-scroll-wrap { overflow-y:auto; height:calc(100vh - 65px); }
+}
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 overflow-hidden">
+
+<div class="overlay fixed inset-0 bg-transparent z-40" id="overlay" onclick="closeMobileSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar fixed left-0 top-0 h-full border-r border-slate-100/80 flex flex-col z-50 md:z-40 shadow-2xl md:shadow-none" id="sidebar">
+  <div class="px-4 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 min-h-18.25">
+    <a href="../adminPages/homeAdmin.html" class="sidebar-logo shrink-0 flex items-center">
+      <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" class="h-10 w-auto object-contain">
+    </a>
+    <button onclick="toggleCollapse()" class="hidden md:flex btn-press p-1.5 rounded-lg hover:bg-slate-100 transition-colors active:scale-95 shrink-0 ml-1">
+      <svg class="collapse-icon w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+    </button>
+  </div>
+  <nav class="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden">
+    <a href="../adminPages/homeAdmin.html" data-tooltip="Home" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      <span class="nav-label">Home</span>
+    </a>
+    <a href="../adminPages/employees.html" data-tooltip="Employees" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span class="nav-label">Employees</span>
+    </a>
+    <a href="../adminPages/maintenance.html" data-tooltip="Maintenance" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span class="nav-label">Maintenance</span>
+    </a>
+    <a href="../adminPages/roomsAdmin.html" data-tooltip="Rooms" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M7 6h10a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>
+      <span class="nav-label">Rooms</span>
+    </a>
+    <a href="../adminPages/units.html" data-tooltip="Units" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V9a2 2 0 00-2-2h-3V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14m0 0H3m3 0h14m-7 0v-4h2v4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1m4 0h1M9 13h1m4 0h1"/></svg>
+      <span class="nav-label">Units</span>
+    </a>
+    <a href="../adminPages/inquiry.html" data-tooltip="Inquiry" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span class="nav-label">Inquiry</span>
+      <span class="nav-badge ml-auto bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center shrink-0" style="font-size:10px;font-family:'DM Mono',monospace;">3</span>
+    </a>
+    <a href="../adminPages/settingsAdmin.html" data-tooltip="Settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span class="nav-label">Settings</span>
+    </a>
+  </nav>
+  <div class="notice-section px-2 py-4 border-t border-slate-100 shrink-0">
+    <button onclick="toggleNotice()" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition-all btn-press active:scale-95">
+      <span class="nav-label">Notice</span>
+      <svg class="notice-chevron w-3.5 h-3.5 text-slate-400 shrink-0" id="noticeChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+    <div class="notice-panel open px-2 pt-1 space-y-0.5" id="noticePanel">
+      <a href="#" class="flex items-center gap-2 py-1.5 px-3 text-xs text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span><span class="nav-label">Summer Vacation</span></a>
+      <a href="#" class="flex items-center gap-2 py-1.5 px-3 text-xs text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span><span class="nav-label">Employment Notice</span></a>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN WRAPPER -->
+<div class="main-wrapper h-screen flex flex-col" id="mainWrapper">
+  <header class="glass-header border-b border-slate-100/80 px-4 md:px-6 py-3.5 flex items-center gap-4 shrink-0 z-30">
+    <button class="md:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95" onclick="openMobileSidebar()">
+      <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div class="relative flex-1 max-w-sm">
+      <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" placeholder="Search inquiries..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
+    </div>
+    <div class="flex items-center gap-2 ml-auto">
+      <button class="relative p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95">
+        <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+      </button>
+      <div class="relative" id="profileWrapper">
+        <button onclick="toggleProfile()" class="flex items-center gap-2.5 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl px-3 py-1.5 transition-all btn-press active:scale-95">
+          <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0">A</div>
+          <div class="hidden sm:block text-left">
+            <p class="text-sm font-semibold text-slate-800 leading-none">Admin Name</p>
+            <p class="text-xs text-slate-400 mt-0.5">Admin</p>
+          </div>
+          <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl py-2 z-50" id="profileDropdown">
+          <a href="../adminPages/myProfileAdmin.html" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors rounded-xl mx-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>My Profile</a>
+          <a href="../adminPages/settingsAdmin.html" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors rounded-xl mx-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Settings</a>
+          <div class="border-t border-slate-100 my-1 mx-3"></div>
+          <a href="../unitOwnerPages/login.html" class="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Sign out</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT AREA: cards left, detail right -->
+  <div class="content-area flex-1 max-w-screen-2xl mx-auto w-full mobile-scroll-wrap">
+
+    <!-- LEFT — Inquiry grid -->
+    <div class="col-scroll flex-1 min-w-0 p-4 md:p-6 space-y-5">
+
+      <!-- Header + filters -->
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">Inquiry</h1>
+          <p class="text-xs text-slate-400 mt-0.5">3 new unread messages</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <select onchange="filterStatus(this.value)" class="zep-select text-sm border border-slate-200 rounded-full px-3 py-2 bg-white text-slate-600 cursor-pointer transition-all">
+            <option value="all">All Status</option>
+            <option value="new">New</option>
+            <option value="read">Read</option>
+            <option value="replied">Replied</option>
+            <option value="closed">Closed</option>
+          </select>
+          <button class="btn-press bg-slate-900 hover:bg-slate-700 active:scale-95 text-white text-sm font-semibold px-4 py-2 rounded-full transition-all">Compose</button>
+        </div>
+      </div>
+
+      <!-- Card grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" id="cardGrid">
+
+        <!-- New badge = amber, Read = blue/slate, Replied = emerald, Closed = slate -->
+        <div class="inq-card rounded-2xl p-5 border border-slate-100 shadow-sm" data-status="new" data-id="1" onclick="openDetail(this)">
+          <div class="flex items-start justify-between mb-3">
+            <div class="w-9 h-9 bg-slate-900 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-bold">JD</div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">New</span>
+          </div>
+          <p class="text-sm font-bold text-slate-900 leading-tight mb-1">Unit Lease Renewal Inquiry</p>
+          <p class="text-xs text-slate-500 mb-3">john.doe@gmail.com</p>
+          <p class="text-xs text-slate-400 line-clamp-2">Hi, I wanted to ask about the process for renewing my lease for unit #A-101. My current lease expires next month and I'd like to discuss the terms.</p>
+          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
+            <span class="text-xs text-slate-400" style="font-family:'DM Mono',monospace">Aug 24, 2022 • 09:15</span>
+            <button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all">Reply</button>
+          </div>
+        </div>
+
+        <div class="inq-card rounded-2xl p-5 border border-slate-100 shadow-sm" data-status="new" data-id="2" onclick="openDetail(this)">
+          <div class="flex items-start justify-between mb-3">
+            <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-bold">MS</div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">New</span>
+          </div>
+          <p class="text-sm font-bold text-slate-900 leading-tight mb-1">Parking Slot Availability</p>
+          <p class="text-xs text-slate-500 mb-3">maria.santos@gmail.com</p>
+          <p class="text-xs text-slate-400 line-clamp-2">Good day. I am inquiring whether there are any available parking slots in the building. I recently moved to unit #B-205 and don't have parking yet.</p>
+          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
+            <span class="text-xs text-slate-400" style="font-family:'DM Mono',monospace">Aug 23, 2022 • 14:32</span>
+            <button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all">Reply</button>
+          </div>
+        </div>
+
+        <div class="inq-card rounded-2xl p-5 border border-slate-100 shadow-sm" data-status="new" data-id="3" onclick="openDetail(this)">
+          <div class="flex items-start justify-between mb-3">
+            <div class="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-bold">RG</div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">New</span>
+          </div>
+          <p class="text-sm font-bold text-slate-900 leading-tight mb-1">Amenities Schedule Request</p>
+          <p class="text-xs text-slate-500 mb-3">roberto.garcia@gmail.com</p>
+          <p class="text-xs text-slate-400 line-clamp-2">Hello, could you please send me the schedule for the gym and swimming pool? I'd like to plan my workouts for next week. Thank you.</p>
+          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
+            <span class="text-xs text-slate-400" style="font-family:'DM Mono',monospace">Aug 23, 2022 • 11:05</span>
+            <button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all">Reply</button>
+          </div>
+        </div>
+
+        <div class="inq-card rounded-2xl p-5 border border-slate-100 shadow-sm" data-status="read" data-id="4" onclick="openDetail(this)">
+          <div class="flex items-start justify-between mb-3">
+            <div class="w-9 h-9 bg-violet-600 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-bold">AL</div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-200">Read</span>
+          </div>
+          <p class="text-sm font-bold text-slate-900 leading-tight mb-1">Internet Service Complaint</p>
+          <p class="text-xs text-slate-500 mb-3">anna.lee@gmail.com</p>
+          <p class="text-xs text-slate-400 line-clamp-2">The internet connection in my unit has been very slow for the past three days. I work from home and this is causing significant issues with my productivity.</p>
+          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
+            <span class="text-xs text-slate-400" style="font-family:'DM Mono',monospace">Aug 22, 2022 • 16:45</span>
+            <button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all">Reply</button>
+          </div>
+        </div>
+
+        <div class="inq-card rounded-2xl p-5 border border-slate-100 shadow-sm" data-status="replied" data-id="5" onclick="openDetail(this)">
+          <div class="flex items-start justify-between mb-3">
+            <div class="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-bold">KW</div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Replied</span>
+          </div>
+          <p class="text-sm font-bold text-slate-900 leading-tight mb-1">Move-In Date Reschedule</p>
+          <p class="text-xs text-slate-500 mb-3">kevin.wu@gmail.com</p>
+          <p class="text-xs text-slate-400 line-clamp-2">I need to reschedule my move-in date from August 28 to September 5. Is that possible? Please let me know what the process is and if there are any fees.</p>
+          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
+            <span class="text-xs text-slate-400" style="font-family:'DM Mono',monospace">Aug 21, 2022 • 08:20</span>
+            <button class="btn-press text-xs font-semibold text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full active:scale-95 transition-all">View</button>
+          </div>
+        </div>
+
+        <div class="inq-card rounded-2xl p-5 border border-slate-100 shadow-sm" data-status="closed" data-id="6" onclick="openDetail(this)">
+          <div class="flex items-start justify-between mb-3">
+            <div class="w-9 h-9 bg-rose-500 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-bold">SN</div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200">Closed</span>
+          </div>
+          <p class="text-sm font-bold text-slate-900 leading-tight mb-1">Guest Policy Clarification</p>
+          <p class="text-xs text-slate-500 mb-3">sofia.nakamura@gmail.com</p>
+          <p class="text-xs text-slate-400 line-clamp-2">What is the policy for overnight guests? I have a family member visiting from abroad next month and they'll be staying with me for about two weeks.</p>
+          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
+            <span class="text-xs text-slate-400" style="font-family:'DM Mono',monospace">Aug 20, 2022 • 17:10</span>
+            <button class="btn-press text-xs font-semibold text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full active:scale-95 transition-all">View</button>
+          </div>
+        </div>
+
+      </div><!-- /grid -->
+
+      <!-- Pagination -->
+      <div class="flex items-center justify-between flex-wrap gap-3 pb-2">
+        <p class="text-xs text-slate-500">Showing <span class="font-semibold text-slate-700">1–6</span> of <span class="font-semibold text-slate-700">XX</span> inquiries</p>
+        <div class="flex items-center gap-1">
+          <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95"><svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+          <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border bg-slate-900 border-slate-900 text-white text-xs font-bold active:scale-95">1</button>
+          <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-xs font-medium hover:bg-slate-50 transition-all active:scale-95">2</button>
+          <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95"><svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+      </div>
+
+    </div><!-- /left col -->
+
+    <!-- RIGHT — Detail panel -->
+    <div class="col-scroll w-full lg:w-96 shrink-0 p-4 md:p-6 lg:pl-0">
+      <!-- Empty state -->
+      <div id="detailEmpty" class="bg-white rounded-2xl border border-slate-100 shadow-sm h-64 flex flex-col items-center justify-center text-center p-6">
+        <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mb-3">
+          <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <p class="text-sm font-semibold text-slate-700">No inquiry selected</p>
+        <p class="text-xs text-slate-400 mt-1">Click a card to read and reply</p>
+      </div>
+
+      <!-- Detail content (hidden until a card is clicked) -->
+      <div id="detailContent" class="detail-panel bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4 hidden">
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0" id="detailAvatar">JD</div>
+            <div>
+              <p class="text-sm font-bold text-slate-900" id="detailSubject">Subject</p>
+              <p class="text-xs text-slate-500" id="detailEmail">email@example.com</p>
+            </div>
+          </div>
+          <span class="text-xs font-semibold px-2.5 py-1 rounded-full shrink-0" id="detailBadge">New</span>
+        </div>
+
+        <div class="text-xs text-slate-400 flex items-center gap-1.5" style="font-family:'DM Mono',monospace">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="detailDate">Aug 24, 2022 • 09:15</span>
+        </div>
+
+        <div class="bg-slate-50 rounded-xl p-4 text-sm text-slate-700 leading-relaxed" id="detailBody">Message body here.</div>
+
+        <!-- Quick mark actions -->
+        <div class="flex gap-2 flex-wrap">
+          <button onclick="markAs('read')" class="btn-press flex-1 text-xs font-semibold px-3 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all active:scale-95">Mark as Read</button>
+          <button onclick="markAs('closed')" class="btn-press flex-1 text-xs font-semibold px-3 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all active:scale-95">Close</button>
+        </div>
+
+        <div class="border-t border-slate-100 pt-4">
+          <p class="text-xs font-semibold text-slate-600 mb-2">Reply</p>
+          <textarea rows="4" placeholder="Type your reply here..." class="zep-input w-full text-sm border border-slate-200 rounded-2xl px-4 py-3 bg-white text-slate-700 resize-none transition-all"></textarea>
+          <div class="flex gap-2 mt-3">
+            <button class="btn-press flex-1 py-2.5 border border-slate-200 text-slate-600 text-sm font-semibold rounded-full hover:bg-slate-50 transition-all active:scale-95">Save Draft</button>
+            <button class="btn-press flex-1 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-full hover:bg-slate-700 transition-all active:scale-95">Send Reply</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /right col -->
+  </div><!-- /content-area -->
+</div><!-- /main-wrapper -->
+
+<script>
+  // ── Inquiry data ─────────────────────────────────────────
+  const inquiries = {
+    1: { subject:'Unit Lease Renewal Inquiry', email:'john.doe@gmail.com', date:'Aug 24, 2022 • 09:15', status:'new', initials:'JD', color:'bg-slate-900', body:'Hi, I wanted to ask about the process for renewing my lease for unit #A-101. My current lease expires next month and I\'d like to discuss the terms and conditions for renewal. Could you please let me know what the requirements are and if there are any changes to the monthly dues? Looking forward to your reply. Thank you!' },
+    2: { subject:'Parking Slot Availability', email:'maria.santos@gmail.com', date:'Aug 23, 2022 • 14:32', status:'new', initials:'MS', color:'bg-blue-600', body:'Good day. I am inquiring whether there are any available parking slots in the building. I recently moved to unit #B-205 and don\'t have parking yet. If there is a waiting list, could you please add me to it? I prefer a covered slot if available.' },
+    3: { subject:'Amenities Schedule Request', email:'roberto.garcia@gmail.com', date:'Aug 23, 2022 • 11:05', status:'new', initials:'RG', color:'bg-emerald-600', body:'Hello, could you please send me the schedule for the gym and swimming pool? I\'d like to plan my workouts for next week. Also, is there a reservation system for the function hall? I\'m planning a small gathering. Thank you in advance!' },
+    4: { subject:'Internet Service Complaint', email:'anna.lee@gmail.com', date:'Aug 22, 2022 • 16:45', status:'read', initials:'AL', color:'bg-violet-600', body:'The internet connection in my unit has been very slow for the past three days. I work from home and this is causing significant issues with my productivity. Could you please have this checked as soon as possible? I\'ve already tried restarting the router but the issue persists.' },
+    5: { subject:'Move-In Date Reschedule', email:'kevin.wu@gmail.com', date:'Aug 21, 2022 • 08:20', status:'replied', initials:'KW', color:'bg-amber-500', body:'I need to reschedule my move-in date from August 28 to September 5. Is that possible? Please let me know what the process is and if there are any fees or penalties involved. I have already paid the security deposit and first month\'s rent.' },
+    6: { subject:'Guest Policy Clarification', email:'sofia.nakamura@gmail.com', date:'Aug 20, 2022 • 17:10', status:'closed', initials:'SN', color:'bg-rose-500', body:'What is the policy for overnight guests? I have a family member visiting from abroad next month and they\'ll be staying with me for about two weeks. I just want to make sure I\'m following the rules. Thank you for your help!' },
+  };
+
+  const statusStyles = {
+    new:     { badge:'bg-amber-50 text-amber-700 border border-amber-200', text:'New' },
+    read:    { badge:'bg-blue-50 text-blue-600 border border-blue-200', text:'Read' },
+    replied: { badge:'bg-emerald-50 text-emerald-700 border border-emerald-200', text:'Replied' },
+    closed:  { badge:'bg-slate-100 text-slate-500 border border-slate-200', text:'Closed' },
+  };
+
+  let currentId = null;
+
+  function openDetail(card) {
+    const id = parseInt(card.dataset.id);
+    const inq = inquiries[id];
+    if (!inq) return;
+    currentId = id;
+
+    // Deselect all, select clicked
+    document.querySelectorAll('.inq-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+
+    // Mark as read if new
+    if (inq.status === 'new') {
+      inq.status = 'read';
+      const badgeEl = card.querySelector('span');
+      if (badgeEl) { badgeEl.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-200'; badgeEl.textContent = 'Read'; }
+      updateBadgeCount();
+    }
+
+    const s = statusStyles[inq.status] || statusStyles.read;
+    document.getElementById('detailAvatar').className = `w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0 ${inq.color}`;
+    document.getElementById('detailAvatar').textContent = inq.initials;
+    document.getElementById('detailSubject').textContent = inq.subject;
+    document.getElementById('detailEmail').textContent = inq.email;
+    document.getElementById('detailDate').textContent = inq.date;
+    document.getElementById('detailBody').textContent = inq.body;
+    document.getElementById('detailBadge').className = `text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${s.badge}`;
+    document.getElementById('detailBadge').textContent = s.text;
+
+    document.getElementById('detailEmpty').classList.add('hidden');
+    const dc = document.getElementById('detailContent');
+    dc.classList.remove('hidden');
+    requestAnimationFrame(() => dc.classList.add('show'));
+  }
+
+  function markAs(status) {
+    if (!currentId) return;
+    inquiries[currentId].status = status;
+    const s = statusStyles[status] || statusStyles.read;
+    document.getElementById('detailBadge').className = `text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${s.badge}`;
+    document.getElementById('detailBadge').textContent = s.text;
+    // Also update the card badge
+    const card = document.querySelector(`.inq-card[data-id="${currentId}"] span`);
+    if (card) { card.className = `text-xs font-semibold px-2.5 py-1 rounded-full ${s.badge}`; card.textContent = s.text; }
+    updateBadgeCount();
+  }
+
+  function updateBadgeCount() {
+    const newCount = Object.values(inquiries).filter(i => i.status === 'new').length;
+    const badge = document.getElementById('inqBadge');
+    badge.textContent = newCount;
+    badge.style.display = newCount > 0 ? '' : 'none';
+  }
+
+  function filterStatus(val) {
+    document.querySelectorAll('.inq-card').forEach(card => {
+      card.style.display = (val === 'all' || card.dataset.status === val) ? '' : 'none';
+    });
+  }
+
+  // ── Sidebar / UI functions ────────────────────────────────
+  let sidebarCollapsed = false;
+  function toggleCollapse() {
+    sidebarCollapsed = !sidebarCollapsed;
+    document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
+    document.getElementById('mainWrapper').classList.toggle('sidebar-collapsed', sidebarCollapsed);
+  }
+  function openMobileSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
+  function closeMobileSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
+  function toggleNotice() { document.getElementById('noticePanel').classList.toggle('open'); document.getElementById('noticeChevron').classList.toggle('rotated'); }
+  function toggleProfile() {
+    const dd = document.getElementById('profileDropdown'), ch = document.getElementById('profileChevron');
+    const open = dd.classList.toggle('open'); ch.style.transform = open ? 'rotate(180deg)' : '';
+  }
+  document.addEventListener('click', e => {
+    const w = document.getElementById('profileWrapper');
+    if (!w.contains(e.target)) { document.getElementById('profileDropdown').classList.remove('open'); document.getElementById('profileChevron').style.transform = ''; }
+  });
+</script>
+</body>
+</html>
