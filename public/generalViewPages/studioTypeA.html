@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zeppelin Suites — Browse Units</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+    * { font-family: "Geist", sans-serif; }
+    .btn-primary { transition: all 0.15s ease; }
+    .btn-primary:active { transform: scale(0.95); }
+    .footer-bg { background-color: #c4c4c4; }
+    /* Slider */
+    .slider-wrap { overflow: hidden; position: relative; }
+    .slider-track { display: flex; transition: transform 0.4s ease; }
+    .slide { min-width: 100%; }
+  </style>
+</head>
+<body class="bg-white text-zinc-900">
+
+<!-- ── NAV ──────────────────────────────────────────────── -->
+<!-- ── NAV ──────────────────────────────────────────────── -->
+<nav class="sticky top-0 w-full bg-white/80 backdrop-blur-md px-6 md:px-16 lg:px-24 xl:px-32 py-4 flex items-center justify-between z-50 border-b border-zinc-200/50">
+  <a href="../generalViewPages/index.html">
+    <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
+  </a>
+  <div class="hidden md:flex items-center gap-8">
+    <a href="../generalViewPages/index.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Home</a>
+    <div class="relative group">
+      <button class="flex items-center gap-1.5 text-sm text-zinc-800 font-medium cursor-pointer bg-transparent border-0 py-2">
+        Browse Units
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="absolute top-full left-0 mt-1 w-44 bg-white border border-zinc-200 rounded-xl shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+        <a href="../generalViewPages/studioTypeA.html" class="block px-4 py-2 text-sm text-zinc-900 font-medium hover:bg-zinc-50">Studio Type A</a>
+        <a href="../generalViewPages/studioTypeB.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
+        <a href="../generalViewPages/oneBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
+        <a href="../generalViewPages/twoBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
+      </div>
+    </div>
+    <a href="../generalViewPages/faq.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">About Us</a>
+    <a href="../generalViewPages/contact.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Contact</a>
+    <a href="../generalViewPages/login.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Portal</a>
+  </div>
+  <button onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
+    <span id="bar1" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+    <span id="bar2" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+    <span id="bar3" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+  </button>
+  <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 md:hidden z-50 hidden">
+    <a href="../generalViewPages/index.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Home</a>
+    <button onclick="toggleDropdown('mobileDropdown','mobileChevron')" class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm text-zinc-800 font-medium hover:bg-zinc-50 bg-transparent border-0 cursor-pointer">
+      Browse Units <svg id="mobileChevron" class="transition-transform" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div id="mobileDropdown" class="hidden flex-col pl-4">
+      <a href="../generalViewPages/studioTypeA.html" class="px-4 py-2 rounded-lg text-sm text-zinc-800 font-medium hover:bg-zinc-50">Studio Type A</a>
+      <a href="../generalViewPages/studioTypeB.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Studio Type B</a>
+      <a href="../generalViewPages/oneBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">One Bedroom</a>
+      <a href="../generalViewPages/twoBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Two Bedroom</a>
+    </div>
+    <a href="../generalViewPages/faq.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">About Us</a>
+    <a href="../generalViewPages/contact.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Contact</a>
+    <a href="../generalViewPages/login.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Portal</a>
+  </div>
+</nav>
+
+<!-- ── PAGE HERO ─────────────────────────────────────────── -->
+<section class="px-6 md:px-16 lg:px-24 xl:px-32 py-16 border-b border-zinc-100">
+  <p class="text-xs tracking-widest uppercase text-zinc-400 mb-2">Explore Our</p>
+  <h1 class="text-4xl md:text-5xl font-bold text-zinc-900">Studio Type Units</h1>
+  <p class="text-zinc-500 mt-3 max-w-lg">Discover the perfect home for your lifestyle. Each unit is thoughtfully designed to deliver comfort, style, and convenience.</p>
+</section>
+
+<!-- ── UNIT CARDS ────────────────────────────────────────── -->
+<section class="px-6 md:px-16 lg:px-24 xl:px-32 py-16 space-y-24">
+
+  <!-- STUDIO TYPE A -->
+  <div id="studio-a" class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center scroll-mt-24">
+    <div class="slider-wrap rounded-2xl overflow-hidden shadow-sm">
+      <div class="slider-track" id="slider-sa">
+        <div class="slide bg-zinc-100 aspect-video flex items-center justify-center">
+          <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80" alt="Studio A" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<span class=\'text-zinc-400 font-bold text-xl\'>ROOM IMG</span>'">
+        </div>
+        <div class="slide bg-zinc-200 aspect-video flex items-center justify-center">
+          <img src="https://images.unsplash.com/photo-1560448075-cbc16bb4af8e?w=800&q=80" alt="Studio A 2" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<span class=\'text-zinc-400 font-bold text-xl\'>ROOM IMG</span>'">
+        </div>
+      </div>
+      <div class="flex justify-between absolute top-1/2 -translate-y-1/2 w-full px-3" style="position:relative;margin-top:-3rem;">
+        <button onclick="slide('slider-sa','sliderIdx-sa',-1)" class="bg-white/80 rounded-full w-9 h-9 flex items-center justify-center shadow text-zinc-700 font-bold hover:bg-white transition-colors">‹</button>
+        <button onclick="slide('slider-sa','sliderIdx-sa',1)" class="bg-white/80 rounded-full w-9 h-9 flex items-center justify-center shadow text-zinc-700 font-bold hover:bg-white transition-colors">›</button>
+      </div>
+      <input type="hidden" id="sliderIdx-sa" value="0">
+    </div>
+    <div>
+      <p class="text-xs tracking-widest uppercase text-zinc-400 mb-2">Studio</p>
+      <h2 class="text-3xl font-bold text-zinc-900 mb-4">Studio Type A</h2>
+      <p class="text-zinc-500 leading-relaxed mb-4">A compact, elegantly furnished studio unit designed for professionals and individuals seeking urban convenience without compromising on luxury. Features open-plan living with premium kitchen finishes.</p>
+      <ul class="space-y-2 mb-6">
+        <li class="flex items-center gap-2 text-sm text-zinc-600"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Floor Area: 25–30 sqm</li>
+        <li class="flex items-center gap-2 text-sm text-zinc-600"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Fully furnished with built-in storage</li>
+        <li class="flex items-center gap-2 text-sm text-zinc-600"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Floor-to-ceiling windows</li>
+        <li class="flex items-center gap-2 text-sm text-zinc-600"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>High-speed internet included</li>
+      </ul>
+      <div class="flex gap-3">
+        <a href="../generalViewPages/contact.html" class="btn-primary bg-zinc-900 text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-zinc-700 active:scale-95 transition-all">Inquire Now</a>
+        <a href="#" class="btn-primary border border-zinc-300 text-zinc-700 px-6 py-3 rounded-full text-sm font-semibold hover:bg-zinc-50 active:scale-95 transition-all">Virtual Tour →</a>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ── FOOTER ────────────────────────────────────────────── -->
+<footer class="footer-bg py-14 px-6 md:px-16 lg:px-24 xl:px-32 text-center">
+  <p class="text-3xl font-black uppercase text-zinc-800 mb-2">Zeppelin Suites</p>
+  <p class="text-zinc-600 text-sm mb-6">Luxury Living in the Heart of Angeles City</p>
+  <div class="flex flex-wrap justify-center gap-6 text-sm text-zinc-600 mb-6">
+    <a href="../generalViewPages/index.html" class="hover:text-zinc-900">Home</a>
+    <a href="../generalViewPages/faq.html" class="hover:text-zinc-900">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="hover:text-zinc-900">About Us</a>
+    <a href="../generalViewPages/contact.html" class="hover:text-zinc-900">Contact</a>
+  </div>
+  <p class="text-xs text-zinc-500">© 2026 Zeppelin Suites. All rights reserved.</p>
+</footer>
+
+<script>
+  let menuOpen = false;
+  function toggleMenu() {
+    menuOpen = !menuOpen;
+    const menu = document.getElementById('mobileMenu');
+    const bar1 = document.getElementById('bar1');
+    const bar2 = document.getElementById('bar2');
+    const bar3 = document.getElementById('bar3');
+    menu.classList.toggle('hidden', !menuOpen);
+    menu.classList.toggle('flex', menuOpen);
+    bar1.style.transform = menuOpen ? 'translateY(8px) rotate(45deg)' : '';
+    bar2.style.opacity = menuOpen ? '0' : '1';
+    bar3.style.transform = menuOpen ? 'translateY(-8px) rotate(-45deg)' : '';
+  }
+  function toggleDropdown(id, chevronId) {
+    const el = document.getElementById(id);
+    const ch = document.getElementById(chevronId);
+    const hidden = el.classList.contains('hidden');
+    el.classList.toggle('hidden', !hidden);
+    el.classList.toggle('flex', hidden);
+    ch.style.transform = hidden ? 'rotate(180deg)' : '';
+  }
+  const sliderState = {};
+  function slide(trackId, idxId, dir) {
+    const track = document.getElementById(trackId);
+    const idxInput = document.getElementById(idxId);
+    let idx = parseInt(idxInput.value);
+    const total = track.children.length;
+    idx = (idx + dir + total) % total;
+    idxInput.value = idx;
+    track.style.transform = `translateX(-${idx * 100}%)`;
+  }
+</script>
+</body>
+</html>

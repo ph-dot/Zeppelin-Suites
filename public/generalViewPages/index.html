@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zeppelin Suites — Luxury Living</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+    * { font-family: "Geist", sans-serif; }
+    .hero-bg {
+      background-image: linear-gradient(rgba(0,0,0,0.52), rgba(0,0,0,0.52)),
+        url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1600&q=80');
+      background-size: cover;
+      background-position: center;
+    }
+    .amenity-bg {
+      background-color: #c4c4c4;
+    }
+    .footer-bg { background-color: #c4c4c4; }
+    .btn-primary { transition: all 0.15s ease; }
+    .btn-primary:active { transform: scale(0.95); }
+    /* Carousel */
+    .carousel-track { display: flex; transition: transform 0.4s ease; }
+  </style>
+</head>
+<body class="bg-white text-zinc-900">
+
+<!-- ── NAV ──────────────────────────────────────────────── -->
+<nav class="sticky top-0 w-full bg-white/80 backdrop-blur-md px-6 md:px-16 lg:px-24 xl:px-32 py-4 flex items-center justify-between z-50 border-b border-zinc-200/50">
+  <a href="../generalViewPages/index.html">
+    <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
+  </a>
+  <div class="hidden md:flex items-center gap-8">
+    <a href="../generalViewPages/index.html" class="text-sm text-zinc-800 font-medium hover:text-zinc-500 transition-colors">Home</a>
+    <div class="relative group">
+      <button class="flex items-center gap-1.5 text-sm text-zinc-500 cursor-pointer bg-transparent border-0 py-2 hover:text-zinc-800 transition-colors">
+        Browse Units
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="absolute top-full left-0 mt-1 w-44 bg-white border border-zinc-200 rounded-xl shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+        <a href="../generalViewPages/studioTypeA.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
+        <a href="../generalViewPages/studioTypeB.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
+        <a href="../generalViewPages/oneBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
+        <a href="../generalViewPages/twoBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
+      </div>
+    </div>
+    <a href="../generalViewPages/faq.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">About Us</a>
+    <a href="../generalViewPages/contact.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Contact</a>
+    <a href="../generalViewPages/login.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Portal</a>
+  </div>
+  <button onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
+    <span id="bar1" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+    <span id="bar2" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+    <span id="bar3" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+  </button>
+  <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 md:hidden z-50 hidden">
+    <a href="../generalViewPages/index.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-900 font-medium hover:bg-zinc-50">Home</a>
+    <button onclick="toggleDropdown('mobileDropdown','mobileChevron')" class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50 bg-transparent border-0 cursor-pointer">
+      Browse Units
+      <svg id="mobileChevron" class="transition-transform" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div id="mobileDropdown" class="hidden flex-col pl-4">
+      <a href="../generalViewPages/studioTypeA.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
+      <a href="../generalViewPages/studioTypeB.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
+      <a href="../generalViewPages/oneBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
+      <a href="../generalViewPages/twoBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
+    </div>
+    <a href="../generalViewPages/faq.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">About Us</a>
+    <a href="../generalViewPages/contact.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Contact</a>
+    <a href="../generalViewPages/login.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Portal</a>
+  </div>
+</nav>
+
+<!-- ── HERO ──────────────────────────────────────────────── -->
+<section id="hero-slider" class="hero-bg relative overflow-hidden min-h-[88vh] flex flex-col items-center justify-center text-center px-6">
+  
+  <div id="slide-bg" class="absolute inset-0 z-0 transition-all duration-1000 ease-in-out bg-cover bg-center"></div>
+  
+  <div class="absolute inset-0 bg-black/40 z-10"></div>
+
+  <div class="relative z-20 flex flex-col items-center">
+    <p class="text-zinc-300 tracking-[0.25em] uppercase text-sm mb-4 font-medium">Welcome to</p>
+    <h1 class="text-5xl md:text-7xl font-bold text-white leading-tight mb-4">Zeppelin Suites</h1>
+    <p class="text-lg md:text-xl text-zinc-300 max-w-xl mb-10">Unrivaled Comfort in the Heart of Angeles City</p>
+    
+    <div class="flex flex-col sm:flex-row gap-4">
+      <a href="../generalViewPages/login.html" class="btn-primary bg-white text-zinc-900 px-8 py-3.5 rounded-full font-semibold text-sm tracking-wide hover:bg-zinc-100 active:scale-95 transition-all">Login</a>
+      <a href="../generalViewPages/contact.html" class="btn-primary border border-white text-white px-8 py-3.5 rounded-full font-semibold text-sm tracking-wide hover:bg-white/10 active:scale-95 transition-all">Contact Us</a>
+    </div>
+  </div>
+
+  <div class="absolute bottom-8 flex flex-col items-center text-white/60 animate-bounce z-20">
+    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+  </div>
+</section>
+
+<!-- ── INTRO / DESCRIPTION + VIRTUAL TOUR ───────────────── -->
+<section class="px-6 md:px-16 lg:px-24 xl:px-32 py-20 md:py-28">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+    <div>
+      <p class="text-xs tracking-widest uppercase text-zinc-400 mb-3">About the Property</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 mb-5 leading-snug">Zeppelin Suites rises above the rest…</h2>
+      <p class="text-zinc-500 leading-relaxed mb-4">Zeppelin affords exceptional views in all directions. But that’s not the only way to rise above the crowd. convenience and sheer indulgence. It’s truly an experience beyond all expectations.</p>
+      <p class="text-zinc-500 leading-relaxed">Presenting, the first phase of Zeppelin Suites – a 7-storey tower close to Angeles City’s central entertainment district, Fields Avenue. Zeppelin Suites comprises a mix of studios, one bedroom serviced apartments, offering access to the heart and soul of the city. The exclusive garden features a swimming pool and a high-end coffee shop. In addition, you can find some shops that stock the daily needs. This is the new highlife. Capitalise now!</p>
+    </div>
+    <div class="flex flex-col gap-4">
+      <div class="bg-zinc-100 rounded-2xl aspect-video flex items-center justify-center overflow-hidden">
+        <img src="../images/zeppelin-suites-front.jpg" alt="Building exterior" class="w-full h-full object-cover rounded-2xl" onerror="this.parentElement.innerHTML='<span class=\'text-zinc-400 font-semibold\'>IMG</span>'">
+      </div>
+      <a href="#" class="btn-primary bg-zinc-900 text-white text-center py-3.5 rounded-xl font-bold text-sm tracking-widest uppercase hover:bg-zinc-700 active:scale-95 transition-all">Virtual Tour →</a>
+    </div>
+  </div>
+</section>
+
+<section class="px-6 md:px-16 lg:px-24 xl:px-32 pb-24">
+  <div class="max-w-6xl mx-auto">
+    <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 mb-10">Browse Rooms</h2>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      
+      <div class="group cursor-pointer flex flex-col h-full">
+        <div class="bg-zinc-200 rounded-2xl aspect-4/3 mb-4 overflow-hidden relative">
+          <img 
+            src="../images/zeppelin-suites-studio-a.jpg" 
+            alt="Studio Type A" 
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+            onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-zinc-200 text-zinc-400 font-bold text-xs\'>IMAGE NOT FOUND</div>'"
+          >
+        </div>
+        <div class="flex flex-col grow">
+          <p class="font-bold text-lg mb-1">Studio Type A</p>
+          <p class="text-zinc-500 text-sm mb-4 line-clamp-2">
+            A compact, modern studio ideal for singles or couples seeking urban convenience.
+          </p>
+          <a href="../generalViewPages/studioTypeA.html" class="mt-auto inline-flex items-center gap-1 text-sm font-semibold text-zinc-900 hover:underline">
+            More &rarr;
+          </a>
+        </div>
+      </div>
+
+      <div class="group cursor-pointer flex flex-col h-full">
+        <div class="bg-zinc-200 rounded-2xl aspect-4/3 mb-4 overflow-hidden relative">
+          <img 
+            src="../images/zeppelin-suites-studio-b.jpg" 
+            alt="Studio Type B" 
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+            onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-zinc-200 text-zinc-400 font-bold text-xs\'>IMAGE NOT FOUND</div>'"
+          >
+        </div>
+        <div class="flex flex-col grow">
+          <p class="font-bold text-lg mb-1">Studio Type B</p>
+          <p class="text-zinc-500 text-sm mb-4 line-clamp-2">
+            A spacious studio layout with premium finishes and flexible living spaces.
+          </p>
+          <a href="../generalViewPages/studioTypeB.html" class="mt-auto inline-flex items-center gap-1 text-sm font-semibold text-zinc-900 hover:underline">
+            More &rarr;
+          </a>
+        </div>
+      </div>
+
+      <div class="group cursor-pointer flex flex-col h-full">
+        <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden relative">
+          <img 
+            src="../images/one-bedroom-slider-2.jpg" 
+            alt="One Bedroom" 
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+            onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-zinc-200 text-zinc-400 font-bold text-xs\'>IMAGE NOT FOUND</div>'"
+          >
+        </div>
+        <div class="flex flex-col grow">
+          <p class="font-bold text-lg mb-1">One Bedroom</p>
+          <p class="text-zinc-500 text-sm mb-4 line-clamp-2">
+            A well-appointed one-bedroom suite offering comfort and privacy for residents.
+          </p>
+          <a href="../generalViewPages/oneBedroom.html" class="mt-auto inline-flex items-center gap-1 text-sm font-semibold text-zinc-900 hover:underline">
+            More &rarr;
+          </a>
+        </div>
+      </div>
+
+      <div class="group cursor-pointer flex flex-col h-full">
+        <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden relative">
+          <img 
+            src="../images/two-bedroom.jpg" 
+            alt="Two Bedroom" 
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+            onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-zinc-200 text-zinc-400 font-bold text-xs\'>IMAGE NOT FOUND</div>'"
+          >
+        </div>
+        <div class="flex flex-col grow">
+          <p class="font-bold text-lg mb-1">Two Bedroom</p>
+          <p class="text-zinc-500 text-sm mb-4 line-clamp-2">
+            A generous two-bedroom layout perfect for families or those who value space and luxury.
+          </p>
+          <a href="../generalViewPages/twoBedroom.html" class="mt-auto inline-flex items-center gap-1 text-sm font-semibold text-zinc-900 hover:underline">
+            More &rarr;
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── FACILITIES & AMENITIES ────────────────────────────── -->
+<section class="amenity-bg py-16 px-6 md:px-16 lg:px-24 xl:px-32">
+  <div class="max-w-6xl mx-auto">
+    <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 mb-10">Facilities and Amenities</h2>
+    
+    <div class="relative group">
+      <div class="overflow-hidden">
+        <div id="amenityTrack" class="flex gap-6 transition-transform duration-500 ease-out" style="transform: translateX(0)">
+          
+          <div class="flex-none w-72 flex flex-col">
+            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
+              <img src="../images/environment.jpg" alt="Environment" class="w-full h-full object-cover">
+            </div>
+            <h3 class="font-bold text-lg text-zinc-900 mb-3">Environment</h3>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Lobby with concierge desk offering 24-hour service</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Landscaped gardens</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Swimming pool</span></li>
+            </ul>
+          </div>
+
+          <div class="flex-none w-72 flex flex-col">
+            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
+              <img src="../images/apartment-features.jpg" alt="Apartment Features" class="w-full h-full object-cover">
+            </div>
+            <h3 class="font-bold text-lg text-zinc-900 mb-3">Apartment Features</h3>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Balconies (as per plan)</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Air conditioning</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Satellite TV and telephone connection points</span></li>
+            </ul>
+          </div>
+
+          <div class="flex-none w-72 flex flex-col">
+            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
+              <img src="../images/elevators.png" alt="Convenience" class="w-full h-full object-cover">
+            </div>
+            <h3 class="font-bold text-lg text-zinc-900 mb-3">Convenience</h3>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Elevators to all floors</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Security access control for common areas</span></li>
+            </ul>
+          </div>
+
+          <div class="flex-none w-72 flex flex-col">
+            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
+              <img src="../images/living-and-dining.jpg" alt="Living & Dining" class="w-full h-full object-cover">
+            </div>
+            <h3 class="font-bold text-lg text-zinc-900 mb-3">Living & Dining</h3>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Ceramic tiled floors throughout</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Plastered and painted walls</span></li>
+            </ul>
+          </div>
+
+          <div class="flex-none w-72 flex flex-col">
+            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
+              <img src="../images/kitchen.jpg" alt="Living & Dining" class="w-full h-full object-cover">
+            </div>
+            <h3 class="font-bold text-lg text-zinc-900 mb-3">Kitchen</h3>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Fitted kitchen with cabinets, stone counter tops, cooktop with exhaust, four burner hood range and exhaust</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Ceramic tiled floors</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Stainless steel covered wall</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Laminated kitchen cabinets</span></li>
+            </ul>
+          </div>
+
+          <div class="flex-none w-72 flex flex-col">
+            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
+              <img src="../images/bathroom.jpg" alt="Bathroom Features" class="w-full h-full object-cover">
+            </div>
+            <h3 class="font-bold text-lg text-zinc-900 mb-3">Bathroom Features</h3>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Quality sanitary fittings</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Floor / wall ceramic tiles</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Shower</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Washer and dryer hookups</span></li>
+            </ul>
+          </div>
+
+          <div class="flex-none w-72 flex flex-col">
+            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
+              <img src="../images/exclusive-services.jpg" alt="Exclusive Services" class="w-full h-full object-cover">
+            </div>
+            <h3 class="font-bold text-lg text-zinc-900 mb-3">Exclusive Services</h3>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Helicopter deck on the roof</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Car Rental & Chauffeur Service</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Airport pick-up and drop off</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Maid and laundry services</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Owners Association to manage the maintenance and upkeep of the common facilities in the building</span></li>
+            </ul>
+          </div>
+
+          <div class="flex-none w-72 flex flex-col">
+            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
+              <img src="../images/shops.png" alt="Shops" class="w-full h-full object-cover">
+            </div>
+            <h3 class="font-bold text-lg text-zinc-900 mb-3">Shops</h3>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Coffee Shops</span></li>
+              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Sports Bar</span></li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+      <button onclick="scrollAmenity(-1)" class="absolute left-0 top-[40%] -translate-y-1/2 -translate-x-6 md:-translate-x-12 text-4xl font-light text-zinc-400 hover:text-zinc-900 transition-colors bg-white/80 rounded-full w-12 h-12 flex items-center justify-center shadow-sm">‹</button>
+      <button onclick="scrollAmenity(1)" class="absolute right-0 top-[40%] -translate-y-1/2 translate-x-6 md:translate-x-12 text-4xl font-light text-zinc-400 hover:text-zinc-900 transition-colors bg-white/80 rounded-full w-12 h-12 flex items-center justify-center shadow-sm">›</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ───────────────────────────────────────────────── -->
+<section class="px-6 md:px-16 lg:px-24 xl:px-32 py-24">
+  <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+    <div>
+      <h2 class="text-5xl md:text-6xl font-black text-zinc-900 leading-tight uppercase">Reach Out<br>And We'll<br>Assist You</h2>
+    </div>
+    <div class="flex md:justify-center">
+      <a href="../generalViewPages/contact.html" class="btn-primary inline-block bg-zinc-900 text-white px-12 py-4 text-sm font-bold tracking-widest uppercase hover:bg-zinc-700 active:scale-95 transition-all">Inquire Now →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ────────────────────────────────────────────── -->
+<footer class="footer-bg py-14 px-6 md:px-16 lg:px-24 xl:px-32 text-center">
+  <p class="text-3xl font-black uppercase text-zinc-800 mb-2">Zeppelin Suites</p>
+  <p class="text-zinc-600 text-sm mb-6">Luxury Living in the Heart of Angeles City</p>
+  <div class="flex flex-wrap justify-center gap-6 text-sm text-zinc-600 mb-6">
+    <a href="../generalViewPages/index.html" class="hover:text-zinc-900">Home</a>
+    <a href="../generalViewPages/faq.html" class="hover:text-zinc-900">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="hover:text-zinc-900">About Us</a>
+    <a href="../generalViewPages/contact.html" class="hover:text-zinc-900">Contact</a>
+  </div>
+  <p class="text-xs text-zinc-500">© 2026 Zeppelin Suites. All rights reserved.</p>
+</footer>
+
+<script>
+  let menuOpen = false;
+  function toggleMenu() {
+    menuOpen = !menuOpen;
+    const menu = document.getElementById('mobileMenu');
+    const bar1 = document.getElementById('bar1');
+    const bar2 = document.getElementById('bar2');
+    const bar3 = document.getElementById('bar3');
+    menu.classList.toggle('hidden', !menuOpen);
+    menu.classList.toggle('flex', menuOpen);
+    bar1.style.transform = menuOpen ? 'translateY(8px) rotate(45deg)' : '';
+    bar2.style.opacity = menuOpen ? '0' : '1';
+    bar3.style.transform = menuOpen ? 'translateY(-8px) rotate(-45deg)' : '';
+  }
+  function toggleDropdown(id, chevronId) {
+    const el = document.getElementById(id);
+    const ch = document.getElementById(chevronId);
+    const hidden = el.classList.contains('hidden');
+    el.classList.toggle('hidden', !hidden);
+    el.classList.toggle('flex', hidden);
+    ch.style.transform = hidden ? 'rotate(180deg)' : '';
+  }
+
+  let amenityIndex = 0;
+  
+  function scrollAmenity(direction) {
+    const track = document.getElementById('amenityTrack');
+    const cards = track.children;
+    const totalCards = cards.length;
+    
+    // Get width of one card + gap (24px for gap-6)
+    const cardWidth = cards[0].offsetWidth + 24; 
+    
+    // Calculate how many cards fit in the visible area (roughly)
+    const visibleCards = Math.floor(track.parentElement.offsetWidth / cardWidth);
+    const maxIndex = totalCards - visibleCards;
+
+    // Update Index
+    amenityIndex += direction;
+
+    // INFINITE LOGIC:
+    // If we go past the end, jump to start
+    if (amenityIndex > maxIndex) {
+      amenityIndex = 0;
+    }
+    // If we go before the start, jump to end
+    if (amenityIndex < 0) {
+      amenityIndex = maxIndex;
+    }
+
+    // Apply the transform
+    const moveX = amenityIndex * cardWidth;
+    track.style.transform = `translateX(-${moveX}px)`;
+  }
+
+  // Optional: Update position on window resize to keep it aligned
+  window.addEventListener('resize', () => {
+    amenityIndex = 0;
+    document.getElementById('amenityTrack').style.transform = `translateX(0)`;
+  });
+
+  //hero section
+  const images = [
+    '../images/zeppelin-suites-slider-exterior-2.jpg',
+    '../images/zeppelin-suites-slider-pool-area.jpg',
+    '../images/zeppelin-suites-slider-interior.jpg',
+    '../images/zeppelin-suites-slider-lobby.jpg'
+  ];
+
+  let currentIndex = 0;
+  const bgElement = document.getElementById('slide-bg');
+
+  function changeBackground() {
+    // Apply the next image in the array
+    bgElement.style.backgroundImage = `url('${images[currentIndex]}')`;
+    
+    // Increment index and loop back to 0
+    currentIndex = (currentIndex + 1) % images.length;
+  }
+
+  // Initial call
+  changeBackground();
+
+  // Change image every 5 seconds
+  setInterval(changeBackground, 5000);
+</script>
+</body>
+</html>

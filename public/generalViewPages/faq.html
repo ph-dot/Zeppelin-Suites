@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zeppelin Suites — FAQ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+    * { font-family: "Geist", sans-serif; }
+    .footer-bg { background-color: #c4c4c4; }
+    .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.35s ease, padding 0.35s ease; }
+    .faq-answer.open { max-height: 400px; }
+    .faq-chevron { transition: transform 0.3s ease; }
+    .faq-chevron.rotated { transform: rotate(180deg); }
+    .tab-btn { transition: all 0.2s ease; }
+    .tab-btn.active { border-bottom: 2px solid #18181b; color: #18181b; }
+    .btn-primary { transition: all 0.15s ease; }
+    .btn-primary:active { transform: scale(0.95); }
+  </style>
+</head>
+<body class="bg-white text-zinc-900">
+
+<!-- ── NAV ──────────────────────────────────────────────── -->
+<nav class="sticky top-0 w-full bg-white/80 backdrop-blur-md px-6 md:px-16 lg:px-24 xl:px-32 py-4 flex items-center justify-between z-50 border-b border-zinc-200/50">
+  <a href="../generalViewPages/index.html">
+    <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
+  </a>
+  <div class="hidden md:flex items-center gap-8">
+    <a href="../generalViewPages/index.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Home</a>
+    <div class="relative group">
+      <button class="flex items-center gap-1.5 text-sm text-zinc-500 cursor-pointer bg-transparent border-0 py-2 hover:text-zinc-800">Browse Units <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="absolute top-full left-0 mt-1 w-44 bg-white border border-zinc-200 rounded-xl shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+        <a href="../generalViewPages/studioTypeA.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
+        <a href="../generalViewPages/studioTypeB.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
+        <a href="../generalViewPages/oneBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
+        <a href="../generalViewPages/twoBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
+      </div>
+    </div>
+    <a href="../generalViewPages/faq.html" class="text-sm text-zinc-800 font-medium hover:text-zinc-500 transition-colors">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">About Us</a>
+    <a href="../generalViewPages/contact.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Contact</a>
+    <a href="../generalViewPages/login.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Portal</a>
+  </div>
+  <button onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
+    <span id="bar1" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+    <span id="bar2" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+    <span id="bar3" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+  </button>
+  <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 md:hidden z-50 hidden">
+    <a href="../generalViewPages/index.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Home</a>
+    <button onclick="toggleDropdown('mobileDropdown','mobileChevron')" class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50 bg-transparent border-0 cursor-pointer">
+      Browse Units <svg id="mobileChevron" class="transition-transform" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div id="mobileDropdown" class="hidden flex-col pl-4">
+      <a href="../generalViewPages/studioTypeA.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Studio Type A</a>
+      <a href="../generalViewPages/studioTypeB.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Studio Type B</a>
+      <a href="../generalViewPages/oneBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">One Bedroom</a>
+      <a href="../generalViewPages/twoBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Two Bedroom</a>
+    </div>
+    <a href="../generalViewPages/faq.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-900 font-medium hover:bg-zinc-50">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">About Us</a>
+    <a href="../generalViewPages/contact.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Contact</a>
+    <a href="../generalViewPages/login.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Portal</a>
+  </div>
+</nav>
+
+<!-- ── PAGE HEADER ───────────────────────────────────────── -->
+<section class="px-6 md:px-16 lg:px-24 xl:px-32 py-16 text-center border-b border-zinc-100">
+  <h1 class="text-4xl md:text-5xl font-black uppercase tracking-wide text-zinc-900">Frequently Asked Questions</h1>
+  <p class="text-zinc-500 mt-4 max-w-xl mx-auto">Find answers to common questions about reserving a unit, payment methods, and association dues.</p>
+</section>
+
+<!-- ── TABS + ACCORDIONS ─────────────────────────────────── -->
+<section class="px-6 md:px-16 lg:px-24 xl:px-32 py-16 max-w-5xl mx-auto w-full">
+
+  <!-- Category tabs -->
+  <div class="flex gap-8 border-b border-zinc-200 mb-10 overflow-x-auto">
+    <button onclick="switchTab('reserving')" id="tab-reserving" class="tab-btn active pb-3 text-sm font-bold uppercase tracking-wide text-zinc-900 whitespace-nowrap border-b-2 border-zinc-900">Reserving a Unit</button>
+    <button onclick="switchTab('payment')" id="tab-payment" class="tab-btn pb-3 text-sm font-bold uppercase tracking-wide text-zinc-400 hover:text-zinc-700 whitespace-nowrap border-b-2 border-transparent">Payment</button>
+    <button onclick="switchTab('association')" id="tab-association" class="tab-btn pb-3 text-sm font-bold uppercase tracking-wide text-zinc-400 hover:text-zinc-700 whitespace-nowrap border-b-2 border-transparent">Association Due</button>
+  </div>
+
+  <!-- RESERVING -->
+  <div id="panel-reserving" class="space-y-3">
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        How do I reserve a unit at Zeppelin Suites?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer open bg-white px-5 py-4">
+        <p class="text-zinc-600 text-sm leading-relaxed">To reserve a unit, you may contact our leasing team directly through the Contact page or visit our office during business hours. A reservation fee is required to secure your chosen unit, and our team will guide you through the necessary documentation.</p>
+      </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        What documents are required for reservation?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed">You will need to submit a valid government-issued ID, proof of income or employment, a completed reservation form, and the required reservation fee. Additional documents may be requested depending on your specific situation.</p>
+      </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        Can I schedule a unit viewing before reserving?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed">Yes, we encourage prospective residents to schedule a unit viewing. You can do so by filling out the inquiry form on our Contact page or by calling our leasing office. Virtual tours are also available for your convenience.</p>
+      </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        Is the reservation fee refundable?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed">The reservation fee is generally non-refundable once processed. However, it is applied toward your first month's rent upon move-in. Please review our terms and conditions or speak with our team for specific scenarios.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT -->
+  <div id="panel-payment" class="space-y-3 hidden">
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        What payment methods are accepted?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer open bg-white px-5 py-4">
+        <p class="text-zinc-600 text-sm leading-relaxed">We accept bank transfers, post-dated checks, credit/debit cards, and select digital payment platforms. Please contact our billing department for a complete list of accepted payment channels and instructions.</p>
+      </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        When is the monthly rent due?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed">Monthly rent is due on the 1st of each month. A grace period of 5 days is provided. Late payments are subject to a penalty charge as outlined in your lease agreement.</p>
+      </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        Are there any additional fees beyond rent?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed">In addition to monthly rent, residents are responsible for utility charges (electricity, water), monthly association dues, and parking fees if applicable. Internet and cable services may be included in select packages.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ASSOCIATION DUE -->
+  <div id="panel-association" class="space-y-3 hidden">
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        What is the association due?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer open bg-white px-5 py-4">
+        <p class="text-zinc-600 text-sm leading-relaxed">The association due is a monthly fee collected from all residents to fund the maintenance, operation, and improvement of shared facilities and common areas within Zeppelin Suites. This includes the gym, pool, lobby, and landscaping.</p>
+      </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        How much is the association due?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed">The association due is calculated based on the floor area of your unit. Rates are approved annually during the homeowners' association meeting. Please contact our administration team for current rates.</p>
+      </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        What happens if I don't pay the association due?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed">Non-payment of association dues may result in restricted access to building amenities, late fees, and in severe cases, legal action. We encourage residents to communicate with our team if they are experiencing financial difficulties.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="mt-16 text-center border-t border-zinc-100 pt-12">
+    <p class="text-zinc-500 mb-4 text-sm">Didn't find what you're looking for?</p>
+    <a href="../generalViewPages/contact.html" class="btn-primary inline-block bg-zinc-900 text-white px-8 py-3.5 rounded-full text-sm font-semibold hover:bg-zinc-700 active:scale-95 transition-all">Contact Us</a>
+  </div>
+</section>
+
+<!-- ── FOOTER ────────────────────────────────────────────── -->
+<footer class="footer-bg py-14 px-6 md:px-16 lg:px-24 xl:px-32 text-center">
+  <p class="text-3xl font-black uppercase text-zinc-800 mb-2">Zeppelin Suites</p>
+  <p class="text-zinc-600 text-sm mb-6">Luxury Living in the Heart of Angeles City</p>
+  <div class="flex flex-wrap justify-center gap-6 text-sm text-zinc-600 mb-6">
+    <a href="../generalViewPages/index.html" class="hover:text-zinc-900">Home</a>
+    <a href="../generalViewPages/faq.html" class="hover:text-zinc-900">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="hover:text-zinc-900">About Us</a>
+    <a href="../generalViewPages/contact.html" class="hover:text-zinc-900">Contact</a>
+  </div>
+  <p class="text-xs text-zinc-500">© 2026 Zeppelin Suites. All rights reserved.</p>
+</footer>
+
+<script>
+  let menuOpen = false;
+  function toggleMenu() {
+    menuOpen = !menuOpen;
+    const menu = document.getElementById('mobileMenu');
+    const bar1 = document.getElementById('bar1');
+    const bar2 = document.getElementById('bar2');
+    const bar3 = document.getElementById('bar3');
+    menu.classList.toggle('hidden', !menuOpen);
+    menu.classList.toggle('flex', menuOpen);
+    bar1.style.transform = menuOpen ? 'translateY(8px) rotate(45deg)' : '';
+    bar2.style.opacity = menuOpen ? '0' : '1';
+    bar3.style.transform = menuOpen ? 'translateY(-8px) rotate(-45deg)' : '';
+  }
+  function toggleDropdown(id, chevronId) {
+    const el = document.getElementById(id);
+    const ch = document.getElementById(chevronId);
+    const hidden = el.classList.contains('hidden');
+    el.classList.toggle('hidden', !hidden);
+    el.classList.toggle('flex', hidden);
+    ch.style.transform = hidden ? 'rotate(180deg)' : '';
+  }
+  function toggleFaq(btn) {
+    const answer = btn.nextElementSibling;
+    const chevron = btn.querySelector('.faq-chevron');
+    const isOpen = answer.classList.contains('open');
+    answer.classList.toggle('open', !isOpen);
+    if (!isOpen) { answer.style.padding = '1rem 1.25rem'; } else { answer.style.padding = '0 1.25rem'; }
+    chevron.classList.toggle('rotated', !isOpen);
+  }
+  function switchTab(tab) {
+    const panels = ['reserving','payment','association'];
+    panels.forEach(p => {
+      document.getElementById('panel-' + p).classList.add('hidden');
+      const btn = document.getElementById('tab-' + p);
+      btn.classList.remove('active','border-zinc-900','text-zinc-900');
+      btn.classList.add('text-zinc-400','border-transparent');
+    });
+    document.getElementById('panel-' + tab).classList.remove('hidden');
+    const activeBtn = document.getElementById('tab-' + tab);
+    activeBtn.classList.add('active','border-zinc-900','text-zinc-900');
+    activeBtn.classList.remove('text-zinc-400','border-transparent');
+  }
+</script>
+</body>
+</html>

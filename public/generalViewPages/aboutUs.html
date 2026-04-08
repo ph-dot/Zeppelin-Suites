@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zeppelin Suites — About Us</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+    * { font-family: "Geist", sans-serif; }
+    .footer-bg { background-color: #c4c4c4; }
+    .btn-primary { transition: all 0.15s ease; }
+    .btn-primary:active { transform: scale(0.95); }
+  </style>
+</head>
+<body class="bg-white text-zinc-900">
+
+<!-- ── NAV ──────────────────────────────────────────────── -->
+<nav class="sticky top-0 w-full bg-white/80 backdrop-blur-md px-6 md:px-16 lg:px-24 xl:px-32 py-4 flex items-center justify-between z-50 border-b border-zinc-200/50">
+  <a href="../generalViewPages/index.html">
+    <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
+  </a>
+  <div class="hidden md:flex items-center gap-8">
+    <a href="../generalViewPages/index.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Home</a>
+    <div class="relative group">
+      <button class="flex items-center gap-1.5 text-sm text-zinc-500 cursor-pointer bg-transparent border-0 py-2 hover:text-zinc-800">Browse Units <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="absolute top-full left-0 mt-1 w-44 bg-white border border-zinc-200 rounded-xl shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+        <a href="../generalViewPages/studioTypeA.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
+        <a href="../generalViewPages/studioTypeB.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
+        <a href="../generalViewPages/oneBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
+        <a href="../generalViewPages/twoBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
+      </div>
+    </div>
+    <a href="../generalViewPages/faq.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="text-sm text-zinc-800 font-medium hover:text-zinc-500 transition-colors">About Us</a>
+    <a href="../generalViewPages/contact.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Contact</a>
+    <a href="../generalViewPages/login.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Portal</a>
+  </div>
+  <button onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
+    <span id="bar1" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+    <span id="bar2" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+    <span id="bar3" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+  </button>
+  <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 md:hidden z-50 hidden">
+    <a href="../generalViewPages/index.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Home</a>
+    <button onclick="toggleDropdown('mobileDropdown','mobileChevron')" class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50 bg-transparent border-0 cursor-pointer">Browse Units <svg id="mobileChevron" class="transition-transform" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div id="mobileDropdown" class="hidden flex-col pl-4">
+      <a href="../generalViewPages/studioTypeA.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Studio Type A</a>
+      <a href="../generalViewPages/studioTypeB.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Studio Type B</a>
+      <a href="../generalViewPages/oneBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">One Bedroom</a>
+      <a href="../generalViewPages/twoBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Two Bedroom</a>
+    </div>
+    <a href="../generalViewPages/faq.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-900 font-medium hover:bg-zinc-50">About Us</a>
+    <a href="../generalViewPages/contact.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Contact</a>
+    <a href="../generalViewPages/login.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Portal</a>
+  </div>
+</nav>
+
+<!-- ── GET TO KNOW US HERO ───────────────────────────────── -->
+<section class="px-6 md:px-16 lg:px-24 xl:px-32 pt-20 pb-16 text-center border-b border-zinc-100">
+  <h1 class="text-5xl md:text-6xl font-black uppercase text-zinc-900 tracking-tight">Get to Know Us!</h1>
+</section>
+
+<!-- ── MISSION — split layout ────────────────────────────── -->
+<section class="px-6 md:px-16 lg:px-24 xl:px-32 py-20">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-14 items-center max-w-6xl mx-auto">
+    <div>
+      <p class="text-xs tracking-widest uppercase text-zinc-400 mb-3">Our Mission</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 mb-6 leading-snug">Redefining the Art of Urban Living</h2>
+      <p class="text-zinc-500 leading-relaxed mb-4">At Zeppelin Suites, our mission is to create a living experience that transcends the ordinary. We believe a home should be more than four walls — it should be a sanctuary that inspires, rejuvenates, and connects.</p>
+      <p class="text-zinc-500 leading-relaxed mb-4">Founded on the principles of design excellence, resident well-being, and community, Zeppelin Suites is committed to delivering world-class service and an unmatched quality of life in the heart of the city.</p>
+      <p class="text-zinc-500 leading-relaxed">Every detail of our suites and shared spaces has been meticulously considered — from the natural light that floods our corridors to the carefully curated amenities that make everyday life extraordinary.</p>
+    </div>
+    <div class="bg-zinc-100 rounded-2xl overflow-hidden aspect-4/3 flex items-center justify-center">
+      <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80" alt="Building" class="w-full h-full object-cover" onerror="this.outerHTML='<span class=\'text-zinc-400 font-bold text-lg\'>IMG</span>'">
+    </div>
+  </div>
+</section>
+
+<!-- ── OUR VALUES ────────────────────────────────────────── -->
+<section class="bg-zinc-50 py-20 px-6 md:px-16 lg:px-24 xl:px-32">
+  <div class="max-w-6xl mx-auto">
+    <p class="text-xs tracking-widest uppercase text-zinc-400 mb-3">What We Stand For</p>
+    <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 mb-12">Our Core Values</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+      <div class="bg-white rounded-2xl p-7 border border-zinc-100 shadow-sm">
+        <div class="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center mb-5">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+        </div>
+        <h3 class="font-bold text-zinc-900 mb-2 text-lg">Design Excellence</h3>
+        <p class="text-zinc-500 text-sm leading-relaxed">Every space is thoughtfully designed to balance beauty and functionality, creating environments that feel as good as they look.</p>
+      </div>
+      <div class="bg-white rounded-2xl p-7 border border-zinc-100 shadow-sm">
+        <div class="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center mb-5">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </div>
+        <h3 class="font-bold text-zinc-900 mb-2 text-lg">Community First</h3>
+        <p class="text-zinc-500 text-sm leading-relaxed">We foster a sense of belonging through shared spaces, curated events, and a team dedicated to the well-being of every resident.</p>
+      </div>
+      <div class="bg-white rounded-2xl p-7 border border-zinc-100 shadow-sm">
+        <div class="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center mb-5">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h3 class="font-bold text-zinc-900 mb-2 text-lg">Integrity & Trust</h3>
+        <p class="text-zinc-500 text-sm leading-relaxed">We operate with transparency, honoring our commitments to residents, partners, and the surrounding community.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── AMENITIES ─────────────────────────────────────────── -->
+<section class="px-6 md:px-16 lg:px-24 xl:px-32 py-20">
+  <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-14 items-center">
+    <div class="bg-zinc-100 rounded-2xl overflow-hidden aspect-4/3 flex items-center justify-center">
+      <img src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=800&q=80" alt="Amenities" class="w-full h-full object-cover" onerror="this.outerHTML='<span class=\'text-zinc-400 font-bold text-lg\'>IMG</span>'">
+    </div>
+    <div>
+      <p class="text-xs tracking-widest uppercase text-zinc-400 mb-3">Lifestyle</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 mb-5 leading-snug">Amenities Built for Living Well</h2>
+      <p class="text-zinc-500 leading-relaxed mb-6">Zeppelin Suites is equipped with world-class amenities that complement every aspect of your lifestyle — from wellness and recreation to work and socializing.</p>
+      <ul class="space-y-3">
+        <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Fully equipped fitness center and yoga studio open 24 hours</span></li>
+        <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Rooftop swimming pool and sun deck with panoramic city views</span></li>
+        <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Co-working spaces and private meeting rooms with high-speed fiber internet</span></li>
+        <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Landscaped garden lounge and BBQ terrace for social gatherings</span></li>
+        <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">24/7 concierge, security, and CCTV-monitored premises</span></li>
+        <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Basement parking with EV charging stations available</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── NEARBY FACILITIES ──────────────────────────────────── -->
+<section class="bg-zinc-50 py-20 px-6 md:px-16 lg:px-24 xl:px-32">
+  <div class="max-w-6xl mx-auto">
+    <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 mb-4">Nearby Facilities</h2>
+    <p class="text-zinc-500 mb-10 max-w-xl">Everything you need is within reach. Zeppelin Suites is strategically located near major lifestyle, commercial, and educational destinations.</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="flex items-start gap-3 bg-white rounded-xl p-4 border border-zinc-100">
+        <span class="text-zinc-900 font-bold shrink-0">✓</span>
+        <div>
+          <p class="font-semibold text-zinc-900 text-sm">Premier Shopping Malls</p>
+          <p class="text-zinc-500 text-xs mt-0.5">Landmark retail centers within 5 minutes' drive</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 bg-white rounded-xl p-4 border border-zinc-100">
+        <span class="text-zinc-900 font-bold shrink-0">✓</span>
+        <div>
+          <p class="font-semibold text-zinc-900 text-sm">Top-Tier Hospitals & Clinics</p>
+          <p class="text-zinc-500 text-xs mt-0.5">World-class medical facilities minutes away</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 bg-white rounded-xl p-4 border border-zinc-100">
+        <span class="text-zinc-900 font-bold shrink-0">✓</span>
+        <div>
+          <p class="font-semibold text-zinc-900 text-sm">International Schools & Universities</p>
+          <p class="text-zinc-500 text-xs mt-0.5">Prestigious educational institutions in the vicinity</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 bg-white rounded-xl p-4 border border-zinc-100">
+        <span class="text-zinc-900 font-bold shrink-0">✓</span>
+        <div>
+          <p class="font-semibold text-zinc-900 text-sm">Dining & Entertainment Hubs</p>
+          <p class="text-zinc-500 text-xs mt-0.5">Award-winning restaurants, cafés, and cultural venues</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ────────────────────────────────────────────── -->
+<footer class="footer-bg py-14 px-6 md:px-16 lg:px-24 xl:px-32 text-center">
+  <p class="text-3xl font-black uppercase text-zinc-800 mb-2">Zeppelin Suites</p>
+  <p class="text-zinc-600 text-sm mb-6">Luxury Living in the Heart of Angeles City</p>
+  <div class="flex flex-wrap justify-center gap-6 text-sm text-zinc-600 mb-6">
+    <a href="../generalViewPages/index.html" class="hover:text-zinc-900">Home</a>
+    <a href="../generalViewPages/faq.html" class="hover:text-zinc-900">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="hover:text-zinc-900">About Us</a>
+    <a href="../generalViewPages/contact.html" class="hover:text-zinc-900">Contact</a>
+  </div>
+  <p class="text-xs text-zinc-500">© 2026 Zeppelin Suites. All rights reserved.</p>
+</footer>
+
+<script>
+  let menuOpen = false;
+  function toggleMenu() {
+    menuOpen = !menuOpen;
+    const menu = document.getElementById('mobileMenu');
+    const bar1 = document.getElementById('bar1');
+    const bar2 = document.getElementById('bar2');
+    const bar3 = document.getElementById('bar3');
+    menu.classList.toggle('hidden', !menuOpen);
+    menu.classList.toggle('flex', menuOpen);
+    bar1.style.transform = menuOpen ? 'translateY(8px) rotate(45deg)' : '';
+    bar2.style.opacity = menuOpen ? '0' : '1';
+    bar3.style.transform = menuOpen ? 'translateY(-8px) rotate(-45deg)' : '';
+  }
+  function toggleDropdown(id, chevronId) {
+    const el = document.getElementById(id);
+    const ch = document.getElementById(chevronId);
+    const hidden = el.classList.contains('hidden');
+    el.classList.toggle('hidden', !hidden);
+    el.classList.toggle('flex', hidden);
+    ch.style.transform = hidden ? 'rotate(180deg)' : '';
+  }
+</script>
+</body>
+</html>
