@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeppelin Suites - Maintenance Request</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],mono:['DM Mono','monospace']}}}}</script>
+<style>
+* { font-family: 'DM Sans', sans-serif; }
+
+/* ── Sidebar ───────────────────────────────────────────── */
+.sidebar {
+  width: 256px;
+  transition: width 0.3s cubic-bezier(0.4,0,0.2,1), transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+}
+.sidebar.collapsed { width: 68px; }
+@media (max-width: 767px) {
+  .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; height: 100vh; width: 256px !important; }
+  .sidebar.open { transform: translateX(0); }
+}
+.main-wrapper { margin-left: 256px; transition: margin-left 0.3s cubic-bezier(0.4,0,0.2,1); }
+.main-wrapper.sidebar-collapsed { margin-left: 68px; }
+@media (max-width: 767px) { .main-wrapper { margin-left: 0 !important; } }
+
+.sidebar-logo { transition: opacity 0.2s ease, width 0.2s ease; }
+.sidebar.collapsed .sidebar-logo { opacity: 0; width: 0; overflow: hidden; pointer-events: none; }
+
+.overlay { display: none; pointer-events: none; }
+.overlay.show { display: block; pointer-events: auto; }
+
+/* ── Sidebar links ─────────────────────────────────────── */
+.sidebar-link { position: relative; transition: all 0.18s ease; white-space: nowrap; overflow: hidden; }
+.sidebar-link.active { background: #0f172a; color: #fff; }
+.sidebar-link.active .nav-icon { color: #60a5fa; }
+.sidebar-link:not(.active):hover { background: #eff6ff; color: #1d4ed8; }
+.sidebar-link:not(.active):hover .nav-icon { color: #3b82f6; }
+.sidebar.collapsed .nav-label,
+.sidebar.collapsed .logo-text { display: none; }
+.sidebar.collapsed .sidebar-link { justify-content: center; padding-left:0; padding-right:0; }
+.sidebar.collapsed .collapse-icon { transform: rotate(180deg); }
+.sidebar.collapsed .sidebar-link:hover::after {
+  content: attr(data-tooltip);
+  position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%);
+  background: #0f172a; color: #fff; font-size: 12px; padding: 5px 10px;
+  border-radius: 8px; white-space: nowrap; z-index: 999;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18); pointer-events: none;
+}
+.nav-label,.logo-text { transition: opacity 0.2s ease; }
+.collapse-icon { transition: transform 0.3s ease; }
+
+/* ── Dropdowns ─────────────────────────────────────────── */
+.profile-dropdown { opacity:0; visibility:hidden; transform:translateY(-6px); transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
+.profile-dropdown.open { opacity:1; visibility:visible; transform:translateY(0); }
+
+/* ── Glass header ──────────────────────────────────────── */
+.glass-header { background:rgba(255,255,255,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+
+/* ── INDEPENDENT COLUMN SCROLL ─────────────────────────── */
+.content-area {
+  height: calc(100vh - 65px);
+  display: flex;
+  overflow: hidden;
+}
+.col-scroll {
+  overflow-y: auto;
+  height: 100%;
+}
+@media (max-width: 1023px) {
+  .content-area { display: block; height: auto; overflow: visible; }
+  .col-scroll { overflow-y: visible; height: auto; }
+  .mobile-scroll-wrap { overflow-y: auto; height: calc(100vh - 65px); }
+}
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:#f1f5f9; }
+::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
+
+/* ── Buttons / inputs ──────────────────────────────────── */
+.btn-press { transition: all 0.15s ease; }
+.btn-press:active { transform: scale(0.95); }
+.zep-input:focus { outline:none; border-color:#0f172a; box-shadow:0 0 0 3px rgba(15,23,42,0.07); }
+.zep-select:focus { outline:none; border-color:#0f172a; box-shadow:0 0 0 3px rgba(15,23,42,0.07); }
+.zep-textarea:focus { outline:none; border-color:#0f172a; box-shadow:0 0 0 3px rgba(15,23,42,0.07); }
+
+/* ── Table rows ────────────────────────────────────────── */
+.req-row { transition: background 0.15s ease; }
+.req-row:hover { background: #f8fafc; }
+
+/* ── Modal ─────────────────────────────────────────────── */
+.modal-backdrop {
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.modal-backdrop.open {
+  opacity: 1; visibility: visible;
+}
+.modal-card {
+  transform: translateY(16px) scale(0.97);
+  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+.modal-backdrop.open .modal-card {
+  transform: translateY(0) scale(1);
+}
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 overflow-hidden">
+
+<!-- Overlay -->
+<div class="overlay fixed inset-0 bg-transparent z-40" id="overlay" onclick="closeMobileSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar fixed left-0 top-0 h-full border-r border-slate-100/80 flex flex-col z-50 md:z-40 shadow-2xl md:shadow-none" id="sidebar">
+  <div class="px-4 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 min-h-[73px]">
+    <a href="homeTenant.html" class="sidebar-logo shrink-0 flex items-center">
+      <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" class="h-10 w-auto object-contain">
+    </a>
+    <button onclick="toggleCollapse()" class="hidden md:flex btn-press p-1.5 rounded-lg hover:bg-slate-100 transition-colors active:scale-95 shrink-0 ml-1">
+      <svg class="collapse-icon w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+    </button>
+  </div>
+  <nav class="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden">
+    <!-- Home -->
+    <a href="homeTenant.html" data-tooltip="Home" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      <span class="nav-label">Home</span>
+    </a>
+    <!-- Maintenance Request -->
+    <a href="maintenanceRequestTenant.html" data-tooltip="Maintenance Request" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span class="nav-label">Maintenance Request</span>
+    </a>
+    <!-- My Account -->
+    <a href="#" data-tooltip="My Account" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      <span class="nav-label">My Account</span>
+    </a>
+    <!-- Settings -->
+    <a href="#" data-tooltip="Settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span class="nav-label">Settings</span>
+    </a>
+  </nav>
+</aside>
+
+<!-- ── MAIN WRAPPER ─────────────────────────────────────── -->
+<div class="main-wrapper h-screen flex flex-col" id="mainWrapper">
+
+  <!-- TOP BAR -->
+  <header class="glass-header border-b border-slate-100/80 px-4 md:px-6 py-3.5 flex items-center gap-4 shrink-0 z-30">
+    <button class="md:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95" onclick="openMobileSidebar()">
+      <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div class="relative flex-1 max-w-sm">
+      <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" placeholder="Search requests..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
+    </div>
+    <div class="flex items-center gap-2 ml-auto">
+      <button class="relative p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95">
+        <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+      </button>
+      <div class="relative" id="profileWrapper">
+        <button onclick="toggleProfile()" class="flex items-center gap-2.5 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl px-3 py-1.5 transition-all btn-press active:scale-95">
+          <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0">T</div>
+          <div class="hidden sm:block text-left">
+            <p class="text-sm font-semibold text-slate-800 leading-none">Tenant Name</p>
+            <p class="text-xs text-slate-400 mt-0.5">Tenant</p>
+          </div>
+          <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl py-2 z-50" id="profileDropdown">
+          <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors rounded-xl mx-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>My Profile</a>
+          <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors rounded-xl mx-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Settings</a>
+          <div class="border-t border-slate-100 my-1 mx-3"></div>
+          <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Sign out</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT AREA -->
+  <div class="content-area flex-1 max-w-screen-2xl mx-auto w-full mobile-scroll-wrap" id="contentArea">
+
+    <!-- LEFT COLUMN -->
+    <div class="col-scroll flex-1 min-w-0 p-4 md:p-6 space-y-6">
+
+      <!-- Page header -->
+      <div class="flex items-center justify-between">
+        <h1 class="text-xl font-bold text-slate-900">Maintenance Request</h1>
+        <button onclick="openModal()" class="btn-press bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-all active:scale-95 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Create Request
+        </button>
+      </div>
+
+      <!-- Requests Table -->
+      <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100">
+          <h2 class="font-bold text-slate-900 text-sm">Your Requests</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-100 bg-slate-50/60">
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">#</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Subject</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Category</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Date Submitted</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Status</th>
+                <th class="px-4 py-3 w-16"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50" id="requestTableBody">
+              <!-- Sample rows -->
+              <tr class="req-row cursor-pointer">
+                <td class="px-5 py-3.5 text-slate-400 text-xs" style="font-family:'DM Mono',monospace">001</td>
+                <td class="px-4 py-3.5 font-semibold text-slate-800 whitespace-nowrap">Leaking Faucet</td>
+                <td class="px-4 py-3.5"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">Plumbing</span></td>
+                <td class="px-4 py-3.5 text-slate-500 whitespace-nowrap" style="font-family:'DM Mono',monospace;font-size:11px">01-05-2026 09:14:22</td>
+                <td class="px-4 py-3.5"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">In Progress</span></td>
+                <td class="px-4 py-3.5 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all whitespace-nowrap">View</button></td>
+              </tr>
+              <tr class="req-row cursor-pointer">
+                <td class="px-5 py-3.5 text-slate-400 text-xs" style="font-family:'DM Mono',monospace">002</td>
+                <td class="px-4 py-3.5 font-semibold text-slate-800 whitespace-nowrap">Broken Outlet</td>
+                <td class="px-4 py-3.5"><span class="bg-yellow-50 text-yellow-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-yellow-100">Electrical</span></td>
+                <td class="px-4 py-3.5 text-slate-500 whitespace-nowrap" style="font-family:'DM Mono',monospace;font-size:11px">01-08-2026 14:30:05</td>
+                <td class="px-4 py-3.5"><span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-100">Resolved</span></td>
+                <td class="px-4 py-3.5 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all whitespace-nowrap">View</button></td>
+              </tr>
+              <tr class="req-row cursor-pointer">
+                <td class="px-5 py-3.5 text-slate-400 text-xs" style="font-family:'DM Mono',monospace">003</td>
+                <td class="px-4 py-3.5 font-semibold text-slate-800 whitespace-nowrap">AC Unit Not Cooling</td>
+                <td class="px-4 py-3.5"><span class="bg-slate-100 text-slate-600 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-200">Fixture</span></td>
+                <td class="px-4 py-3.5 text-slate-500 whitespace-nowrap" style="font-family:'DM Mono',monospace;font-size:11px">01-10-2026 08:55:47</td>
+                <td class="px-4 py-3.5"><span class="bg-red-50 text-red-600 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-red-100">Pending</span></td>
+                <td class="px-4 py-3.5 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all whitespace-nowrap">View</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination -->
+        <div class="flex items-center justify-end px-4 py-3.5 border-t border-slate-100 gap-1">
+          <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95"><svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+          <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border bg-slate-900 border-slate-900 text-white text-xs font-bold active:scale-95">1</button>
+          <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95"><svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+      </div>
+
+    </div><!-- /left col -->
+
+  </div><!-- /content-area -->
+</div><!-- /main-wrapper -->
+
+<!-- ── CREATE REQUEST MODAL ──────────────────────────────── -->
+<div class="modal-backdrop fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4" id="modalBackdrop">
+  <div class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-100 overflow-hidden">
+    <!-- Modal header -->
+    <div class="bg-slate-900 px-6 py-4 flex items-center justify-between">
+      <h2 class="text-base font-bold text-white">Create Maintenance Request</h2>
+      <button onclick="closeModal()" class="btn-press p-1.5 rounded-lg hover:bg-white/10 transition-colors active:scale-95">
+        <svg class="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <!-- Modal body -->
+    <div class="p-6 space-y-4">
+
+      <!-- Subject -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Subject</label>
+        <input type="text" placeholder="Brief description of the issue" class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all">
+      </div>
+
+      <!-- Unit -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Unit</label>
+        <input type="text" value="Unit 404 — One Bedroom" disabled class="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-400 cursor-not-allowed">
+        <p class="text-xs text-slate-400 mt-1 ml-1">Auto-filled from your unit information</p>
+      </div>
+
+      <!-- Category -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Category</label>
+        <select class="zep-select w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 cursor-pointer transition-all appearance-none">
+          <option value="" disabled selected>Select a category</option>
+          <option value="plumbing">Plumbing</option>
+          <option value="electrical">Electrical</option>
+          <option value="cleaning">Cleaning</option>
+          <option value="fixture">Fixture</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Description</label>
+        <textarea rows="4" placeholder="Provide detailed notes about the issue..." class="zep-textarea w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all resize-none"></textarea>
+      </div>
+
+    </div>
+    <!-- Modal footer -->
+    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/60">
+      <button onclick="closeModal()" class="btn-press px-5 py-2 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-100 transition-all active:scale-95">Cancel</button>
+      <button onclick="submitRequest()" class="btn-press bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold px-6 py-2 rounded-xl tracking-widest transition-all active:scale-95">SEND</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let sidebarCollapsed = false;
+
+  function toggleCollapse() {
+    sidebarCollapsed = !sidebarCollapsed;
+    document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
+    document.getElementById('mainWrapper').classList.toggle('sidebar-collapsed', sidebarCollapsed);
+  }
+  function openMobileSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('overlay').classList.add('show');
+  }
+  function closeMobileSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('show');
+  }
+  function toggleProfile() {
+    const dd = document.getElementById('profileDropdown');
+    const ch = document.getElementById('profileChevron');
+    const open = dd.classList.toggle('open');
+    ch.style.transform = open ? 'rotate(180deg)' : '';
+  }
+  document.addEventListener('click', e => {
+    const w = document.getElementById('profileWrapper');
+    if (w && !w.contains(e.target)) {
+      document.getElementById('profileDropdown').classList.remove('open');
+      document.getElementById('profileChevron').style.transform = '';
+    }
+  });
+
+  // Modal
+  function openModal() {
+    document.getElementById('modalBackdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    document.getElementById('modalBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  // Close modal on backdrop click
+  document.getElementById('modalBackdrop').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+  // Submit request
+  function submitRequest() {
+    const subject = document.querySelector('#modalBackdrop input[type="text"]').value.trim();
+    const category = document.querySelector('#modalBackdrop select').value;
+    const description = document.querySelector('#modalBackdrop textarea').value.trim();
+    if (!subject || !category) {
+      alert('Please fill in Subject and Category before sending.');
+      return;
+    }
+    // Add to table
+    const tbody = document.getElementById('requestTableBody');
+    const rowCount = tbody.querySelectorAll('tr').length + 1;
+    const num = String(rowCount).padStart(3, '0');
+    const now = new Date();
+    const dateStr = `${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}-${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    const categoryColors = {
+      plumbing: 'bg-blue-50 text-blue-700 border-blue-100',
+      electrical: 'bg-yellow-50 text-yellow-700 border-yellow-100',
+      cleaning: 'bg-green-50 text-green-700 border-green-100',
+      fixture: 'bg-slate-100 text-slate-600 border-slate-200',
+      other: 'bg-purple-50 text-purple-700 border-purple-100'
+    };
+    const catLabel = category.charAt(0).toUpperCase() + category.slice(1);
+    const catColor = categoryColors[category] || 'bg-slate-100 text-slate-600 border-slate-200';
+    const tr = document.createElement('tr');
+    tr.className = 'req-row cursor-pointer';
+    tr.innerHTML = `
+      <td class="px-5 py-3.5 text-slate-400 text-xs" style="font-family:'DM Mono',monospace">${num}</td>
+      <td class="px-4 py-3.5 font-semibold text-slate-800 whitespace-nowrap">${subject}</td>
+      <td class="px-4 py-3.5"><span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border ${catColor}">${catLabel}</span></td>
+      <td class="px-4 py-3.5 text-slate-500 whitespace-nowrap" style="font-family:'DM Mono',monospace;font-size:11px">${dateStr}</td>
+      <td class="px-4 py-3.5"><span class="bg-red-50 text-red-600 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-red-100">Pending</span></td>
+      <td class="px-4 py-3.5 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all whitespace-nowrap">View</button></td>
+    `;
+    tbody.prepend(tr);
+    // Reset form
+    document.querySelector('#modalBackdrop input[type="text"]').value = '';
+    document.querySelector('#modalBackdrop select').value = '';
+    document.querySelector('#modalBackdrop textarea').value = '';
+    closeModal();
+  }
+</script>
+</body>
+</html>
