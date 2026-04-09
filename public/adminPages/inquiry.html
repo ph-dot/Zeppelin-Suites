@@ -45,31 +45,15 @@
 .zep-select:focus { outline:none; border-color:#0f172a; box-shadow:0 0 0 3px rgba(15,23,42,0.07); }
 .glass-header { background:rgba(255,255,255,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
 .main-scroll { height:calc(100vh - 65px); overflow-y:auto; }
-
-/* ── Inquiry card ──────────────────────────────────────── */
-.inq-card {
-  background: linear-gradient(135deg,#ffffff 0%,#f8fafc 100%);
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-  cursor: pointer;
-}
-.inq-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.10); border-color: #0f172a; }
-.inq-card.selected { border-color: #0f172a; box-shadow: 0 0 0 2px #0f172a; }
-
-/* ── Detail panel ──────────────────────────────────────── */
-.detail-panel {
-  transition: opacity 0.25s ease, transform 0.25s ease;
-  opacity: 0; transform: translateY(8px); pointer-events: none;
-}
-.detail-panel.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
-
-/* ── Content split ─────────────────────────────────────── */
-.content-area { height:calc(100vh - 65px); display:flex; overflow:hidden; }
-.col-scroll { overflow-y:auto; height:100%; }
-@media (max-width:1023px) {
-  .content-area { display:block; height:auto; overflow:visible; }
-  .col-scroll { overflow-y:visible; height:auto; }
-  .mobile-scroll-wrap { overflow-y:auto; height:calc(100vh - 65px); }
-}
+.stat-card { transition:transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease; cursor:pointer; }
+.stat-card:hover { transform:translateY(-4px); box-shadow:0 20px 40px rgba(0,0,0,0.10); border-color:#0f172a; }
+.inq-row { transition:background 0.15s ease; cursor:pointer; }
+.inq-row:hover { background:#f8fafc; }
+/* Modal */
+.modal-backdrop { opacity:0; visibility:hidden; transition:opacity 0.25s ease, visibility 0.25s ease; }
+.modal-backdrop.open { opacity:1; visibility:visible; }
+.modal-card { transform:translateY(16px) scale(0.97); transition:transform 0.25s cubic-bezier(0.4,0,0.2,1); }
+.modal-backdrop.open .modal-card { transform:translateY(0) scale(1); }
 </style>
 </head>
 <body class="bg-slate-50 text-slate-800 overflow-hidden">
@@ -78,7 +62,7 @@
 
 <!-- SIDEBAR -->
 <aside class="sidebar fixed left-0 top-0 h-full border-r border-slate-100/80 flex flex-col z-50 md:z-40 shadow-2xl md:shadow-none" id="sidebar">
-  <div class="px-4 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 min-h-18.25">
+  <div class="px-4 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
     <a href="../adminPages/homeAdmin.html" class="sidebar-logo shrink-0 flex items-center">
       <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" class="h-10 w-auto object-contain">
     </a>
@@ -163,281 +147,260 @@
     </div>
   </header>
 
-  <!-- CONTENT AREA: cards left, detail right -->
-  <div class="content-area flex-1 max-w-screen-2xl mx-auto w-full mobile-scroll-wrap">
+  <!-- MAIN CONTENT -->
+  <div class="main-scroll p-4 md:p-6 space-y-6">
 
-    <!-- LEFT — Inquiry grid -->
-    <div class="col-scroll flex-1 min-w-0 p-4 md:p-6 space-y-5">
+    <!-- Page Title -->
+    <div>
+      <h1 class="text-xl font-bold text-slate-900">Inquiry</h1>
+      <p class="text-xs text-slate-400 mt-0.5">Manage incoming messages from residents and guests</p>
+    </div>
 
-      <!-- Header + filters -->
-      <div class="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 class="text-xl font-bold text-slate-900">Inquiry</h1>
-          <p class="text-xs text-slate-400 mt-0.5">3 new unread messages</p>
+    <!-- STAT CARDS -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <span class="text-sm font-semibold text-slate-600">New today</span>
         </div>
-        <div class="flex items-center gap-2">
-          <select onchange="filterStatus(this.value)" class="zep-select text-sm border border-slate-200 rounded-full px-3 py-2 bg-white text-slate-600 cursor-pointer transition-all">
-            <option value="all">All Status</option>
-            <option value="new">New</option>
-            <option value="read">Read</option>
-            <option value="replied">Replied</option>
-            <option value="closed">Closed</option>
-          </select>
-          <button class="btn-press bg-slate-900 hover:bg-slate-700 active:scale-95 text-white text-sm font-semibold px-4 py-2 rounded-full transition-all">Compose</button>
-        </div>
+        <p class="text-3xl font-bold text-slate-900" style="font-family:'DM Mono',monospace">3</p>
+        <p class="text-xs text-amber-500 font-semibold mt-1">↑ 2 <span class="text-slate-400 font-normal">from yesterday</span></p>
       </div>
-
-      <!-- Card grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" id="cardGrid">
-
-        <!-- New badge = amber, Read = blue/slate, Replied = emerald, Closed = slate -->
-        <div class="inq-card rounded-2xl p-5 border border-slate-100 shadow-sm" data-status="new" data-id="1" onclick="openDetail(this)">
-          <div class="flex items-start justify-between mb-3">
-            <div class="w-9 h-9 bg-slate-900 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-bold">JD</div>
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">New</span>
+      <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           </div>
-          <p class="text-sm font-bold text-slate-900 leading-tight mb-1">Unit Lease Renewal Inquiry</p>
-          <p class="text-xs text-slate-500 mb-3">john.doe@gmail.com</p>
-          <p class="text-xs text-slate-400 line-clamp-2">Hi, I wanted to ask about the process for renewing my lease for unit #A-101. My current lease expires next month and I'd like to discuss the terms.</p>
-          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
-            <span class="text-xs text-slate-400" style="font-family:'DM Mono',monospace">Aug 24, 2022 • 09:15</span>
-            <button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all">Reply</button>
-          </div>
+          <span class="text-sm font-semibold text-slate-600">Pending</span>
         </div>
-
-        <div class="inq-card rounded-2xl p-5 border border-slate-100 shadow-sm" data-status="new" data-id="2" onclick="openDetail(this)">
-          <div class="flex items-start justify-between mb-3">
-            <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-bold">MS</div>
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">New</span>
+        <p class="text-3xl font-bold text-slate-900" style="font-family:'DM Mono',monospace">7</p>
+        <p class="text-xs text-blue-500 font-semibold mt-1">↑ 1 <span class="text-slate-400 font-normal">awaiting reply</span></p>
+      </div>
+      <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           </div>
-          <p class="text-sm font-bold text-slate-900 leading-tight mb-1">Parking Slot Availability</p>
-          <p class="text-xs text-slate-500 mb-3">maria.santos@gmail.com</p>
-          <p class="text-xs text-slate-400 line-clamp-2">Good day. I am inquiring whether there are any available parking slots in the building. I recently moved to unit #B-205 and don't have parking yet.</p>
-          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
-            <span class="text-xs text-slate-400" style="font-family:'DM Mono',monospace">Aug 23, 2022 • 14:32</span>
-            <button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all">Reply</button>
-          </div>
+          <span class="text-sm font-semibold text-slate-600">Responded</span>
         </div>
+        <p class="text-3xl font-bold text-slate-900" style="font-family:'DM Mono',monospace">24</p>
+        <p class="text-xs text-emerald-500 font-semibold mt-1">↑ 5 <span class="text-slate-400 font-normal">this week</span></p>
+      </div>
+    </div>
 
-        <div class="inq-card rounded-2xl p-5 border border-slate-100 shadow-sm" data-status="new" data-id="3" onclick="openDetail(this)">
-          <div class="flex items-start justify-between mb-3">
-            <div class="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-bold">RG</div>
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">New</span>
-          </div>
-          <p class="text-sm font-bold text-slate-900 leading-tight mb-1">Amenities Schedule Request</p>
-          <p class="text-xs text-slate-500 mb-3">roberto.garcia@gmail.com</p>
-          <p class="text-xs text-slate-400 line-clamp-2">Hello, could you please send me the schedule for the gym and swimming pool? I'd like to plan my workouts for next week. Thank you.</p>
-          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
-            <span class="text-xs text-slate-400" style="font-family:'DM Mono',monospace">Aug 23, 2022 • 11:05</span>
-            <button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all">Reply</button>
-          </div>
-        </div>
+    <!-- TABLE CONTAINER -->
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <h2 class="font-bold text-slate-900 text-sm">All Inquiries</h2>
+        <select onchange="filterTable(this.value)" class="zep-select text-xs border border-slate-200 rounded-full px-3 py-1.5 bg-white text-slate-600 cursor-pointer transition-all">
+          <option value="all">All Status</option>
+          <option value="new">New</option>
+          <option value="pending">Pending</option>
+          <option value="responded">Responded</option>
+        </select>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-100 bg-slate-50/60">
+              <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Email</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Subject</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Message</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Timestamp</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Status</th>
+              <th class="px-4 py-3 w-12"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50" id="inqTableBody">
 
-        <div class="inq-card rounded-2xl p-5 border border-slate-100 shadow-sm" data-status="read" data-id="4" onclick="openDetail(this)">
-          <div class="flex items-start justify-between mb-3">
-            <div class="w-9 h-9 bg-violet-600 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-bold">AL</div>
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-200">Read</span>
-          </div>
-          <p class="text-sm font-bold text-slate-900 leading-tight mb-1">Internet Service Complaint</p>
-          <p class="text-xs text-slate-500 mb-3">anna.lee@gmail.com</p>
-          <p class="text-xs text-slate-400 line-clamp-2">The internet connection in my unit has been very slow for the past three days. I work from home and this is causing significant issues with my productivity.</p>
-          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
-            <span class="text-xs text-slate-400" style="font-family:'DM Mono',monospace">Aug 22, 2022 • 16:45</span>
-            <button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all">Reply</button>
-          </div>
-        </div>
+            <tr class="inq-row" data-status="new"
+              data-subject="Unit Lease Renewal Inquiry"
+              data-email="johndoe@email.com"
+              data-message="Hi, I wanted to ask about the process for renewing my lease for unit #A-101. My current lease expires next month and I'd like to discuss the terms and any potential changes to the monthly rate. Please let me know at your earliest convenience."
+              onclick="openModal(this)">
+              <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">johndoe@email.com</td>
+              <td class="px-4 py-3.5 font-semibold text-slate-800 whitespace-nowrap">Unit Lease Renewal Inquiry</td>
+              <td class="px-4 py-3.5 text-slate-400 text-xs max-w-xs truncate">Hi, I wanted to ask about the process for renewing my lease for unit #A-101...</td>
+              <td class="px-4 py-3.5 text-slate-500 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">Aug 24, 2022 · 09:15</td>
+              <td class="px-4 py-3.5"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-200">New</span></td>
+              <td class="px-4 py-3.5 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all" onclick="event.stopPropagation();openModal(this.closest('tr'))">View</button></td>
+            </tr>
 
-        <div class="inq-card rounded-2xl p-5 border border-slate-100 shadow-sm" data-status="replied" data-id="5" onclick="openDetail(this)">
-          <div class="flex items-start justify-between mb-3">
-            <div class="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-bold">KW</div>
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Replied</span>
-          </div>
-          <p class="text-sm font-bold text-slate-900 leading-tight mb-1">Move-In Date Reschedule</p>
-          <p class="text-xs text-slate-500 mb-3">kevin.wu@gmail.com</p>
-          <p class="text-xs text-slate-400 line-clamp-2">I need to reschedule my move-in date from August 28 to September 5. Is that possible? Please let me know what the process is and if there are any fees.</p>
-          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
-            <span class="text-xs text-slate-400" style="font-family:'DM Mono',monospace">Aug 21, 2022 • 08:20</span>
-            <button class="btn-press text-xs font-semibold text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full active:scale-95 transition-all">View</button>
-          </div>
-        </div>
+            <tr class="inq-row" data-status="new"
+              data-subject="Parking Slot Availability"
+              data-email="msmith@condo.net"
+              data-message="Good day. I am inquiring whether there are any available parking slots in the building. I recently moved to unit #B-205 and don't have parking yet. Please let me know if there are reserved or open slots available and what the monthly fee would be."
+              onclick="openModal(this)">
+              <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">msmith@condo.net</td>
+              <td class="px-4 py-3.5 font-semibold text-slate-800 whitespace-nowrap">Parking Slot Availability</td>
+              <td class="px-4 py-3.5 text-slate-400 text-xs max-w-xs truncate">Good day. I am inquiring whether there are any available parking slots...</td>
+              <td class="px-4 py-3.5 text-slate-500 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">Aug 23, 2022 · 14:32</td>
+              <td class="px-4 py-3.5"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-200">New</span></td>
+              <td class="px-4 py-3.5 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all" onclick="event.stopPropagation();openModal(this.closest('tr'))">View</button></td>
+            </tr>
 
-        <div class="inq-card rounded-2xl p-5 border border-slate-100 shadow-sm" data-status="closed" data-id="6" onclick="openDetail(this)">
-          <div class="flex items-start justify-between mb-3">
-            <div class="w-9 h-9 bg-rose-500 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-bold">SN</div>
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200">Closed</span>
-          </div>
-          <p class="text-sm font-bold text-slate-900 leading-tight mb-1">Guest Policy Clarification</p>
-          <p class="text-xs text-slate-500 mb-3">sofia.nakamura@gmail.com</p>
-          <p class="text-xs text-slate-400 line-clamp-2">What is the policy for overnight guests? I have a family member visiting from abroad next month and they'll be staying with me for about two weeks.</p>
-          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
-            <span class="text-xs text-slate-400" style="font-family:'DM Mono',monospace">Aug 20, 2022 • 17:10</span>
-            <button class="btn-press text-xs font-semibold text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full active:scale-95 transition-all">View</button>
-          </div>
-        </div>
+            <tr class="inq-row" data-status="new"
+              data-subject="Amenities Schedule Request"
+              data-email="rgarcia@mail.com"
+              data-message="Hello, could you please send me the schedule for the gym and swimming pool? I'd like to plan my workouts for next week. It would also help to know the rules around reservations for the function hall. Thank you very much."
+              onclick="openModal(this)">
+              <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">rgarcia@mail.com</td>
+              <td class="px-4 py-3.5 font-semibold text-slate-800 whitespace-nowrap">Amenities Schedule Request</td>
+              <td class="px-4 py-3.5 text-slate-400 text-xs max-w-xs truncate">Hello, could you please send me the schedule for the gym and swimming pool...</td>
+              <td class="px-4 py-3.5 text-slate-500 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">Aug 23, 2022 · 11:05</td>
+              <td class="px-4 py-3.5"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-200">New</span></td>
+              <td class="px-4 py-3.5 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all" onclick="event.stopPropagation();openModal(this.closest('tr'))">View</button></td>
+            </tr>
 
-      </div><!-- /grid -->
+            <tr class="inq-row" data-status="pending"
+              data-subject="Internet Service Complaint"
+              data-email="aluna@inbox.ph"
+              data-message="The internet connection in my unit has been very slow for the past three days. I work from home and this is causing significant issues with my productivity. I would appreciate if this can be escalated to your technical team immediately. My unit is C-312."
+              onclick="openModal(this)">
+              <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">aluna@inbox.ph</td>
+              <td class="px-4 py-3.5 font-semibold text-slate-800 whitespace-nowrap">Internet Service Complaint</td>
+              <td class="px-4 py-3.5 text-slate-400 text-xs max-w-xs truncate">The internet connection in my unit has been very slow for the past three days...</td>
+              <td class="px-4 py-3.5 text-slate-500 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">Aug 22, 2022 · 16:45</td>
+              <td class="px-4 py-3.5"><span class="bg-blue-50 text-blue-600 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-200">Pending</span></td>
+              <td class="px-4 py-3.5 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all" onclick="event.stopPropagation();openModal(this.closest('tr'))">View</button></td>
+            </tr>
 
+            <tr class="inq-row" data-status="responded"
+              data-subject="Move-In Date Reschedule"
+              data-email="kwillis@gmail.com"
+              data-message="I need to reschedule my move-in date from August 28 to September 5. Is that possible? Please let me know what the process is and if there are any fees or penalties involved. I can provide a written request if needed."
+              onclick="openModal(this)">
+              <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">kwillis@gmail.com</td>
+              <td class="px-4 py-3.5 font-semibold text-slate-800 whitespace-nowrap">Move-In Date Reschedule</td>
+              <td class="px-4 py-3.5 text-slate-400 text-xs max-w-xs truncate">I need to reschedule my move-in date from August 28 to September 5...</td>
+              <td class="px-4 py-3.5 text-slate-500 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">Aug 21, 2022 · 08:20</td>
+              <td class="px-4 py-3.5"><span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-200">Responded</span></td>
+              <td class="px-4 py-3.5 text-right"><button class="btn-press text-xs font-semibold text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full active:scale-95 transition-all" onclick="event.stopPropagation();openModal(this.closest('tr'))">View</button></td>
+            </tr>
+
+            <tr class="inq-row" data-status="responded"
+              data-subject="Guest Policy Clarification"
+              data-email="snunes@condo.net"
+              data-message="What is the policy for overnight guests? I have a family member visiting from abroad next month and they'll be staying with me for about two weeks. Is there a registration process, any fees, or visitor passes required by building management?"
+              onclick="openModal(this)">
+              <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">snunes@condo.net</td>
+              <td class="px-4 py-3.5 font-semibold text-slate-800 whitespace-nowrap">Guest Policy Clarification</td>
+              <td class="px-4 py-3.5 text-slate-400 text-xs max-w-xs truncate">What is the policy for overnight guests? I have a family member visiting...</td>
+              <td class="px-4 py-3.5 text-slate-500 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">Aug 20, 2022 · 17:10</td>
+              <td class="px-4 py-3.5"><span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-200">Responded</span></td>
+              <td class="px-4 py-3.5 text-right"><button class="btn-press text-xs font-semibold text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full active:scale-95 transition-all" onclick="event.stopPropagation();openModal(this.closest('tr'))">View</button></td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
       <!-- Pagination -->
-      <div class="flex items-center justify-between flex-wrap gap-3 pb-2">
-        <p class="text-xs text-slate-500">Showing <span class="font-semibold text-slate-700">1–6</span> of <span class="font-semibold text-slate-700">XX</span> inquiries</p>
+      <div class="flex items-center justify-between flex-wrap gap-3 px-5 py-3.5 border-t border-slate-100">
+        <p class="text-xs text-slate-500">Showing <span class="font-semibold text-slate-700">1–6</span> of <span class="font-semibold text-slate-700">6</span> inquiries</p>
         <div class="flex items-center gap-1">
           <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95"><svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
           <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border bg-slate-900 border-slate-900 text-white text-xs font-bold active:scale-95">1</button>
-          <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-xs font-medium hover:bg-slate-50 transition-all active:scale-95">2</button>
           <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95"><svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
         </div>
       </div>
+    </div>
 
-    </div><!-- /left col -->
-
-    <!-- RIGHT — Detail panel -->
-    <div class="col-scroll w-full lg:w-96 shrink-0 p-4 md:p-6 lg:pl-0">
-      <!-- Empty state -->
-      <div id="detailEmpty" class="bg-white rounded-2xl border border-slate-100 shadow-sm h-64 flex flex-col items-center justify-center text-center p-6">
-        <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mb-3">
-          <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <p class="text-sm font-semibold text-slate-700">No inquiry selected</p>
-        <p class="text-xs text-slate-400 mt-1">Click a card to read and reply</p>
-      </div>
-
-      <!-- Detail content (hidden until a card is clicked) -->
-      <div id="detailContent" class="detail-panel bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4 hidden">
-        <div class="flex items-start justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0" id="detailAvatar">JD</div>
-            <div>
-              <p class="text-sm font-bold text-slate-900" id="detailSubject">Subject</p>
-              <p class="text-xs text-slate-500" id="detailEmail">email@example.com</p>
-            </div>
-          </div>
-          <span class="text-xs font-semibold px-2.5 py-1 rounded-full shrink-0" id="detailBadge">New</span>
-        </div>
-
-        <div class="text-xs text-slate-400 flex items-center gap-1.5" style="font-family:'DM Mono',monospace">
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span id="detailDate">Aug 24, 2022 • 09:15</span>
-        </div>
-
-        <div class="bg-slate-50 rounded-xl p-4 text-sm text-slate-700 leading-relaxed" id="detailBody">Message body here.</div>
-
-        <!-- Quick mark actions -->
-        <div class="flex gap-2 flex-wrap">
-          <button onclick="markAs('read')" class="btn-press flex-1 text-xs font-semibold px-3 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all active:scale-95">Mark as Read</button>
-          <button onclick="markAs('closed')" class="btn-press flex-1 text-xs font-semibold px-3 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all active:scale-95">Close</button>
-        </div>
-
-        <div class="border-t border-slate-100 pt-4">
-          <p class="text-xs font-semibold text-slate-600 mb-2">Reply</p>
-          <textarea rows="4" placeholder="Type your reply here..." class="zep-input w-full text-sm border border-slate-200 rounded-2xl px-4 py-3 bg-white text-slate-700 resize-none transition-all"></textarea>
-          <div class="flex gap-2 mt-3">
-            <button class="btn-press flex-1 py-2.5 border border-slate-200 text-slate-600 text-sm font-semibold rounded-full hover:bg-slate-50 transition-all active:scale-95">Save Draft</button>
-            <button class="btn-press flex-1 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-full hover:bg-slate-700 transition-all active:scale-95">Send Reply</button>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /right col -->
-  </div><!-- /content-area -->
+  </div><!-- /main-scroll -->
 </div><!-- /main-wrapper -->
 
+<!-- ── MESSAGE DETAIL MODAL ────────────────────────────── -->
+<div class="modal-backdrop fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4" id="modalBackdrop" onclick="handleBackdropClick(event)">
+  <div class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-100 overflow-hidden">
+    <div class="bg-slate-900 px-6 py-4 flex items-center justify-between">
+      <h2 class="text-base font-bold text-white" id="modalSubject">Subject</h2>
+      <button onclick="closeModal()" class="btn-press p-1.5 rounded-lg hover:bg-white/10 transition-colors active:scale-95">
+        <svg class="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="p-6 space-y-4">
+      <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+        <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white text-sm font-bold shrink-0" id="modalAvatar">?</div>
+        <div>
+          <p class="text-xs text-slate-400 uppercase tracking-wide font-semibold mb-0.5">From</p>
+          <p class="text-sm font-semibold text-slate-800" id="modalEmail">—</p>
+        </div>
+      </div>
+      <div>
+        <p class="text-xs text-slate-400 uppercase tracking-wide font-semibold mb-2">Message</p>
+        <p class="text-sm text-slate-700 leading-relaxed" id="modalMessage">—</p>
+      </div>
+    </div>
+    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/60">
+      <button onclick="closeModal()" class="btn-press px-5 py-2 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-100 transition-all active:scale-95">Close</button>
+      <button class="btn-press bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-all active:scale-95">Reply</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  // ── Inquiry data ─────────────────────────────────────────
-  const inquiries = {
-    1: { subject:'Unit Lease Renewal Inquiry', email:'john.doe@gmail.com', date:'Aug 24, 2022 • 09:15', status:'new', initials:'JD', color:'bg-slate-900', body:'Hi, I wanted to ask about the process for renewing my lease for unit #A-101. My current lease expires next month and I\'d like to discuss the terms and conditions for renewal. Could you please let me know what the requirements are and if there are any changes to the monthly dues? Looking forward to your reply. Thank you!' },
-    2: { subject:'Parking Slot Availability', email:'maria.santos@gmail.com', date:'Aug 23, 2022 • 14:32', status:'new', initials:'MS', color:'bg-blue-600', body:'Good day. I am inquiring whether there are any available parking slots in the building. I recently moved to unit #B-205 and don\'t have parking yet. If there is a waiting list, could you please add me to it? I prefer a covered slot if available.' },
-    3: { subject:'Amenities Schedule Request', email:'roberto.garcia@gmail.com', date:'Aug 23, 2022 • 11:05', status:'new', initials:'RG', color:'bg-emerald-600', body:'Hello, could you please send me the schedule for the gym and swimming pool? I\'d like to plan my workouts for next week. Also, is there a reservation system for the function hall? I\'m planning a small gathering. Thank you in advance!' },
-    4: { subject:'Internet Service Complaint', email:'anna.lee@gmail.com', date:'Aug 22, 2022 • 16:45', status:'read', initials:'AL', color:'bg-violet-600', body:'The internet connection in my unit has been very slow for the past three days. I work from home and this is causing significant issues with my productivity. Could you please have this checked as soon as possible? I\'ve already tried restarting the router but the issue persists.' },
-    5: { subject:'Move-In Date Reschedule', email:'kevin.wu@gmail.com', date:'Aug 21, 2022 • 08:20', status:'replied', initials:'KW', color:'bg-amber-500', body:'I need to reschedule my move-in date from August 28 to September 5. Is that possible? Please let me know what the process is and if there are any fees or penalties involved. I have already paid the security deposit and first month\'s rent.' },
-    6: { subject:'Guest Policy Clarification', email:'sofia.nakamura@gmail.com', date:'Aug 20, 2022 • 17:10', status:'closed', initials:'SN', color:'bg-rose-500', body:'What is the policy for overnight guests? I have a family member visiting from abroad next month and they\'ll be staying with me for about two weeks. I just want to make sure I\'m following the rules. Thank you for your help!' },
-  };
-
-  const statusStyles = {
-    new:     { badge:'bg-amber-50 text-amber-700 border border-amber-200', text:'New' },
-    read:    { badge:'bg-blue-50 text-blue-600 border border-blue-200', text:'Read' },
-    replied: { badge:'bg-emerald-50 text-emerald-700 border border-emerald-200', text:'Replied' },
-    closed:  { badge:'bg-slate-100 text-slate-500 border border-slate-200', text:'Closed' },
-  };
-
-  let currentId = null;
-
-  function openDetail(card) {
-    const id = parseInt(card.dataset.id);
-    const inq = inquiries[id];
-    if (!inq) return;
-    currentId = id;
-
-    // Deselect all, select clicked
-    document.querySelectorAll('.inq-card').forEach(c => c.classList.remove('selected'));
-    card.classList.add('selected');
-
-    // Mark as read if new
-    if (inq.status === 'new') {
-      inq.status = 'read';
-      const badgeEl = card.querySelector('span');
-      if (badgeEl) { badgeEl.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-200'; badgeEl.textContent = 'Read'; }
-      updateBadgeCount();
-    }
-
-    const s = statusStyles[inq.status] || statusStyles.read;
-    document.getElementById('detailAvatar').className = `w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0 ${inq.color}`;
-    document.getElementById('detailAvatar').textContent = inq.initials;
-    document.getElementById('detailSubject').textContent = inq.subject;
-    document.getElementById('detailEmail').textContent = inq.email;
-    document.getElementById('detailDate').textContent = inq.date;
-    document.getElementById('detailBody').textContent = inq.body;
-    document.getElementById('detailBadge').className = `text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${s.badge}`;
-    document.getElementById('detailBadge').textContent = s.text;
-
-    document.getElementById('detailEmpty').classList.add('hidden');
-    const dc = document.getElementById('detailContent');
-    dc.classList.remove('hidden');
-    requestAnimationFrame(() => dc.classList.add('show'));
-  }
-
-  function markAs(status) {
-    if (!currentId) return;
-    inquiries[currentId].status = status;
-    const s = statusStyles[status] || statusStyles.read;
-    document.getElementById('detailBadge').className = `text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${s.badge}`;
-    document.getElementById('detailBadge').textContent = s.text;
-    // Also update the card badge
-    const card = document.querySelector(`.inq-card[data-id="${currentId}"] span`);
-    if (card) { card.className = `text-xs font-semibold px-2.5 py-1 rounded-full ${s.badge}`; card.textContent = s.text; }
-    updateBadgeCount();
-  }
-
-  function updateBadgeCount() {
-    const newCount = Object.values(inquiries).filter(i => i.status === 'new').length;
-    const badge = document.getElementById('inqBadge');
-    badge.textContent = newCount;
-    badge.style.display = newCount > 0 ? '' : 'none';
-  }
-
-  function filterStatus(val) {
-    document.querySelectorAll('.inq-card').forEach(card => {
-      card.style.display = (val === 'all' || card.dataset.status === val) ? '' : 'none';
-    });
-  }
-
-  // ── Sidebar / UI functions ────────────────────────────────
   let sidebarCollapsed = false;
   function toggleCollapse() {
     sidebarCollapsed = !sidebarCollapsed;
     document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
     document.getElementById('mainWrapper').classList.toggle('sidebar-collapsed', sidebarCollapsed);
   }
-  function openMobileSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
-  function closeMobileSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
-  function toggleNotice() { document.getElementById('noticePanel').classList.toggle('open'); document.getElementById('noticeChevron').classList.toggle('rotated'); }
+  function openMobileSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('overlay').classList.add('show');
+  }
+  function closeMobileSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('show');
+  }
+  function toggleNotice() {
+    document.getElementById('noticePanel').classList.toggle('open');
+    document.getElementById('noticeChevron').classList.toggle('rotated');
+  }
   function toggleProfile() {
-    const dd = document.getElementById('profileDropdown'), ch = document.getElementById('profileChevron');
-    const open = dd.classList.toggle('open'); ch.style.transform = open ? 'rotate(180deg)' : '';
+    const dd = document.getElementById('profileDropdown');
+    const ch = document.getElementById('profileChevron');
+    const open = dd.classList.toggle('open');
+    ch.style.transform = open ? 'rotate(180deg)' : '';
   }
   document.addEventListener('click', e => {
     const w = document.getElementById('profileWrapper');
-    if (!w.contains(e.target)) { document.getElementById('profileDropdown').classList.remove('open'); document.getElementById('profileChevron').style.transform = ''; }
+    if (w && !w.contains(e.target)) {
+      document.getElementById('profileDropdown').classList.remove('open');
+      document.getElementById('profileChevron').style.transform = '';
+    }
   });
+
+  function filterTable(status) {
+    document.querySelectorAll('#inqTableBody tr').forEach(row => {
+      row.style.display = (status === 'all' || row.dataset.status === status) ? '' : 'none';
+    });
+  }
+
+  function openModal(row) {
+    const subject = row.dataset.subject;
+    const email = row.dataset.email;
+    const message = row.dataset.message;
+    document.getElementById('modalSubject').textContent = subject;
+    document.getElementById('modalEmail').textContent = email;
+    document.getElementById('modalMessage').textContent = message;
+    // Avatar initials
+    const parts = email.split('@')[0].split(/[._-]/);
+    const initials = parts.length >= 2
+      ? (parts[0][0] + parts[1][0]).toUpperCase()
+      : parts[0].slice(0,2).toUpperCase();
+    document.getElementById('modalAvatar').textContent = initials;
+    document.getElementById('modalBackdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    document.getElementById('modalBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function handleBackdropClick(e) {
+    if (e.target === document.getElementById('modalBackdrop')) closeModal();
+  }
 </script>
 </body>
 </html>

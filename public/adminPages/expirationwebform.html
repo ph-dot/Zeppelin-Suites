@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeppelin Suites — Condominium Reservation</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],mono:['DM Mono','monospace']}}}}</script>
+<style>
+* { font-family: 'DM Sans', sans-serif; }
+.btn-press { transition: all 0.15s ease; }
+.btn-press:active { transform: scale(0.95); }
+.zep-input:focus { outline:none; border-color:#0f172a; box-shadow:0 0 0 3px rgba(15,23,42,0.07); }
+.zep-select:focus { outline:none; border-color:#0f172a; box-shadow:0 0 0 3px rgba(15,23,42,0.07); }
+/* Upload zone */
+.upload-zone { border: 2px dashed #cbd5e1; transition: border-color 0.2s, background 0.2s; }
+.upload-zone:hover { border-color: #0f172a; background: #f8fafc; }
+/* Status banner */
+.status-banner { transition: all 0.3s ease; }
+/* Countdown ring */
+.countdown-ring { transition: stroke-dashoffset 1s linear; }
+/* Scrollbar */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:#f1f5f9; }
+::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen py-8 px-4">
+
+<div class="max-w-lg mx-auto space-y-4">
+
+  <!-- ── STATUS BANNER ─────────────────────────────────── -->
+  <div class="status-banner rounded-2xl border px-5 py-4 flex items-start gap-4" id="statusBanner">
+    <!-- Icon -->
+    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" id="statusIconWrap">
+      <!-- Countdown SVG (shown when pending) -->
+      <div id="countdownRing" class="relative w-10 h-10">
+        <svg class="w-10 h-10 -rotate-90" viewBox="0 0 40 40">
+          <circle cx="20" cy="20" r="16" fill="none" stroke="#e2e8f0" stroke-width="3"/>
+          <circle id="ringProgress" cx="20" cy="20" r="16" fill="none" stroke="#0f172a" stroke-width="3"
+            stroke-dasharray="100.5" stroke-dashoffset="0" stroke-linecap="round"/>
+        </svg>
+        <span class="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-800" id="ringLabel" style="font-family:'DM Mono',monospace">30</span>
+      </div>
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="font-bold text-sm" id="statusTitle">Reservation Pending</p>
+      <p class="text-xs mt-0.5" id="statusMsg">Complete the form and submit before the timer expires.</p>
+      <p class="text-xs font-semibold mt-1" id="statusCountdown" style="font-family:'DM Mono',monospace"></p>
+    </div>
+  </div>
+
+  <!-- ── FORM CARD ─────────────────────────────────────── -->
+  <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden" id="formCard">
+
+    <!-- Card header -->
+    <div class="bg-slate-900 px-6 py-5">
+      <h1 class="text-lg font-bold text-white tracking-tight">Condominium Reservation Form</h1>
+      <p class="text-slate-400 text-xs mt-0.5">Zeppelin Suites — Please fill in all required fields</p>
+    </div>
+
+    <div class="p-6 space-y-7" id="formBody">
+
+      <!-- ── RESIDENT INFO ──────────────────────────────── -->
+      <section>
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-1.5 h-5 bg-slate-900 rounded-full"></div>
+          <h2 class="font-bold text-slate-900 text-sm uppercase tracking-wide">Resident Info</h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Name <span class="text-red-400">*</span></label>
+            <input type="text" id="resName" placeholder="Full name" class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Resident Type <span class="text-red-400">*</span></label>
+            <input type="text" id="resType" placeholder="e.g. New Tenant" class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Contact <span class="text-red-400">*</span></label>
+            <input type="tel" id="resContact" placeholder="+63 900 000 0000" class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Unit Type &amp; No. <span class="text-red-400">*</span></label>
+            <input type="text" id="resUnit" placeholder="e.g. Studio A — 302" class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Email Address <span class="text-red-400">*</span></label>
+            <input type="email" id="resEmail" placeholder="you@example.com" class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all">
+          </div>
+        </div>
+      </section>
+
+      <div class="border-t border-slate-100"></div>
+
+      <!-- ── RESERVATION DETAILS ────────────────────────── -->
+      <section>
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-1.5 h-5 bg-slate-900 rounded-full"></div>
+          <h2 class="font-bold text-slate-900 text-sm uppercase tracking-wide">Reservation Details</h2>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Reservation Type <span class="text-red-400">*</span></label>
+            <select id="resReservationType" class="zep-select w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 cursor-pointer transition-all appearance-none" style="background-image:url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'14\' height=\'14\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'2\'%3E%3Cpath d=\'m6 9 6 6 6-6\'/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;">
+              <option value="" disabled selected>Select reservation type</option>
+              <option value="new-lease">New Lease</option>
+              <option value="renewal">Lease Renewal</option>
+              <option value="transfer">Unit Transfer</option>
+              <option value="short-term">Short-Term Stay</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Lease / Duration <span class="text-red-400">*</span></label>
+              <div class="relative">
+                <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <input type="date" id="resLease" class="zep-input w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Move-in Date <span class="text-red-400">*</span></label>
+              <div class="relative">
+                <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <input type="date" id="resMoveIn" class="zep-input w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="border-t border-slate-100"></div>
+
+      <!-- ── PAYMENT DETAILS ────────────────────────────── -->
+      <section>
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-1.5 h-5 bg-slate-900 rounded-full"></div>
+          <h2 class="font-bold text-slate-900 text-sm uppercase tracking-wide">Payment Details</h2>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Amount <span class="text-red-400">*</span></label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500 pointer-events-none select-none">₱</span>
+              <input type="number" id="resAmount" placeholder="0.00" min="0" step="0.01" class="zep-input w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all">
+            </div>
+          </div>
+
+          <!-- Payment Method / QR -->
+          <div class="bg-slate-50 rounded-2xl border border-slate-200 p-5">
+            <div class="flex items-start gap-4">
+              <!-- QR placeholder -->
+              <div class="w-20 h-20 shrink-0 bg-white border-2 border-slate-300 rounded-xl flex items-center justify-center overflow-hidden">
+                <img src="../images/qr-code.png" alt="QR Code" class="w-full h-full object-contain"
+                  onerror="this.outerHTML='<svg class=\'w-14 h-14 text-slate-300\' viewBox=\'0 0 80 80\' fill=\'currentColor\'><rect x=\'10\' y=\'10\' width=\'22\' height=\'22\' rx=\'2\'/><rect x=\'48\' y=\'10\' width=\'22\' height=\'22\' rx=\'2\'/><rect x=\'10\' y=\'48\' width=\'22\' height=\'22\' rx=\'2\'/><rect x=\'14\' y=\'14\' width=\'14\' height=\'14\' rx=\'1\' fill=\'white\'/><rect x=\'52\' y=\'14\' width=\'14\' height=\'14\' rx=\'1\' fill=\'white\'/><rect x=\'14\' y=\'52\' width=\'14\' height=\'14\' rx=\'1\' fill=\'white\'/><rect x=\'48\' y=\'48\' width=\'6\' height=\'6\'/><rect x=\'58\' y=\'48\' width=\'6\' height=\'6\'/><rect x=\'64\' y=\'54\' width=\'6\' height=\'6\'/><rect x=\'48\' y=\'58\' width=\'6\' height=\'6\'/><rect x=\'36\' y=\'10\' width=\'6\' height=\'6\'/><rect x=\'36\' y=\'22\' width=\'6\' height=\'6\'/><rect x=\'36\' y=\'34\' width=\'6\' height=\'6\'/><rect x=\'10\' y=\'36\' width=\'6\' height=\'6\'/><rect x=\'22\' y=\'36\' width=\'6\' height=\'6\'/><rect x=\'10\' y=\'36\' width=\'6\' height=\'6\'/></svg>'">
+              </div>
+              <div>
+                <p class="font-bold text-slate-900 text-sm mb-1">Payment Method</p>
+                <p class="text-xs text-slate-500 leading-relaxed">Payment is accepted via QR only.<br>Scan the QR code using your preferred e-wallet or banking app to complete your payment.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upload Proof -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Upload Proof of Payment <span class="text-red-400">*</span></label>
+            <label for="proofUpload" class="upload-zone w-full flex flex-col items-center justify-center gap-2 rounded-2xl py-8 cursor-pointer transition-all">
+              <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+              <div class="text-center">
+                <p class="text-sm font-semibold text-slate-700">Click to upload or drag &amp; drop</p>
+                <p class="text-xs text-slate-400 mt-0.5">PNG, JPG, PDF up to 10MB</p>
+              </div>
+              <span id="uploadFileName" class="text-xs text-emerald-600 font-semibold hidden"></span>
+              <input type="file" id="proofUpload" accept=".png,.jpg,.jpeg,.pdf" class="hidden" onchange="handleUpload(this)">
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <div class="border-t border-slate-100"></div>
+
+      <!-- ── AGREEMENT + SUBMIT ──────────────────────────── -->
+      <section>
+        <div class="flex items-start gap-3 mb-6">
+          <input type="checkbox" id="agreeCheck" class="mt-0.5 w-4 h-4 rounded border-slate-300 accent-slate-900 cursor-pointer">
+          <label for="agreeCheck" class="text-sm text-slate-600 cursor-pointer leading-relaxed">
+            I agree to the <a href="#" class="text-slate-900 font-semibold underline hover:no-underline">Terms and Conditions</a> and <a href="#" class="text-slate-900 font-semibold underline hover:no-underline">Privacy Policy</a> of Zeppelin Suites. I confirm that all information provided is accurate and complete.
+          </label>
+        </div>
+        <div class="flex items-center justify-between gap-4">
+          <p class="text-xs text-slate-400">Reservation ID: <span class="font-semibold text-slate-600" style="font-family:'DM Mono',monospace">#101</span></p>
+          <button onclick="submitForm()" id="submitBtn" class="btn-press bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold px-8 py-3 rounded-xl tracking-widest transition-all active:scale-95">SUBMIT</button>
+        </div>
+      </section>
+
+    </div><!-- /formBody -->
+
+    <!-- Expired overlay (hidden by default) -->
+    <div id="expiredOverlay" class="hidden p-8 text-center">
+      <div class="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <p class="text-lg font-bold text-slate-900 mb-2">Reservation Link Expired</p>
+      <p class="text-sm text-slate-500 mb-6">This reservation link is no longer valid. Please submit a new inquiry to get a fresh reservation link.</p>
+      <a href="../generalViewPages/contact.html" class="btn-press inline-block bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold px-8 py-3 rounded-xl tracking-wide transition-all active:scale-95">Submit New Inquiry</a>
+    </div>
+
+    <!-- Confirmed overlay (hidden by default) -->
+    <div id="confirmedOverlay" class="hidden p-8 text-center">
+      <div class="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <p class="text-lg font-bold text-slate-900 mb-2">Reservation Confirmed!</p>
+      <p class="text-sm text-slate-500 mb-2">Reservation <span class="font-semibold text-slate-700" style="font-family:'DM Mono',monospace">#101</span> has been successfully submitted.</p>
+      <p class="text-xs text-slate-400">Our team will contact you within 24 hours to finalize your move-in details.</p>
+    </div>
+
+  </div><!-- /form card -->
+
+</div><!-- /max-w-lg -->
+
+<script>
+// ======= Configuration (from original expirationwebform.html) =======
+const expirationSeconds = 30;
+let reservationStatus = 'pending';
+const reservationId = 101;
+
+const createdAt = new Date().getTime();
+const expiresAt = createdAt + expirationSeconds * 1000;
+
+const circumference = 2 * Math.PI * 16; // r=16 → ~100.5
+
+function updateStatus() {
+  const now = new Date().getTime();
+  const banner = document.getElementById('statusBanner');
+  const title = document.getElementById('statusTitle');
+  const msg = document.getElementById('statusMsg');
+  const countdown = document.getElementById('statusCountdown');
+  const ring = document.getElementById('ringProgress');
+  const ringLabel = document.getElementById('ringLabel');
+  const formBody = document.getElementById('formBody');
+  const expiredOverlay = document.getElementById('expiredOverlay');
+  const confirmedOverlay = document.getElementById('confirmedOverlay');
+  const submitBtn = document.getElementById('submitBtn');
+
+  if (reservationStatus === 'confirmed') {
+    // Confirmed state
+    banner.className = 'status-banner rounded-2xl border px-5 py-4 flex items-start gap-4 bg-emerald-50 border-emerald-200';
+    document.getElementById('countdownRing').innerHTML = '<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" style="color:#10b981"/></svg>';
+    title.textContent = 'Reservation #' + reservationId + ' Confirmed!';
+    title.className = 'font-bold text-sm text-emerald-800';
+    msg.textContent = 'Your reservation has been successfully submitted.';
+    msg.className = 'text-xs mt-0.5 text-emerald-600';
+    countdown.textContent = '';
+    formBody.classList.add('hidden');
+    expiredOverlay.classList.add('hidden');
+    confirmedOverlay.classList.remove('hidden');
+    return;
+  }
+
+  if (now > expiresAt) {
+    reservationStatus = 'expired';
+    banner.className = 'status-banner rounded-2xl border px-5 py-4 flex items-start gap-4 bg-red-50 border-red-200';
+    document.getElementById('countdownRing').innerHTML = '<svg class="w-10 h-10" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+    title.textContent = 'Reservation Link Expired';
+    title.className = 'font-bold text-sm text-red-800';
+    msg.textContent = 'This reservation link has expired. Please submit a new inquiry.';
+    msg.className = 'text-xs mt-0.5 text-red-600';
+    countdown.textContent = '';
+    formBody.classList.add('hidden');
+    expiredOverlay.classList.remove('hidden');
+    confirmedOverlay.classList.add('hidden');
+    if (submitBtn) submitBtn.disabled = true;
+    return;
+  }
+
+  // Pending state
+  const remaining = Math.ceil((expiresAt - now) / 1000);
+  const fraction = remaining / expirationSeconds;
+  const offset = circumference * (1 - fraction);
+
+  banner.className = 'status-banner rounded-2xl border px-5 py-4 flex items-start gap-4 bg-white border-slate-200 shadow-sm';
+  title.textContent = 'Reservation Pending';
+  title.className = 'font-bold text-sm text-slate-900';
+  msg.textContent = 'Complete the form and submit before the timer expires.';
+  msg.className = 'text-xs mt-0.5 text-slate-500';
+  countdown.textContent = `Time remaining: ${remaining} second${remaining !== 1 ? 's' : ''}`;
+  countdown.className = 'text-xs font-semibold mt-1 ' + (remaining <= 10 ? 'text-red-500' : 'text-slate-600');
+
+  // Update ring
+  if (ring) {
+    ring.style.strokeDashoffset = offset;
+    ring.setAttribute('stroke', remaining <= 10 ? '#ef4444' : '#0f172a');
+  }
+  if (ringLabel) {
+    ringLabel.textContent = remaining;
+    ringLabel.className = `absolute inset-0 flex items-center justify-center text-xs font-bold ${remaining <= 10 ? 'text-red-500' : 'text-slate-800'}`;
+  }
+}
+
+function submitForm() {
+  const now = new Date().getTime();
+
+  if (now > expiresAt || reservationStatus === 'expired') {
+    reservationStatus = 'expired';
+    updateStatus();
+    return;
+  }
+
+  // Basic validation
+  const name = document.getElementById('resName').value.trim();
+  const email = document.getElementById('resEmail').value.trim();
+  const agree = document.getElementById('agreeCheck').checked;
+
+  if (!name || !email) {
+    // Highlight empty fields
+    if (!name) document.getElementById('resName').style.borderColor = '#ef4444';
+    if (!email) document.getElementById('resEmail').style.borderColor = '#ef4444';
+    return;
+  }
+
+  if (!agree) {
+    document.getElementById('agreeCheck').style.outline = '2px solid #ef4444';
+    return;
+  }
+
+  reservationStatus = 'confirmed';
+  updateStatus();
+}
+
+function handleUpload(input) {
+  const label = document.getElementById('uploadFileName');
+  if (input.files && input.files[0]) {
+    label.textContent = '✓ ' + input.files[0].name;
+    label.classList.remove('hidden');
+  }
+}
+
+// Reset border color on input
+document.querySelectorAll('.zep-input').forEach(el => {
+  el.addEventListener('input', () => { el.style.borderColor = ''; });
+});
+
+setInterval(updateStatus, 1000);
+updateStatus();
+</script>
+</body>
+</html>
