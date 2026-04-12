@@ -80,7 +80,11 @@
   <div class="flex gap-8 border-b border-zinc-200 mb-10 overflow-x-auto">
     <button onclick="switchTab('reserving')" id="tab-reserving" class="tab-btn active pb-3 text-sm font-bold uppercase tracking-wide text-zinc-900 whitespace-nowrap border-b-2 border-zinc-900">Reserving a Unit</button>
     <button onclick="switchTab('payment')" id="tab-payment" class="tab-btn pb-3 text-sm font-bold uppercase tracking-wide text-zinc-400 hover:text-zinc-700 whitespace-nowrap border-b-2 border-transparent">Payment</button>
+    <button onclick="switchTab('attorney')" id="tab-attorney" class="tab-btn pb-3 text-sm font-bold uppercase tracking-wide text-zinc-400 hover:text-zinc-700 whitespace-nowrap border-b-2 border-transparent">Power of Attorney</button>
     <button onclick="switchTab('association')" id="tab-association" class="tab-btn pb-3 text-sm font-bold uppercase tracking-wide text-zinc-400 hover:text-zinc-700 whitespace-nowrap border-b-2 border-transparent">Association Due</button>
+    <button onclick="switchTab('homeowner')" id="tab-homeowner" class="tab-btn pb-3 text-sm font-bold uppercase tracking-wide text-zinc-400 hover:text-zinc-700 whitespace-nowrap border-b-2 border-transparent">Homeowner Rights and Responsibilities</button>
+    <button onclick="switchTab('parking')" id="tab-parking" class="tab-btn pb-3 text-sm font-bold uppercase tracking-wide text-zinc-400 hover:text-zinc-700 whitespace-nowrap border-b-2 border-transparent">Parking</button>
+    <button onclick="switchTab('pets')" id="tab-pets" class="tab-btn pb-3 text-sm font-bold uppercase tracking-wide text-zinc-400 hover:text-zinc-700 whitespace-nowrap border-b-2 border-transparent">Pets</button>
   </div>
 
   <!-- RESERVING -->
@@ -91,25 +95,24 @@
         <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
       </button>
       <div class="faq-answer open bg-white px-5 py-4">
-        <p class="text-zinc-600 text-sm leading-relaxed">To reserve a unit, you may contact our leasing team directly through the Contact page or visit our office during business hours. A reservation fee is required to secure your chosen unit, and our team will guide you through the necessary documentation.</p>
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">A condominium unit may be reserved for thirty days by presenting a Reservation Fee or PHP 100,000 per unit, and the following documents:</p>
+        <ul class="space-y-2 mb-4">
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Photocopy of two valid IDs (i.e. passport, driver’s license)</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Tax Identification Number (TIN)</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Reservation Agreement signed by buyer</li>
+        </ul>
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">Please submit the fee and the specified documents within thirty days; otherwise your reservation may be cancelled and the fee may be forfeited. 
+          In case you have problems acquiring the documents within the specified time or if you need assistance and clarification, please contact our Sales Department and we will be happy to help you.</p>
+        <a class="text-sm text-amber-600 hover:text-amber-500" href="mailto:sales@zeppelinsuites.com">sales@zeppelinsuites.com</a>
       </div>
     </div>
     <div class="border border-zinc-200 rounded-xl overflow-hidden">
       <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
-        What documents are required for reservation?
+        What is a Reservation Agreement?
         <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
       </button>
       <div class="faq-answer bg-white px-5">
-        <p class="text-zinc-600 text-sm leading-relaxed">You will need to submit a valid government-issued ID, proof of income or employment, a completed reservation form, and the required reservation fee. Additional documents may be requested depending on your specific situation.</p>
-      </div>
-    </div>
-    <div class="border border-zinc-200 rounded-xl overflow-hidden">
-      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
-        Can I schedule a unit viewing before reserving?
-        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-      </button>
-      <div class="faq-answer bg-white px-5">
-        <p class="text-zinc-600 text-sm leading-relaxed">Yes, we encourage prospective residents to schedule a unit viewing. You can do so by filling out the inquiry form on our Contact page or by calling our leasing office. Virtual tours are also available for your convenience.</p>
+        <p class="text-zinc-600 text-sm leading-relaxed">A Reservation Agreement is a document, which formally expresses the interest of the buyer in purchasing a unit. Its main purpose is for the unit to be set-aside for the client for a certain period of time (in this case, 30 days).</p>
       </div>
     </div>
     <div class="border border-zinc-200 rounded-xl overflow-hidden">
@@ -118,7 +121,7 @@
         <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
       </button>
       <div class="faq-answer bg-white px-5">
-        <p class="text-zinc-600 text-sm leading-relaxed">The reservation fee is generally non-refundable once processed. However, it is applied toward your first month's rent upon move-in. Please review our terms and conditions or speak with our team for specific scenarios.</p>
+        <p class="text-zinc-600 text-sm leading-relaxed">As stipulated in the Reservation Agreement, the Reservation Fee is non-refundable.</p>
       </div>
     </div>
   </div>
@@ -127,29 +130,84 @@
   <div id="panel-payment" class="space-y-3 hidden">
     <div class="border border-zinc-200 rounded-xl overflow-hidden">
       <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
-        What payment methods are accepted?
+        What kinds of payment are accepted?
         <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
       </button>
       <div class="faq-answer open bg-white px-5 py-4">
-        <p class="text-zinc-600 text-sm leading-relaxed">We accept bank transfers, post-dated checks, credit/debit cards, and select digital payment platforms. Please contact our billing department for a complete list of accepted payment channels and instructions.</p>
+        <p class="text-zinc-600 text-sm leading-relaxed">The down payment, which is minimum of 35% of the contract price, can be paid in cash, personal check or a manager’s check.</p>
       </div>
     </div>
     <div class="border border-zinc-200 rounded-xl overflow-hidden">
       <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
-        When is the monthly rent due?
+        What is my payment schedule? What kinds of Financing are available to me?
         <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
       </button>
       <div class="faq-answer bg-white px-5">
-        <p class="text-zinc-600 text-sm leading-relaxed">Monthly rent is due on the 1st of each month. A grace period of 5 days is provided. Late payments are subject to a penalty charge as outlined in your lease agreement.</p>
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">As specified in the buyer’s Reservation Agreement and the Contract to Sell, the full or partial minimum down payment of thirty five percent (35%), should be paid no later than thirty days from the date of reservation. We only have In-house Financing payment to cater and complete your full payment.</p>
+        <p class="text-zinc-600 text-sm leading-relaxed">Upon full payment of the unit, Zeppelin Suites will commence the transfer of ownership of the unit to the buyer. Should you wish to opt for Zeppelin Suites to process the transfer, we shall be requiring your payment of a Transfer Fee, which will be used to formally reflect in the Condominium Certificate of Title your name as the legal owner of the property.</p>
       </div>
     </div>
     <div class="border border-zinc-200 rounded-xl overflow-hidden">
       <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
-        Are there any additional fees beyond rent?
+        What shall I do if I want to change my payment terms or my condominium unit?
         <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
       </button>
       <div class="faq-answer bg-white px-5">
-        <p class="text-zinc-600 text-sm leading-relaxed">In addition to monthly rent, residents are responsible for utility charges (electricity, water), monthly association dues, and parking fees if applicable. Internet and cable services may be included in select packages.</p>
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">Zeppelin Suites charges a Restructuring Fee of PHP 10,000.00 per unit for request of change of term or change of condominium unit, except for the following case:</p>
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">Upgrading to a larger unit within the same project</p>
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">Change of term from In-House Financing to Bank within one year from the payment of the reservation fee.</p>
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">If the request to change the payment term was made within the 30 day Reservation Period and the buyer has not yet signed the Reservation Agreement</p>
+        <p class="text-zinc-600 text-sm leading-relaxed"></p>
+      </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        What kinds of discounts are available?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed">For Cash buyers, the discounts for condominium units are Outright Cash: 5% Discount</p>
+      </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        Can I refund my down payment?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed">As a general rule, should the buyer decide to back-out of the transaction, the down payment will be forfeited in favor of Zeppelin Suites and is therefore non-refundable.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POWER OF ATTORNEY -->
+  <div id="panel-attorney" class="space-y-3 hidden">
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        If I am unable to personally transact with Zeppelin Suites because I am out of the country what should I do?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer open bg-white px-5 py-4">
+        <p class="text-zinc-600 text-sm leading-relaxed">In case you are unable to transact with Zeppelin Suites, a duly notarized Special Power of Attorney (SPA) is needed in appointing a person to represent you in all dealings with DMCI Homes. 
+          In case you are outside the Philippines, an SPA notarized at the Philippine Embassy of the country of your residence is a legal document that is recognized by the Philippines and the country that you are at. 
+          Properly executed, it allows the appointed person to represent, act and transact on behalf of the unit owner to the extent stipulated in the SPA.</p>
+      </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        Can a foreigner purchase a Zeppelin Suites unit?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">As a general rule, foreigners can only purchase condominium units and not houses and lots. 
+          However, if the foreigner was born in the Philippines or if the foreigner is part owner of a company whose majority share is owned by Filipinos, then they can purchase a house-and-lot.</p>
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">The additional documents required to complete the purchase are:</p>
+        <ul class="space-y-2 mb-4">
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Passport</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Alien Certificate of Registration</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Tax Identification Number (TIN#)</li>
+        </ul>
+        <p class="text-zinc-600 text-sm leading-relaxed">If the buyer has no Tax Identification Number, Zeppelin Suites will apply the TIN number on their behalf for transferring of the title.</p>
       </div>
     </div>
   </div>
@@ -158,29 +216,164 @@
   <div id="panel-association" class="space-y-3 hidden">
     <div class="border border-zinc-200 rounded-xl overflow-hidden">
       <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
-        What is the association due?
+        What expenses are included in the Association Dues and assessments billed by the Condominium Corporation?
         <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
       </button>
       <div class="faq-answer open bg-white px-5 py-4">
-        <p class="text-zinc-600 text-sm leading-relaxed">The association due is a monthly fee collected from all residents to fund the maintenance, operation, and improvement of shared facilities and common areas within Zeppelin Suites. This includes the gym, pool, lobby, and landscaping.</p>
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">Association Dues are collected monthly and they include the unit owner’s share of the following expenses:</p>
+        <ul class="space-y-2 mb-4">
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Salaries and wages for the employees of the Condominium</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Corporation, such as the Property Manager, security guards, property janitors, gardeners, etc.</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Utility expenses for the common areas</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Garbage Collection Fees</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Office Expenses of the Property Management Office</li>
+        </ul>
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">Periodically, Association Dues are also used to pay for the following additional expenses:</p>
+        <ul class="space-y-2 mb-4">
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Insurance expenses to cover the amenities and buildings in the project</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Real estate taxes on the common areas and facilities</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Major repairs and special maintenance of the buildings in the project, when necessary</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Permits and license fees paid to the government</li>
+        </ul>
       </div>
     </div>
     <div class="border border-zinc-200 rounded-xl overflow-hidden">
       <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
-        How much is the association due?
+        When do I start paying Association Dues?
         <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
       </button>
       <div class="faq-answer bg-white px-5">
-        <p class="text-zinc-600 text-sm leading-relaxed">The association due is calculated based on the floor area of your unit. Rates are approved annually during the homeowners' association meeting. Please contact our administration team for current rates.</p>
+        <p class="text-zinc-600 text-sm leading-relaxed">Once the unit has been turned-over, the owner/tenant will be obliged to pay the association dues, whether the unit is occupied or not. 
+          (For example, if a unit has been turned over in January but the tenant does not move-in until February, the tenant is still obliged to pay the Association Dues for January.)</p>
       </div>
     </div>
     <div class="border border-zinc-200 rounded-xl overflow-hidden">
       <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
-        What happens if I don't pay the association due?
+        What will happen if I fail to pay my Association Dues on time?
         <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
       </button>
       <div class="faq-answer bg-white px-5">
-        <p class="text-zinc-600 text-sm leading-relaxed">Non-payment of association dues may result in restricted access to building amenities, late fees, and in severe cases, legal action. We encourage residents to communicate with our team if they are experiencing financial difficulties.</p>
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">The payment of Association Dues is the responsibility of the unit owner. 
+          Failure to make the payment on time will hamper the effectiveness and efficiency of the Property Management Office. 
+          This will, in turn, result in the deterioration of the project development in general, lowering the value of the condominium units in the property.</p>
+        <p class="text-zinc-600 text-sm leading-relaxed">Therefore, for every delayed payment or nonpayment of Association Dues, 
+          a penalty fee will be added to the overdue amount for the next billing cycle. This penalty fee varies according to the rules and regulations of each specific condominium complex.</p>
+        </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        How much are the monthly Association Dues for each project/complex?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">Please note that monthly dues are computed based on the total area (in square meters) of the unit you are purchasing, and that they are subject to change without notice from the Property Management Office. 
+          The rate is PHP 55.00 per sq. meter per month.</p>
+        <p class="text-zinc-600 text-sm leading-relaxed">For more updated rates, please contact the Property Management Office of the specific project you wish to inquire after.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOMEOWNER RIGHTS AND RESPONSIBILITIES -->
+  <div id="panel-homeowner" class="space-y-3 hidden">
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        What are my responsibilities as a unit owner?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer open bg-white px-5 py-4">
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">According to Philippines law, upon acceptance of the unit, you automatically become a member of the condominium corporation. As such, the buyer is responsible for the following:</p>
+        <ul class="space-y-2">
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Association Dues</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>A one-time Membership Fee</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Insurance Premium for the unit</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>The buyer’s share of the Insurance Premium for common areas and facilities</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Real Property Tax</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Other assessments deemed necessary by the Board of the Condominium such as repairs</li>
+        </ul>
+      </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        Do I have to pay Real Property Tax?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed">As stipulated in the Contract to Sell (9.2), the purchaser shall immediately be responsible in paying the Real Property Tax from the date whichever is earlier of the actual acceptance or deemed acceptance of the buyer.</p>
+      </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        What are my rights as a unit owner?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed">As a unit owner you have the right to sell, transfer, lease or otherwise dispose of the condominium unit. You can mortgage, pledge or encumber the unit and have it appraised. 
+          You also have stockholder’s rights in the Condominium Corporation and can participate in the operation and decision-making processes of the condominium corporation.</p>
+      </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        Can I use my unit for commercial activities?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed">Zeppelin Suites units are registered as a residential development. Therefore no commercial activities are allowed within the condominium units.</p>
+      </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        If I have concerns as a unit owner, to whom shall I address them?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed">The most appropriate place to air your concerns is the local Property Management Office. 
+          Depending on the nature of your concerns, the PMO will either address them directly or refer you to the concerned groups such as Marketing, Sales, Construction or Treasury.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PARKING -->
+  <div id="panel-parking" class="space-y-3 hidden">
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        How do I get my own parking slot?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer open bg-white px-5 py-4">
+        <p class="text-zinc-600 text-sm leading-relaxed">We don’t have available Parking slots for sale. Although there is a limited amount of parking slots in each development, the parking slots are available on a “first-come, first-served” basis.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PETS -->
+  <div id="panel-pets" class="space-y-3 hidden">
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        Can I keep pets in my units?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer open bg-white px-5 py-4">
+        <p class="text-zinc-600 text-sm leading-relaxed">As a general rule, pets are not allowed in condominium projects. 
+          It is usually not allowed because of noise disturbances, or the hygienic dangers of keeping animals in confined spaces. 
+          However, the Property Management Office of each development decides on the rules and regulations with regards to the keeping of pets; 
+          therefore, it is important to consult with your Property Manager first before making any decisions.</p>
+      </div>
+    </div>
+    <div class="border border-zinc-200 rounded-xl overflow-hidden">
+      <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between px-5 py-4 bg-zinc-900 text-white text-left font-semibold text-sm">
+        Can a foreigner purchase a Zeppelin Suites unit?
+        <svg class="faq-chevron w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="faq-answer bg-white px-5">
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">As a general rule, foreigners can only purchase condominium units and not houses and lots. 
+          However, if the foreigner was born in the Philippines or if the foreigner is part owner of a company whose majority share is owned by Filipinos, then they can purchase a house-and-lot.</p>
+        <p class="text-zinc-600 text-sm leading-relaxed mb-4">The additional documents required to complete the purchase are:</p>
+        <ul class="space-y-2 mb-4">
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Passport</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Alien Certificate of Registration</li>
+          <li class="flex items-center gap-2 text-sm text-zinc-600 ml-4"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Tax Identification Number (TIN#)</li>
+        </ul>
+        <p class="text-zinc-600 text-sm leading-relaxed">If the buyer has no Tax Identification Number, Zeppelin Suites will apply the TIN number on their behalf for transferring of the title.</p>
       </div>
     </div>
   </div>
@@ -236,7 +429,7 @@
     chevron.classList.toggle('rotated', !isOpen);
   }
   function switchTab(tab) {
-    const panels = ['reserving','payment','association'];
+    const panels = ['reserving','payment','attorney','association','homeowner','parking','pets'];
     panels.forEach(p => {
       document.getElementById('panel-' + p).classList.add('hidden');
       const btn = document.getElementById('tab-' + p);
