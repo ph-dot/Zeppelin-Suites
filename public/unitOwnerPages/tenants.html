@@ -31,10 +31,7 @@
 .collapse-icon { transition:transform 0.3s ease; }
 .profile-dropdown { opacity:0; visibility:hidden; transform:translateY(-6px); transition:all 0.2s cubic-bezier(0.4,0,0.2,1); }
 .profile-dropdown.open { opacity:1; visibility:visible; transform:translateY(0); }
-.data-row { transition:background 0.15s ease; }
-.data-row:hover { background:#f1f5f9; }
-.reveal-btn { opacity:0; transform:translateX(6px); transition:opacity 0.18s ease,transform 0.18s ease; pointer-events:none; }
-.data-row:hover .reveal-btn { opacity:1; transform:translateX(0); pointer-events:auto; }
+/* row hover handled by Tailwind group/group-hover */
 .modal-backdrop { opacity:0; visibility:hidden; transition:opacity 0.22s ease,visibility 0.22s ease; }
 .modal-backdrop.open { opacity:1; visibility:visible; }
 .modal-card { transform:translateY(12px) scale(0.98); transition:transform 0.22s cubic-bezier(0.4,0,0.2,1); }
@@ -129,45 +126,39 @@
       <h1 class="text-xl font-bold text-slate-900">MY Tenants</h1>
 
       <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div class="bg-slate-900 px-5 py-3.5">
-          <div class="grid grid-cols-6 gap-4">
-            <span class="text-xs font-semibold text-white uppercase tracking-wide">Tenant Name</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide">Unit No.</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide">Move-in</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide">Lease-End</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide">Contact</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide">Status / Action</span>
-          </div>
+        
         </div>
         <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead class="sr-only"><tr><th>Name</th><th>Unit</th><th>Move-in</th><th>Lease-End</th><th>Contact</th><th>Status</th><th>Action</th></tr></thead>
-            <tbody class="divide-y divide-slate-50" id="tenantsBody">
-              <tr class="data-row cursor-pointer" onclick="openTenantModal({name:'John Doe',unit:'C505',type:'One Bedroom',moveIn:'Jan 1, 2026',leaseEnd:'Dec 31, 2026',contact:'09xx xxx xxxx',email:'john.doe@email.com',status:'Active'})">
-                <td class="px-5 py-3.5 font-semibold text-slate-800 whitespace-nowrap">John Doe</td>
-                <td class="px-4 py-3.5"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">C505</span></td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace">Jan 1, 2026</td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace">Dec 31, 2026</td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs" style="font-family:'DM Mono',monospace">09xx xxx xxxx</td>
-                <td class="px-4 py-3.5">
-                  <div class="flex items-center gap-2">
-                    <span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-100">Active</span>
-                    <button class="reveal-btn btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full active:scale-95 transition-all" onclick="event.stopPropagation();openTenantModal({name:'John Doe',unit:'C505',type:'One Bedroom',moveIn:'Jan 1, 2026',leaseEnd:'Dec 31, 2026',contact:'09xx xxx xxxx',email:'john.doe@email.com',status:'Active'})">View</button>
-                  </div>
-                </td>
+                    <table class="w-full text-sm" id="tenantsTable">
+            <thead>
+              <tr class="border-b border-slate-100 bg-slate-50/60">
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Tenant Name</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Unit No.</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Move-in</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Lease-End</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Contact</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Status</th>
+                <th class="px-4 py-3.5 w-20"></th>
               </tr>
-              <tr class="data-row cursor-pointer" onclick="openTenantModal({name:'Maria Santos',unit:'A104',type:'Two Bedroom',moveIn:'Feb 1, 2026',leaseEnd:'Jan 31, 2027',contact:'09yy yyy yyyy',email:'maria.s@email.com',status:'Reserved'})">
-                <td class="px-5 py-3.5 font-semibold text-slate-800 whitespace-nowrap">Maria Santos</td>
-                <td class="px-4 py-3.5"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">A104</span></td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace">Feb 1, 2026</td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace">Jan 31, 2027</td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs" style="font-family:'DM Mono',monospace">09yy yyy yyyy</td>
-                <td class="px-4 py-3.5">
-                  <div class="flex items-center gap-2">
-                    <span class="bg-yellow-50 text-yellow-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-yellow-100">Reserved</span>
-                    <button class="reveal-btn btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full active:scale-95 transition-all" onclick="event.stopPropagation();openTenantModal({name:'Maria Santos',unit:'A104',type:'Two Bedroom',moveIn:'Feb 1, 2026',leaseEnd:'Jan 31, 2027',contact:'09yy yyy yyyy',email:'maria.s@email.com',status:'Reserved'})">View</button>
-                  </div>
-                </td>
+            </thead>
+            <tbody id="tenantsBody">
+              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openTenantModal({name:'John Doe',unit:'C505',type:'One Bedroom',moveIn:'Jan 1, 2026',leaseEnd:'Dec 31, 2026',contact:'09xx xxx xxxx',email:'john.doe@email.com',status:'Active'})">
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap">John Doe</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">C505</span></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Jan 1, 2026</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Dec 31, 2026</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">09xx xxx xxxx</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-100">Active</span></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openTenantModal({name:'John Doe',unit:'C505',type:'One Bedroom',moveIn:'Jan 1, 2026',leaseEnd:'Dec 31, 2026',contact:'09xx xxx xxxx',email:'john.doe@email.com',status:'Active'})">View</button></td>
+              </tr>
+              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openTenantModal({name:'Maria Santos',unit:'A104',type:'Two Bedroom',moveIn:'Feb 1, 2026',leaseEnd:'Jan 31, 2027',contact:'09yy yyy yyyy',email:'maria.s@email.com',status:'Reserved'})">
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap">Maria Santos</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">A104</span></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Feb 1, 2026</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Jan 31, 2027</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">09yy yyy yyyy</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-yellow-50 text-yellow-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-yellow-100">Reserved</span></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openTenantModal({name:'Maria Santos',unit:'A104',type:'Two Bedroom',moveIn:'Feb 1, 2026',leaseEnd:'Jan 31, 2027',contact:'09yy yyy yyyy',email:'maria.s@email.com',status:'Reserved'})">View</button></td>
               </tr>
             </tbody>
           </table>

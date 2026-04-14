@@ -123,53 +123,53 @@
       </div>
     </div>
   </header>
-
+ 
   <div class="main-scroll p-4 md:p-6 space-y-6">
     <div class="max-w-screen-xl mx-auto space-y-6">
       <h1 class="text-xl font-bold text-slate-900">Reservation Requests</h1>
-
+ 
       <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div class="bg-slate-900 px-5 py-3.5 overflow-x-auto">
-          <div class="flex items-center gap-4 min-w-[700px]">
-            <span class="text-xs font-semibold text-white uppercase tracking-wide w-24 shrink-0">Res #</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide flex-1">Full Name</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide w-28 shrink-0">Email</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide w-28 shrink-0">Contact</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide w-28 shrink-0">Res. Type</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide w-20 shrink-0">Res. Fee</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide w-24 shrink-0">Lease</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide w-24 shrink-0">Move-in</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide w-20 shrink-0">Status</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide w-16 shrink-0 text-right">Action</span>
-          </div>
         </div>
         <div class="overflow-x-auto">
-          <table class="w-full text-sm" style="min-width:900px">
-            <thead class="sr-only"><tr><th>Res#</th><th>Name</th><th>Email</th><th>Contact</th><th>Type</th><th>Fee</th><th>Lease</th><th>Movein</th><th>Status</th><th>Action</th></tr></thead>
-            <tbody class="divide-y divide-slate-50" id="resBody">
-              <tr class="data-row cursor-pointer" onclick="openResModal({num:'RES-001',name:'Carlos Reyes',email:'carlos.r@email.com',contact:'09aa aaa aaaa',type:'New Lease',fee:'₱5,000',lease:'12 months',moveIn:'Feb 1, 2026',unit:'B302',unitType:'Studio Type A',status:'Pending'})">
-                <td class="px-5 py-3.5 font-semibold text-slate-800 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">RES-001</td>
-                <td class="px-4 py-3.5 font-semibold text-slate-800 whitespace-nowrap">Carlos Reyes</td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs truncate max-w-[110px]">carlos.r@email.com</td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace">09aa aaa aaaa</td>
-                <td class="px-4 py-3.5"><span class="bg-purple-50 text-purple-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-purple-100">New Lease</span></td>
-                <td class="px-4 py-3.5 text-slate-700 text-sm whitespace-nowrap" style="font-family:'DM Mono',monospace">₱5,000</td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap">12 months</td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace">Feb 1, 2026</td>
-                <td class="px-4 py-3.5"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">Pending</span></td>
-                <td class="px-4 py-3.5 text-right"><button class="reveal-btn btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full active:scale-95 transition-all whitespace-nowrap" onclick="event.stopPropagation();openResModal({num:'RES-001',name:'Carlos Reyes',email:'carlos.r@email.com',contact:'09aa aaa aaaa',type:'New Lease',fee:'₱5,000',lease:'12 months',moveIn:'Feb 1, 2026',unit:'B302',unitType:'Studio Type A',status:'Pending'})">View</button></td>
+                    <table class="w-full text-sm" id="resTable">
+            <thead>
+              <tr class="border-b border-slate-100 bg-slate-50/60">
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Res #</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Full Name</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Email</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Contact</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Res. Type</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Res. Fee</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Lease</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Move-in</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Status</th>
+                <th class="px-4 py-3.5 w-20"></th>
               </tr>
-              <tr class="data-row cursor-pointer" onclick="openResModal({num:'RES-002',name:'Angela Cruz',email:'angela.c@email.com',contact:'09bb bbb bbbb',type:'Renewal',fee:'₱3,500',lease:'6 months',moveIn:'Mar 1, 2026',unit:'D701',unitType:'Studio Type B',status:'Under Review'})">
-                <td class="px-5 py-3.5 font-semibold text-slate-800 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">RES-002</td>
-                <td class="px-4 py-3.5 font-semibold text-slate-800 whitespace-nowrap">Angela Cruz</td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs truncate max-w-[110px]">angela.c@email.com</td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace">09bb bbb bbbb</td>
-                <td class="px-4 py-3.5"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">Renewal</span></td>
-                <td class="px-4 py-3.5 text-slate-700 text-sm whitespace-nowrap" style="font-family:'DM Mono',monospace">₱3,500</td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap">6 months</td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace">Mar 1, 2026</td>
-                <td class="px-4 py-3.5"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">Under Review</span></td>
-                <td class="px-4 py-3.5 text-right"><button class="reveal-btn btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full active:scale-95 transition-all whitespace-nowrap" onclick="event.stopPropagation();openResModal({num:'RES-002',name:'Angela Cruz',email:'angela.c@email.com',contact:'09bb bbb bbbb',type:'Renewal',fee:'₱3,500',lease:'6 months',moveIn:'Mar 1, 2026',unit:'D701',unitType:'Studio Type B',status:'Under Review'})">View</button></td>
+            </thead>
+            <tbody id="resBody">
+              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openResModal({num:'RES-001',name:'Carlos Reyes',email:'carlos.r@email.com',contact:'09aa aaa aaaa',type:'New Lease',fee:'₱5,000',lease:'12 months',moveIn:'Feb 1, 2026',unit:'B302',unitType:'Studio Type A',status:'Pending'})">
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">RES-001</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap">Carlos Reyes</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">carlos.r@email.com</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">09aa aaa aaaa</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-purple-50 text-purple-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-purple-100">New Lease</span></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">₱5,000</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">12 months</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Feb 1, 2026</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">Pending</span></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openResModal({num:'RES-001',name:'Carlos Reyes',email:'carlos.r@email.com',contact:'09aa aaa aaaa',type:'New Lease',fee:'₱5,000',lease:'12 months',moveIn:'Feb 1, 2026',unit:'B302',unitType:'Studio Type A',status:'Pending'})">View</button></td>
+              </tr>
+              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openResModal({num:'RES-002',name:'Angela Cruz',email:'angela.c@email.com',contact:'09bb bbb bbbb',type:'Renewal',fee:'₱3,500',lease:'6 months',moveIn:'Mar 1, 2026',unit:'D701',unitType:'Studio Type B',status:'Under Review'})">
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">RES-002</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap">Angela Cruz</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">angela.c@email.com</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">09bb bbb bbbb</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">Renewal</span></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">₱3,500</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">6 months</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Mar 1, 2026</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">Under Review</span></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openResModal({num:'RES-002',name:'Angela Cruz',email:'angela.c@email.com',contact:'09bb bbb bbbb',type:'Renewal',fee:'₱3,500',lease:'6 months',moveIn:'Mar 1, 2026',unit:'D701',unitType:'Studio Type B',status:'Under Review'})">View</button></td>
               </tr>
             </tbody>
           </table>

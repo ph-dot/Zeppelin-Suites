@@ -31,10 +31,7 @@
 .collapse-icon { transition:transform 0.3s ease; }
 .profile-dropdown { opacity:0; visibility:hidden; transform:translateY(-6px); transition:all 0.2s cubic-bezier(0.4,0,0.2,1); }
 .profile-dropdown.open { opacity:1; visibility:visible; transform:translateY(0); }
-.data-row { transition:background 0.15s ease; }
-.data-row:hover { background:#f1f5f9; }
-.reveal-btn { opacity:0; transform:translateX(6px); transition:opacity 0.18s ease,transform 0.18s ease; pointer-events:none; }
-.data-row:hover .reveal-btn { opacity:1; transform:translateX(0); pointer-events:auto; }
+/* row hover handled by Tailwind group/group-hover */
 .modal-backdrop { opacity:0; visibility:hidden; transition:opacity 0.22s ease,visibility 0.22s ease; }
 .modal-backdrop.open { opacity:1; visibility:visible; }
 .modal-card { transform:translateY(12px) scale(0.98); transition:transform 0.22s cubic-bezier(0.4,0,0.2,1); }
@@ -136,38 +133,37 @@
       </div>
 
       <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div class="bg-slate-900 px-5 py-3.5">
-          <div class="flex items-center gap-0">
-            <span class="text-xs font-semibold text-white uppercase tracking-wide w-24">Request ID</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide w-24">Unit No</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide flex-1">Tenant</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide flex-1">Issue</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide w-36">Date Submitted</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide w-24">Status</span>
-            <span class="text-xs font-semibold text-white uppercase tracking-wide w-20 text-right">Action</span>
-          </div>
-        </div>
         <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead class="sr-only"><tr><th>ID</th><th>Unit</th><th>Tenant</th><th>Issue</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
-            <tbody class="divide-y divide-slate-50" id="mainBody">
-              <tr class="data-row cursor-pointer" onclick="openViewModal({id:'MR-001',unit:'C505',tenant:'John Doe',issue:'Leaking faucet in bathroom',category:'Plumbing',date:'Jan 10, 2026 09:15',status:'Pending',desc:'The bathroom faucet has been dripping constantly for 3 days.'})">
-                <td class="px-5 py-3.5 font-semibold text-slate-800 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">MR-001</td>
-                <td class="px-4 py-3.5"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">C505</span></td>
-                <td class="px-4 py-3.5 text-slate-600 text-sm">John Doe</td>
-                <td class="px-4 py-3.5 text-slate-700 text-sm">Leaking faucet in bathroom</td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace">Jan 10, 2026 09:15</td>
-                <td class="px-4 py-3.5"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">Pending</span></td>
-                <td class="px-4 py-3.5 text-right"><button class="reveal-btn btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full active:scale-95 transition-all" onclick="event.stopPropagation();openViewModal({id:'MR-001',unit:'C505',tenant:'John Doe',issue:'Leaking faucet in bathroom',category:'Plumbing',date:'Jan 10, 2026 09:15',status:'Pending',desc:'The bathroom faucet has been dripping constantly for 3 days.'})">View</button></td>
+                    <table class="w-full text-sm" id="mainTable">
+            <thead>
+              <tr class="border-b border-slate-100 bg-slate-50/60">
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Request ID</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Unit No</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Tenant</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Issue</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Date Submitted</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Status</th>
+                <th class="px-4 py-3.5 w-20"></th>
               </tr>
-              <tr class="data-row cursor-pointer" onclick="openViewModal({id:'MR-002',unit:'A104',tenant:'Maria Santos',issue:'AC unit not cooling',category:'Fixture',date:'Jan 8, 2026 14:30',status:'In Progress',desc:'The air conditioning unit runs but does not cool the room.'})">
-                <td class="px-5 py-3.5 font-semibold text-slate-800 whitespace-nowrap text-xs" style="font-family:'DM Mono',monospace">MR-002</td>
-                <td class="px-4 py-3.5"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">A104</span></td>
-                <td class="px-4 py-3.5 text-slate-600 text-sm">Maria Santos</td>
-                <td class="px-4 py-3.5 text-slate-700 text-sm">AC unit not cooling</td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace">Jan 8, 2026 14:30</td>
-                <td class="px-4 py-3.5"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">In Progress</span></td>
-                <td class="px-4 py-3.5 text-right"><button class="reveal-btn btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full active:scale-95 transition-all" onclick="event.stopPropagation();openViewModal({id:'MR-002',unit:'A104',tenant:'Maria Santos',issue:'AC unit not cooling',category:'Fixture',date:'Jan 8, 2026 14:30',status:'In Progress',desc:'The air conditioning unit runs but does not cool the room.'})">View</button></td>
+            </thead>
+            <tbody id="mainBody">
+              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openViewModal({id:'MR-001',unit:'C505',tenant:'John Doe',issue:'Leaking faucet in bathroom',category:'Plumbing',date:'Jan 10, 2026 09:15',status:'Pending',desc:'The bathroom faucet has been dripping constantly for 3 days.'})">
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">MR-001</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">C505</span></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">John Doe</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">Leaking faucet in bathroom</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Jan 10, 2026 09:15</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">Pending</span></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openViewModal({id:'MR-001',unit:'C505',tenant:'John Doe',issue:'Leaking faucet in bathroom',category:'Plumbing',date:'Jan 10, 2026 09:15',status:'Pending',desc:'The bathroom faucet has been dripping constantly for 3 days.'})">View</button></td>
+              </tr>
+              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openViewModal({id:'MR-002',unit:'A104',tenant:'Maria Santos',issue:'AC unit not cooling',category:'Fixture',date:'Jan 8, 2026 14:30',status:'In Progress',desc:'The air conditioning unit runs but does not cool the room.'})">
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">MR-002</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">A104</span></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">Maria Santos</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">AC unit not cooling</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Jan 8, 2026 14:30</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">In Progress</span></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openViewModal({id:'MR-002',unit:'A104',tenant:'Maria Santos',issue:'AC unit not cooling',category:'Fixture',date:'Jan 8, 2026 14:30',status:'In Progress',desc:'The air conditioning unit runs but does not cool the room.'})">View</button></td>
               </tr>
             </tbody>
           </table>
