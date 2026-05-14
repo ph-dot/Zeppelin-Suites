@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeppelin Suites – Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],mono:['DM Mono','monospace']}}}}</script>
+<style>
+* { font-family: 'DM Sans', sans-serif; }
+
+/* ── Sidebar ───────────────────────────────────────────── */
+.sidebar {
+  width: 256px;
+  transition: width 0.3s cubic-bezier(0.4,0,0.2,1), transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+}
+.sidebar.collapsed { width: 68px; }
+@media (max-width: 767px) {
+  .sidebar { transform: translateX(-100%); position: fixed; z-index: 50; height: 100vh; width: 256px !important; }
+  .sidebar.open { transform: translateX(0); }
+}
+.main-wrapper { margin-left: 256px; transition: margin-left 0.3s cubic-bezier(0.4,0,0.2,1); }
+.main-wrapper.sidebar-collapsed { margin-left: 68px; }
+@media (max-width: 767px) { .main-wrapper { margin-left: 0 !important; } }
+.sidebar-logo { transition: opacity 0.2s ease, width 0.2s ease; }
+.sidebar.collapsed .sidebar-logo { opacity: 0; width: 0; overflow: hidden; pointer-events: none; }
+.overlay { display: none; pointer-events: none; }
+.overlay.show { display: block; pointer-events: auto; }
+
+/* ── Sidebar links ─────────────────────────────────────── */
+.sidebar-link { position: relative; transition: all 0.18s ease; white-space: nowrap; overflow: hidden; }
+.sidebar-link.active { background: #0f172a; color: #fff; }
+.sidebar-link.active .nav-icon { color: #60a5fa; }
+.sidebar-link:not(.active):hover { background: #eff6ff; color: #1d4ed8; }
+.sidebar-link:not(.active):hover .nav-icon { color: #3b82f6; }
+.sidebar.collapsed .nav-label,.sidebar.collapsed .nav-badge,
+.sidebar.collapsed .logo-text,.sidebar.collapsed .notice-section { display: none; }
+.sidebar.collapsed .sidebar-link { justify-content: center; padding-left:0; padding-right:0; }
+.sidebar.collapsed .collapse-icon { transform: rotate(180deg); }
+.sidebar.collapsed .sidebar-link:hover::after {
+  content: attr(data-tooltip);
+  position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%);
+  background: #0f172a; color: #fff; font-size: 12px; padding: 5px 10px;
+  border-radius: 8px; white-space: nowrap; z-index: 999;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18); pointer-events: none;
+}
+.nav-label,.logo-text { transition: opacity 0.2s ease; }
+.collapse-icon { transition: transform 0.3s ease; }
+
+/* ── Dropdowns ─────────────────────────────────────────── */
+.notice-panel { max-height:0; overflow:hidden; opacity:0; transition: max-height 0.3s ease, opacity 0.3s ease; }
+.notice-panel.open { max-height:120px; opacity:1; }
+.notice-chevron { transition: transform 0.3s ease; }
+.notice-chevron.rotated { transform: rotate(180deg); }
+.profile-dropdown { opacity:0; visibility:hidden; transform:translateY(-6px); transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
+.profile-dropdown.open { opacity:1; visibility:visible; transform:translateY(0); }
+
+/* ── Stat card hover ───────────────────────────────────── */
+.stat-card { transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease; cursor: pointer; }
+.stat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.10); border-color: #0f172a; }
+
+/* ── Chart card hover ──────────────────────────────────── */
+.chart-card { transition: box-shadow 0.22s ease, border-color 0.22s ease; }
+.chart-card:hover { box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
+
+/* ── Table rows ────────────────────────────────────────── */
+.tbl-row { transition: background 0.15s ease; }
+.tbl-row:hover { background: #f8fafc; }
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:#f1f5f9; }
+::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
+
+/* ── Buttons / inputs ──────────────────────────────────── */
+.btn-press { transition: all 0.15s ease; }
+.btn-press:active { transform: scale(0.95); }
+.zep-input:focus { outline:none; border-color:#0f172a; box-shadow:0 0 0 3px rgba(15,23,42,0.07); }
+.zep-select:focus { outline:none; border-color:#0f172a; box-shadow:0 0 0 3px rgba(15,23,42,0.07); }
+
+/* ── Glass header ──────────────────────────────────────── */
+.glass-header { background:rgba(255,255,255,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+
+/* ── Funnel bars ───────────────────────────────────────── */
+.funnel-bar { transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+
+/* ── Filter bar ────────────────────────────────────────── */
+.filter-bar { background: rgba(255,255,255,0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+
+/* ── Progress ring ─────────────────────────────────────── */
+.ring-track { stroke: #f1f5f9; }
+.ring-fill { transition: stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1); transform-origin: center; transform: rotate(-90deg); }
+
+/* ── Independent column scroll ─────────────────────────── */
+.content-area {
+  height: calc(100vh - 65px);
+  display: flex;
+  overflow: hidden;
+}
+.col-scroll {
+  overflow-y: auto;
+  height: 100%;
+}
+@media (max-width: 1023px) {
+  .content-area { display: block; height: auto; overflow: visible; }
+  .col-scroll { overflow-y: visible; height: auto; }
+  .mobile-scroll-wrap { overflow-y: auto; height: calc(100vh - 65px); }
+}
+
+/* ── Trend badges ──────────────────────────────────────── */
+.trend-up   { color: #10b981; }
+.trend-down { color: #ef4444; }
+.trend-neu  { color: #6b7280; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 overflow-hidden">
+
+<!-- Overlay -->
+<div class="overlay fixed inset-0 bg-transparent z-40" id="overlay" onclick="closeMobileSidebar()"></div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════════════════════════ -->
+<aside class="sidebar fixed left-0 top-0 h-full border-r border-slate-100/80 flex flex-col z-50 md:z-40 shadow-2xl md:shadow-none" id="sidebar">
+  <div class="px-4 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
+    <a href="../adminPages/homeAdmin.html" class="sidebar-logo shrink-0 flex items-center gap-2.5">
+      <!-- Logo wordmark fallback (image path kept consistent with project) -->
+      <div class="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center shrink-0">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <span class="logo-text font-bold text-slate-900 text-sm tracking-tight">Zeppelin Suites</span>
+    </a>
+    <button onclick="toggleCollapse()" class="hidden md:flex btn-press p-1.5 rounded-lg hover:bg-slate-100 transition-colors active:scale-95 shrink-0 ml-1">
+      <svg class="collapse-icon w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+    </button>
+  </div>
+
+  <nav class="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden">
+    <a href="../adminPages/homeAdmin.html" data-tooltip="Home" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      <span class="nav-label">Home</span>
+    </a>
+    <a href="../adminPages/inquiry.html" data-tooltip="Inquiry" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
+      <span class="nav-label">Inquiry</span>
+      <span class="nav-badge ml-auto bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center shrink-0" style="font-size:10px;font-family:'DM Mono',monospace;">3</span>
+    </a>
+    <a href="../adminPages/reservation.html" data-tooltip="Reservation" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      <span class="nav-label">Reservation</span>
+      <span class="nav-badge ml-auto bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center shrink-0" style="font-size:10px;font-family:'DM Mono',monospace;">3</span>
+    </a>
+    <a href="../adminPages/units.html" data-tooltip="Units" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V9a2 2 0 00-2-2h-3V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14m0 0H3m3 0h14m-7 0v-4h2v4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1m4 0h1M9 13h1m4 0h1"/></svg>
+      <span class="nav-label">Units</span>
+    </a>
+    <a href="../adminPages/roomsAdmin.html" data-tooltip="Rooms" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M7 6h10a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>
+      <span class="nav-label">Rooms</span>
+    </a>
+    <a href="../adminPages/bookingcalendar.php" data-tooltip="Booking Calendar" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      <span class="nav-label">Booking Calendar</span>
+    </a>
+    <a href="../adminPages/maintenance.html" data-tooltip="Maintenance" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span class="nav-label">Maintenance</span>
+    </a>
+    <a href="../adminPages/employees.html" data-tooltip="Employees" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span class="nav-label">Employees</span>
+    </a>
+    <!-- Analytics — active -->
+    <a href="../adminPages/analytics.html" data-tooltip="Analytics" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      <span class="nav-label">Analytics</span>
+    </a>
+    <a href="../adminPages/settingsAdmin.html" data-tooltip="Settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span class="nav-label">Settings</span>
+    </a>
+  </nav>
+
+  <!-- Notice section -->
+  <div class="notice-section px-2 py-4 border-t border-slate-100 shrink-0">
+    <button onclick="toggleNotice()" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition-all btn-press active:scale-95">
+      <span class="nav-label">Notice</span>
+      <svg class="notice-chevron w-3.5 h-3.5 text-slate-400 shrink-0" id="noticeChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+    <div class="notice-panel open px-2 pt-1 space-y-0.5" id="noticePanel">
+      <a href="#" class="flex items-center gap-2 py-1.5 px-3 text-xs text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span><span class="nav-label">Summer Vacation</span></a>
+      <a href="#" class="flex items-center gap-2 py-1.5 px-3 text-xs text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span><span class="nav-label">Employment Notice</span></a>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════════════════════════
+     MAIN WRAPPER
+══════════════════════════════════════════════════════════ -->
+<div class="main-wrapper h-screen flex flex-col" id="mainWrapper">
+
+  <!-- TOP BAR -->
+  <header class="glass-header border-b border-slate-100/80 px-4 md:px-6 py-3.5 flex items-center gap-4 shrink-0 z-30">
+    <button class="md:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95" onclick="openMobileSidebar()">
+      <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div class="relative flex-1 max-w-sm">
+      <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" placeholder="Search analytics..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
+    </div>
+    <div class="flex items-center gap-2 ml-auto">
+      <!-- Export button -->
+      <button class="btn-press hidden sm:flex items-center gap-2 text-sm font-semibold text-slate-600 border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2 rounded-full transition-all active:scale-95">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Export
+      </button>
+      <button class="relative p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95">
+        <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+      </button>
+      <div class="relative" id="profileWrapper">
+        <button onclick="toggleProfile()" class="flex items-center gap-2.5 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl px-3 py-1.5 transition-all btn-press active:scale-95">
+          <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0">A</div>
+          <div class="hidden sm:block text-left">
+            <p class="text-sm font-semibold text-slate-800 leading-none">Admin Name</p>
+            <p class="text-xs text-slate-400 mt-0.5">Admin</p>
+          </div>
+          <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl py-2 z-50" id="profileDropdown">
+          <a href="../adminPages/myProfileAdmin.html" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors rounded-xl mx-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>My Profile</a>
+          <a href="../adminPages/settingsAdmin.html" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors rounded-xl mx-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Settings</a>
+          <div class="border-t border-slate-100 my-1 mx-3"></div>
+          <a href="../unitOwnerPages/login.html" class="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Sign out</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════
+       CONTENT AREA
+  ══════════════════════════════════════════════════════ -->
+  <div class="content-area flex-1 max-w-screen-2xl mx-auto w-full mobile-scroll-wrap" id="contentArea">
+    <div class="col-scroll flex-1 min-w-0 p-4 md:p-6 space-y-5">
+
+      <!-- ── PAGE HEADER ─────────────────────────────────── -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">Analytics</h1>
+          <p class="text-xs text-slate-400 mt-0.5">Property performance overview for Zeppelin Suites</p>
+        </div>
+        <span class="text-xs font-semibold text-slate-400 border border-slate-200 bg-white rounded-full px-3 py-1.5" style="font-family:'DM Mono',monospace;" id="lastUpdatedLabel">Last updated: May 2025</span>
+      </div>
+
+      <!-- ── FILTER BAR ───────────────────────────────────── -->
+      <div class="filter-bar border border-slate-200/80 rounded-2xl px-4 py-3 flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/></svg>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Filters</span>
+        </div>
+        <div class="w-px h-5 bg-slate-200"></div>
+        <!-- Month -->
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-medium text-slate-400">Month</label>
+          <select id="filterMonth" onchange="applyFilters()" class="zep-select btn-press text-sm border border-slate-200 rounded-xl px-3 py-1.5 bg-white text-slate-700 cursor-pointer transition-all">
+            <option value="0">January</option><option value="1">February</option>
+            <option value="2">March</option><option value="3">April</option>
+            <option value="4" selected>May</option><option value="5">June</option>
+            <option value="6">July</option><option value="7">August</option>
+            <option value="8">September</option><option value="9">October</option>
+            <option value="10">November</option><option value="11">December</option>
+          </select>
+        </div>
+        <!-- Year -->
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-medium text-slate-400">Year</label>
+          <select id="filterYear" onchange="applyFilters()" class="zep-select btn-press text-sm border border-slate-200 rounded-xl px-3 py-1.5 bg-white text-slate-700 cursor-pointer transition-all">
+            <option value="2023">2023</option><option value="2024">2024</option>
+            <option value="2025" selected>2025</option><option value="2026">2026</option>
+          </select>
+        </div>
+        <!-- Unit Type -->
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-medium text-slate-400">Unit Type</label>
+          <select id="filterUnit" onchange="applyFilters()" class="zep-select btn-press text-sm border border-slate-200 rounded-xl px-3 py-1.5 bg-white text-slate-700 cursor-pointer transition-all">
+            <option value="all">Entire Portfolio</option>
+            <option value="studioA">Studio Type A</option>
+            <option value="studioB">Studio Type B</option>
+            <option value="one">One Bedroom</option>
+            <option value="two">Two Bedroom</option>
+          </select>
+        </div>
+        <!-- Active filter chips -->
+        <div class="ml-auto flex items-center gap-2">
+          <span id="activeFilterChip" class="text-xs font-semibold bg-slate-900 text-white rounded-full px-3 py-1">May 2025 · All Units</span>
+          <button onclick="resetFilters()" class="btn-press text-xs font-medium text-slate-400 hover:text-slate-700 border border-slate-200 bg-white rounded-full px-3 py-1 transition-all active:scale-95">Reset</button>
+        </div>
+      </div>
+
+      <!-- ── KPI CARDS ────────────────────────────────────── -->
+      <!-- NOTE: Maintenance Health and Revenue Outlook cards are intentionally hidden here.
+           Their data (kpi.maintenance, kpi.revenue, barMaintenance, barRevenue) is preserved
+           in DATASET and updateKPIs() — re-add the card HTML and restore grid to
+           grid-cols-2 lg:grid-cols-4 to bring them back. -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        <!-- Occupancy Rate -->
+        <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            </div>
+            <span class="text-sm font-semibold text-slate-600">Occupancy Rate</span>
+          </div>
+          <p class="text-3xl font-bold text-slate-900" style="font-family:'DM Mono',monospace" id="kpiOccupancy">87.5%</p>
+          <p class="text-xs mt-1"><span class="font-semibold trend-up">↑ 4.2%</span> <span class="text-slate-400">vs last month</span></p>
+          <div class="mt-3 w-full bg-slate-100 rounded-full h-1.5">
+            <div class="bg-emerald-500 h-1.5 rounded-full transition-all duration-700" style="width:87.5%" id="barOccupancy"></div>
+          </div>
+          <p class="text-xs text-slate-400 mt-1.5" style="font-family:'DM Mono',monospace">28 / 32 units occupied</p>
+        </div>
+
+        <!-- Inquiry Conversion -->
+        <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            </div>
+            <span class="text-sm font-semibold text-slate-600">Inquiry Conversion</span>
+          </div>
+          <p class="text-3xl font-bold text-slate-900" style="font-family:'DM Mono',monospace" id="kpiConversion">62.3%</p>
+          <p class="text-xs mt-1"><span class="font-semibold trend-up">↑ 8.1%</span> <span class="text-slate-400">vs last month</span></p>
+          <div class="mt-3 w-full bg-slate-100 rounded-full h-1.5">
+            <div class="bg-blue-500 h-1.5 rounded-full transition-all duration-700" style="width:62.3%" id="barConversion"></div>
+          </div>
+          <p class="text-xs text-slate-400 mt-1.5" style="font-family:'DM Mono',monospace">73 inquiries → 45 confirmed</p>
+        </div>
+
+      </div>
+
+      <!-- ── ROW 2: FUNNEL + DONUT ─────────────────────────── -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        <!-- Reservation Funnel -->
+        <div class="chart-card bg-white rounded-2xl border border-slate-100 p-5 lg:col-span-2">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h2 class="font-bold text-slate-900 text-sm">Reservation Funnel</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Inquiry → Confirmation pipeline</p>
+            </div>
+            <span class="text-xs font-semibold bg-slate-100 text-slate-500 rounded-full px-2.5 py-1">This Month</span>
+          </div>
+          <!-- Custom funnel bars -->
+          <div class="space-y-3" id="funnelContainer">
+            <!-- Steps rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Cancellation Rate Donut -->
+        <div class="chart-card bg-white rounded-2xl border border-slate-100 p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="font-bold text-slate-900 text-sm">Cancellation Rate</h2>
+              <p class="text-xs text-slate-400 mt-0.5">30-day rule applied</p>
+            </div>
+          </div>
+          <div class="flex-1 flex flex-col items-center justify-center gap-4">
+            <div class="relative w-36 h-36">
+              <canvas id="donutChart"></canvas>
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span class="text-2xl font-bold text-slate-900" style="font-family:'DM Mono',monospace" id="donutCenter">88%</span>
+                <span class="text-xs text-slate-400">Completed</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-5 text-xs">
+              <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span><span class="text-slate-500">Completed <span class="font-semibold text-slate-700" style="font-family:'DM Mono',monospace">40</span></span></div>
+              <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-400 shrink-0"></span><span class="text-slate-500">Canceled <span class="font-semibold text-slate-700" style="font-family:'DM Mono',monospace">5</span></span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── ROW 3: BAR + LINE ──────────────────────────────── -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        <!-- Unit Performance Bar Chart -->
+        <div class="chart-card bg-white rounded-2xl border border-slate-100 p-5">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h2 class="font-bold text-slate-900 text-sm">Unit Performance</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Demand by unit category</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-slate-900 shrink-0"></span>
+              <span class="text-xs text-slate-400">Inquiries</span>
+              <span class="w-2 h-2 rounded-full bg-blue-400 shrink-0 ml-2"></span>
+              <span class="text-xs text-slate-400">Confirmed</span>
+            </div>
+          </div>
+          <div class="relative h-52">
+            <canvas id="barChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Maintenance Trends Line Chart -->
+        <div class="chart-card bg-white rounded-2xl border border-slate-100 p-5">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h2 class="font-bold text-slate-900 text-sm">Maintenance Trends</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Requests vs. completions over month</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+              <span class="text-xs text-slate-400">Requests</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 ml-2"></span>
+              <span class="text-xs text-slate-400">Completed</span>
+            </div>
+          </div>
+          <div class="relative h-52">
+            <canvas id="lineChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── TOP PERFORMING UNITS TABLE (hidden — re-add HTML here to restore) ───
+           Data is preserved: TOP_UNITS array and renderTable() function are intact in JS.
+           To restore: paste back the table markup and call renderTable() in DOMContentLoaded.
+      ──────────────────────────────────────────────────────────────────────────────── -->
+
+      <!-- Bottom spacer -->
+      <div class="h-4"></div>
+
+    </div><!-- /col-scroll -->
+  </div><!-- /content-area -->
+</div><!-- /main-wrapper -->
+
+<!-- ══════════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════ -->
+<script>
+/* ─── Sidebar ─────────────────────────────────────────────── */
+let sidebarCollapsed = false;
+function toggleCollapse() {
+  sidebarCollapsed = !sidebarCollapsed;
+  document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
+  document.getElementById('mainWrapper').classList.toggle('sidebar-collapsed', sidebarCollapsed);
+}
+function openMobileSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeMobileSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+function toggleNotice() {
+  document.getElementById('noticePanel').classList.toggle('open');
+  document.getElementById('noticeChevron').classList.toggle('rotated');
+}
+function toggleProfile() {
+  const dd = document.getElementById('profileDropdown');
+  const ch = document.getElementById('profileChevron');
+  const open = dd.classList.toggle('open');
+  ch.style.transform = open ? 'rotate(180deg)' : '';
+}
+document.addEventListener('click', e => {
+  const w = document.getElementById('profileWrapper');
+  if (w && !w.contains(e.target)) {
+    document.getElementById('profileDropdown').classList.remove('open');
+    document.getElementById('profileChevron').style.transform = '';
+  }
+});
+
+/* ─── Dataset per filter combination (demo data) ─────────── */
+const DATASET = {
+  all: {
+    kpi:        { occupancy:'87.5%', occ28:28, occ32:32, occBar:87.5, conversion:'62.3%', conv73:73, conv45:45, convBar:62.3, maintenance:'2.4d', mBar:76, revenue:'₱384k' },
+    funnel:     [73, 58, 49, 45, 45],
+    donut:      [40, 5],
+    bar:        { inquiries:[22,28,14,9,73], confirmed:[14,18,8,5,45] },
+    line:       { requests:[3,5,4,6,4,7,5,4,6,3,5,4,6,5,4,5,6,4,5,3,4,6,5,4,4,5,4,5,4,3], completed:[2,4,4,5,3,6,5,3,5,3,4,4,5,4,4,5,5,3,4,3,3,5,4,4,3,4,4,4,3,3] },
+  },
+  studioA: {
+    kpi:        { occupancy:'92.0%', occ28:11, occ32:12, occBar:92, conversion:'68.0%', conv73:25, conv45:17, convBar:68, maintenance:'1.8d', mBar:85, revenue:'₱96k' },
+    funnel:     [25, 21, 18, 17, 17],
+    donut:      [15, 2],
+    bar:        { inquiries:[22,0,0,0,0], confirmed:[14,0,0,0,0] },
+    line:       { requests:[1,2,1,2,1,3,2,1,2,1,2,1,2,1,1,2,2,1,2,1,1,2,2,1,1,2,1,2,1,1], completed:[1,2,1,2,1,2,2,1,2,1,2,1,2,1,1,2,2,1,1,1,1,2,1,1,1,1,1,1,1,1] },
+  },
+  studioB: {
+    kpi:        { occupancy:'89.5%', occ28:10, occ32:12, occBar:89.5, conversion:'64.3%', conv73:28, conv45:18, convBar:64.3, maintenance:'2.1d', mBar:80, revenue:'₱88k' },
+    funnel:     [28, 23, 20, 18, 18],
+    donut:      [17, 2],
+    bar:        { inquiries:[0,28,0,0,0], confirmed:[0,18,0,0,0] },
+    line:       { requests:[1,2,2,2,1,2,2,1,2,1,2,2,2,1,1,2,2,1,2,1,1,2,2,1,1,2,2,2,1,1], completed:[1,2,1,2,1,2,1,1,2,1,1,2,2,1,1,2,2,1,2,1,1,2,1,1,1,2,1,2,1,1] },
+  },
+  one: {
+    kpi:        { occupancy:'85.7%', occ28:12, occ32:14, occBar:85.7, conversion:'60.0%', conv73:30, conv45:18, convBar:60, maintenance:'2.6d', mBar:72, revenue:'₱154k' },
+    funnel:     [30, 24, 20, 18, 18],
+    donut:      [16, 2],
+    bar:        { inquiries:[0,0,14,0,0], confirmed:[0,0,8,0,0] },
+    line:       { requests:[2,2,2,3,2,3,2,2,3,1,2,2,3,2,2,2,3,2,2,1,2,3,2,2,2,2,2,2,2,1], completed:[1,2,2,2,2,3,2,1,2,1,2,2,2,2,2,2,2,1,2,1,1,2,2,2,1,2,2,2,1,1] },
+  },
+  two: {
+    kpi:        { occupancy:'83.3%', occ28:5, occ32:6, occBar:83.3, conversion:'55.6%', conv73:18, conv45:10, convBar:55.6, maintenance:'3.2d', mBar:62, revenue:'₱134k' },
+    funnel:     [18, 13, 11, 10, 10],
+    donut:      [9, 1],
+    bar:        { inquiries:[0,0,0,9,0], confirmed:[0,0,0,5,0] },
+    line:       { requests:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], completed:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1] },
+  }
+};
+
+const TOP_UNITS = [
+  { rank:1, unit:'ZS-2B-14', type:'Two Bedroom', owner:'Reyes, Carlo M.',  revenue:'₱48,500', occ:'100%', status:'Occupied',  statusClass:'bg-emerald-50 text-emerald-700 border-emerald-100' },
+  { rank:2, unit:'ZS-1B-07', type:'One Bedroom',  owner:'Santos, Luz A.',   revenue:'₱38,200', occ:'100%', status:'Occupied',  statusClass:'bg-emerald-50 text-emerald-700 border-emerald-100' },
+  { rank:3, unit:'ZS-ST-03', type:'Studio',        owner:'Bautista, Ed R.', revenue:'₱32,800', occ:'100%', status:'Occupied',  statusClass:'bg-emerald-50 text-emerald-700 border-emerald-100' },
+  { rank:4, unit:'ZS-1B-11', type:'One Bedroom',  owner:'Flores, Ana C.',   revenue:'₱30,500', occ:'100%', status:'Occupied',  statusClass:'bg-emerald-50 text-emerald-700 border-emerald-100' },
+  { rank:5, unit:'ZS-ST-09', type:'Studio',        owner:'Cruz, Mark T.',   revenue:'₱28,400', occ:'86%',  status:'Reserved',  statusClass:'bg-blue-50 text-blue-700 border-blue-100' },
+  { rank:6, unit:'ZS-2B-02', type:'Two Bedroom', owner:'Gonzales, Ray P.', revenue:'₱25,100', occ:'72%',  status:'Partial',   statusClass:'bg-amber-50 text-amber-700 border-amber-100' },
+  { rank:7, unit:'ZS-ST-17', type:'Studio',        owner:'Torres, Gina B.', revenue:'₱21,600', occ:'68%',  status:'Reserved',  statusClass:'bg-blue-50 text-blue-700 border-blue-100' },
+  { rank:8, unit:'ZS-1B-04', type:'One Bedroom',  owner:'Villanueva, Jo K.',revenue:'₱18,900', occ:'0%',   status:'Vacant',    statusClass:'bg-slate-50 text-slate-500 border-slate-100' },
+];
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const FUNNEL_STEPS = ['Total Inquiries','HOA Checked','Owner Approved','Webform Submitted','Confirmed'];
+const FUNNEL_COLORS = ['bg-slate-800','bg-blue-600','bg-blue-400','bg-violet-400','bg-emerald-500'];
+const FUNNEL_TEXT   = ['text-slate-100','text-white','text-white','text-white','text-white'];
+
+/* ─── Chart instances ─────────────────────────────────────── */
+let donutInst=null, barInst=null, lineInst=null;
+
+/* ─── Funnel ──────────────────────────────────────────────── */
+function renderFunnel(values) {
+  const container = document.getElementById('funnelContainer');
+  const max = values[0];
+  container.innerHTML = '';
+  FUNNEL_STEPS.forEach((label, i) => {
+    const pct = Math.round((values[i]/max)*100);
+    const convRate = i===0 ? 100 : Math.round((values[i]/values[0])*100);
+    container.innerHTML += `
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-medium text-slate-500">${label}</span>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold text-slate-700" style="font-family:'DM Mono',monospace">${values[i]}</span>
+            <span class="text-xs text-slate-400" style="font-family:'DM Mono',monospace">${convRate}%</span>
+          </div>
+        </div>
+        <div class="w-full bg-slate-100 rounded-full h-6 overflow-hidden">
+          <div class="funnel-bar h-6 rounded-full ${FUNNEL_COLORS[i]} flex items-center px-3" style="width:${pct}%">
+            <span class="text-xs font-semibold ${FUNNEL_TEXT[i]} whitespace-nowrap hidden sm:block">${label}</span>
+          </div>
+        </div>
+      </div>`;
+  });
+}
+
+/* ─── Donut chart ─────────────────────────────────────────── */
+function renderDonut(values) {
+  const ctx = document.getElementById('donutChart').getContext('2d');
+  const total = values[0]+values[1];
+  const pct = Math.round((values[0]/total)*100);
+  document.getElementById('donutCenter').textContent = pct+'%';
+  if (donutInst) donutInst.destroy();
+  donutInst = new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      datasets:[{
+        data: values,
+        backgroundColor:['#10b981','#f87171'],
+        borderWidth:0,
+        hoverOffset:4
+      }]
+    },
+    options:{
+      cutout:'75%',
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw}`}} },
+      animation:{ animateRotate:true, duration:900 }
+    }
+  });
+}
+
+/* ─── Bar chart ───────────────────────────────────────────── */
+function renderBar(barData) {
+  const ctx = document.getElementById('barChart').getContext('2d');
+  if (barInst) barInst.destroy();
+  barInst = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:['Studio Type A','Studio Type B','One Bedroom','Two Bedroom','Entire Portfolio'],
+      datasets:[
+        { label:'Inquiries', data: barData.inquiries, backgroundColor:'#0f172a', borderRadius:6, barPercentage:0.5 },
+        { label:'Confirmed', data: barData.confirmed, backgroundColor:'#60a5fa', borderRadius:6, barPercentage:0.5 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ grid:{display:false}, ticks:{font:{family:'DM Sans',size:11}, color:'#94a3b8'} },
+        y:{ grid:{color:'#f1f5f9'}, ticks:{font:{family:'DM Mono',size:10}, color:'#94a3b8'}, beginAtZero:true }
+      }
+    }
+  });
+}
+
+/* ─── Line chart ──────────────────────────────────────────── */
+function renderLine(lineData) {
+  const ctx = document.getElementById('lineChart').getContext('2d');
+  const days = Array.from({length:30},(_,i)=>i+1);
+  if (lineInst) lineInst.destroy();
+  lineInst = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels: days,
+      datasets:[
+        { label:'Requests',  data:lineData.requests,  borderColor:'#fbbf24', backgroundColor:'rgba(251,191,36,0.07)', tension:0.4, fill:true, pointRadius:0, borderWidth:2 },
+        { label:'Completed', data:lineData.completed, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,0.07)', tension:0.4, fill:true, pointRadius:0, borderWidth:2 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ grid:{display:false}, ticks:{font:{family:'DM Mono',size:10}, color:'#94a3b8', maxTicksLimit:8} },
+        y:{ grid:{color:'#f1f5f9'}, ticks:{font:{family:'DM Mono',size:10}, color:'#94a3b8'}, beginAtZero:true }
+      }
+    }
+  });
+}
+
+/* ─── KPI card update ─────────────────────────────────────── */
+// NOTE: d.maintenance, d.mBar, d.revenue are preserved in DATASET but not rendered
+// while the Maintenance Health / Revenue Outlook cards are hidden. Re-add the cards
+// and uncomment the lines below to re-enable them.
+function updateKPIs(d) {
+  document.getElementById('kpiOccupancy').textContent   = d.occupancy;
+  document.getElementById('kpiConversion').textContent  = d.conversion;
+  // document.getElementById('kpiMaintenance').textContent = d.maintenance;
+  // document.getElementById('kpiRevenue').textContent     = d.revenue;
+  document.getElementById('barOccupancy').style.width   = d.occBar+'%';
+  document.getElementById('barConversion').style.width  = d.convBar+'%';
+  // document.getElementById('barMaintenance').style.width = d.mBar+'%';
+}
+
+/* ─── Table render ────────────────────────────────────────── */
+function renderTable() {
+  const tbody = document.getElementById('topUnitsTable');
+  tbody.innerHTML = TOP_UNITS.map(u=>`
+    <tr class="tbl-row cursor-pointer">
+      <td class="px-5 py-3.5 text-xs text-slate-400 font-medium" style="font-family:'DM Mono',monospace">${u.rank}</td>
+      <td class="px-4 py-3.5 font-semibold text-slate-800 whitespace-nowrap" style="font-family:'DM Mono',monospace;font-size:12px">${u.unit}</td>
+      <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap">${u.type}</td>
+      <td class="px-4 py-3.5 text-slate-700 font-medium whitespace-nowrap">${u.owner}</td>
+      <td class="px-4 py-3.5 font-bold text-slate-800 whitespace-nowrap" style="font-family:'DM Mono',monospace">${u.revenue}</td>
+      <td class="px-4 py-3.5 text-slate-600 whitespace-nowrap" style="font-family:'DM Mono',monospace;font-size:12px">${u.occ}</td>
+      <td class="px-4 py-3.5"><span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border ${u.statusClass}">${u.status}</span></td>
+      <td class="px-4 py-3.5 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all">View</button></td>
+    </tr>`).join('');
+}
+
+/* ─── Filter application ──────────────────────────────────── */
+function applyFilters() {
+  const month    = parseInt(document.getElementById('filterMonth').value);
+  const year     = document.getElementById('filterYear').value;
+  const unitType = document.getElementById('filterUnit').value;
+  const unitLabel = {all:'All Units', studioA:'Studio Type A', studioB:'Studio Type B', one:'One Bedroom', two:'Two Bedroom'}[unitType];
+
+  // Update label
+  document.getElementById('activeFilterChip').textContent = `${MONTHS[month]} ${year} · ${unitLabel}`;
+  document.getElementById('lastUpdatedLabel').textContent  = `Last updated: ${MONTHS[month].substring(0,3)} ${year}`;
+
+  const d = DATASET[unitType] || DATASET.all;
+  updateKPIs(d.kpi);
+  renderFunnel(d.funnel);
+  renderDonut(d.donut);
+  renderBar(d.bar);
+  renderLine(d.line);
+}
+
+function resetFilters() {
+  document.getElementById('filterMonth').value = '4';
+  document.getElementById('filterYear').value  = '2025';
+  document.getElementById('filterUnit').value  = 'all';
+  applyFilters();
+}
+
+/* ─── Init ────────────────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  // renderTable() is intentionally not called here — table section is hidden.
+  // Restore the table HTML and uncomment renderTable() below to re-enable it.
+  // renderTable();
+  applyFilters();
+});
+</script>
+</body>
+</html>
