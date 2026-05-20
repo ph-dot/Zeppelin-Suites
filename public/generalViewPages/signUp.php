@@ -35,7 +35,7 @@
         </div>
         <a href="../generalViewPages/faq.html" class="text-sm text-zinc-500 hover:text-zinc-800">FAQ</a>
         <a href="../generalViewPages/aboutUs.html" class="text-sm text-zinc-500 hover:text-zinc-800">About Us</a>
-        <a href="../generalViewPages/contact.html" class="text-sm text-zinc-500 hover:text-zinc-800">Contact</a>
+        <a href="../generalViewPages/contact.php" class="text-sm text-zinc-500 hover:text-zinc-800">Contact</a>
         <a href="../generalViewPages/login.html" class="text-sm text-zinc-800 font-medium hover:text-zinc-800">Portal</a>
     </div>
 
@@ -62,7 +62,7 @@
         </div>
         <a href="../generalViewPages/faq.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">FAQ</a>
         <a href="../generalViewPages/aboutUs.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">About Us</a>
-        <a href="../generalViewPages/contact.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Contact</a>
+        <a href="../generalViewPages/contact.php" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Contact</a>
         <a href="../generalViewPages/login.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-800 font-medium hover:bg-zinc-50">Portal</a>
     </div>
 </nav>

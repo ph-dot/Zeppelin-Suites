@@ -1,3 +1,20 @@
+<?php 
+require_once '../php_files/auth.php'; // Use your new auth file
+
+// Redirect if already logged in
+if (isset($_SESSION['user_id'])) {
+    $role = normalizeRole($_SESSION['role'] ?? '');
+    
+    if ($role === 'admin') {
+        header("Location: ../adminPages/homeAdmin.php");
+    } elseif ($role === 'unit owner') {
+        header("Location: ../unitOwnerPages/overview.html");
+    } elseif ($role === 'tenant') {
+        header("Location: ../tenantPages/homeTenant.html");
+    }
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,8 +52,8 @@
         </div>
         <a href="../generalViewPages/faq.html" class="text-sm text-zinc-500 hover:text-zinc-800">FAQ</a>
         <a href="../generalViewPages/aboutUs.html" class="text-sm text-zinc-500 hover:text-zinc-800">About Us</a>
-        <a href="../generalViewPages/contact.html" class="text-sm text-zinc-500 hover:text-zinc-800">Contact</a>
-        <a href="../generalViewPages/login.html" class="text-sm text-zinc-800 font-medium hover:text-zinc-800">Portal</a>
+        <a href="../generalViewPages/contact.php" class="text-sm text-zinc-500 hover:text-zinc-800">Contact</a>
+        <a href="../generalViewPages/login.php" class="text-sm text-zinc-800 font-medium hover:text-zinc-800">Portal</a>
     </div>
 
     <!-- Hamburger -->
@@ -62,8 +79,8 @@
         </div>
         <a href="../generalViewPages/faq.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">FAQ</a>
         <a href="../generalViewPages/aboutUs.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">About Us</a>
-        <a href="../generalViewPages/contact.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Contact</a>
-        <a href="../generalViewPages/login.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-800 font-medium hover:bg-zinc-50">Portal</a>
+        <a href="../generalViewPages/contact.php" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Contact</a>
+        <a href="../generalViewPages/login.php" class="px-4 py-2.5 rounded-lg text-sm text-zinc-800 font-medium hover:bg-zinc-50">Portal</a>
     </div>
 </nav>
 
@@ -72,7 +89,7 @@
 
     <div class="w-full flex flex-col items-center justify-center">
 
-        <form class="md:w-96 w-80 flex flex-col items-center justify-center">
+        <form action="ActionsGV/loginAction.php" method="POST" class="md:w-96 w-80 flex flex-col items-center justify-center">
             <h2 class="text-4xl text-gray-900 font-medium">Sign in</h2>
             <p class="text-sm text-gray-500/90 mt-3">Welcome back! Please sign in to continue</p>
 
@@ -96,14 +113,14 @@
                 <svg width="16" height="11" viewBox="0 0 16 11" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path fill-rule="evenodd" clip-rule="evenodd" d="M0 .55.571 0H15.43l.57.55v9.9l-.571.55H.57L0 10.45zm1.143 1.138V9.9h13.714V1.69l-6.503 4.8h-.697zM13.749 1.1H2.25L8 5.356z" fill="#6B7280"/>
                 </svg>
-                <input type="email" placeholder="Email id" class="bg-transparent text-gray-500/80 placeholder-gray-500/80 outline-none text-sm w-full h-full" required>
+                <input type="email" name="email" placeholder="Email id" class="bg-transparent text-gray-500/80 placeholder-gray-500/80 outline-none text-sm w-full h-full" required>
             </div>
 
             <div class="flex items-center mt-6 w-full bg-transparent border border-black h-12 rounded-full overflow-hidden pl-6 gap-2">
                 <svg width="13" height="17" viewBox="0 0 13 17" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M13 8.5c0-.938-.729-1.7-1.625-1.7h-.812V4.25C10.563 1.907 8.74 0 6.5 0S2.438 1.907 2.438 4.25V6.8h-.813C.729 6.8 0 7.562 0 8.5v6.8c0 .938.729 1.7 1.625 1.7h9.75c.896 0 1.625-.762 1.625-1.7zM4.063 4.25c0-1.406 1.093-2.55 2.437-2.55s2.438 1.144 2.438 2.55V6.8H4.061z" fill="#6B7280"/>
                 </svg>
-                <input type="password" placeholder="Password" class="bg-transparent text-gray-500/80 placeholder-gray-500/80 outline-none text-sm w-full h-full" required>
+                <input type="password" name="password" placeholder="Password" class="bg-transparent text-gray-500/80 placeholder-gray-500/80 outline-none text-sm w-full h-full" required>
             </div>
 
             <div class="w-full flex items-center justify-between mt-8 text-gray-500/80">
@@ -117,8 +134,20 @@
             <button type="submit" class="mt-8 w-full h-11 rounded-full text-white bg-black hover:bg-zinc-800 transition-colors">
                 Login
             </button>
-            <p class="text-gray-500/90 text-sm mt-4">Don't have an account? <a class="text-black hover:underline" href="../generalViewPages/signUp.html">Sign up</a></p>
+            <p class="text-gray-500/90 text-sm mt-4">Don't have an account? <a class="text-black hover:underline" href="../generalViewPages/signUp.php">Sign up</a></p>
         </form>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div id="errorModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-2xl w-80 text-center shadow-lg">
+        <h2 class="text-lg font-semibold text-red-600">Login Failed</h2>
+        <p id="errorMessage" class="text-sm text-gray-600 mt-2"></p>
+
+        <button onclick="closeModal()" class="mt-5 w-full bg-black text-white py-2 rounded-full">
+            OK
+        </button>
     </div>
 </div>
 
@@ -148,6 +177,31 @@
         dropdown.classList.toggle('flex', isHidden);
         chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
     }
+    function showError(message) {
+        document.getElementById("errorMessage").innerText = message;
+        document.getElementById("errorModal").classList.remove("hidden");
+        document.body.style.overflow = 'hidden'; // Disable page scrolling when modal is open
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        document.getElementById("errorModal").classList.add("hidden");
+        document.body.style.overflow = 'auto'; // Enable page scrolling after modal is closed
+    }
+<?php
+if (isset($_SESSION['error_message'])) {
+    $message = $_SESSION['error_message'];
+    unset($_SESSION['error_message']);
+
+    echo "showError(" . json_encode($message) . ");";
+} elseif (isset($_GET['error'])) {
+    if ($_GET['error'] === "no_user") {
+        echo "showError('No account found with this email.');";
+    } elseif ($_GET['error'] === "wrong_password") {
+        echo "showError('Incorrect password. Try again.');";
+    }
+}
+?>
 </script>
 </body>
 </html>

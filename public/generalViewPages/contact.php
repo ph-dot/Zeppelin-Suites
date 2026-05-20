@@ -40,8 +40,8 @@
     </div>
     <a href="../generalViewPages/faq.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">FAQ</a>
     <a href="../generalViewPages/aboutUs.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">About Us</a>
-    <a href="../generalViewPages/contact.html" class="text-sm text-zinc-800 font-medium hover:text-zinc-500 transition-colors">Contact</a>
-    <a href="../generalViewPages/login.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Portal</a>
+    <a href="../generalViewPages/contact.php" class="text-sm text-zinc-800 font-medium hover:text-zinc-500 transition-colors">Contact</a>
+    <a href="../generalViewPages/login.php" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Portal</a>
   </div>
   <button onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
     <span id="bar1" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
@@ -60,8 +60,8 @@
     </div>
     <a href="../generalViewPages/faq.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">FAQ</a>
     <a href="../generalViewPages/aboutUs.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">About Us</a>
-    <a href="../generalViewPages/contact.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-900 font-medium hover:bg-zinc-50">Contact</a>
-    <a href="../generalViewPages/login.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Portal</a>
+    <a href="../generalViewPages/contact.php" class="px-4 py-2.5 rounded-lg text-sm text-zinc-900 font-medium hover:bg-zinc-50">Contact</a>
+    <a href="../generalViewPages/login.php" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Portal</a>
   </div>
 </nav>
 
@@ -77,18 +77,21 @@
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 max-w-6xl mx-auto">
 
     <!-- ── LEFT: CONTACT FORM ────────────────────────────── -->
-    <div class="lg:col-span-2 border border-zinc-200 rounded-2xl p-8 md:p-10">
+   <div class="lg:col-span-2 border border-zinc-200 rounded-2xl p-8 md:p-10">
       <!-- Success message -->
-      <div id="formSuccess" class="form-success items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-4 mb-6">
-        <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <p class="text-sm font-semibold text-emerald-700">Your inquiry has been submitted! We'll be in touch soon.</p>
+      <div id="formSuccess" class="form-success items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-4 mb-6 hidden">
+          <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <p class="text-sm font-semibold text-emerald-700">Your inquiry has been submitted! We'll be in touch soon.</p>
       </div>
 
-      <form id="contactForm" onsubmit="handleSubmit(event)" class="space-y-6">
+
+       <form id="contactForm" action="ActionsGV/inquiryInput.php" method="POST" class="space-y-6">
         <!-- Name -->
         <div>
           <label class="block text-sm font-semibold text-zinc-800 mb-2">Name:</label>
-          <input type="text" placeholder="Your full name" required
+          <input type="text" name="sender_name" placeholder="Your full name" required
             class="zep-input w-full border-b border-zinc-300 bg-transparent py-2.5 text-sm text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 transition-colors outline-none">
         </div>
 
@@ -96,55 +99,71 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label class="block text-sm font-semibold text-zinc-800 mb-2">Email:</label>
-            <input type="email" placeholder="your@email.com" required
+            <input type="email" name="sender_email" placeholder="your@email.com" required
               class="zep-input w-full border-b border-zinc-300 bg-transparent py-2.5 text-sm text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 transition-colors outline-none">
           </div>
           <div>
             <label class="block text-sm font-semibold text-zinc-800 mb-2">Phone:</label>
-            <input type="tel" placeholder="09XX-XXX-XXXX"
+            <input type="tel" name="sender_contact" placeholder="09XX-XXX-XXXX"
               class="zep-input w-full border-b border-zinc-300 bg-transparent py-2.5 text-sm text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 transition-colors outline-none">
           </div>
         </div>
 
-        <!-- Inquiry Type -->
-        <div>
-          <label class="block text-sm font-semibold text-zinc-800 mb-2">Inquiry Type:</label>
-          <div class="relative">
-            <select class="zep-select w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-600 appearance-none cursor-pointer focus:border-zinc-900 outline-none transition-colors" required>
-              <option value="" disabled selected>Choose option</option>
-              <option>Unit Reservation</option>
-              <option>Owner-Requested Unit Reservation</option>
-              <option>Lease Inquiry</option>
-              <option>General Inquiry</option>
-              <option>Others</option>
-            </select>
-            <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center">
-              <svg width="12" height="8" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-          </div>
-        </div>
+<!-- Inquiry Type -->
+  <div>
+    <label class="block text-sm font-semibold text-zinc-800 mb-2">Inquiry Type:</label>
+    <div class="relative">
+      <select name="inquiry_type" id="inquiry_type" class="zep-select w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-600 appearance-none cursor-pointer focus:border-zinc-900 outline-none transition-colors" required>
+        <option value="" disabled selected>Choose option</option>
+        <option value="Unit Reservation">Unit Reservation</option>
+        <option value="Resale Inquiry">Resale Inquiry</option>
+        <option value="Lease Inquiry">Lease Inquiry</option>
+        <option value="General Inquiry">General Inquiry</option>
+        <option value="Others">Others</option>
+      </select>
+      <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center">
+        <svg width="12" height="8" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </div>
 
-        <!-- Unit Preferences -->
-        <div>
-          <label class="block text-sm font-semibold text-zinc-800 mb-2">Unit Preference:</label>
-          <div class="relative">
-            <select class="zep-select w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-600 appearance-none cursor-pointer focus:border-zinc-900 outline-none transition-colors" required>
-              <option value="" disabled selected>Choose option</option>
-              <option>Studio Type A</option>
-              <option>Studio Type B</option>
-              <option>One Bedroom</option>
-              <option>Two Bedroom</option>
-            </select>
-            <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center">
-              <svg width="12" height="8" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-          </div>
-        </div>
+  <!-- Unit Preference (Existing) -->
+  <div id="unit-preference" style="display: none;">
+    <label class="block text-sm font-semibold text-zinc-800 mb-2">Unit Preference:</label>
+    <div class="relative">
+      <select name="Preferred_unit_id" class="zep-select w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-600 appearance-none cursor-pointer focus:border-zinc-900 outline-none transition-colors">
+        <option value="" disabled selected>Choose option</option>
+        <option>Studio Type A</option>
+        <option>Studio Type B</option>
+        <option>One Bedroom</option>
+        <option>Two Bedroom</option>
+      </select>
+      <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center">
+        <svg width="12" height="8" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEASE DURATION: WRAPPED IN A DIV WITH ID -->
+  <div id="lease-duration-container" style="display: none;">
+    <label for="lease_duration" class="block text-sm font-semibold text-zinc-800 mb-2">Preferred Lease Duration:</label>
+    <select name="lease_duration" id="lease_duration" class="zep-select w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-600">
+      <option value="" disabled selected>Choose option</option>
+      <option value="lease immediately">Lease Immediately</option>
+      <option value="for the next 3 months">For the next 3 months</option>
+      <option value="for the next 6 months">For the next 6 months</option>
+      <option value="1 year">1 year</option>
+      <option value="2 years">2 years</option>
+      <option value="longer contract">Longer contract</option>
+      <option value="still deciding">Still deciding</option>
+    </select>
+  </div>
+
 
         <!-- Message -->
         <div>
           <label class="block text-sm font-semibold text-zinc-800 mb-2">Message:</label>
-          <textarea rows="5" placeholder="Write your message here..." required
+          <textarea name="Message" rows="5" placeholder="Write your message here..." required
             class="zep-input w-full border-b border-zinc-300 bg-transparent pt-2 pb-3 text-sm text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 transition-colors outline-none resize-none"></textarea>
         </div>
 
@@ -244,25 +263,28 @@
     <a href="../generalViewPages/index.html" class="hover:text-zinc-900">Home</a>
     <a href="../generalViewPages/faq.html" class="hover:text-zinc-900">FAQ</a>
     <a href="../generalViewPages/aboutUs.html" class="hover:text-zinc-900">About Us</a>
-    <a href="../generalViewPages/contact.html" class="hover:text-zinc-900">Contact</a>
+    <a href="../generalViewPages/contact.php" class="hover:text-zinc-900">Contact</a>
   </div>
   <p class="text-xs text-zinc-500">© 2026 Zeppelin Suites. All rights reserved.</p>
 </footer>
 
 <script>
   let menuOpen = false;
+
   function toggleMenu() {
     menuOpen = !menuOpen;
     const menu = document.getElementById('mobileMenu');
     const bar1 = document.getElementById('bar1');
     const bar2 = document.getElementById('bar2');
     const bar3 = document.getElementById('bar3');
+
     menu.classList.toggle('hidden', !menuOpen);
     menu.classList.toggle('flex', menuOpen);
     bar1.style.transform = menuOpen ? 'translateY(8px) rotate(45deg)' : '';
     bar2.style.opacity = menuOpen ? '0' : '1';
     bar3.style.transform = menuOpen ? 'translateY(-8px) rotate(-45deg)' : '';
   }
+
   function toggleDropdown(id, chevronId) {
     const el = document.getElementById(id);
     const ch = document.getElementById(chevronId);
@@ -271,6 +293,7 @@
     el.classList.toggle('flex', hidden);
     ch.style.transform = hidden ? 'rotate(180deg)' : '';
   }
+
   function handleSubmit(e) {
     e.preventDefault();
     const success = document.getElementById('formSuccess');
@@ -280,6 +303,39 @@
     success.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     setTimeout(() => success.classList.remove('show'), 6000);
   }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const inquiryTypeSelect = document.getElementById('inquiry_type');
+    const unitPreferenceDiv = document.getElementById('unit-preference');
+    // FIX: Target the new container ID instead of the parent of the select
+    const leaseDurationContainer = document.getElementById('lease-duration-container');
+
+    function toggleFields() {
+      const value = inquiryTypeSelect.value;
+
+      // Default: hide both
+      unitPreferenceDiv.style.display = 'none';
+      leaseDurationContainer.style.display = 'none';
+
+      if (value === 'Resale Inquiry') {
+        // Resale: Show Unit Preference only
+        unitPreferenceDiv.style.display = 'block';
+      } 
+      else if (value === 'Unit Reservation' || value === 'Lease Inquiry') {
+        // Reservation or Lease: Show BOTH
+        unitPreferenceDiv.style.display = 'block';
+        leaseDurationContainer.style.display = 'block';
+      }
+      // General Inquiry or Others: Leave both hidden (default)
+    }
+
+    // Run once on load to set initial state
+    toggleFields();
+
+    // Listen for changes
+    inquiryTypeSelect.addEventListener('change', toggleFields);
+  });
 </script>
+
 </body>
 </html>

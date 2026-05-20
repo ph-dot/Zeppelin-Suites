@@ -98,7 +98,7 @@
       <section>
         <div class="flex items-center gap-2 mb-4">
           <div class="w-1.5 h-5 bg-slate-900 rounded-full"></div>
-          <h2 class="font-bold text-slate-900 text-sm uppercase tracking-wide">Reservation Details</h2>
+          <h2 class="font-bold text-slate-900 text-sm uppercase tracking-wide">Lease Term Details</h2>
         </div>
         <div class="space-y-4">
           <div>
@@ -110,6 +110,17 @@
               <option value="transfer">Unit Transfer</option>
               <option value="short-term">Short-Term Stay</option>
             </select>
+             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Lease Duration <span class="text-red-400">*</span></label>
+            <select id="resLeaseDuration" class="zep-select w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 cursor-pointer transition-all appearance-none" style="background-image:url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'14\' height=\'14\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'2\'%3E%3Cpath d=\'m6 9 6 6 6-6\'/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;">
+              <option value="" disabled selected>Select lease duration</option>
+              <option value="lease immediately">Lease Immediately</option>
+              <option value="for the next 3 months">For the next 3 months</option>
+              <option value="for the next 6 months">For the next 6 months</option>
+              <option value="1 year">1 year</option>
+              <option value="2 years">2 years</option>
+              <option value="longer contract">Longer contract</option>
+              <option value="still deciding">Still deciding</option>
+            </select>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -120,7 +131,7 @@
               </div>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Lease / Duration <span class="text-red-400">*</span></label>
+              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Move-out Date <span class="text-red-400">*</span></label>
               <div class="relative">
                 <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 <input type="date" id="resLease" class="zep-input w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all">
@@ -227,7 +238,7 @@ let reservationStatus = 'pending';
 const reservationId = 101;
 
 const createdAt = new Date().getTime();
-const expiresAt = createdAt + expirationSeconds * 1000;
+const expiresAt = createdAt + expirationSeconds *  86400;
 
 const circumference = 2 * Math.PI * 16; // r=16 → ~100.5
 
