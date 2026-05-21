@@ -285,60 +285,6 @@ tailwind.config = {
           </section>
 
           <div class="h-px bg-slate-200"></div>
-
-          <!-- 4. TIN and ID Upload Section -->
-        <div class="space-y-5 p-4 border rounded-xl">
-            <h2 class="text-lg font-semibold text-slate-900">4. Identification Documents</h2>
-            
-            <!-- TIN Input -->
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Tax Identification Number (TIN) <span class="text-red-500">*</span></label>
-                <input type="text" name="tin" placeholder="Enter your TIN" class="zep-input w-full p-3 border rounded-xl text-base" required>
-            </div>
-
-            <!-- First ID -->
-            <div class="space-y-2 mt-4">
-                <label class="block text-sm font-semibold text-slate-700 mb-2">First Government ID <span class="text-red-500">*</span></label>
-                <select name="id_type_1" class="zep-select w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base text-slate-500 cursor-pointer" required>
-                <option value="" disabled selected>Select ID type</option>
-                <option value="passport">Passport</option>
-                <option value="driver_license">Driver's License</option>
-                <option value="gsis_id">GSIS ID</option>
-                <option value="sss_id">SSS ID</option>
-                <option value="philhealth_id">PhilHealth ID</option>
-                <option value="tin_id">TIN ID</option>
-                <option value="postal_id">Postal ID</option>
-                <option value="voter_id">Voter’s ID</option>
-                <option value="other">Other</option>
-                </select>
-               <label class="upload-zone w-full p-3 rounded-xl border-dashed border-2 border-slate-300 flex flex-col items-center justify-center cursor-pointer text-slate-500 hover:border-blue-600 hover:bg-slate-50 transition">
-                    Click or drag file here
-                    <input type="file" name="id_file_1" accept=".jpg,.jpeg,.png,.pdf" class="opacity-0 absolute inset-0 cursor-pointer" required>
-                </label>          
-            </div>
-
-            <!-- Second ID -->
-            <div class="space-y-2 mt-4">
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Second Government ID <span class="text-red-500">*</span></label>
-                <select name="id_type_2" class="zep-select w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base text-slate-500 cursor-pointer" required>
-                <option value="" disabled selected>Select ID type</option>
-                <option value="passport">Passport</option>
-                <option value="driver_license">Driver's License</option>
-                <option value="gsis_id">GSIS ID</option>
-                <option value="sss_id">SSS ID</option>
-                <option value="philhealth_id">PhilHealth ID</option>
-                <option value="tin_id">TIN ID</option>
-                <option value="postal_id">Postal ID</option>
-                <option value="voter_id">Voter’s ID</option>
-                <option value="other">Other</option>
-                </select>
-               <label class="upload-zone w-full p-3 rounded-xl border-dashed border-2 border-slate-300 flex flex-col items-center justify-center cursor-pointer text-slate-500 hover:border-blue-600 hover:bg-slate-50 transition">
-                    Click or drag file here
-                    <input type="file" name="id_file_2" accept=".jpg,.jpeg,.png,.pdf" class="opacity-0 absolute inset-0 cursor-pointer" required>
-                    </label>          
-            </div>
-            </div>
-
             
           <!-- PAYMENT DETAILS -->
           <section>
@@ -361,14 +307,14 @@ tailwind.config = {
 
                 <div class="text-sm text-slate-600 leading-relaxed">
                   <p class="font-bold text-slate-900 mb-1">Scan the QR code to pay</p>
-                  <p>Use your preferred e-wallet or banking app to complete your payment.</p>
+                  <p>Use your gcash to complete your payment.</p>
                 </div>
 
                 <div class="flex flex-col items-center">
                   <p class="text-xs font-bold text-slate-800 tracking-wide mb-2">SCAN TO PAY</p>
                   <div class="qr-grid">
                     <div class="qr-grid w-48 h-48 flex items-center justify-center">
-                    <img src="path/to/your-qr-code.png" alt="Reservation QR Code" class="w-full h-full object-contain rounded-xl shadow-sm">
+                    <img src="/images/QR.jpg" alt="Reservation QR Code" class="w-full h-full object-contain rounded-xl shadow-sm">
                     </div>
                   </div>
                   <p class="text-xs text-slate-500 mt-2">Reference ID: <span class="font-bold">#101</span></p>
