@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="../output.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <title>Zeppelin Suites - Sign Up Page</title>
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
@@ -18,7 +19,7 @@
         <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites Logo" style="height:75px;">
     </a>
     <!-- Desktop Nav Items -->
-    <div class="hidden md:flex items-center gap-8">
+    <div class="hidden min-[851px]:flex items-center gap-8">
         <a href="../generalViewPages/index.html" class="text-sm text-zinc-500 hover:text-zinc-800">Home</a>
         <a href="../generalViewPages/tour.html" class="text-sm text-zinc-500 hover:text-zinc-500 transition-colors">Take a Tour</a>
         <div class="relative group">
@@ -40,14 +41,14 @@
     </div>
 
     <!-- Hamburger -->
-    <button onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
+    <button onclick="toggleMenu()" class="min-[851px]:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
         <span id="bar1" class="block w-6 h-0.5 bg-zinc-800 transition-transform"></span>
         <span id="bar2" class="block w-6 h-0.5 bg-zinc-800 transition-opacity"></span>
         <span id="bar3" class="block w-6 h-0.5 bg-zinc-800 transition-transform"></span>
     </button>
 
     <!-- Mobile Menu -->
-    <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 md:hidden z-50 hidden">
+    <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 min-[851px]:hidden z-50 hidden">
         <a href="../generalViewPages/index.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Home</a>
         <a href="../generalViewPages/tour.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Take a Tour</a>
         <button onclick="toggleDropdown('mobileDropdown', 'mobileChevron')" class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50 bg-transparent border-0 cursor-pointer">
