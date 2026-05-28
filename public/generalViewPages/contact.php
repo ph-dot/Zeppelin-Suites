@@ -26,7 +26,7 @@
   <a href="../generalViewPages/index.html">
     <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
   </a>
-  <div class="hidden md:flex items-center gap-8">
+  <div class="hidden min-[851px]:flex items-center gap-8">
     <a href="../generalViewPages/index.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Home</a>
     <a href="../generalViewPages/tour.html" class="text-sm text-zinc-500 hover:text-zinc-500 transition-colors">Take a Tour</a>
     <div class="relative group">
@@ -43,12 +43,12 @@
     <a href="../generalViewPages/contact.php" class="text-sm text-zinc-800 font-medium hover:text-zinc-500 transition-colors">Contact</a>
     <a href="../generalViewPages/login.php" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Portal</a>
   </div>
-  <button onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
+  <button onclick="toggleMenu()" class="min-[851px]:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
     <span id="bar1" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
     <span id="bar2" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
     <span id="bar3" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
   </button>
-  <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 md:hidden z-50 hidden">
+  <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 min-[851px]:hidden z-50 hidden">
     <a href="../generalViewPages/index.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Home</a>
     <a href="../generalViewPages/tour.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Take a Tour</a>
     <button onclick="toggleDropdown('mobileDropdown','mobileChevron')" class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50 bg-transparent border-0 cursor-pointer">Browse Units <svg id="mobileChevron" class="transition-transform" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -240,14 +240,11 @@
       <div>
         <p class="text-xs text-white/50 mb-3 uppercase tracking-widest">Follow Us</p>
         <div class="flex gap-3">
-          <a href="#" class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors">
+          <a href="https://www.facebook.com/zeppilinsuites2015" class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors">
             <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
           </a>
-          <a href="#" class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors">
+          <a href="https://www.instagram.com/zeppelinsuites" class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors">
             <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-          </a>
-          <a href="#" class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors">
-            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.07a8.15 8.15 0 004.77 1.52V7.15a4.85 4.85 0 01-1-.46z"/></svg>
           </a>
         </div>
       </div>
@@ -264,8 +261,95 @@
     <a href="../generalViewPages/faq.html" class="hover:text-zinc-900">FAQ</a>
     <a href="../generalViewPages/aboutUs.html" class="hover:text-zinc-900">About Us</a>
     <a href="../generalViewPages/contact.php" class="hover:text-zinc-900">Contact</a>
+<!-- ── PREMIUM FOOTER ────────────────────────────────────────────── -->
+<footer class="bg-zinc-950 text-zinc-300 py-16 md:py-20 px-6 md:px-8 lg:px-16 xl:px-24">
+  <div class="max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-x-12 gap-y-14">
+      
+      <!-- Brand -->
+      <div class="sm:col-span-5 flex flex-col items-center lg:items-start">
+        <a href="../generalViewPages/index.html" class="inline-block mb-8">
+          <div class="font-bold tracking-tighter text-white leading-none text-center lg:text-left">
+            <span class="text-5xl md:text-6xl">ZEPPELIN</span><br>
+            <span class="text-xl md:text-2xl tracking-[0.25em] font-light text-zinc-400">SUITES</span>
+          </div>
+        </a>
+        <p class="text-zinc-400 text-center lg:text-left max-w-sm leading-relaxed text-sm md:text-base px-4 md:px-0">
+          Experience unparalleled luxury in the heart of Angeles City. 
+          Zeppelin Suites redefines modern living with sophisticated design and exceptional amenities.
+        </p>
+      </div>
+
+      <!-- Explore -->
+      <div class="lg:col-span-2 items-center lg:items-start">
+        <h3 class="font-semibold text-white mb-5 tracking-wider text-sm text-center sm:text-left">EXPLORE</h3>
+        <div class="flex flex-col gap-3 text-sm text-center sm:text-left">
+          <a href="../generalViewPages/index.html" class="hover:text-white transition-colors">Home</a>
+          <a href="../generalViewPages/tour.html" class="hover:text-white transition-colors">Virtual Tour</a>
+          <a href="../generalViewPages/aboutUs.html" class="hover:text-white transition-colors">About Us</a>
+          <a href="../generalViewPages/faq.html" class="hover:text-white transition-colors">FAQ</a>
+          <a href="../generalViewPages/contact.html" class="hover:text-white transition-colors">Contact</a>
+        </div>
+      </div>
+
+      <!-- Units -->
+      <div class="lg:col-span-2">
+        <h3 class="font-semibold text-white mb-5 tracking-wider text-sm text-center sm:text-left">UNITS</h3>
+        <div class="flex flex-col gap-3 text-sm text-center sm:text-left">
+          <a href="../generalViewPages/studioTypeA.html" class="hover:text-white transition-colors">Studio Type A</a>
+          <a href="../generalViewPages/studioTypeB.html" class="hover:text-white transition-colors">Studio Type B</a>
+          <a href="../generalViewPages/oneBedroom.html" class="hover:text-white transition-colors">One Bedroom</a>
+          <a href="../generalViewPages/twoBedroom.html" class="hover:text-white transition-colors">Two Bedroom</a>
+        </div>
+      </div>
+
+      <!-- Connect -->
+      <div class="sm:col-span-2">
+        <h3 class="font-semibold text-white mb-5 tracking-wider text-sm text-center sm:text-left">CONNECT WITH US</h3>
+        
+        <div class="flex gap-6 mb-8 justify-center sm:justify-start">
+          <a href="https://www.facebook.com/zeppilinsuites2015" target="_blank" class="text-zinc-400 hover:text-white transition-all hover:scale-110">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+            </svg>
+          </a>
+          <a href="https://www.instagram.com/zeppelinsuites" target="_blank" class="text-zinc-400 hover:text-white transition-all hover:scale-110">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+            </svg>
+          </a>
+        </div>
+
+        <div class="space-y-5 text-sm text-center sm:text-left">
+          <div>
+            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Address</p>
+            <p class="text-zinc-300">Fields Avenue, Angeles City, Pampanga</p>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Phone</p>
+            <a href="tel:+645 304 3016" class="hover:text-white block">+645 304 3016</a>
+            <a href="tel:+639982243692" class="hover:text-white block">+63 998 224 3692</a>
+            <a href="tel:+639164491253" class="hover:text-white block">+63 916 449 1253</a>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Email</p>
+            <a href="mailto:info@zeppelinsuites.com" class="text-amber-600 hover:text-amber-500">info@zeppelinsuites.com</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="border-t border-zinc-800 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-zinc-500">
+      <p class="text-center md:text-left">© 2026 Zeppelin Suites. All rights reserved.</p>
+      <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center md:justify-start">
+        <a href="../generalViewPages/privacy-policy.htm" class="hover:text-zinc-300 transition-colors">Privacy Policy</a>
+        <a href="../generalViewPages/terms-of-service.htm" class="hover:text-zinc-300 transition-colors">Terms of Service</a>
+      </div>
+    </div>
   </div>
-  <p class="text-xs text-zinc-500">© 2026 Zeppelin Suites. All rights reserved.</p>
 </footer>
 
 <script>

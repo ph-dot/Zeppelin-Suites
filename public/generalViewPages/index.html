@@ -32,7 +32,7 @@
   <a href="../generalViewPages/index.html">
     <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
   </a>
-  <div class="hidden md:flex items-center gap-8">
+  <div class="hidden min-[851px]:flex items-center gap-8">
     <a href="../generalViewPages/index.html" class="text-sm text-zinc-800 font-medium hover:text-zinc-500 transition-colors">Home</a>
     <a href="../generalViewPages/tour.html" class="text-sm text-zinc-500 hover:text-zinc-500 transition-colors">Take a Tour</a>
     <div class="relative group">
@@ -52,12 +52,12 @@
     <a href="../generalViewPages/contact.php" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Contact</a>
     <a href="../generalViewPages/login.php" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Portal</a>
   </div>
-  <button onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
+  <button onclick="toggleMenu()" class="min-[851px]:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
     <span id="bar1" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
     <span id="bar2" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
     <span id="bar3" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
   </button>
-  <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 md:hidden z-50 hidden">
+  <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 min-[851px]:hidden z-50 hidden">
     <a href="../generalViewPages/index.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-900 font-medium hover:bg-zinc-50">Home</a>
     <a href="../generalViewPages/tour.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Take a Tour</a>
     <button onclick="toggleDropdown('mobileDropdown','mobileChevron')" class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50 bg-transparent border-0 cursor-pointer">
@@ -112,7 +112,7 @@
       <div class="bg-zinc-100 rounded-2xl aspect-video flex items-center justify-center overflow-hidden">
         <img src="../images/zeppelin-suites-front.jpg" alt="Building exterior" class="w-full h-full object-cover rounded-2xl" onerror="this.parentElement.innerHTML='<span class=\'text-zinc-400 font-semibold\'>IMG</span>'">
       </div>
-      <a href="#" class="btn-primary bg-zinc-900 text-white text-center py-3.5 rounded-xl font-bold text-sm tracking-widest uppercase hover:bg-zinc-700 active:scale-95 transition-all">Virtual Tour →</a>
+      <a href="../generalViewPages/tour.html" class="btn-primary bg-zinc-900 text-white text-center py-3.5 rounded-xl font-bold text-sm tracking-widest uppercase hover:bg-zinc-700 active:scale-95 transition-all">Virtual Tour →</a>
     </div>
   </div>
 </section>
@@ -207,117 +207,37 @@
   </div>
 </section>
 
-<!-- ── FACILITIES & AMENITIES ────────────────────────────── -->
-<section class="amenity-bg py-16 px-6 md:px-16 lg:px-24 xl:px-32">
-  <div class="max-w-6xl mx-auto">
-    <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 mb-10">Facilities and Amenities</h2>
-    
+<!-- ── PREMIUM FACILITIES & AMENITIES ────────────────────────────── -->
+<section class="py-16 md:py-20 px-6 md:px-8 lg:px-16 xl:px-24 bg-white">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-12">
+      <div>
+        <p class="text-xs tracking-[0.125em] uppercase text-zinc-400 font-medium mb-2">LUXURY LIVING</p>
+        <h2 class="text-4xl md:text-5xl font-bold text-zinc-900 leading-tight">Facilities &amp; Amenities</h2>
+      </div>
+      <p class="text-zinc-500 max-w-md mt-4 md:mt-0 text-sm md:text-base">
+        Thoughtfully curated spaces designed for comfort, convenience, and elevated living.
+      </p>
+    </div>
+
+    <!-- Responsive Infinite Carousel -->
     <div class="relative group">
-      <div class="overflow-hidden">
-        <div id="amenityTrack" class="flex gap-6 transition-transform duration-500 ease-out" style="transform: translateX(0)">
-          
-          <div class="flex-none w-72 flex flex-col">
-            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
-              <img src="../images/environment.jpg" alt="Environment" class="w-full h-full object-cover">
-            </div>
-            <h3 class="font-bold text-lg text-zinc-900 mb-3">Environment</h3>
-            <ul class="space-y-3">
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Lobby with concierge desk offering 24-hour service</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Landscaped gardens</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Swimming pool</span></li>
-            </ul>
-          </div>
-
-          <div class="flex-none w-72 flex flex-col">
-            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
-              <img src="../images/apartment-features.jpg" alt="Apartment Features" class="w-full h-full object-cover">
-            </div>
-            <h3 class="font-bold text-lg text-zinc-900 mb-3">Apartment Features</h3>
-            <ul class="space-y-3">
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Balconies (as per plan)</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Air conditioning</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Satellite TV and telephone connection points</span></li>
-            </ul>
-          </div>
-
-          <div class="flex-none w-72 flex flex-col">
-            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
-              <img src="../images/elevators.png" alt="Convenience" class="w-full h-full object-cover">
-            </div>
-            <h3 class="font-bold text-lg text-zinc-900 mb-3">Convenience</h3>
-            <ul class="space-y-3">
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Elevators to all floors</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Security access control for common areas</span></li>
-            </ul>
-          </div>
-
-          <div class="flex-none w-72 flex flex-col">
-            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
-              <img src="../images/living-and-dining.jpg" alt="Living & Dining" class="w-full h-full object-cover">
-            </div>
-            <h3 class="font-bold text-lg text-zinc-900 mb-3">Living & Dining</h3>
-            <ul class="space-y-3">
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Ceramic tiled floors throughout</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Plastered and painted walls</span></li>
-            </ul>
-          </div>
-
-          <div class="flex-none w-72 flex flex-col">
-            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
-              <img src="../images/kitchen.jpg" alt="Living & Dining" class="w-full h-full object-cover">
-            </div>
-            <h3 class="font-bold text-lg text-zinc-900 mb-3">Kitchen</h3>
-            <ul class="space-y-3">
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Fitted kitchen with cabinets, stone counter tops, cooktop with exhaust, four burner hood range and exhaust</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Ceramic tiled floors</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Stainless steel covered wall</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Laminated kitchen cabinets</span></li>
-            </ul>
-          </div>
-
-          <div class="flex-none w-72 flex flex-col">
-            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
-              <img src="../images/bathroom.jpg" alt="Bathroom Features" class="w-full h-full object-cover">
-            </div>
-            <h3 class="font-bold text-lg text-zinc-900 mb-3">Bathroom Features</h3>
-            <ul class="space-y-3">
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Quality sanitary fittings</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Floor / wall ceramic tiles</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Shower</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Washer and dryer hookups</span></li>
-            </ul>
-          </div>
-
-          <div class="flex-none w-72 flex flex-col">
-            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
-              <img src="../images/exclusive-services.jpg" alt="Exclusive Services" class="w-full h-full object-cover">
-            </div>
-            <h3 class="font-bold text-lg text-zinc-900 mb-3">Exclusive Services</h3>
-            <ul class="space-y-3">
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Helicopter deck on the roof</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Car Rental & Chauffeur Service</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Airport pick-up and drop off</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Maid and laundry services</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Owners Association to manage the maintenance and upkeep of the common facilities in the building</span></li>
-            </ul>
-          </div>
-
-          <div class="flex-none w-72 flex flex-col">
-            <div class="bg-zinc-200 rounded-2xl aspect-[4/3] mb-4 overflow-hidden">
-              <img src="../images/shops.png" alt="Shops" class="w-full h-full object-cover">
-            </div>
-            <h3 class="font-bold text-lg text-zinc-900 mb-3">Shops</h3>
-            <ul class="space-y-3">
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Coffee Shops</span></li>
-              <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Sports Bar</span></li>
-            </ul>
-          </div>
-
+      <div id="amenityWrapper" class="overflow-hidden rounded-3xl">
+        <div id="amenityTrack" 
+             class="flex gap-4 md:gap-6 transition-transform duration-700 ease-out px-4 md:px-0">
+          <!-- Populated by JavaScript -->
         </div>
       </div>
 
-      <button onclick="scrollAmenity(-1)" class="absolute left-0 top-[40%] -translate-y-1/2 -translate-x-6 md:-translate-x-12 text-4xl font-light text-zinc-400 hover:text-zinc-900 transition-colors bg-white/80 rounded-full w-12 h-12 flex items-center justify-center shadow-sm">‹</button>
-      <button onclick="scrollAmenity(1)" class="absolute right-0 top-[40%] -translate-y-1/2 translate-x-6 md:translate-x-12 text-4xl font-light text-zinc-400 hover:text-zinc-900 transition-colors bg-white/80 rounded-full w-12 h-12 flex items-center justify-center shadow-sm">›</button>
+      <!-- Navigation Buttons -->
+      <button onclick="prevAmenity()" 
+              class="absolute left-3 md:left-8 top-1/2 -translate-y-1/2 z-30 bg-white/95 hover:bg-white shadow-lg text-zinc-900 w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center text-3xl transition-all hover:scale-110 active:scale-95 border border-zinc-100">
+        ‹
+      </button>
+      <button onclick="nextAmenity()" 
+              class="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 z-30 bg-white/95 hover:bg-white shadow-lg text-zinc-900 w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center text-3xl transition-all hover:scale-110 active:scale-95 border border-zinc-100">
+        ›
+      </button>
     </div>
   </div>
 </section>
@@ -343,8 +263,95 @@
     <a href="../generalViewPages/faq.html" class="hover:text-zinc-900">FAQ</a>
     <a href="../generalViewPages/aboutUs.html" class="hover:text-zinc-900">About Us</a>
     <a href="../generalViewPages/contact.php" class="hover:text-zinc-900">Contact</a>
+<!-- ── PREMIUM FOOTER ────────────────────────────────────────────── -->
+<footer class="bg-zinc-950 text-zinc-300 py-16 md:py-20 px-6 md:px-8 lg:px-16 xl:px-24">
+  <div class="max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-x-12 gap-y-14">
+      
+      <!-- Brand -->
+      <div class="sm:col-span-5 flex flex-col items-center lg:items-start">
+        <a href="../generalViewPages/index.html" class="inline-block mb-8">
+          <div class="font-bold tracking-tighter text-white leading-none text-center lg:text-left">
+            <span class="text-5xl md:text-6xl">ZEPPELIN</span><br>
+            <span class="text-xl md:text-2xl tracking-[0.25em] font-light text-zinc-400">SUITES</span>
+          </div>
+        </a>
+        <p class="text-zinc-400 text-center lg:text-left max-w-sm leading-relaxed text-sm md:text-base px-4 md:px-0">
+          Experience unparalleled luxury in the heart of Angeles City. 
+          Zeppelin Suites redefines modern living with sophisticated design and exceptional amenities.
+        </p>
+      </div>
+
+      <!-- Explore -->
+      <div class="lg:col-span-2 items-center lg:items-start">
+        <h3 class="font-semibold text-white mb-5 tracking-wider text-sm text-center sm:text-left">EXPLORE</h3>
+        <div class="flex flex-col gap-3 text-sm text-center sm:text-left">
+          <a href="../generalViewPages/index.html" class="hover:text-white transition-colors">Home</a>
+          <a href="../generalViewPages/tour.html" class="hover:text-white transition-colors">Virtual Tour</a>
+          <a href="../generalViewPages/aboutUs.html" class="hover:text-white transition-colors">About Us</a>
+          <a href="../generalViewPages/faq.html" class="hover:text-white transition-colors">FAQ</a>
+          <a href="../generalViewPages/contact.html" class="hover:text-white transition-colors">Contact</a>
+        </div>
+      </div>
+
+      <!-- Units -->
+      <div class="lg:col-span-2">
+        <h3 class="font-semibold text-white mb-5 tracking-wider text-sm text-center sm:text-left">UNITS</h3>
+        <div class="flex flex-col gap-3 text-sm text-center sm:text-left">
+          <a href="../generalViewPages/studioTypeA.html" class="hover:text-white transition-colors">Studio Type A</a>
+          <a href="../generalViewPages/studioTypeB.html" class="hover:text-white transition-colors">Studio Type B</a>
+          <a href="../generalViewPages/oneBedroom.html" class="hover:text-white transition-colors">One Bedroom</a>
+          <a href="../generalViewPages/twoBedroom.html" class="hover:text-white transition-colors">Two Bedroom</a>
+        </div>
+      </div>
+
+      <!-- Connect -->
+      <div class="sm:col-span-2">
+        <h3 class="font-semibold text-white mb-5 tracking-wider text-sm text-center sm:text-left">CONNECT WITH US</h3>
+        
+        <div class="flex gap-6 mb-8 justify-center sm:justify-start">
+          <a href="https://www.facebook.com/zeppilinsuites2015" target="_blank" class="text-zinc-400 hover:text-white transition-all hover:scale-110">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+            </svg>
+          </a>
+          <a href="https://www.instagram.com/zeppelinsuites" target="_blank" class="text-zinc-400 hover:text-white transition-all hover:scale-110">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+            </svg>
+          </a>
+        </div>
+
+        <div class="space-y-5 text-sm text-center sm:text-left">
+          <div>
+            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Address</p>
+            <p class="text-zinc-300">Fields Avenue, Angeles City, Pampanga</p>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Phone</p>
+            <a href="tel:+645 304 3016" class="hover:text-white block">+645 304 3016</a>
+            <a href="tel:+639982243692" class="hover:text-white block">+63 998 224 3692</a>
+            <a href="tel:+639164491253" class="hover:text-white block">+63 916 449 1253</a>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Email</p>
+            <a href="mailto:info@zeppelinsuites.com" class="text-amber-600 hover:text-amber-500">info@zeppelinsuites.com</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="border-t border-zinc-800 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-zinc-500">
+      <p class="text-center md:text-left">© 2026 Zeppelin Suites. All rights reserved.</p>
+      <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center md:justify-start">
+        <a href="../generalViewPages/privacy-policy.htm" class="hover:text-zinc-300 transition-colors">Privacy Policy</a>
+        <a href="../generalViewPages/terms-of-service.htm" class="hover:text-zinc-300 transition-colors">Terms of Service</a>
+      </div>
+    </div>
   </div>
-  <p class="text-xs text-zinc-500">© 2026 Zeppelin Suites. All rights reserved.</p>
 </footer>
 
 <script>
@@ -370,68 +377,183 @@
     ch.style.transform = hidden ? 'rotate(180deg)' : '';
   }
 
-  let amenityIndex = 0;
-  
-  function scrollAmenity(direction) {
-    const track = document.getElementById('amenityTrack');
-    const cards = track.children;
-    const totalCards = cards.length;
-    
-    // Get width of one card + gap (24px for gap-6)
-    const cardWidth = cards[0].offsetWidth + 24; 
-    
-    // Calculate how many cards fit in the visible area (roughly)
-    const visibleCards = Math.floor(track.parentElement.offsetWidth / cardWidth);
-    const maxIndex = totalCards - visibleCards;
-
-    // Update Index
-    amenityIndex += direction;
-
-    // INFINITE LOGIC:
-    // If we go past the end, jump to start
-    if (amenityIndex > maxIndex) {
-      amenityIndex = 0;
+  // ==================== PREMIUM AMENITIES CAROUSEL ====================
+  const amenitiesData = [
+    {
+      title: "Environment",
+      image: "../images/environment.jpg",
+      items: [
+        "24-hour concierge lobby",
+        "Landscaped gardens",
+        "Swimming pool with lounge area"
+      ]
+    },
+    {
+      title: "Apartment Features",
+      image: "../images/apartment-features.jpg",
+      items: [
+        "Private balconies",
+        "Central air conditioning",
+        "Premium finishes throughout"
+      ]
+    },
+    {
+      title: "Convenience",
+      image: "../images/elevators.png",
+      items: [
+        "High-speed elevators",
+        "Smart security access",
+        "Underground parking"
+      ]
+    },
+    {
+      title: "Living & Dining",
+      image: "../images/living-and-dining.jpg",
+      items: [
+        "Spacious open-plan layouts",
+        "Ceramic tiled flooring",
+        "Large windows with city views"
+      ]
+    },
+    {
+      title: "Kitchen",
+      image: "../images/kitchen.jpg",
+      items: [
+        "Stone countertops",
+        "Modern cabinetry",
+        "Stainless steel appliances"
+      ]
+    },
+    {
+      title: "Bathroom",
+      image: "../images/bathroom.jpg",
+      items: [
+        "Luxury sanitary fittings",
+        "Ceramic wall & floor tiles",
+        "Rain shower system"
+      ]
+    },
+    {
+      title: "Exclusive Services",
+      image: "../images/exclusive-services.jpg",
+      items: [
+        "Helicopter landing pad",
+        "Airport transfer service",
+        "Concierge & maid service"
+      ]
     }
-    // If we go before the start, jump to end
-    if (amenityIndex < 0) {
-      amenityIndex = maxIndex;
-    }
-
-    // Apply the transform
-    const moveX = amenityIndex * cardWidth;
-    track.style.transform = `translateX(-${moveX}px)`;
-  }
-
-  // Optional: Update position on window resize to keep it aligned
-  window.addEventListener('resize', () => {
-    amenityIndex = 0;
-    document.getElementById('amenityTrack').style.transform = `translateX(0)`;
-  });
-
-  //hero section
-  const images = [
-    '../images/zeppelin-suites-slider-exterior-2.jpg',
-    '../images/zeppelin-suites-slider-pool-area.jpg',
-    '../images/zeppelin-suites-slider-interior.jpg',
-    '../images/zeppelin-suites-slider-lobby.jpg'
   ];
 
-  let currentIndex = 0;
-  const bgElement = document.getElementById('slide-bg');
+  let currentAmenityIndex = 0;
+  let isTransitioning = false;
 
-  function changeBackground() {
-    // Apply the next image in the array
-    bgElement.style.backgroundImage = `url('${images[currentIndex]}')`;
+  function createAmenityCard(amenity) {
+    const card = document.createElement('div');
+    card.className = `flex-none w-[85vw] max-w-[340px] sm:w-[340px] md:w-[380px] bg-white rounded-3xl overflow-hidden shadow-sm border border-zinc-100 group hover:shadow-xl transition-all duration-500`;
     
-    // Increment index and loop back to 0
-    currentIndex = (currentIndex + 1) % images.length;
+    card.innerHTML = `
+      <div class="relative aspect-[4/3] overflow-hidden">
+        <img src="${amenity.image}" alt="${amenity.title}" 
+            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+        <div class="absolute bottom-6 left-6 text-white">
+          <h3 class="font-semibold text-2xl tracking-tight">${amenity.title}</h3>
+        </div>
+      </div>
+      <div class="p-6 md:p-8">
+        <ul class="space-y-4">
+          ${amenity.items.map(item => `
+            <li class="flex items-start gap-3 text-zinc-600">
+              <span class="text-emerald-500 mt-1">•</span>
+              <span class="text-sm leading-relaxed">${item}</span>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+    return card;
   }
 
-  // Initial call
-  changeBackground();
+  function renderAmenities() {
+    const track = document.getElementById('amenityTrack');
+    track.innerHTML = '';
 
-  // Change image every 5 seconds
-  setInterval(changeBackground, 5000);
+    [...amenitiesData, ...amenitiesData].forEach(amenity => {
+      track.appendChild(createAmenityCard(amenity));
+    });
+  }
+
+  function updateCarouselPosition() {
+    if (isTransitioning) return;
+    isTransitioning = true;
+
+    const track = document.getElementById('amenityTrack');
+    const isMobile = window.innerWidth < 640;
+    const cardWidth = isMobile ? 340 + 16 : 380 + 24;   // card + gap
+    const offset = -currentAmenityIndex * cardWidth;
+
+    track.style.transform = `translateX(${offset}px)`;
+
+    setTimeout(() => {
+      isTransitioning = false;
+
+      // Infinite loop reset
+      if (currentAmenityIndex >= amenitiesData.length) {
+        currentAmenityIndex = 0;
+        track.style.transition = 'none';
+        track.style.transform = `translateX(0px)`;
+        void track.offsetWidth;
+        track.style.transition = 'transform 700ms cubic-bezier(0.4, 0, 0.2, 1)';
+      }
+    }, 700);
+  }
+
+  function nextAmenity() {
+    currentAmenityIndex++;
+    updateCarouselPosition();
+  }
+
+  function prevAmenity() {
+    if (currentAmenityIndex <= 0) return;
+    currentAmenityIndex--;
+    updateCarouselPosition();
+  }
+
+  // Footer Inquiry Handler
+  function submitFooterInquiry() {
+    const emailInput = document.getElementById('footerEmail');
+    if (emailInput.value.trim() === '') {
+      alert("Please enter your email address.");
+      return;
+    }
+    alert("Thank you! We'll get back to you shortly.");
+    emailInput.value = '';
+  }
+
+  // Initialize everything
+  window.onload = () => {
+    // Render amenities
+    renderAmenities();
+
+    // Hero slider
+    const images = [
+      '../images/zeppelin-suites-slider-exterior-2.jpg',
+      '../images/zeppelin-suites-slider-pool-area.jpg',
+      '../images/zeppelin-suites-slider-interior.jpg',
+      '../images/zeppelin-suites-slider-lobby.jpg'
+    ];
+
+    let currentIndex = 0;
+    const bgElement = document.getElementById('slide-bg');
+
+    function changeBackground() {
+      bgElement.style.backgroundImage = `url('${images[currentIndex]}')`;
+      currentIndex = (currentIndex + 1) % images.length;
+    }
+
+    changeBackground();
+    setInterval(changeBackground, 5000);
+  };
 </script>
 </body>
 </html>

@@ -3,18 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zeppelin Suites — Browse Units</title>
+  <title>Terms of Service — Zeppelin Suites</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
     * { font-family: "Geist", sans-serif; }
     .btn-primary { transition: all 0.15s ease; }
     .btn-primary:active { transform: scale(0.95); }
-    .footer-bg { background-color: #c4c4c4; }
-    /* Slider */
-    .slider-wrap { overflow: hidden; position: relative; }
-    .slider-track { display: flex; transition: transform 0.4s ease; }
-    .slide { min-width: 100%; }
   </style>
 </head>
 <body class="bg-white text-zinc-900">
@@ -25,24 +20,24 @@
     <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
   </a>
   <div class="hidden min-[851px]:flex items-center gap-8">
-    <a href="../generalViewPages/index.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Home</a>
+    <a href="../generalViewPages/index.html" class="text-sm text-zinc-500 hover:text-zinc-500 transition-colors">Home</a>
     <a href="../generalViewPages/tour.html" class="text-sm text-zinc-500 hover:text-zinc-500 transition-colors">Take a Tour</a>
     <div class="relative group">
-      <button class="flex items-center gap-1.5 text-sm text-zinc-800 font-medium cursor-pointer bg-transparent border-0 py-2">
+      <button class="flex items-center gap-1.5 text-sm text-zinc-500 cursor-pointer bg-transparent border-0 py-2 hover:text-zinc-800 transition-colors">
         Browse Units
         <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <div class="absolute top-full left-0 mt-1 w-44 bg-white border border-zinc-200 rounded-xl shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
         <a href="../generalViewPages/studioTypeA.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
         <a href="../generalViewPages/studioTypeB.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
-        <a href="../generalViewPages/oneBedroom.html" class="block px-4 py-2 text-sm text-zinc-900 font-medium hover:bg-zinc-50">One Bedroom</a>
+        <a href="../generalViewPages/oneBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
         <a href="../generalViewPages/twoBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
       </div>
     </div>
     <a href="../generalViewPages/faq.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">FAQ</a>
     <a href="../generalViewPages/aboutUs.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">About Us</a>
-    <a href="../generalViewPages/contact.php" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Contact</a>
-    <a href="../generalViewPages/login.php" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Portal</a>
+    <a href="../generalViewPages/contact.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Contact</a>
+    <a href="../generalViewPages/login.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Portal</a>
   </div>
   <button onclick="toggleMenu()" class="min-[851px]:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
     <span id="bar1" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
@@ -50,79 +45,54 @@
     <span id="bar3" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
   </button>
   <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 min-[851px]:hidden z-50 hidden">
-    <a href="../generalViewPages/index.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Home</a>
+    <a href="../generalViewPages/index.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Home</a>
     <a href="../generalViewPages/tour.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Take a Tour</a>
-    <button onclick="toggleDropdown('mobileDropdown','mobileChevron')" class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm text-zinc-800 font-medium hover:bg-zinc-50 bg-transparent border-0 cursor-pointer">
-      Browse Units <svg id="mobileChevron" class="transition-transform" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <button onclick="toggleDropdown('mobileDropdown','mobileChevron')" class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50 bg-transparent border-0 cursor-pointer">
+      Browse Units
+      <svg id="mobileChevron" class="transition-transform" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
     <div id="mobileDropdown" class="hidden flex-col pl-4">
-      <a href="../generalViewPages/studioTypeA.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Studio Type A</a>
-      <a href="../generalViewPages/studioTypeB.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Studio Type B</a>
-      <a href="../generalViewPages/oneBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-800 font-medium hover:bg-zinc-50">One Bedroom</a>
-      <a href="../generalViewPages/twoBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Two Bedroom</a>
+      <a href="../generalViewPages/studioTypeA.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
+      <a href="../generalViewPages/studioTypeB.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
+      <a href="../generalViewPages/oneBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
+      <a href="../generalViewPages/twoBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
     </div>
-    <a href="../generalViewPages/faq.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">FAQ</a>
-    <a href="../generalViewPages/aboutUs.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">About Us</a>
-    <a href="../generalViewPages/contact.php" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Contact</a>
-    <a href="../generalViewPages/login.php" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Portal</a>
+    <a href="../generalViewPages/faq.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">About Us</a>
+    <a href="../generalViewPages/contact.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Contact</a>
+    <a href="../generalViewPages/login.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Portal</a>
   </div>
 </nav>
 
-<!-- ── PAGE HERO ─────────────────────────────────────────── -->
-<section class="px-6 md:px-16 lg:px-24 xl:px-32 py-16 border-b border-zinc-100">
-  <p class="text-xs tracking-widest uppercase text-zinc-400 mb-2">Explore Our</p>
-  <h1 class="text-4xl md:text-5xl font-bold text-zinc-900">Bedroom Type Units</h1>
-  <p class="text-zinc-500 mt-3 max-w-lg">Discover the perfect home for your lifestyle. Each unit is thoughtfully designed to deliver comfort, style, and convenience.</p>
-</section>
+<section class="max-w-4xl mx-auto px-6 md:px-8 py-16 md:py-24">
+  <h1 class="text-4xl md:text-5xl font-bold text-zinc-900 mb-4">Terms of Service</h1>
+  <p class="text-zinc-500 mb-12">Last updated: April 28, 2026</p>
 
-<!-- ── UNIT CARDS ────────────────────────────────────────── -->
-<section class="px-6 md:px-16 lg:px-24 xl:px-32 py-16 space-y-24">
+  <div class="prose prose-zinc max-w-none text-zinc-600 leading-relaxed">
+    <p class="text-lg">Welcome to Zeppelin Suites. By accessing or using our website, you agree to be bound by these Terms of Service.</p>
 
-  <!-- ONE BEDROOM -->
-  <div id="studio-a" class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center scroll-mt-24">
-    <div class="slider-wrap rounded-2xl overflow-hidden shadow-sm">
-      <div class="slider-track" id="slider-sa">
-        <div class="slide bg-zinc-100 aspect-video flex items-center justify-center">
-          <img src="../images/two-bedroom.jpg" alt="Studio A" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<span class=\'text-zinc-400 font-bold text-xl\'>ROOM IMG</span>'">
-        </div>
-        <div class="slide bg-zinc-200 aspect-video flex items-center justify-center">
-          <img src="../images/2_bedroom_kitchen.jpg" alt="Studio A 2" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<span class=\'text-zinc-400 font-bold text-xl\'>ROOM IMG</span>'">
-        </div>
-      </div>
-      <div class="flex justify-between absolute top-1/2 -translate-y-1/2 w-full px-3" style="position:relative;margin-top:-3rem;">
-        <button onclick="slide('slider-sa','sliderIdx-sa',-1)" class="bg-white/80 rounded-full w-9 h-9 flex items-center justify-center shadow text-zinc-700 font-bold hover:bg-white transition-colors">‹</button>
-        <button onclick="slide('slider-sa','sliderIdx-sa',1)" class="bg-white/80 rounded-full w-9 h-9 flex items-center justify-center shadow text-zinc-700 font-bold hover:bg-white transition-colors">›</button>
-      </div>
-      <input type="hidden" id="sliderIdx-sa" value="0">
-    </div>
-    <div>
-      <p class="text-xs tracking-widest uppercase text-zinc-400 mb-2">Bedroom Type</p>
-      <h2 class="text-3xl font-bold text-zinc-900 mb-4">One Bedroom Unit</h2>
-      <p class="text-zinc-500 leading-relaxed mb-4">A perfectly balanced residential space presenting a completely separate sanctuary for rest. This layout boasts an inviting living area and an independent kitchen zone, making it excellent for entertaining guests.</p>
-      <ul class="space-y-2 mb-6">
-        <li class="flex items-center gap-2 text-sm text-zinc-600"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Floor Area: 35-45 sqm</li>
-        <li class="flex items-center gap-2 text-sm text-zinc-600"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Fully enclosed, private independent bedroom suite</li>
-        <li class="flex items-center gap-2 text-sm text-zinc-600"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Dedicated breakfast nook and integrated kitchen workstation</li>
-        <li class="flex items-center gap-2 text-sm text-zinc-600"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>For couples or dynamic professionals needing separated workspaces</li>
-      </ul>
-      <div class="flex gap-3">
-        <a href="../generalViewPages/contact.php" class="btn-primary bg-zinc-900 text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-zinc-700 active:scale-95 transition-all">Inquire Now</a>
-        <a href="#" class="btn-primary border border-zinc-300 text-zinc-700 px-6 py-3 rounded-full text-sm font-semibold hover:bg-zinc-50 active:scale-95 transition-all">Virtual Tour →</a>
-      </div>
-    </div>
+    <h2 class="text-2xl font-semibold text-zinc-900 mt-12 mb-4">1. Use of Website</h2>
+    <p>This website is provided for informational purposes. You may not use it for any unlawful purpose or in any way that could damage, disable, or impair our site.</p>
+
+    <h2 class="text-2xl font-semibold text-zinc-900 mt-12 mb-4">2. Intellectual Property</h2>
+    <p>All content, logos, images, and materials on this website are the property of Zeppelin Suites or its licensors and are protected by copyright and trademark laws.</p>
+
+    <h2 class="text-2xl font-semibold text-zinc-900 mt-12 mb-4">3. Booking and Reservations</h2>
+    <p>All bookings and reservations are subject to availability and our booking terms. Deposits and payments are non-refundable unless otherwise stated.</p>
+
+    <h2 class="text-2xl font-semibold text-zinc-900 mt-12 mb-4">4. Limitation of Liability</h2>
+    <p>Zeppelin Suites shall not be liable for any indirect, incidental, or consequential damages arising from your use of this website.</p>
+
+    <h2 class="text-2xl font-semibold text-zinc-900 mt-12 mb-4">5. Changes to Terms</h2>
+    <p>We reserve the right to modify these Terms of Service at any time. Continued use of the website after changes constitutes acceptance of the new terms.</p>
+
+    <h2 class="text-2xl font-semibold text-zinc-900 mt-12 mb-4">6. Contact Us</h2>
+    <p>If you have any questions about these Terms, please contact us at:</p>
+    <p class="font-medium">Email: info@zeppelinsuites.com</p>
+    <p class="font-medium">Phone: +63 917 123 4567</p>
   </div>
-
 </section>
 
-<!-- ── FOOTER ────────────────────────────────────────────── -->
-<footer class="footer-bg py-14 px-6 md:px-16 lg:px-24 xl:px-32 text-center">
-  <p class="text-3xl font-black uppercase text-zinc-800 mb-2">Zeppelin Suites</p>
-  <p class="text-zinc-600 text-sm mb-6">Luxury Living in the Heart of Angeles City</p>
-  <div class="flex flex-wrap justify-center gap-6 text-sm text-zinc-600 mb-6">
-    <a href="../generalViewPages/index.html" class="hover:text-zinc-900">Home</a>
-    <a href="../generalViewPages/faq.html" class="hover:text-zinc-900">FAQ</a>
-    <a href="../generalViewPages/aboutUs.html" class="hover:text-zinc-900">About Us</a>
-    <a href="../generalViewPages/contact.php" class="hover:text-zinc-900">Contact</a>
 <!-- ── PREMIUM FOOTER ────────────────────────────────────────────── -->
 <footer class="bg-zinc-950 text-zinc-300 py-16 md:py-20 px-6 md:px-8 lg:px-16 xl:px-24">
   <div class="max-w-7xl mx-auto">
@@ -215,6 +185,7 @@
 </footer>
 
 <script>
+  // Mobile menu functionality
   let menuOpen = false;
   function toggleMenu() {
     menuOpen = !menuOpen;
@@ -235,16 +206,6 @@
     el.classList.toggle('hidden', !hidden);
     el.classList.toggle('flex', hidden);
     ch.style.transform = hidden ? 'rotate(180deg)' : '';
-  }
-  const sliderState = {};
-  function slide(trackId, idxId, dir) {
-    const track = document.getElementById(trackId);
-    const idxInput = document.getElementById(idxId);
-    let idx = parseInt(idxInput.value);
-    const total = track.children.length;
-    idx = (idx + dir + total) % total;
-    idxInput.value = idx;
-    track.style.transform = `translateX(-${idx * 100}%)`;
   }
 </script>
 </body>
