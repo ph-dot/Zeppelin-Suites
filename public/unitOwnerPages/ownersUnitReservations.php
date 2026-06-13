@@ -2,7 +2,8 @@
 require_once '../php_files/auth.php'; 
 require_once '../php_files/db.php'; 
 
-$userData = requireRole($conn, ['admin']); ?>
+$userData = requireRole($conn, ['unit owner']); 
+$owner_id = (int)$userData['user_id']; ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -81,87 +82,75 @@ $userData = requireRole($conn, ['admin']); ?>
 
 <!-- SIDEBAR -->
 <aside class="sidebar fixed left-0 top-0 h-full border-r border-slate-100/80 flex flex-col z-50 md:z-40 shadow-2xl md:shadow-none" id="sidebar">
-  <div class="px-4 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 min-h-18.25">
-    <a href="../adminPages/homeAdmin.php" class="sidebar-logo shrink-0 flex items-center">
-      <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" class="h-10 w-auto object-contain">
+  <div class="px-4 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
+    <a href="overview.html" class="sidebar-logo shrink-0 flex items-center">
+      <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" class="h-10 w-auto object-contain" onerror="this.outerHTML='<span class=\'font-bold text-slate-900 text-sm\'>ZEPPELIN SUITES</span>'">
     </a>
     <button onclick="toggleCollapse()" class="hidden md:flex btn-press p-1.5 rounded-lg hover:bg-slate-100 transition-colors active:scale-95 shrink-0 ml-1">
       <svg class="collapse-icon w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
     </button>
   </div>
   <nav class="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden">
-    <a href="../adminPages/homeAdmin.php" data-tooltip="Home" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="overview.php" data-tooltip="Overview" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-      <span class="nav-label">Home</span>
+      <span class="nav-label">Overview</span>
     </a>
-    <a href="../adminPages/inquiry.php" data-tooltip="Inquiry" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
-      <span class="nav-label">Inquiry</span>
-    </a>
-    <a href="../adminPages/reservation.php" data-tooltip="Reservation" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-      <span class="nav-label">Reservation</span>
-   </a>
-    <a href="../adminPages/units.php" data-tooltip="Units" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="ownersUnit.php" data-tooltip="Units" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V9a2 2 0 00-2-2h-3V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14m0 0H3m3 0h14m-7 0v-4h2v4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1m4 0h1M9 13h1m4 0h1"/></svg>
       <span class="nav-label">Units</span>
     </a>
-    <a href="../adminPages/maintenance.php" data-tooltip="Maintenance" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="tenants.php" data-tooltip="Tenants" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span class="nav-label">Tenants</span>
+    </a>
+    <a href="ownersMaintenance.php" data-tooltip="Maintenance" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span class="nav-label">Maintenance</span>
     </a>
-    <a href="../adminPages/residents.php" data-tooltip="Employees" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      <span class="nav-label">Residents</span>
+    <a href="ownersUnitReservations.php" data-tooltip="Reservations" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      <span class="nav-label">Reservations</span>
     </a>
-    <a href="../adminPages/analytics.php" data-tooltip="Analytics" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-      <span class="nav-label">Analytics</span>
+    <a href="ownersReservations.php" data-tooltip="Reservations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      <span class="nav-label">Inquiries</span>
     </a>
   </nav>
-  <div class="notice-section px-2 py-4 border-t border-slate-100 shrink-0">
-    <button onclick="toggleNotice()" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition-all btn-press active:scale-95">
-      <span class="nav-label">Notice</span>
-      <svg class="notice-chevron w-3.5 h-3.5 text-slate-400 shrink-0" id="noticeChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-    </button>
-    <div class="notice-panel open px-2 pt-1 space-y-0.5" id="noticePanel">
-      <a href="#" class="flex items-center gap-2 py-1.5 px-3 text-xs text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span><span class="nav-label">Summer Vacation</span></a>
-      <a href="#" class="flex items-center gap-2 py-1.5 px-3 text-xs text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span><span class="nav-label">Employment Notice</span></a>
-    </div>
-  </div>
 </aside>
 
-<!-- MAIN WRAPPER -->
 <div class="main-wrapper h-screen flex flex-col" id="mainWrapper">
-  <header class="glass-header border-b border-slate-100/80 px-4 md:px-6 py-3.5 flex items-center gap-4 shrink-0 z-30">
-  <button class="md:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95" onclick="openMobileSidebar()">
-    <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-  </button>
-  
-  <div class="relative flex-1 max-w-sm">
-    <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-    <input type="text" placeholder="Search inquiries..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
-  </div>
-  
-  <div class="flex items-center gap-2 ml-auto">
-    <button class="p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95 relative">
-      <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-      <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+   <header class="glass-header border-b border-slate-100/80 px-4 md:px-6 py-3.5 flex items-center gap-4 shrink-0 z-30">
+    <button class="md:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95" onclick="openMobileSidebar()">
+      <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
-    
-     <div class="relative">
-        <button onclick="toggleProfile()" class="flex items-center gap-2.5 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl px-3 py-1.5 transition-all btn-press">
-          <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0" id="userInitials">A</div>
-          <div class="hidden sm:block text-left">
-            <p class="text-sm font-semibold text-slate-800 truncate" id="userName">Admin</p>
+    <div class="relative flex-1 max-w-sm">
+      <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" placeholder="Search..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
+    </div>
+    <div class="flex items-center gap-2 ml-auto">
+      <button class="relative p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95">
+        <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+      </button>
+      <div class="relative" id="profileWrapper">
+        <button onclick="toggleProfile()" class="flex items-center gap-2.5 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl px-3 py-1.5 transition-all btn-press active:scale-95">
+          <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0">
+            <?= htmlspecialchars($user['initial'] ?? 'U') ?>
           </div>
-          <svg class="w-3.5 h-3.5 text-slate-400" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+
+          <div class="hidden sm:block text-left">
+            <p class="text-sm font-semibold text-slate-800 leading-none">
+              <?= htmlspecialchars($user['full_name'] ?? 'Unit Owner') ?>
+            </p>
+            <p class="text-xs text-slate-400 mt-0.5">Unit Owner</p>
+          </div>
+          <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
-        
-        <!-- Simple Dropdown -->
-        <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50 hidden" id="profileDropdown">
-          <div class="border-t border-slate-100 my-1"></div>
-          <button onclick="confirmLogout()" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg mx-1">Sign out</button>
+        <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl py-2 z-50" id="profileDropdown">
+          <a href="../php_files/logout_session.php" class="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Sign out
+          </a>    
         </div>
       </div>
     </div>
@@ -190,10 +179,9 @@ $userData = requireRole($conn, ['admin']); ?>
             <svg class="w-4 h-4 inline-block mr-1.5 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
             Filter
           </button>
-          <a href="inquiry.php"
-            class="btn-press bg-slate-900 hover:bg-slate-700 active:scale-95 text-white text-sm font-semibold px-4 py-2 rounded-full transition-all">
-            View Inquiries
-          </a>
+          <button class="btn-press bg-slate-900 hover:bg-slate-700 active:scale-95 text-white text-sm font-semibold px-4 py-2 rounded-full transition-all">
+            + Add Reservation
+          </button>
         </div>
       </div>
 
@@ -215,7 +203,7 @@ $userData = requireRole($conn, ['admin']); ?>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50" id="resBody">
-              <?php include 'ActionsAP/getReservation.php'; ?>
+              <?php require_once __DIR__ . '/ActionsUOP/getOwnersUnitReservations.php'; ?>
             </tbody>
           </table>
         </div>
@@ -432,22 +420,6 @@ $userData = requireRole($conn, ['admin']); ?>
       </p>
     </div>
 
-    <div id="paymentActionButtons" class="mt-5 flex flex-col sm:flex-row gap-3">
-      <button 
-        type="button"
-        id="btnVerifyPayment"
-        class="btn-press flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all">
-        Payment Matches — Verify
-      </button>
-
-      <button 
-        type="button"
-        id="btnRejectPayment"
-        class="btn-press flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all">
-        Payment Does Not Match — Reject
-      </button>
-    </div>
-
     <div class="mt-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
       <p class="text-xs text-amber-700 leading-relaxed">
         Reservation fee is non-refundable once verified and processed. If the payment does not match the required amount, the reservation may be rejected before requirement tracking.
@@ -503,6 +475,15 @@ $userData = requireRole($conn, ['admin']); ?>
         -
       </p>
     </div>
+    
+    <div id="requirementDecisionDisplay" class="hidden mb-5 rounded-xl border px-4 py-3">
+  <p class="text-xs font-bold uppercase tracking-wide mb-1" id="requirementDecisionLabel">
+    Requirement Status
+  </p>
+  <p class="text-sm font-semibold" id="requirementDecisionText">
+    -
+  </p>
+</div>
 
 <div id="requirementActionArea">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -522,6 +503,12 @@ $userData = requireRole($conn, ['admin']); ?>
       </label>
     </div>
 
+    <div class="mt-5 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
+      <p class="text-xs text-blue-700 leading-relaxed">
+        This is admin tracking only. No document upload is required here.
+      </p>
+    </div>
+
     <button 
       type="button"
       id="btnSaveRequirements"
@@ -536,62 +523,28 @@ $userData = requireRole($conn, ['admin']); ?>
     class="hidden mt-5 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all">
     Edit Requirement Tracking
   </button>
-
-  <button 
-    type="button"
-    id="btnOfficiallyBooked"
-    class="hidden mt-3 w-full bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all">
-    Mark as Officially Booked
-  </button>
-
-  <div class="mt-4 bg-white border border-slate-200 rounded-xl p-4">
-  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Last Updated By</p>
-  <p id="requirements_updated_by_display" class="text-sm font-semibold text-slate-800 mt-1">Not updated yet</p>
-  <p id="requirements_updated_at_display" class="text-xs text-slate-500 mt-1">-</p>
-</div>
+    <div class="mt-4 bg-white border border-slate-200 rounded-xl p-4">
+    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Last Updated By</p>
+    <p id="requirements_updated_by_display" class="text-sm font-semibold text-slate-800 mt-1">Not updated yet</p>
+    <p id="requirements_updated_at_display" class="text-xs text-slate-500 mt-1">-</p>
+  </div>
   </section>
 
-  <!-- CANCELLATION REQUEST -->
-<section id="cancellationRequestSection" class="hidden bg-red-50 border border-red-200 rounded-2xl p-5">
-  <div class="flex items-center gap-2 mb-4">
-    <div class="w-9 h-9 rounded-xl bg-white border border-red-200 flex items-center justify-center">
-      <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-      </svg>
-    </div>
-
-    <div>
-      <h3 class="text-sm font-bold text-red-800 uppercase tracking-wide">Cancellation Request</h3>
-     <p class="text-xs text-red-600 mt-0.5">A cancellation request was submitted. Admin approval is required.</p>
-    </div>
-  </div>
-
-  <div class="bg-white border border-red-100 rounded-xl p-4">
-    <p class="text-xs font-semibold text-red-400 uppercase tracking-wide">Requested At</p>
-    <p id="cancel_requested_at_display" class="text-sm font-semibold text-red-800 mt-1">-</p>
-  </div>
-
-  <div class="mt-4 bg-white border border-red-100 rounded-xl p-4">
-    <p class="text-xs font-semibold text-red-400 uppercase tracking-wide">Reason</p>
-    <p id="cancel_reason_display" class="text-sm text-red-800 mt-1 leading-relaxed">-</p>
-  </div>
+  <!-- FOOTER -->
+  <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/60">
+    <<button 
+    type="button"
+    id="btnRequestCancellation"
+    class="btn-press px-5 py-2 text-sm font-bold text-red-600 border border-red-200 bg-red-50 rounded-xl hover:bg-red-100 transition-all active:scale-95">
+    Request Cancellation
+  </button>
 
   <button 
     type="button"
-    id="btnApproveCancellation"
-    class="mt-5 w-full bg-red-600 hover:bg-red-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all">
-    Approve Cancellation
+    onclick="closeEditModal()" 
+    class="btn-press px-5 py-2 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-100 transition-all active:scale-95">
+    Close
   </button>
-</section>
-
-  <!-- FOOTER -->
-  <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/60">
-    <button 
-      type="button"
-      onclick="closeEditModal()" 
-      class="btn-press px-5 py-2 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-100 transition-all active:scale-95">
-      Close
-    </button>
   </div>
 </div>
 </div>
@@ -622,17 +575,11 @@ $userData = requireRole($conn, ['admin']); ?>
     </div>
 
     <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50">
-      <button 
-        type="button" 
-        onclick="closePaymentConfirmModal('verifyPaymentModal')" 
-        class="px-5 py-2 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-100">
+      <button type="button" onclick="closePaymentConfirmModal('verifyPaymentModal')" class="px-5 py-2 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-100">
         Cancel
       </button>
 
-      <button 
-        type="button" 
-        onclick="confirmPaymentAction('verify')" 
-        class="px-5 py-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl">
+      <button type="button" onclick="confirmPaymentAction('verify')" class="px-5 py-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl">
         Yes, Verify Payment
       </button>
     </div>
@@ -677,91 +624,181 @@ $userData = requireRole($conn, ['admin']); ?>
   </div>
 </div>
 
+<!-- OWNER CANCELLATION REQUEST MODAL -->
+<div id="ownerCancelRequestModal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/50 px-4">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+    <div class="bg-red-600 px-6 py-4">
+      <h2 class="text-lg font-bold text-white">Request Cancellation?</h2>
+      <p class="text-sm text-red-50 mt-1">Admin approval is required.</p>
+    </div>
 
+    <div class="p-6">
+      <p class="text-sm text-slate-700 leading-relaxed">
+        This will not cancel the reservation immediately. It will send a cancellation request to the admin for review.
+      </p>
+
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mt-5 mb-1.5">
+        Reason for Cancellation <span class="text-red-500">*</span>
+      </label>
+
+      <textarea 
+        id="ownerCancelReason"
+        rows="4"
+        placeholder="Enter reason for requesting cancellation..."
+        class="zep-input w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 resize-none"></textarea>
+    </div>
+
+    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50">
+      <button 
+        type="button" 
+        onclick="closeOwnerCancelRequestModal()" 
+        class="px-5 py-2 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-100">
+        Close
+      </button>
+
+      <button 
+        type="button" 
+        onclick="submitOwnerCancelRequest()" 
+        class="px-5 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl">
+        Submit Request
+      </button>
+    </div>
+  </div>
+</div>
 <script>
-  let sidebarCollapsed = false;
-  let editRow = null;
+let sidebarCollapsed = false;
+let editRow = null;
 
-  function toggleCollapse() {
-    sidebarCollapsed = !sidebarCollapsed;
-    document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
-    document.getElementById('mainWrapper').classList.toggle('sidebar-collapsed', sidebarCollapsed);
-  }
-  function openMobileSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
-  function closeMobileSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
-  function toggleNotice() { document.getElementById('noticePanel').classList.toggle('open'); document.getElementById('noticeChevron').classList.toggle('rotated'); }
-  function toggleProfile() {
-    const dd = document.getElementById('profileDropdown'), ch = document.getElementById('profileChevron');
-    const open = dd.classList.toggle('open'); ch.style.transform = open ? 'rotate(180deg)' : '';
-  }
-  document.addEventListener('click', e => {
-    const w = document.getElementById('profileWrapper');
-    if (w && !w.contains(e.target)) { document.getElementById('profileDropdown').classList.remove('open'); document.getElementById('profileChevron').style.transform = ''; }
-  });
+/* SIDEBAR */
+function toggleCollapse() {
+  sidebarCollapsed = !sidebarCollapsed;
 
-  document.addEventListener('DOMContentLoaded', function() {
-  const userName = '<?php echo htmlspecialchars($_SESSION["full_name"] ?? "Admin"); ?>';
-  const initials = '<?php echo $_SESSION["initial"] ?? "A"; ?>';
-  
-  document.getElementById('userName').textContent = userName;
-  document.getElementById('userInitials').textContent = initials;
-});
+  const sidebar = document.getElementById('sidebar');
+  const mainWrapper = document.getElementById('mainWrapper');
 
-let profileOpen = false;
+  if (sidebar) sidebar.classList.toggle('collapsed', sidebarCollapsed);
+  if (mainWrapper) mainWrapper.classList.toggle('sidebar-collapsed', sidebarCollapsed);
+}
 
+function openMobileSidebar() {
+  document.getElementById('sidebar')?.classList.add('open');
+  document.getElementById('overlay')?.classList.add('show');
+}
+
+function closeMobileSidebar() {
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('overlay')?.classList.remove('show');
+}
+
+function toggleNotice() {
+  document.getElementById('noticePanel')?.classList.toggle('open');
+  document.getElementById('noticeChevron')?.classList.toggle('rotated');
+}
+
+/* PROFILE */
 function toggleProfile() {
   const dropdown = document.getElementById('profileDropdown');
   const chevron = document.getElementById('profileChevron');
-  
-  dropdown.classList.toggle('hidden');  // Toggle hidden class
-  chevron.style.transform = dropdown.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+
+  if (!dropdown) return;
+
+  dropdown.classList.toggle('hidden');
+
+  if (chevron) {
+    chevron.style.transform = dropdown.classList.contains('hidden') 
+      ? 'rotate(0deg)' 
+      : 'rotate(180deg)';
+  }
 }
 
-// Close dropdown on outside click
 document.addEventListener('click', function(e) {
+  const profileWrapper = document.getElementById('profileWrapper');
   const profileBtn = e.target.closest('button[onclick="toggleProfile()"]');
-  const profileWrapper = document.querySelector('.relative'); // Your profile container
-  
-  if (!profileWrapper.contains(e.target) && !profileBtn) {
-    document.getElementById('profileDropdown').classList.add('hidden');
-    document.getElementById('profileChevron').style.transform = 'rotate(0deg)';
+
+  if (profileWrapper && !profileWrapper.contains(e.target) && !profileBtn) {
+    document.getElementById('profileDropdown')?.classList.add('hidden');
+
+    const chevron = document.getElementById('profileChevron');
+    if (chevron) chevron.style.transform = 'rotate(0deg)';
   }
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+  const userName = '<?php echo htmlspecialchars($_SESSION["full_name"] ?? "Unit Owner"); ?>';
+  const initials = '<?php echo $_SESSION["initial"] ?? "U"; ?>';
+
+  const nameEl = document.getElementById('userName');
+  const initialsEl = document.getElementById('userInitials');
+
+  if (nameEl) nameEl.textContent = userName;
+  if (initialsEl) initialsEl.textContent = initials;
+
+  document.querySelectorAll('.requirement-check').forEach(check => {
+    check.addEventListener('change', function() {
+      // When owner edits a completed requirement set, allow saving again.
+      updateRequirementLiveState();
+    });
+  });
+
+  const editBtn = document.getElementById('btnEditRequirements');
+  if (editBtn) {
+    editBtn.addEventListener('click', function() {
+      document.getElementById('requirementActionArea')?.classList.remove('hidden');
+      document.getElementById('btnEditRequirements')?.classList.add('hidden');
+    });
+  }
+
+  const saveBtn = document.getElementById('btnSaveRequirements');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', saveRequirementTracking);
+  }
+});
+
+/* LOGOUT */
 function confirmLogout() {
-  document.getElementById('logoutModal').classList.remove('hidden');
+  document.getElementById('logoutModal')?.classList.remove('hidden');
 }
 
 function hideModal() {
-  document.getElementById('logoutModal').classList.add('hidden');
+  document.getElementById('logoutModal')?.classList.add('hidden');
 }
 
 function doLogout() {
-  window.location.href = '/Zeppelin-Suites/public/php_files/logout_session.php';  // Your logout file
+  window.location.href = '/Zeppelin-Suites/public/php_files/logout_session.php';
 }
 
-  
+/* SEARCH */
+function filterSearch() {
+  const input = document.getElementById('searchInput');
+  const q = input ? input.value.toLowerCase() : '';
 
-  function filterSearch() {
-    const q = document.getElementById('searchInput').value.toLowerCase();
-    document.querySelectorAll('#resBody tr').forEach(r => { r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none'; });
-  }
+  document.querySelectorAll('#resBody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
 
-function getCellText(row, idx) { return (row.cells[idx] ? row.cells[idx].textContent.trim() : ''); }
-
+/* HELPERS */
 function setText(id, value) {
   const el = document.getElementById(id);
-  if (el) {
-    el.textContent = value || '-';
-  }
+  if (el) el.textContent = value || '-';
 }
+
+function setValue(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value || '';
+}
+
+/* OPEN VIEW MODAL */
 function openEditModal(row) {
   editRow = row;
 
   const modal = document.getElementById('editModalBackdrop');
+  if (!modal) return;
 
-  document.getElementById('editModalMeta').textContent =
-    `Reservation #${row.dataset.reservationId || '-'} • Inquiry #${row.dataset.inquiryId || '-'}`;
+  const reservationStatus = row.dataset.reservationStatus || '';
+  const paymentStatus = row.dataset.paymentStatus || '';
+
+  setText('editModalMeta', `Reservation #${row.dataset.reservationId} • Inquiry #${row.dataset.inquiryId}`);
 
   setText('view_client_name', row.dataset.clientName);
   setText('view_unit', row.dataset.unit);
@@ -787,9 +824,18 @@ function openEditModal(row) {
   setText('ef_payment_method', row.dataset.paymentMethod);
   setText('ef_payment_reference', row.dataset.paymentReference);
 
-  setText('view_payment_status', row.dataset.paymentStatus || 'Payment Status');
-  setText('view_reservation_status', row.dataset.reservationStatus || 'Reservation Status');
-  setText('verify_payment_status', row.dataset.paymentStatus || 'Pending Review');
+  setText('view_payment_status', paymentStatus || 'Payment Status');
+  setText('view_reservation_status', reservationStatus || 'Reservation Status');
+  setText('verify_payment_status', paymentStatus || 'Pending Review');
+  setText(
+  'requirements_updated_by_display',
+  `${row.dataset.requirementsUpdatedByName || 'Not updated yet'} (${row.dataset.requirementsUpdatedByRole || '-'})`
+  );
+
+  setText(
+    'requirements_updated_at_display',
+    row.dataset.requirementsUpdatedAt || '-'
+  );
 
   const proofLink = document.getElementById('ef_payment_proof');
 
@@ -805,10 +851,7 @@ function openEditModal(row) {
     }
   }
 
-  const processId = document.getElementById('process_reservation_id');
-  if (processId) {
-    processId.value = row.dataset.reservationId || '';
-  }
+  setValue('process_reservation_id', row.dataset.reservationId);
 
   const twoIds = document.getElementById('check_two_valid_ids');
   const tin = document.getElementById('check_tin_number');
@@ -818,54 +861,21 @@ function openEditModal(row) {
   if (tin) tin.checked = row.dataset.tinNumberStatus === '1';
   if (agreement) agreement.checked = row.dataset.reservationAgreementStatus === '1';
 
-  setText(
-    'requirements_updated_by_display',
-    `${row.dataset.requirementsUpdatedByName || 'Not updated yet'} (${row.dataset.requirementsUpdatedByRole || '-'})`
-  );
-
-  setText(
-    'requirements_updated_at_display',
-    row.dataset.requirementsUpdatedAt || '-'
-  );
-
-  updatePaymentDecisionUI(row.dataset.paymentStatus);
-  updateRequirementDecisionUI(row.dataset.reservationStatus);
-  toggleOfficialButton();
-
-  const cancellationSection = document.getElementById('cancellationRequestSection');
-  const approveCancelBtn = document.getElementById('btnApproveCancellation');
-  const cancellationStatus = (row.dataset.cancellationStatus || 'none').toLowerCase();
-
-  setText('cancel_requested_at_display', row.dataset.cancellationRequestedAt || '-');
-  setText('cancel_reason_display', row.dataset.cancellationReason || '-');
-
-  if (cancellationSection) {
-    if (cancellationStatus === 'requested') {
-      cancellationSection.classList.remove('hidden');
-    } else {
-      cancellationSection.classList.add('hidden');
-    }
-  }
-
-  if (approveCancelBtn) {
-    if (cancellationStatus === 'requested') {
-      approveCancelBtn.classList.remove('hidden');
-    } else {
-      approveCancelBtn.classList.add('hidden');
-    }
-  }
+  updatePaymentDecisionUI(paymentStatus);
+  updateRequirementSectionUI(paymentStatus, reservationStatus);
 
   modal.classList.remove('hidden');
   modal.classList.add('flex');
 }
 
-
-
+/* CLOSE MODAL */
 function closeEditModal() {
   const modal = document.getElementById('editModalBackdrop');
 
-  modal.classList.add('hidden');
-  modal.classList.remove('flex');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
 
   editRow = null;
 }
@@ -882,22 +892,19 @@ document.getElementById('editModalBackdrop')?.addEventListener('click', function
   }
 });
 
+/* PAYMENT UI - VIEW ONLY FOR UNIT OWNER */
 function updatePaymentDecisionUI(paymentStatus) {
   const status = (paymentStatus || '').toLowerCase();
 
-  const buttons = document.getElementById('paymentActionButtons');
   const display = document.getElementById('paymentDecisionDisplay');
   const label = document.getElementById('paymentDecisionLabel');
   const text = document.getElementById('paymentDecisionText');
-  const requirementSection = document.getElementById('requirementTrackingSection');
 
-  if (!buttons || !display || !label || !text) return;
+  if (!display || !label || !text) return;
 
   display.className = 'hidden mt-5 rounded-xl border px-4 py-3';
 
   if (status === 'verified') {
-    buttons.classList.add('hidden');
-
     display.classList.remove('hidden');
     display.classList.add('bg-emerald-50', 'border-emerald-200');
 
@@ -905,18 +912,11 @@ function updatePaymentDecisionUI(paymentStatus) {
     text.className = 'text-sm font-semibold text-emerald-800';
 
     label.textContent = 'Payment Verified';
-    text.textContent = 'This payment has been verified. The client was notified and requirement tracking is now available.';
-
-    if (requirementSection) {
-      requirementSection.classList.remove('hidden');
-    }
-
+    text.textContent = 'HOA/Admin has verified the payment. Requirement tracking is now available.';
     return;
   }
 
   if (status === 'rejected') {
-    buttons.classList.add('hidden');
-
     display.classList.remove('hidden');
     display.classList.add('bg-red-50', 'border-red-200');
 
@@ -924,35 +924,42 @@ function updatePaymentDecisionUI(paymentStatus) {
     text.className = 'text-sm font-semibold text-red-800';
 
     label.textContent = 'Payment Rejected';
-    text.textContent = 'This payment was rejected. The client was notified and this reservation can no longer proceed.';
-
-    if (requirementSection) {
-      requirementSection.classList.add('hidden');
-    }
-
+    text.textContent = 'HOA/Admin rejected this payment. Requirement tracking is not available.';
     return;
   }
 
-  buttons.classList.remove('hidden');
-  display.classList.add('hidden');
+  display.classList.remove('hidden');
+  display.classList.add('bg-amber-50', 'border-amber-200');
 
-  if (requirementSection) {
-    requirementSection.classList.add('hidden');
-  }
+  label.className = 'text-xs font-bold uppercase tracking-wide mb-1 text-amber-700';
+  text.className = 'text-sm font-semibold text-amber-800';
+
+  label.textContent = 'Payment Pending Review';
+  text.textContent = 'HOA/Admin has not verified the payment yet. Requirement tracking is locked.';
 }
 
-function updateRequirementDecisionUI(reservationStatus) {
+/* REQUIREMENT UI */
+function updateRequirementSectionUI(paymentStatus, reservationStatus) {
+  const payment = (paymentStatus || '').toLowerCase();
   const status = (reservationStatus || '').toLowerCase();
 
+  const section = document.getElementById('requirementTrackingSection');
   const actionArea = document.getElementById('requirementActionArea');
   const display = document.getElementById('requirementDecisionDisplay');
   const label = document.getElementById('requirementDecisionLabel');
   const text = document.getElementById('requirementDecisionText');
   const editBtn = document.getElementById('btnEditRequirements');
 
-  if (!actionArea || !display || !label || !text || !editBtn) return;
+  if (!section || !actionArea || !display || !label || !text || !editBtn) return;
 
   display.className = 'hidden mb-5 rounded-xl border px-4 py-3';
+
+  if (payment !== 'verified') {
+    section.classList.add('hidden');
+    return;
+  }
+
+  section.classList.remove('hidden');
 
   if (status === 'requirements completed') {
     actionArea.classList.add('hidden');
@@ -965,8 +972,7 @@ function updateRequirementDecisionUI(reservationStatus) {
     text.className = 'text-sm font-semibold text-emerald-800';
 
     label.textContent = 'Requirements Completed';
-    text.textContent = 'All reservation requirements have been completed. You may now mark this reservation as officially booked.';
-
+    text.textContent = 'All reservation requirements have been completed. You may edit tracking if needed.';
     return;
   }
 
@@ -981,8 +987,7 @@ function updateRequirementDecisionUI(reservationStatus) {
     text.className = 'text-sm font-semibold text-emerald-800';
 
     label.textContent = 'Officially Booked';
-    text.textContent = 'This reservation has already been officially booked.';
-
+    text.textContent = 'This reservation is already officially booked.';
     return;
   }
 
@@ -991,115 +996,19 @@ function updateRequirementDecisionUI(reservationStatus) {
   display.classList.add('hidden');
 }
 
-function toggleOfficialButton() {
-  const btn = document.getElementById('btnOfficiallyBooked');
-  if (!btn) return;
+function updateRequirementLiveState() {
+  const status = (editRow?.dataset?.reservationStatus || '').toLowerCase();
 
-  const reservationStatus = (editRow?.dataset?.reservationStatus || '').toLowerCase();
+  if (status === 'reserved') return;
 
-  if (reservationStatus === 'reserved') {
-    btn.classList.add('hidden');
-    return;
-  }
+  const actionArea = document.getElementById('requirementActionArea');
+  const editBtn = document.getElementById('btnEditRequirements');
 
-  const allChecked =
-    document.getElementById('check_two_valid_ids')?.checked &&
-    document.getElementById('check_tin_number')?.checked &&
-    document.getElementById('check_reservation_agreement')?.checked;
-
-  if (allChecked || reservationStatus === 'requirements completed') {
-    btn.classList.remove('hidden');
-  } else {
-    btn.classList.add('hidden');
-  }
+  if (actionArea) actionArea.classList.remove('hidden');
+  if (editBtn) editBtn.classList.add('hidden');
 }
 
-document.querySelectorAll('.requirement-check').forEach(check => {
-  check.addEventListener('change', toggleOfficialButton);
-});
-
-document.getElementById('btnEditRequirements')?.addEventListener('click', function() {
-  document.getElementById('requirementActionArea')?.classList.remove('hidden');
-  document.getElementById('btnEditRequirements')?.classList.add('hidden');
-});
-
-function openPaymentConfirmModal(action) {
-  if (action === 'verify') {
-    document.getElementById('verifyPaymentRemarks').value = '';
-    document.getElementById('verifyPaymentModal').classList.remove('hidden');
-    document.getElementById('verifyPaymentModal').classList.add('flex');
-  }
-
-  if (action === 'reject') {
-    document.getElementById('rejectPaymentRemarks').value = '';
-    document.getElementById('rejectPaymentModal').classList.remove('hidden');
-    document.getElementById('rejectPaymentModal').classList.add('flex');
-  }
-}
-
-function closePaymentConfirmModal(modalId) {
-  const modal = document.getElementById(modalId);
-  modal.classList.add('hidden');
-  modal.classList.remove('flex');
-}
-
-function confirmPaymentAction(action) {
-  const reservationId = document.getElementById('process_reservation_id')?.value;
-
-  if (!reservationId) {
-    alert('Reservation ID not found.');
-    return;
-  }
-
-  let remarks = '';
-
-  if (action === 'verify') {
-    remarks = document.getElementById('verifyPaymentRemarks').value.trim();
-    closePaymentConfirmModal('verifyPaymentModal');
-  }
-
-  if (action === 'reject') {
-    remarks = document.getElementById('rejectPaymentRemarks').value.trim();
-
-    if (remarks === '') {
-      alert('Please enter a reason for rejecting the payment.');
-      return;
-    }
-
-    closePaymentConfirmModal('rejectPaymentModal');
-  }
-
-  const formData = new FormData();
-  formData.append('reservation_id', reservationId);
-  formData.append('action', action);
-  formData.append('remarks', remarks);
-
-  fetch('ActionsAP/updatePaymentStatus.php', {
-    method: 'POST',
-    body: formData
-  })
-  .then(response => response.json())
-  .then(data => {
-    alert(data.message);
-
-    if (data.success) {
-      window.location.reload();
-    }
-  })
-  .catch(error => {
-    console.error(error);
-    alert('Something went wrong while updating payment status.');
-  });
-}
-
-document.getElementById('btnVerifyPayment')?.addEventListener('click', function() {
-  openPaymentConfirmModal('verify');
-});
-
-document.getElementById('btnRejectPayment')?.addEventListener('click', function() {
-  openPaymentConfirmModal('reject');
-});
-
+/* SAVE REQUIREMENTS - UNIT OWNER ONLY */
 function saveRequirementTracking() {
   const reservationId = document.getElementById('process_reservation_id')?.value;
 
@@ -1110,11 +1019,11 @@ function saveRequirementTracking() {
 
   const formData = new FormData();
   formData.append('reservation_id', reservationId);
-  formData.append('two_valid_ids_status', document.getElementById('check_two_valid_ids').checked ? '1' : '0');
-  formData.append('tin_number_status', document.getElementById('check_tin_number').checked ? '1' : '0');
-  formData.append('reservation_agreement_status', document.getElementById('check_reservation_agreement').checked ? '1' : '0');
+  formData.append('two_valid_ids_status', document.getElementById('check_two_valid_ids')?.checked ? '1' : '0');
+  formData.append('tin_number_status', document.getElementById('check_tin_number')?.checked ? '1' : '0');
+  formData.append('reservation_agreement_status', document.getElementById('check_reservation_agreement')?.checked ? '1' : '0');
 
-  fetch('ActionsAP/updateRequirementStatus.php', {
+  fetch('ActionsUOP/updateOwnerRequirementStatus.php', {
     method: 'POST',
     body: formData
   })
@@ -1132,9 +1041,7 @@ function saveRequirementTracking() {
   });
 }
 
-document.getElementById('btnSaveRequirements')?.addEventListener('click', saveRequirementTracking);
-
-function markOfficiallyBooked() {
+function openOwnerCancelRequestModal() {
   const reservationId = document.getElementById('process_reservation_id')?.value;
 
   if (!reservationId) {
@@ -1142,14 +1049,41 @@ function markOfficiallyBooked() {
     return;
   }
 
-  if (!confirm('Mark this reservation as officially booked? This will set the unit status to Reserved.')) {
+  const reasonBox = document.getElementById('ownerCancelReason');
+  const modal = document.getElementById('ownerCancelRequestModal');
+
+  if (reasonBox) reasonBox.value = '';
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeOwnerCancelRequestModal() {
+  const modal = document.getElementById('ownerCancelRequestModal');
+
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+function submitOwnerCancelRequest() {
+  const reservationId = document.getElementById('process_reservation_id')?.value;
+  const reason = document.getElementById('ownerCancelReason')?.value.trim();
+
+  if (!reservationId) {
+    alert('Reservation ID not found.');
+    return;
+  }
+
+  if (!reason) {
+    alert('Cancellation reason is required.');
     return;
   }
 
   const formData = new FormData();
   formData.append('reservation_id', reservationId);
+  formData.append('reason', reason);
 
-  fetch('ActionsAP/markOfficiallyBooked.php', {
+  fetch('ActionsUOP/requestCancellation.php', {
     method: 'POST',
     body: formData
   })
@@ -1163,51 +1097,11 @@ function markOfficiallyBooked() {
   })
   .catch(error => {
     console.error(error);
-    alert('Something went wrong while officially booking this reservation.');
+    alert('Something went wrong while requesting cancellation.');
   });
 }
 
-document.getElementById('btnOfficiallyBooked')?.addEventListener('click', markOfficiallyBooked);
-
-
-
-
-function approveCancellationRequest() {
-  const reservationId = document.getElementById('process_reservation_id')?.value;
-  const reason = document.getElementById('cancel_reason_display')?.textContent.trim();
-
-  if (!reservationId) {
-    alert('Reservation ID not found.');
-    return;
-  }
-
-  if (!confirm('Approve this cancellation request? This will cancel the reservation and release the unit.')) {
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append('reservation_id', reservationId);
-  formData.append('remarks', reason || 'Approved cancellation request from unit owner.');
-
-  fetch('ActionsAP/cancelReservation.php', {
-    method: 'POST',
-    body: formData
-  })
-  .then(response => response.json())
-  .then(data => {
-    alert(data.message);
-
-    if (data.success) {
-      window.location.reload();
-    }
-  })
-  .catch(error => {
-    console.error(error);
-    alert('Something went wrong while approving cancellation.');
-  });
-}
-
-document.getElementById('btnApproveCancellation')?.addEventListener('click', approveCancellationRequest);
+document.getElementById('btnRequestCancellation')?.addEventListener('click', openOwnerCancelRequestModal);
 </script>
 </body>
 </html>

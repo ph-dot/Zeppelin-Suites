@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/ActionsAP/getReplyData.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -128,7 +129,7 @@
 
 <!-- SIDEBAR -->
 <aside class="sidebar fixed left-0 top-0 h-full border-r border-slate-100/80 flex flex-col z-50 md:z-40 shadow-2xl md:shadow-none" id="sidebar">
-  <div class="px-4 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 min-h-18.25">
+  <div class="px-4 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
     <a href="../adminPages/homeAdmin.php" class="sidebar-logo shrink-0 flex items-center">
       <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" class="h-10 w-auto object-contain">
     </a>
@@ -141,7 +142,7 @@
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
       <span class="nav-label">Home</span>
     </a>
-    <a href="../adminPages/inquiry.php" data-tooltip="Inquiry" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="../adminPages/inquiry.php" data-tooltip="Inquiry" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
       <span class="nav-label">Inquiry</span>
       <span class="nav-badge ml-auto bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center shrink-0" style="font-size:10px;font-family:'DM Mono',monospace;">3</span>
@@ -155,23 +156,35 @@
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V9a2 2 0 00-2-2h-3V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14m0 0H3m3 0h14m-7 0v-4h2v4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1m4 0h1M9 13h1m4 0h1"/></svg>
       <span class="nav-label">Units</span>
     </a>
-    <a href="../adminPages/roomsAdmin.php" data-tooltip="Rooms" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M7 6h10a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>
-      <span class="nav-label">Rooms</span>
-    </a>
-    <a href="../adminPages/maintenance.php" data-tooltip="Maintenance" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="../adminPages/maintenance.php" data-tooltip="Maintenance" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span class="nav-label">Maintenance</span>
     </a>
-    <a href="../adminPages/employees.php" data-tooltip="Employees" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="../adminPages/residents.php" data-tooltip="Employees" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      <span class="nav-label">Employees</span>
+      <span class="nav-label">Residents</span>
     </a>
-    <a href="../adminPages/settingsAdmin.php" data-tooltip="Settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="../adminPages/analytics.php" data-tooltip="Analytics" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      <span class="nav-label">Analytics</span>
+    </a>
+    <a href="../adminPages/settingsAdmin.html" data-tooltip="Settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span class="nav-label">Settings</span>
     </a>
   </nav>
+  <div class="notice-section px-2 py-4 border-t border-slate-100 shrink-0">
+    <button onclick="toggleNotice()" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition-all btn-press active:scale-95">
+      <span class="nav-label">Notice</span>
+      <svg class="notice-chevron w-3.5 h-3.5 text-slate-400 shrink-0" id="noticeChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+    <div class="notice-panel open px-2 pt-1 space-y-0.5" id="noticePanel">
+      <a href="#" class="flex items-center gap-2 py-1.5 px-3 text-xs text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span><span class="nav-label">Summer Vacation</span></a>
+      <a href="#" class="flex items-center gap-2 py-1.5 px-3 text-xs text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span><span class="nav-label">Employment Notice</span></a>
+    </div>
+  </div>
+</aside>
+
   <div class="notice-section px-2 py-4 border-t border-slate-100 shrink-0">
     <button onclick="toggleNotice()" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition-all btn-press active:scale-95">
       <span class="nav-label">Notice</span>
@@ -225,44 +238,48 @@
     
         <!-- Inquiry Details Section -->
     <div class="w-full max-w-4xl mx-auto p-6 space-y-4 bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
-    <p class="section-header text-lg font-bold text-slate-900 mb-0.5">Inquiry type</p>
+    <p class="section-header text-lg font-bold text-slate-900 mb-0.5"> <?php echo replyClean($inquiry_type); ?> </p>
 
     <!-- Sender Info + Unit Info -->
     <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
-        <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white text-sm font-bold shrink-0" id="modalAvatar">?</div>
+  <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white text-sm font-bold shrink-0" id="modalAvatar"> <?php echo replyClean($avatar); ?> </div>
         <div class="flex-1 min-w-0">
-        <p class="text-xs text-slate-400 uppercase tracking-wide font-semibold mb-0.5">From</p>
-        <p class="text-sm font-semibold text-slate-800 truncate" id="modalName">John Doe</p>
-        <p class="text-xs text-slate-500 truncate" id="modalEmail">maddysilvano@gmail.com</p>
-        <p class="text-xs text-slate-500 truncate" id="modalContact">123-456-7890</p>
+        <p class="text-sm font-semibold text-slate-800 truncate" id="modalName"> <?php echo replyClean($sender_name); ?> </p>
+        <p class="text-xs text-slate-500 truncate" id="modalEmail"> <?php echo replyClean($sender_email); ?> </p>
+        <p class="text-xs text-slate-500 truncate" id="modalContact"> <?php echo replyClean($sender_contact); ?> </p>
         </div>
-        <div id="unitSection" class="text-right shrink-0">
+        <div id="unitSection" class="text-right shrink-0" <?php echo $is_general ? 'style="display:none;"' : ''; ?>>
         <p class="text-xs text-slate-400 uppercase tracking-wide font-semibold mb-0.5">Selected Unit</p>
-        <p class="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full" id="modalUnitPref">Studio Type A</p>
+        <p class="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full" id="modalUnitPref"> <?php echo replyClean($preferred_unit); ?> </p>
         </div>
     </div>
 
     <!-- Lease Duration -->
-    <div id="leaseDurationSection" class="flex items-center gap-3 pb-4 border-b border-slate-100">
+    <div id="leaseDurationSection" class="flex items-center gap-3 pb-4 border-b border-slate-100" <?php echo $is_general ? 'style="display:none;"' : ''; ?>>
       <div class="flex-1 min-w-0">
         <p class="text-xs text-slate-400 uppercase tracking-wide font-semibold mb-0.5">Lease Duration</p>
-        <p class="text-sm font-semibold text-slate-800 truncate" id="modalLeaseDuration">—</p>
+        <p class="text-sm font-semibold text-slate-800 truncate" id="modalLeaseDuration"> <?php echo replyClean($lease_duration ?: '—'); ?> </p>
       </div>
     </div>
     <!-- Message Box Section -->
     <div class="pb-4 border-b border-slate-100">
         <p class="text-xs text-slate-400 uppercase tracking-wide font-semibold mb-2">Message</p>
         <div class="p-4 bg-gray-100 rounded-lg border border-slate-200">
-        <p class="text-sm text-slate-800" id="modalMessage">This is a sample message from the recipient. The message content will be displayed here.</p>
-        </div>
+       <p class="text-sm text-slate-800" id="modalMessage"><?php echo replyClean($message); ?> </p>
     </div>
     </div>
+  </div>
 
     
 
     <!-- Email Reply Section -->
-  <div class="w-full max-w-4xl mx-auto p-6 space-y-6 bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
-      
+    <form 
+      action="ActionsAP/sendInquiryReply.php" 
+      method="POST"
+      class="w-full max-w-4xl mx-auto p-6 space-y-6 bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm"
+    >
+
+  <input type="hidden" name="inq_id" value="<?php echo (int)$inq_id; ?>">
       <!-- Header -->
       <div class="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
         <div>
@@ -271,9 +288,9 @@
             Review and edit the prepared response before sending it to the inquirer.
           </p>
         </div>
-        <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full">
-          Ready to Send
-        </span>
+       <span class="text-xs font-semibold <?php echo replyClean($status_badge_class); ?> border px-3 py-1 rounded-full">
+        <?php echo replyClean($status_badge_text); ?>
+      </span>
       </div>
 
       <!-- Email Details - Single column -->
@@ -282,10 +299,11 @@
           <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
             To
           </label>
-          <input 
+        <input 
             type="email" 
             id="replyToEmail"
-            value=""
+            name="reply_to"
+            value="<?php echo replyClean($sender_email); ?>"
             class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 bg-slate-50 focus:outline-none focus:border-slate-900 focus:bg-white"
           >
         </div>
@@ -297,7 +315,8 @@
           <input 
             type="text" 
             id="replySubject"
-            value="Unit Availability Update - Zeppelin Suites"
+            name="reply_subject"
+            value="<?php echo replyClean($reply_subject); ?>"
             class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 bg-slate-50 focus:outline-none focus:border-slate-900 focus:bg-white"
           >
         </div>
@@ -306,20 +325,33 @@
       <!-- Selected Unit Summary - Single row wrap -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
-          <p class="text-xs text-blue-500 uppercase font-semibold mb-1">Available Unit</p>
-          <p class="text-sm font-bold text-blue-900">Studio Type A</p>
+          <p class="text-xs text-blue-500 uppercase font-semibold mb-1">
+            <?php echo $approval_status === 'approved' ? 'Approved Unit' : 'Preferred Unit'; ?>
+          </p>
+          <p class="text-sm font-bold text-blue-900">
+            <?php echo replyClean($unit_display); ?>
+          </p>
         </div>
+
         <div class="bg-slate-50 border border-slate-100 rounded-xl p-4">
           <p class="text-xs text-slate-400 uppercase font-semibold mb-1">Owner</p>
-          <p class="text-sm font-bold text-slate-800">Owner A</p>
+          <p class="text-sm font-bold text-slate-800">
+            <?php echo replyClean($owner_display); ?>
+          </p>
         </div>
+
         <div class="bg-slate-50 border border-slate-100 rounded-xl p-4">
           <p class="text-xs text-slate-400 uppercase font-semibold mb-1">Rate</p>
-          <p class="text-sm font-bold text-slate-800">₱15,000 / month</p>
+          <p class="text-sm font-bold text-slate-800">
+            <?php echo replyClean($rate_display); ?>
+          </p>
         </div>
+
         <div class="bg-slate-50 border border-slate-100 rounded-xl p-4">
-          <p class="text-xs text-slate-400 uppercase font-semibold mb-1">Lease Period</p>
-          <p class="text-sm font-bold text-slate-800">Apr 30 - May 10, 2026</p>
+          <p class="text-xs text-slate-400 uppercase font-semibold mb-1">Lease Preference</p>
+          <p class="text-sm font-bold text-slate-800">
+            <?php echo replyClean($lease_display); ?>
+          </p>
         </div>
       </div>
 
@@ -329,32 +361,12 @@
           Email Message
         </label>
         <textarea 
-          id="emailBody"
-          rows="18"
-          class="w-full min-h-[420px] border border-slate-200 rounded-2xl px-5 py-4 text-sm text-slate-700 leading-7 bg-slate-50 resize-vertical focus:outline-none focus:border-slate-900 focus:bg-white"
-        >Hello John Doe,
-
-Thank you for reaching out to Zeppelin Suites.
-
-We are pleased to inform you that there is an available unit that matches your preferred unit type and requested lease period.
-
-Here are the available unit details:
-
-Unit: Studio Type A
-Unit Owner: Owner A
-Rate: ₱15,000 per month
-Start Date: April 30, 2026
-End Date: May 10, 2026
-Stay Type: Short-Term Stay
-
-This unit is currently available within your requested lease period. Kindly review the details above and let us know if you would like to proceed with the reservation or if you have any additional questions regarding the unit, rate, or booking process.
-
-Please note that availability may still change depending on confirmed reservations. To secure the unit, we recommend confirming your reservation as soon as possible.
-
-Thank you, and we look forward to assisting you.
-
-Best regards,
-Zeppelin Suites Team</textarea>
+            id="emailBody"
+            name="email_body"
+            rows="18"
+            class="w-full min-h-[420px] border border-slate-200 rounded-2xl px-5 py-4 text-sm text-slate-700 leading-7 bg-slate-50 resize-vertical focus:outline-none focus:border-slate-900 focus:bg-white"
+          ><?php echo replyClean($email_body); ?>
+        </textarea>
       </div>
 
       <!-- Action Buttons -->
@@ -373,71 +385,112 @@ Zeppelin Suites Team</textarea>
             class="px-5 py-2.5 text-sm font-semibold text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-100 transition-all">
             Copy Reply
           </button>
-          <button 
-            type="button"
-            onclick="sendEmail()"
+         <button 
+            type="submit"
             class="bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-all">
             Send Reply
           </button>
         </div>
       </div>
-    </div>
+    </form>
   </main>
 </div>
+
+<!-- Email Sent Confirmation Modal -->
+<?php if (!empty($_SESSION['success_message'])): ?>
+<div id="emailSentModal" class="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
+  <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
+    
+    <div class="p-6 text-center">
+      <div class="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+
+      <h2 class="text-lg font-bold text-slate-900 mb-1">
+        Email Sent
+      </h2>
+
+      <p class="text-sm text-slate-500">
+        <?php echo htmlspecialchars($_SESSION['success_message']); ?>
+      </p>
+    </div>
+
+    <div class="px-6 pb-6">
+      <button 
+        type="button"
+        onclick="closeEmailSentModal()"
+        class="w-full bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold px-5 py-3 rounded-xl transition-all active:scale-95">
+        Okay
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<?php unset($_SESSION['success_message']); ?>
+<?php endif; ?>
+
+<!-- error modal -->
+<?php if (!empty($_SESSION['error_message'])): ?>
+<div id="emailErrorModal" class="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
+  <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
+    
+    <div class="p-6 text-center">
+      <div class="w-14 h-14 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </div>
+
+      <h2 class="text-lg font-bold text-slate-900 mb-1">
+        Email Not Sent
+      </h2>
+
+      <p class="text-sm text-slate-500">
+        <?php echo htmlspecialchars($_SESSION['error_message']); ?>
+      </p>
+    </div>
+
+    <div class="px-6 pb-6">
+      <button 
+        type="button"
+        onclick="closeEmailErrorModal()"
+        class="w-full bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold px-5 py-3 rounded-xl transition-all active:scale-95">
+        Okay
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<?php unset($_SESSION['error_message']); ?>
+<?php endif; ?>
+
 <script>
-    // Simulate sending the email (you can replace this with your actual email sending logic)
-    function sendEmail() {
-      alert("Reply sent to maddysilvano@gmail.com!");
-    }
-document.addEventListener("DOMContentLoaded", function () {
-    const storedData = sessionStorage.getItem('replyInquiryData');
+function copyEmailReply() {
+  const body = document.getElementById("emailBody");
 
-    if (!storedData) {
-        console.log("No inquiry data found");
-        return;
-    }
+  body.select();
+  body.setSelectionRange(0, 99999);
 
-    const data = JSON.parse(storedData);
+  document.execCommand("copy");
+  alert("Reply copied.");
+}
 
-    // Fill the fields
-    document.getElementById("modalName").textContent = data.name || "—";
-    document.getElementById("modalEmail").textContent = data.email || "—";
-    document.getElementById("modalContact").textContent = data.contact || "—";
-    document.getElementById("modalUnitPref").textContent = data.unitpref || "—";
-    document.getElementById("modalLeaseDuration").textContent = data.leaseDuration || "—";
-    document.getElementById("modalMessage").textContent = data.message || "—";
-
-    // Optional: Inquiry type (title)
-    document.querySelector(".section-header").textContent = data.inquiry_type || "Inquiry";
-
-    // Avatar first letter
-    if (data.name) {
-        document.getElementById("modalAvatar").textContent = data.name.charAt(0).toUpperCase();
-    }
-
-    // 🔥 SAME LOGIC YOU USED IN MODAL (nice touch)
-    const type = (data.inquiry_type || "").toLowerCase();
-    const hideGeneral = type.includes("general") || type.includes("other");
-
-    if (hideGeneral) {
-        document.getElementById("unitSection").style.display = "none";
-        document.getElementById("leaseDurationSection").style.display = "none";
-    }
-});
-document.addEventListener("DOMContentLoaded", function () {
-    const storedData = sessionStorage.getItem('replyInquiryData');
-
-    if (!storedData) return;
-
-    const data = JSON.parse(storedData);
-
-    // Autofill email (editable)
-    const emailInput = document.getElementById("replyToEmail");
-    if (emailInput) {
-        emailInput.value = data.email || "";
-    }
-});
-
+function closeEmailSentModal() {
+  const modal = document.getElementById("emailSentModal");
+  if (modal) {
+    modal.remove();
+  }
+}
+function closeEmailErrorModal() {
+  const modal = document.getElementById("emailErrorModal");
+  if (modal) {
+    modal.remove();
+  }
+}
 </script>
 </body>
 </html>

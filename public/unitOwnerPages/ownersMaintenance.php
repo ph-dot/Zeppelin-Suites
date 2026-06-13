@@ -1,3 +1,8 @@
+<?php
+require_once __DIR__ . '/../php_files/auth.php';
+
+$user = requireRole($conn, ['unit owner']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -62,29 +67,29 @@
     </button>
   </div>
   <nav class="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden">
-    <a href="overview.html" data-tooltip="Overview" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="overview.php" data-tooltip="Overview" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
       <span class="nav-label">Overview</span>
     </a>
-    <a href="ownersUnit.html" data-tooltip="Units" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="ownersUnit.php" data-tooltip="Units" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V9a2 2 0 00-2-2h-3V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14m0 0H3m3 0h14m-7 0v-4h2v4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1m4 0h1M9 13h1m4 0h1"/></svg>
       <span class="nav-label">Units</span>
     </a>
-    <a href="tenants.html" data-tooltip="Tenants" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="tenants.php" data-tooltip="Tenants" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span class="nav-label">Tenants</span>
     </a>
-    <a href="ownersMaintenance.html" data-tooltip="Maintenance" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+    <a href="ownersMaintenance.php" data-tooltip="Maintenance" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span class="nav-label">Maintenance</span>
     </a>
-    <a href="ownersReservations.html" data-tooltip="Reservations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="ownersUnitReservations.php" data-tooltip="Reservations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
       <span class="nav-label">Reservations</span>
     </a>
-    <a href="ownersSettings.html" data-tooltip="Settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      <span class="nav-label">Settings</span>
+    <a href="ownersReservations.php" data-tooltip="Reservations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      <span class="nav-label">Inquiries</span>
     </a>
   </nav>
 </aside>
@@ -97,7 +102,7 @@
     </button>
     <div class="relative flex-1 max-w-sm">
       <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      <input type="text" placeholder="Search requests..." id="searchInput" oninput="filterTable()" class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
+      <input type="text" placeholder="Search..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
     </div>
     <div class="flex items-center gap-2 ml-auto">
       <button class="relative p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95">
@@ -106,17 +111,23 @@
       </button>
       <div class="relative" id="profileWrapper">
         <button onclick="toggleProfile()" class="flex items-center gap-2.5 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl px-3 py-1.5 transition-all btn-press active:scale-95">
-          <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0">U</div>
+          <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0">
+            <?= htmlspecialchars($user['initial'] ?? 'U') ?>
+          </div>
+
           <div class="hidden sm:block text-left">
-            <p class="text-sm font-semibold text-slate-800 leading-none">Unit Owner Name</p>
+            <p class="text-sm font-semibold text-slate-800 leading-none">
+              <?= htmlspecialchars($user['full_name'] ?? 'Unit Owner') ?>
+            </p>
             <p class="text-xs text-slate-400 mt-0.5">Unit Owner</p>
           </div>
           <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl py-2 z-50" id="profileDropdown">
-          <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors rounded-xl mx-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>My Profile</a>
-          <div class="border-t border-slate-100 my-1 mx-3"></div>
-          <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Sign out</a>
+          <a href="../php_files/logout_session.php" class="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Sign out
+          </a>    
         </div>
       </div>
     </div>
@@ -124,6 +135,17 @@
 
   <div class="main-scroll p-4 md:p-6 space-y-6">
     <div class="max-w-screen-xl mx-auto space-y-6">
+      <?php if (!empty($_SESSION['success_message'])): ?>
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          <?php echo htmlspecialchars($_SESSION['success_message']); unset($_SESSION['success_message']); ?>
+        </div>
+      <?php endif; ?>
+
+      <?php if (!empty($_SESSION['error_message'])): ?>
+        <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+          <?php echo htmlspecialchars($_SESSION['error_message']); unset($_SESSION['error_message']); ?>
+        </div>
+      <?php endif; ?>
       <div class="flex items-center justify-between">
         <h1 class="text-xl font-bold text-slate-900">Maintenance Request</h1>
         <button onclick="openCreateModal()" class="btn-press bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-all active:scale-95 flex items-center gap-2">
@@ -147,24 +169,7 @@
               </tr>
             </thead>
             <tbody id="mainBody">
-              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openViewModal({id:'MR-001',unit:'C505',tenant:'John Doe',issue:'Leaking faucet in bathroom',category:'Plumbing',date:'Jan 10, 2026 09:15',status:'Pending',desc:'The bathroom faucet has been dripping constantly for 3 days.'})">
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">MR-001</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">C505</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">John Doe</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">Leaking faucet in bathroom</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Jan 10, 2026 09:15</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">Pending</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openViewModal({id:'MR-001',unit:'C505',tenant:'John Doe',issue:'Leaking faucet in bathroom',category:'Plumbing',date:'Jan 10, 2026 09:15',status:'Pending',desc:'The bathroom faucet has been dripping constantly for 3 days.'})">View</button></td>
-              </tr>
-              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openViewModal({id:'MR-002',unit:'A104',tenant:'Maria Santos',issue:'AC unit not cooling',category:'Fixture',date:'Jan 8, 2026 14:30',status:'In Progress',desc:'The air conditioning unit runs but does not cool the room.'})">
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">MR-002</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">A104</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">Maria Santos</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">AC unit not cooling</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Jan 8, 2026 14:30</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">In Progress</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openViewModal({id:'MR-002',unit:'A104',tenant:'Maria Santos',issue:'AC unit not cooling',category:'Fixture',date:'Jan 8, 2026 14:30',status:'In Progress',desc:'The air conditioning unit runs but does not cool the room.'})">View</button></td>
-              </tr>
+              <?php require_once __DIR__ . '/ActionsUOP/getOwnerMaintenanceRequests.php'; ?>
             </tbody>
           </table>
         </div>
@@ -213,46 +218,156 @@
 
 <!-- CREATE REQUEST MODAL -->
 <div class="modal-backdrop fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4" id="createModal" onclick="handleBackdropClick(event,'createModal')">
-  <div class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100 overflow-hidden">
+  <form 
+    action="ActionsUOP/submitMaintenanceRequest.php" 
+    method="POST" 
+    enctype="multipart/form-data"
+    class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100 overflow-hidden"
+    onclick="event.stopPropagation()">
+
     <div class="bg-slate-900 px-6 py-4 flex items-center justify-between">
-      <h2 class="text-base font-bold text-white">Create Maintenance Request</h2>
-      <button onclick="closeModal('createModal')" class="btn-press p-1.5 rounded-lg hover:bg-white/10 transition-colors active:scale-95">
-        <svg class="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      <div>
+        <h2 class="text-base font-bold text-white">Create Maintenance Request</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Submit a maintenance concern for your unit.</p>
+      </div>
+
+      <button type="button" onclick="closeModal('createModal')" class="btn-press p-1.5 rounded-lg hover:bg-white/10 transition-colors active:scale-95">
+        <svg class="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
       </button>
     </div>
+
     <div class="p-6 space-y-4">
       <div>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Subject</label>
-        <input type="text" id="crSubject" placeholder="Brief description of the issue" class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all">
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Unit</label>
-        <div class="flex items-center gap-2">
-          <input type="text" id="crUnit" placeholder="Unit number" class="zep-input flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all">
-          <button onclick="autoFillUnit()" class="btn-press px-3 py-2.5 text-xs font-semibold bg-slate-900 text-white rounded-xl hover:bg-slate-700 transition-all active:scale-95 whitespace-nowrap">Auto Fill</button>
-        </div>
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Category</label>
-        <select id="crCategory" class="zep-select w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm cursor-pointer transition-all appearance-none" style="background-image:url('data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 20 20\' fill=\'%239ca3af\'><path fill-rule=\'evenodd\' d=\'M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z\' clip-rule=\'evenodd\'/></svg>');background-repeat:no-repeat;background-position:right 12px center;background-size:16px">
-          <option value="">Select category</option>
-          <option value="Plumbing">Plumbing</option>
-          <option value="Electrical">Electrical</option>
-          <option value="Cleaning">Cleaning</option>
-          <option value="Fixture">Fixture</option>
-          <option value="Other">Other</option>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+          Unit <span class="text-red-500">*</span>
+        </label>
+
+        <select 
+          name="unit_id" 
+          id="crUnit"
+          required
+          class="zep-select w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm cursor-pointer transition-all">
+          <option value="">Select affected unit</option>
+          <?php require_once __DIR__ . '/ActionsUOP/getOwnerUnitsOptions.php'; ?>
         </select>
       </div>
+
       <div>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Description</label>
-        <textarea id="crDesc" rows="4" placeholder="Describe the issue in detail..." class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all resize-none"></textarea>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+          Subject <span class="text-red-500">*</span>
+        </label>
+        <input 
+          type="text" 
+          name="subject"
+          id="crSubject" 
+          required
+          placeholder="Brief description of the issue" 
+          class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all">
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+            Category <span class="text-red-500">*</span>
+          </label>
+
+          <select 
+            name="category"
+            id="crCategory" 
+            required
+            class="zep-select w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm cursor-pointer transition-all">
+            <option value="">Select category</option>
+            <option value="Plumbing">Plumbing</option>
+            <option value="Electrical">Electrical</option>
+            <option value="Cleaning">Cleaning</option>
+            <option value="Fixture">Fixture</option>
+            <option value="Structural">Structural</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+            Priority <span class="text-red-500">*</span>
+          </label>
+
+          <select 
+            name="priority"
+            id="crPriority" 
+            required
+            class="zep-select w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm cursor-pointer transition-all">
+            <option value="normal">Normal</option>
+            <option value="low">Low</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+          Description <span class="text-red-500">*</span>
+        </label>
+
+        <textarea 
+          name="description"
+          id="crDesc" 
+          rows="4" 
+          required
+          placeholder="Describe the issue in detail..." 
+          class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all resize-none"></textarea>
+      </div>
+
+      <!-- UPLOAD PHOTOS -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+          Upload Photos
+        </label>
+
+        <label 
+          for="maintenancePhotos" 
+          class="upload-zone w-full min-h-[140px] rounded-xl flex flex-col items-center justify-center gap-3 cursor-pointer border border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 transition-all">
+
+          <svg class="w-9 h-9 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+          </svg>
+
+          <div class="text-center">
+            <p class="text-base font-bold text-slate-800">Click to upload or drag &amp; drop</p>
+            <p class="text-sm text-slate-500 mt-1">JPG, PNG, WEBP up to 5MB each</p>
+            <p class="text-xs text-slate-400 mt-1">Maximum of 5 photos</p>
+          </div>
+
+          <span id="maintenanceUploadFileName" class="text-sm text-emerald-600 font-semibold hidden"></span>
+
+          <input 
+            type="file" 
+            name="maintenance_photos[]" 
+            id="maintenancePhotos"
+            accept=".jpg,.jpeg,.png,.webp"
+            multiple
+            class="hidden"
+            onchange="handleMaintenanceUpload(this)">
+        </label>
       </div>
     </div>
+
     <div class="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50/60">
-      <button onclick="closeModal('createModal')" class="btn-press px-4 py-2 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-100 transition-all active:scale-95">Cancel</button>
-      <button onclick="submitRequest()" class="btn-press bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold px-6 py-2 rounded-xl tracking-widest transition-all active:scale-95">SEND</button>
+      <button 
+        type="button"
+        onclick="closeModal('createModal')" 
+        class="btn-press px-4 py-2 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-100 transition-all active:scale-95">
+        Cancel
+      </button>
+
+      <button 
+        type="submit"
+        class="btn-press bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold px-6 py-2 rounded-xl tracking-widest transition-all active:scale-95">
+        SEND
+      </button>
     </div>
-  </div>
+  </form>
 </div>
 
 <script>
@@ -291,22 +406,65 @@
     document.getElementById('createModal').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
-  function autoFillUnit() { document.getElementById('crUnit').value = 'C505'; }
-  function submitRequest() {
-    const s = document.getElementById('crSubject').value.trim();
-    const u = document.getElementById('crUnit').value.trim();
-    const c = document.getElementById('crCategory').value;
-    if (!s || !u || !c) { alert('Please fill in Subject, Unit, and Category.'); return; }
-    closeModal('createModal');
-    ['crSubject','crUnit','crDesc'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('crCategory').value = '';
+  function handleMaintenanceUpload(input) {
+  const fileNameDisplay = document.getElementById('maintenanceUploadFileName');
+
+  if (!fileNameDisplay) return;
+
+  if (!input.files || input.files.length === 0) {
+    fileNameDisplay.classList.add('hidden');
+    fileNameDisplay.textContent = '';
+    return;
   }
+
+  if (input.files.length > 5) {
+    alert('You may upload up to 5 photos only.');
+    input.value = '';
+    fileNameDisplay.classList.add('hidden');
+    fileNameDisplay.textContent = '';
+    return;
+  }
+
+  fileNameDisplay.textContent = input.files.length === 1
+    ? input.files[0].name
+    : `${input.files.length} photos selected`;
+
+  fileNameDisplay.classList.remove('hidden');
+}
   function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
   function handleBackdropClick(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
   function filterTable() {
     const q = document.getElementById('searchInput').value.toLowerCase();
     document.querySelectorAll('#mainBody tr').forEach(r => { r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none'; });
   }
+
+  function handleMaintenanceUpload(input) {
+  const fileNameDisplay = document.getElementById('maintenanceUploadFileName');
+
+  if (!fileNameDisplay) return;
+
+  if (!input.files || input.files.length === 0) {
+    fileNameDisplay.classList.add('hidden');
+    fileNameDisplay.textContent = '';
+    return;
+  }
+
+  if (input.files.length > 5) {
+    alert('You may upload up to 5 photos only.');
+    input.value = '';
+    fileNameDisplay.classList.add('hidden');
+    fileNameDisplay.textContent = '';
+    return;
+  }
+
+  const fileNames = Array.from(input.files).map(file => file.name);
+
+  fileNameDisplay.textContent = fileNames.length === 1
+    ? fileNames[0]
+    : `${fileNames.length} photos selected`;
+
+  fileNameDisplay.classList.remove('hidden');
+}
 </script>
 </body>
 </html>

@@ -62,10 +62,26 @@ $totalItems = $countResult->fetch_assoc()['total'];
 $totalPages = ceil($totalItems / $itemsPerPage);
 
 // SQL query - NEWEST FIRST with LIMIT and OFFSET
-$sql = "SELECT inq_id, sender_name, sender_email, sender_contact, inquiry_type, Preferred_unit_id, message, 
-        DATE(timestamp) as date_only, status, lease_duration
-        FROM Inquiry_table 
-        ORDER BY timestamp DESC 
+$sql = "SELECT 
+            i.inq_id,
+            i.sender_name,
+            i.sender_email,
+            i.sender_contact,
+            i.inquiry_type,
+            i.Preferred_unit_id,
+            i.message,
+            DATE(i.timestamp) AS date_only,
+            i.status,
+            i.approval_status,
+            i.approved_unit_id,
+            i.approval_approved_at,
+            DATE_FORMAT(i.approval_approved_at, '%b %d, %Y %h:%i %p') AS approval_approved_at_display,
+            i.lease_duration,
+            u.unit_number AS approved_unit_number
+        FROM Inquiry_table i
+        LEFT JOIN units_table u 
+            ON i.approved_unit_id = u.unit_id
+        ORDER BY i.timestamp DESC 
         LIMIT ? OFFSET ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ii", $itemsPerPage, $offset);
@@ -87,9 +103,37 @@ if ($result->num_rows > 0) {
         $dateOnly = htmlspecialchars($row['date_only'] ?? '', ENT_QUOTES, 'UTF-8');
         $status = htmlspecialchars($row['status'] ?? 'pending', ENT_QUOTES, 'UTF-8'); // ✅ Default 'pending'
 
-        echo "<tr class='inq-row' 
-                data-inq-id='{$row['inq_id']}'
-                data-status='{$status}'  ✅ ADDED: Missing for filtering/stats
+        $approval_status = htmlspecialchars($row['approval_status'] ?? 'not_requested', ENT_QUOTES, 'UTF-8');
+        $approved_unit_number = htmlspecialchars($row['approved_unit_number'] ?? '', ENT_QUOTES, 'UTF-8');
+        $approval_approved_at = htmlspecialchars($row['approval_approved_at_display'] ?? '', ENT_QUOTES, 'UTF-8');
+
+        $status_lower = strtolower(trim($status));
+        $approval_lower = strtolower(trim($approval_status));
+
+        $updateBadge = "";
+
+        if ($status_lower === 'responded') {
+            $displayStatus = 'Responded';
+            $status_class = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+        } else {
+            $displayStatus = 'Pending';
+            $status_class = 'bg-amber-50 text-amber-700 border border-amber-200';
+
+            if (
+                $approval_lower === 'requested' ||
+                $approval_lower === 'approved' ||
+                $approval_lower === 'declined'
+            ) {
+                $updateBadge = "<span class='ml-1 bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full'>UPDATED</span>";
+            }
+        }
+
+       echo "<tr class='inq-row' 
+                data-inq-id='" . (int)$row['inq_id'] . "'
+                data-status='{$status}'
+                data-approval-status='{$approval_status}'
+                data-approved-unit='{$approved_unit_number}'
+                data-approved-at='{$approval_approved_at}'
                 data-name='" . addslashes($sender_name) . "'
                 data-email='" . addslashes($sender_email) . "'
                 data-contact='" . addslashes($sender_contact) . "'
@@ -98,14 +142,25 @@ if ($result->num_rows > 0) {
                 data-lease-duration='" . addslashes($lease_duration) . "'
                 data-message='" . addslashes($message) . "'
                 onclick='openModal(this)'>
-                <td class='px-5 py-3.5 font-semibold text-slate-800 whitespace-nowrap'>{$sender_name}</td>
-                <td class='px-4 py-3.5 text-slate-500 text-xs'>{$sender_email}</td>
+                <td class='px-5 py-4'>
+                    <div class='min-w-[180px]'>
+                        <p class='text-sm font-bold text-slate-900 leading-tight'>
+                            {$sender_name}
+                        </p>
+                        <p class='text-xs text-slate-400 mt-1 leading-tight'>
+                            {$sender_email}
+                        </p>
+                    </div>
+                </td>
                 <td class='px-4 py-3.5'><span class='text-xs font-semibold px-2.5 py-0.5'>{$inquiry_type}</span></td>
                 <td class='px-4 py-3.5 text-slate-700 text-xs font-medium whitespace-nowrap'>{$preferred_unit_id}</td>
                 <td class='px-4 py-3.5 text-slate-400 text-xs max-w-xs truncate'>{$message}</td>
                       <td class='px-4 py-3.5 text-slate-500 whitespace-nowrap text-xs' style='font-family:&quot;DM Mono&quot;,monospace'>{$dateOnly}</td>
                 <td class='px-4 py-3.5'>
-                    <span class='status-badge " . ($status === 'responded' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200') . " text-xs font-semibold px-2.5 py-0.5 rounded-full'>{$status}</span>
+                    <span class='status-badge {$status_class} text-xs font-semibold px-2.5 py-0.5 rounded-full'>
+                        {$displayStatus}
+                    </span>
+                    {$updateBadge}
                 </td>
                 <td class='px-4 py-3.5 text-right'>
                     <button class='btn-press text-xs font-semibold text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full active:scale-95 transition-all' onclick='event.stopPropagation(); openModal(this.closest(\"tr\"))'>View</button>
@@ -118,4 +173,4 @@ if ($result->num_rows > 0) {
 
 $stmt->close();
 $conn->close();
-?></script>
+?>

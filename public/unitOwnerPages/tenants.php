@@ -1,9 +1,14 @@
+<?php
+require_once __DIR__ . '/../php_files/auth.php';
+
+$user = requireRole($conn, ['unit owner']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zeppelin Suites — My Units</title>
+<title>Zeppelin Suites — My Tenants</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],mono:['DM Mono','monospace']}}}}</script>
@@ -31,9 +36,7 @@
 .collapse-icon { transition:transform 0.3s ease; }
 .profile-dropdown { opacity:0; visibility:hidden; transform:translateY(-6px); transition:all 0.2s cubic-bezier(0.4,0,0.2,1); }
 .profile-dropdown.open { opacity:1; visibility:visible; transform:translateY(0); }
-/* Hover-reveal row pattern */
 /* row hover handled by Tailwind group/group-hover */
-/* Modal */
 .modal-backdrop { opacity:0; visibility:hidden; transition:opacity 0.22s ease,visibility 0.22s ease; }
 .modal-backdrop.open { opacity:1; visibility:visible; }
 .modal-card { transform:translateY(12px) scale(0.98); transition:transform 0.22s cubic-bezier(0.4,0,0.2,1); }
@@ -63,29 +66,29 @@
     </button>
   </div>
   <nav class="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden">
-    <a href="overview.html" data-tooltip="Overview" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="overview.php" data-tooltip="Overview" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
       <span class="nav-label">Overview</span>
     </a>
-    <a href="ownersUnit.html" data-tooltip="Units" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+    <a href="ownersUnit.php" data-tooltip="Units" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V9a2 2 0 00-2-2h-3V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14m0 0H3m3 0h14m-7 0v-4h2v4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1m4 0h1M9 13h1m4 0h1"/></svg>
       <span class="nav-label">Units</span>
     </a>
-    <a href="tenants.html" data-tooltip="Tenants" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="tenants.php" data-tooltip="Tenants" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span class="nav-label">Tenants</span>
     </a>
-    <a href="ownersMaintenance.html" data-tooltip="Maintenance" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="ownersMaintenance.php" data-tooltip="Maintenance" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span class="nav-label">Maintenance</span>
     </a>
-    <a href="ownersReservations.html" data-tooltip="Reservations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="ownersUnitReservations.php" data-tooltip="Reservations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
       <span class="nav-label">Reservations</span>
     </a>
-    <a href="ownersSettings.html" data-tooltip="Settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      <span class="nav-label">Settings</span>
+    <a href="ownersReservations.php" data-tooltip="Reservations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      <span class="nav-label">Inquiries</span>
     </a>
   </nav>
 </aside>
@@ -98,7 +101,7 @@
     </button>
     <div class="relative flex-1 max-w-sm">
       <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      <input type="text" placeholder="Search units..." id="searchInput" oninput="filterTable()" class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
+      <input type="text" placeholder="Search..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
     </div>
     <div class="flex items-center gap-2 ml-auto">
       <button class="relative p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95">
@@ -107,17 +110,23 @@
       </button>
       <div class="relative" id="profileWrapper">
         <button onclick="toggleProfile()" class="flex items-center gap-2.5 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl px-3 py-1.5 transition-all btn-press active:scale-95">
-          <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0">U</div>
+          <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0">
+            <?= htmlspecialchars($user['initial'] ?? 'U') ?>
+          </div>
+
           <div class="hidden sm:block text-left">
-            <p class="text-sm font-semibold text-slate-800 leading-none">Unit Owner Name</p>
+            <p class="text-sm font-semibold text-slate-800 leading-none">
+              <?= htmlspecialchars($user['full_name'] ?? 'Unit Owner') ?>
+            </p>
             <p class="text-xs text-slate-400 mt-0.5">Unit Owner</p>
           </div>
           <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl py-2 z-50" id="profileDropdown">
-          <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors rounded-xl mx-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>My Profile</a>
-          <div class="border-t border-slate-100 my-1 mx-3"></div>
-          <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Sign out</a>
+          <a href="../php_files/logout_session.php" class="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Sign out
+          </a>    
         </div>
       </div>
     </div>
@@ -125,54 +134,48 @@
 
   <div class="main-scroll p-4 md:p-6 space-y-6">
     <div class="max-w-screen-xl mx-auto space-y-6">
-      <h1 class="text-xl font-bold text-slate-900">MY UNITS</h1>
+      <h1 class="text-xl font-bold text-slate-900">MY Tenants</h1>
 
       <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        
+        </div>
         <div class="overflow-x-auto">
-                    <table class="w-full text-sm" id="unitsTable">
+                    <table class="w-full text-sm" id="tenantsTable">
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50/60">
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Tenant Name</th>
                 <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Unit No.</th>
-                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Unit Type</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Move-in</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Lease-End</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Contact</th>
                 <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Status</th>
-                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Tenant</th>
                 <th class="px-4 py-3.5 w-20"></th>
               </tr>
             </thead>
-            <tbody id="unitsBody">
-              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openUnitModal({no:'C505',type:'One Bedroom',status:'Occupied',tenant:'John Doe',floor:'5th Floor',area:'45 sqm',contact:'09xx xxx xxxx',moveIn:'Jan 1, 2026',leaseEnd:'Dec 31, 2026'})">
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap" style="font-family:'DM Mono',monospace">C505</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">One Bedroom</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-100">Occupied</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">John Doe</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openUnitModal({no:'C505',type:'One Bedroom',status:'Occupied',tenant:'John Doe',floor:'5th Floor',area:'45 sqm',contact:'09xx xxx xxxx',moveIn:'Jan 1, 2026',leaseEnd:'Dec 31, 2026'})">View</button></td>
+            <tbody id="tenantsBody">
+              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openTenantModal({name:'John Doe',unit:'C505',type:'One Bedroom',moveIn:'Jan 1, 2026',leaseEnd:'Dec 31, 2026',contact:'09xx xxx xxxx',email:'john.doe@email.com',status:'Active'})">
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap">John Doe</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">C505</span></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Jan 1, 2026</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Dec 31, 2026</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">09xx xxx xxxx</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-100">Active</span></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openTenantModal({name:'John Doe',unit:'C505',type:'One Bedroom',moveIn:'Jan 1, 2026',leaseEnd:'Dec 31, 2026',contact:'09xx xxx xxxx',email:'john.doe@email.com',status:'Active'})">View</button></td>
               </tr>
-              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openUnitModal({no:'B302',type:'Studio Type A',status:'Available',tenant:'—',floor:'3rd Floor',area:'28 sqm',contact:'—',moveIn:'—',leaseEnd:'—'})">
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap" style="font-family:'DM Mono',monospace">B302</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-purple-50 text-purple-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-purple-100">Studio Type A</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-slate-100 text-slate-500 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-200">Available</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 text-slate-400">—</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openUnitModal({no:'B302',type:'Studio Type A',status:'Available',tenant:'—',floor:'3rd Floor',area:'28 sqm',contact:'—',moveIn:'—',leaseEnd:'—'})">View</button></td>
-              </tr>
-              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openUnitModal({no:'A104',type:'Two Bedroom',status:'Reserved',tenant:'Maria Santos',floor:'1st Floor',area:'68 sqm',contact:'09yy yyy yyyy',moveIn:'Feb 1, 2026',leaseEnd:'Jan 31, 2027'})">
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap" style="font-family:'DM Mono',monospace">A104</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">Two Bedroom</span></td>
+              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openTenantModal({name:'Maria Santos',unit:'A104',type:'Two Bedroom',moveIn:'Feb 1, 2026',leaseEnd:'Jan 31, 2027',contact:'09yy yyy yyyy',email:'maria.s@email.com',status:'Reserved'})">
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap">Maria Santos</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">A104</span></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Feb 1, 2026</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Jan 31, 2027</td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">09yy yyy yyyy</td>
                 <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-yellow-50 text-yellow-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-yellow-100">Reserved</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">Maria Santos</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openUnitModal({no:'A104',type:'Two Bedroom',status:'Reserved',tenant:'Maria Santos',floor:'1st Floor',area:'68 sqm',contact:'09yy yyy yyyy',moveIn:'Feb 1, 2026',leaseEnd:'Jan 31, 2027'})">View</button></td>
-              </tr>
-              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openUnitModal({no:'D701',type:'Studio Type B',status:'Available',tenant:'—',floor:'7th Floor',area:'32 sqm',contact:'—',moveIn:'—',leaseEnd:'—'})">
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap" style="font-family:'DM Mono',monospace">D701</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-rose-50 text-rose-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-rose-100">Studio Type B</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-slate-100 text-slate-500 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-200">Available</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 text-slate-400">—</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openUnitModal({no:'D701',type:'Studio Type B',status:'Available',tenant:'—',floor:'7th Floor',area:'32 sqm',contact:'—',moveIn:'—',leaseEnd:'—'})">View</button></td>
+                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openTenantModal({name:'Maria Santos',unit:'A104',type:'Two Bedroom',moveIn:'Feb 1, 2026',leaseEnd:'Jan 31, 2027',contact:'09yy yyy yyyy',email:'maria.s@email.com',status:'Reserved'})">View</button></td>
               </tr>
             </tbody>
           </table>
         </div>
         <div class="flex items-center justify-between px-5 py-3.5 border-t border-slate-100">
-          <p class="text-xs text-slate-400">Showing 4 units</p>
+          <p class="text-xs text-slate-400">Showing 2 tenants</p>
           <div class="flex items-center gap-1">
             <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95"><svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
             <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border bg-slate-900 border-slate-900 text-white text-xs font-bold active:scale-95">1</button>
@@ -184,30 +187,36 @@
   </div>
 </div>
 
-<!-- UNIT DETAIL MODAL -->
-<div class="modal-backdrop fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4" id="unitModal" onclick="handleBackdropClick(event,'unitModal')">
+<!-- TENANT DETAIL MODAL -->
+<div class="modal-backdrop fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4" id="tenantModal" onclick="handleBackdropClick(event,'tenantModal')">
   <div class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100 overflow-hidden">
     <div class="bg-slate-900 px-6 py-4 flex items-center justify-between">
-      <h2 class="text-base font-bold text-white">Unit Details</h2>
-      <button onclick="closeModal('unitModal')" class="btn-press p-1.5 rounded-lg hover:bg-white/10 transition-colors active:scale-95">
+      <h2 class="text-base font-bold text-white">Tenant Details</h2>
+      <button onclick="closeModal('tenantModal')" class="btn-press p-1.5 rounded-lg hover:bg-white/10 transition-colors active:scale-95">
         <svg class="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
     <div class="p-6 space-y-4">
+      <div class="flex items-center gap-4 pb-4 border-b border-slate-100">
+        <div class="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-lg shrink-0" id="mTenantAvatar">?</div>
+        <div>
+          <p class="font-bold text-slate-900 text-base" id="mTenantName">—</p>
+          <p class="text-xs text-slate-400" id="mTenantEmail">—</p>
+        </div>
+        <span class="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full border" id="mTenantStatusBadge">—</span>
+      </div>
       <div class="grid grid-cols-2 gap-4">
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Unit No.</p><p class="text-sm font-bold text-slate-900" id="mUnitNo" style="font-family:'DM Mono',monospace">—</p></div>
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Type</p><p class="text-sm font-semibold text-slate-800" id="mUnitType">—</p></div>
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Floor</p><p class="text-sm text-slate-700" id="mUnitFloor">—</p></div>
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Area</p><p class="text-sm text-slate-700" id="mUnitArea">—</p></div>
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Status</p><p class="text-sm font-semibold" id="mUnitStatus">—</p></div>
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Tenant</p><p class="text-sm text-slate-700" id="mUnitTenant">—</p></div>
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Move-in</p><p class="text-sm text-slate-600" id="mUnitMoveIn" style="font-family:'DM Mono',monospace">—</p></div>
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Lease End</p><p class="text-sm text-slate-600" id="mUnitLeaseEnd" style="font-family:'DM Mono',monospace">—</p></div>
+        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Unit No.</p><p class="text-sm font-bold text-slate-900" id="mTenantUnit" style="font-family:'DM Mono',monospace">—</p></div>
+        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Unit Type</p><p class="text-sm text-slate-700" id="mTenantType">—</p></div>
+        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Contact</p><p class="text-sm text-slate-700" id="mTenantContact" style="font-family:'DM Mono',monospace">—</p></div>
+        <div></div>
+        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Move-in</p><p class="text-sm text-slate-600" id="mTenantMoveIn" style="font-family:'DM Mono',monospace">—</p></div>
+        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Lease End</p><p class="text-sm text-slate-600" id="mTenantLeaseEnd" style="font-family:'DM Mono',monospace">—</p></div>
       </div>
     </div>
     <div class="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50/60">
-      <button onclick="closeModal('unitModal')" class="btn-press px-4 py-2 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-100 transition-all active:scale-95">Close</button>
-      <button class="btn-press bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all active:scale-95">Manage Unit</button>
+      <button onclick="closeModal('tenantModal')" class="btn-press px-4 py-2 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-100 transition-all active:scale-95">Close</button>
+      <button class="btn-press bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all active:scale-95">Contact Tenant</button>
     </div>
   </div>
 </div>
@@ -229,23 +238,29 @@
     const w = document.getElementById('profileWrapper');
     if (w && !w.contains(e.target)) { document.getElementById('profileDropdown').classList.remove('open'); document.getElementById('profileChevron').style.transform = ''; }
   });
-  function openUnitModal(d) {
-    document.getElementById('mUnitNo').textContent = d.no;
-    document.getElementById('mUnitType').textContent = d.type;
-    document.getElementById('mUnitFloor').textContent = d.floor;
-    document.getElementById('mUnitArea').textContent = d.area;
-    document.getElementById('mUnitStatus').textContent = d.status;
-    document.getElementById('mUnitTenant').textContent = d.tenant;
-    document.getElementById('mUnitMoveIn').textContent = d.moveIn;
-    document.getElementById('mUnitLeaseEnd').textContent = d.leaseEnd;
-    document.getElementById('unitModal').classList.add('open');
+  function openTenantModal(d) {
+    const initials = d.name.split(' ').map(n => n[0]).join('').toUpperCase();
+    document.getElementById('mTenantAvatar').textContent = initials;
+    document.getElementById('mTenantName').textContent = d.name;
+    document.getElementById('mTenantEmail').textContent = d.email;
+    document.getElementById('mTenantUnit').textContent = d.unit;
+    document.getElementById('mTenantType').textContent = d.type;
+    document.getElementById('mTenantContact').textContent = d.contact;
+    document.getElementById('mTenantMoveIn').textContent = d.moveIn;
+    document.getElementById('mTenantLeaseEnd').textContent = d.leaseEnd;
+    const badge = document.getElementById('mTenantStatusBadge');
+    badge.textContent = d.status;
+    badge.className = d.status === 'Active'
+      ? 'ml-auto text-xs font-semibold px-2.5 py-1 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200'
+      : 'ml-auto text-xs font-semibold px-2.5 py-1 rounded-full border bg-yellow-50 text-yellow-700 border-yellow-200';
+    document.getElementById('tenantModal').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
   function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
   function handleBackdropClick(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
   function filterTable() {
     const q = document.getElementById('searchInput').value.toLowerCase();
-    document.querySelectorAll('#unitsBody tr').forEach(r => {
+    document.querySelectorAll('#tenantsBody tr').forEach(r => {
       r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
     });
   }

@@ -66,12 +66,14 @@ if ($result && $result->num_rows > 0) {
 
             if ($status_lower === 'ready for occupancy') {
                 $status_class = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+            } elseif ($status_lower === 'on hold') {
+                $status_class = 'bg-amber-50 text-amber-700 border border-amber-200';
             } elseif ($status_lower === 'resale') {
                 $status_class = 'bg-blue-50 text-blue-700 border border-blue-200';
             } elseif ($status_lower === 'reserved') {
-                $status_class = 'bg-yellow-50 text-yellow-700 border border-yellow-200';
-            } elseif ($status_lower === 'occupied') {
                 $status_class = 'bg-red-50 text-red-700 border border-red-200';
+            } elseif ($status_lower === 'occupied') {
+                $status_class = 'bg-rose-50 text-rose-700 border border-rose-200';
             } elseif ($status_lower === 'under maintenance') {
                 $status_class = 'bg-orange-50 text-orange-700 border border-orange-200';
             } else {

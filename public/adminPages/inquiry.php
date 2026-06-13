@@ -89,35 +89,29 @@ $userData = requireRole($conn, ['admin']); ?>
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
       <span class="nav-label">Home</span>
     </a>
-    <a href="../adminPages/inquiry.php" data-tooltip="Inquiry" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
-      <!-- Chat bubble / inquiry icon -->
+    <a href="../adminPages/inquiry.php" data-tooltip="Inquiry" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
       <span class="nav-label">Inquiry</span>
     </a>
     <a href="../adminPages/reservation.php" data-tooltip="Reservation" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <!-- Calendar / reservation icon -->
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
       <span class="nav-label">Reservation</span>
-    </a>
+      </a>
     <a href="../adminPages/units.php" data-tooltip="Units" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V9a2 2 0 00-2-2h-3V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14m0 0H3m3 0h14m-7 0v-4h2v4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1m4 0h1M9 13h1m4 0h1"/></svg>
       <span class="nav-label">Units</span>
-    </a>
-    <a href="../adminPages/roomsAdmin.php" data-tooltip="Rooms" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M7 6h10a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>
-      <span class="nav-label">Rooms</span>
     </a>
     <a href="../adminPages/maintenance.php" data-tooltip="Maintenance" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span class="nav-label">Maintenance</span>
     </a>
-    <a href="../adminPages/employees.php" data-tooltip="Employees" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="../adminPages/residents.php" data-tooltip="Employees" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      <span class="nav-label">Employees</span>
+      <span class="nav-label">Residents</span>
     </a>
-    <a href="../adminPages/settingsAdmin.php" data-tooltip="Settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      <span class="nav-label">Settings</span>
+    <a href="../adminPages/analytics.php" data-tooltip="Analytics" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      <span class="nav-label">Analytics</span>
     </a>
   </nav>
   <div class="notice-section px-2 py-4 border-t border-slate-100 shrink-0">
@@ -250,8 +244,7 @@ $userData = requireRole($conn, ['admin']); ?>
           <table class="w-full text-sm" id="inqTable">
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50/60">
-                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Name</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Email</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Inquirer</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">inquiry Type</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Unit Preference</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Message Preview</th>
@@ -533,7 +526,11 @@ $userData = requireRole($conn, ['admin']); ?>
 <script>
 let sidebarCollapsed = false;
 let currentRow = null;
-let currentFilter = 'all'; // ADD: Track current filter
+let currentFilter = 'all';
+
+let currentInquiryId = null;
+let currentUnitPreference = null;
+let checkedAvailableUnits = [];
 
 // Your existing sidebar functions (unchanged)
 function toggleCollapse() {
@@ -604,7 +601,7 @@ function hideModal() {
 }
 
 function doLogout() {
-  window.location.href = '/Zeppelin-Suites/public/generalViewPages/index.html'; // Your logout file
+  window.location.href = '/Zeppelin-Suites/public/php_files/logout_session.php'; // Your logout file
 }
 
 
@@ -687,6 +684,12 @@ setTimeout(() => {
 // Rest of your functions (modal, reply, etc.) - unchanged
 function openModal(row) {
   currentRow = row;
+
+  currentInquiryId = row.dataset.inqId || null;
+  currentUnitPreference = row.dataset.unitpref || '';
+
+  resetApprovalUI();
+
   document.getElementById('modalSubject').textContent = row.dataset.inquiryType || '—';
   document.getElementById('modalName').textContent = row.dataset.name || '—';
   document.getElementById('modalContact').textContent = row.dataset.contact || '—';
@@ -694,46 +697,262 @@ function openModal(row) {
   document.getElementById('modalUnitPref').textContent = row.dataset.unitpref || '—';
   document.getElementById('modalLeaseDuration').textContent = row.dataset.leaseDuration || '—';
   document.getElementById('modalMessage').textContent = row.dataset.message || '—';
-  document.getElementById('modalBackdrop').classList.add('open');
-  const type = row.dataset.inquiryType.toLowerCase();
+
+  // ✅ PUT APPROVAL STATUS DISPLAY HERE
+  const approvalStatus = row.dataset.approvalStatus || 'not_requested';
+  const approvedUnit = row.dataset.approvedUnit || '';
+  const approvedAt = row.dataset.approvedAt || '';
+
+  if (approvalStatus === 'approved') {
+    document.getElementById('approvalStatusText').textContent = 'Owner approved';
+    document.getElementById('approvalSubText').textContent = approvedAt
+      ? 'Approved on ' + approvedAt
+      : 'A unit owner approved this reservation request.';
+
+    const badge = document.getElementById('approvalStatusBadge');
+    badge.textContent = 'Approved';
+    badge.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0';
+
+    document.getElementById('availableUnitsCount').textContent = approvedUnit
+      ? 'Approved unit: ' + approvedUnit
+      : 'Approved unit selected';
+
+    document.getElementById('checkUnitsBtn').classList.add('hidden');
+    document.getElementById('sendApprovalBtn').classList.add('hidden');
+    document.getElementById('approvedApprovalBox').classList.remove('hidden');
+
+    document.getElementById('approvedUnitText').textContent = approvedAt
+      ? 'Assigned unit: ' + approvedUnit + ' • Approved on ' + approvedAt
+      : 'Assigned unit: ' + approvedUnit;
+  }
+
+  else if (approvalStatus === 'requested') {
+    document.getElementById('approvalStatusText').textContent = 'Waiting for owner approval';
+    document.getElementById('approvalSubText').textContent = 'Request was sent to available unit owners.';
+
+    const badge = document.getElementById('approvalStatusBadge');
+    badge.textContent = 'On Hold';
+    badge.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 shrink-0';
+
+    document.getElementById('waitingApprovalBox').classList.remove('hidden');
+    document.getElementById('checkUnitsBtn').classList.add('hidden');
+    document.getElementById('sendApprovalBtn').classList.add('hidden');
+  }
+
+  else if (approvalStatus === 'declined') {
+    document.getElementById('approvalStatusText').textContent = 'Owner declined';
+    document.getElementById('approvalSubText').textContent = 'No unit owner approved this request.';
+
+    const badge = document.getElementById('approvalStatusBadge');
+    badge.textContent = 'Declined';
+    badge.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-200 shrink-0';
+
+    document.getElementById('declinedApprovalBox').classList.remove('hidden');
+    document.getElementById('checkUnitsBtn').classList.remove('hidden');
+    document.getElementById('sendApprovalBtn').classList.add('hidden');
+  }
+
+  const type = (row.dataset.inquiryType || '').toLowerCase();
   const hideGeneral = type.includes('general') || type.includes('other');
-  
+
   if (hideGeneral) {
     document.getElementById('unitSection').style.display = 'none';
-    document.getElementById('datesSection').style.display = 'none';
-    document.getElementById('staySection').style.display = 'none';
+    document.getElementById('leaseDurationSection').style.display = 'none';
+    document.getElementById('approvalSection').style.display = 'none';
   } else {
     document.getElementById('unitSection').style.display = '';
-    document.getElementById('datesSection').style.display = '';
-    document.getElementById('staySection').style.display = '';
+    document.getElementById('leaseDurationSection').style.display = '';
+    document.getElementById('approvalSection').style.display = '';
   }
-  // 🔥 END 5 LINES
-  
-  document.getElementById('modalBackdrop').classList.add('open');
+
+  const modal = document.getElementById('modalBackdrop');
+  modal.classList.remove('hidden');
+  modal.classList.add('open');
 }
 
-function closeModal() { document.getElementById('modalBackdrop')?.classList.remove('open'); 
+function closeModal() {
+  const modal = document.getElementById('modalBackdrop');
 
+  if (!modal) return;
+
+  modal.classList.remove('open');
+  modal.classList.add('hidden');
+
+  currentRow = null;
+  currentInquiryId = null;
+  currentUnitPreference = '';
 }
-function handleBackdropClick(e) { if (e.target === document.getElementById('modalBackdrop')) closeModal(); 
 
+function handleBackdropClick(e) {
+  if (e.target === document.getElementById('modalBackdrop')) {
+    closeModal();
+  }
 }
 
 function sendReply() {
-    if (currentRow) {
-        sessionStorage.setItem('replyInquiryData', JSON.stringify({
-            inquiry_type: currentRow.dataset.inquiryType,
-            name: currentRow.dataset.name,
-            contact: currentRow.dataset.contact,
-            email: currentRow.dataset.email,
-            unitpref: currentRow.dataset.unitpref,
-            leaseDuration: currentRow.dataset.leaseDuration,
-            message: currentRow.dataset.message,
-            inq_id: currentRow.dataset.inqId
-        }));
-        window.location.href = 'replyform.php';
-    }
+  if (!currentRow) {
+    alert("No inquiry selected.");
+    return;
+  }
+
+  const inqId = currentRow.dataset.inqId;
+
+  if (!inqId) {
+    alert("Inquiry ID is missing.");
+    return;
+  }
+
+  window.location.href = "replyform.php?inq_id=" + encodeURIComponent(inqId);
 }
+
+function resetApprovalUI() {
+  checkedAvailableUnits = [];
+
+  document.getElementById("availableUnitsCount").textContent = "Not checked yet";
+  document.getElementById("availableUnitsList").innerHTML = "";
+  document.getElementById("availableUnitsList").classList.add("hidden");
+
+  document.getElementById("checkUnitsBtn").classList.remove("hidden");
+
+  document.getElementById("sendApprovalBtn").classList.add("hidden");
+  document.getElementById("waitingApprovalBox").classList.add("hidden");
+  document.getElementById("approvedApprovalBox").classList.add("hidden");
+  document.getElementById("declinedApprovalBox").classList.add("hidden");
+
+  document.getElementById("approvalStatusText").textContent = "Not yet requested";
+  document.getElementById("approvalSubText").textContent = "Check available units first, then send approval requests to unit owners.";
+
+  const badge = document.getElementById("approvalStatusBadge");
+  badge.textContent = "Not Requested";
+  badge.className = "text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 shrink-0";
+}
+
+function checkAvailableUnits() {
+  if (!currentInquiryId) {
+    alert("No inquiry selected.");
+    return;
+  }
+
+  if (!currentUnitPreference) {
+    alert("No unit preference found for this inquiry.");
+    return;
+  }
+
+  const countText = document.getElementById("availableUnitsCount");
+  const list = document.getElementById("availableUnitsList");
+  const sendBtn = document.getElementById("sendApprovalBtn");
+
+  countText.textContent = "Checking...";
+  list.innerHTML = "";
+  list.classList.add("hidden");
+  sendBtn.classList.add("hidden");
+
+  fetch("ActionsAP/checkAvailableUnits.php?unit_type=" + encodeURIComponent(currentUnitPreference))
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        countText.textContent = "Unable to check units";
+        alert(data.message || "Something went wrong.");
+        return;
+      }
+
+      checkedAvailableUnits = data.units || [];
+
+      if (checkedAvailableUnits.length === 0) {
+        countText.textContent = "No available units found";
+        list.innerHTML = `
+          <div class="bg-white border border-slate-100 rounded-xl px-3 py-3">
+            <p class="text-sm font-semibold text-slate-700">No units available</p>
+            <p class="text-xs text-slate-500 mt-0.5">
+              No ready units with assigned owners were found for ${currentUnitPreference}.
+            </p>
+          </div>
+        `;
+        list.classList.remove("hidden");
+        return;
+      }
+
+      countText.textContent = checkedAvailableUnits.length + " available unit(s) found";
+
+      list.innerHTML = checkedAvailableUnits.map(unit => {
+        const rate = Number(unit.lease_rate || 0).toLocaleString("en-PH", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+
+        return `
+          <div class="flex items-center justify-between bg-white border border-slate-100 rounded-xl px-3 py-2">
+            <div>
+              <p class="text-sm font-semibold text-slate-800">
+                ${unit.unit_number} — ${unit.unit_type}
+              </p>
+              <p class="text-xs text-slate-500">
+                Owner: ${unit.owner_name || "No owner"} · ₱${rate}
+              </p>
+            </div>
+
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+              Available
+            </span>
+          </div>
+        `;
+      }).join("");
+
+      list.classList.remove("hidden");
+      sendBtn.classList.remove("hidden");
+    })
+    .catch(error => {
+      console.error(error);
+      countText.textContent = "Error checking units";
+      alert("Error checking available units.");
+    });
+}
+function sendApprovalToOwners() {
+  if (!currentInquiryId) {
+    alert("No inquiry selected.");
+    return;
+  }
+
+  if (checkedAvailableUnits.length === 0) {
+    alert("Please check available units first.");
+    return;
+  }
+
+  const unitIds = checkedAvailableUnits.map(unit => unit.unit_id);
+
+  const formData = new FormData();
+  formData.append("inq_id", currentInquiryId);
+  formData.append("unit_ids", JSON.stringify(unitIds));
+
+  fetch("ActionsAP/sendApprovalRequests.php", {
+    method: "POST",
+    body: formData
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        alert(data.message || "Unable to send approval requests.");
+        return;
+      }
+
+      document.getElementById("approvalStatusText").textContent = "Approval requested";
+      document.getElementById("approvalSubText").textContent = "Request was sent to all available unit owners.";
+
+      const badge = document.getElementById("approvalStatusBadge");
+      badge.textContent = "Requested";
+      badge.className = "text-xs font-semibold px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 shrink-0";
+
+      document.getElementById("sendApprovalBtn").classList.add("hidden");
+      document.getElementById("waitingApprovalBox").classList.remove("hidden");
+
+      alert("Approval requests sent successfully.");
+    })
+    .catch(error => {
+      console.error(error);
+      alert("Error sending approval requests.");
+    });
+}
+
 </script>
 </body>
 </html>

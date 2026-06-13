@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/ActionsGV/loadReservationForm.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -155,7 +156,7 @@ tailwind.config = {
   <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,720px)_360px] gap-9 items-start">
 
     <!-- LEFT CONTENT -->
-    <div class="space-y-6">
+    <div class="space-y-8">
 
       <!-- STATUS BANNER -->
       <div class="status-banner rounded-xl border border-amber-200 bg-amber-50/80 shadow-sm px-7 py-5 flex items-center justify-between gap-5" id="statusBanner">
@@ -192,6 +193,8 @@ tailwind.config = {
         </div>
 
         <div class="p-7 md:p-8 space-y-8" id="formBody">
+          <form action="ActionsGV/submitReservation.php" method="POST" enctype="multipart/form-data" class="space-y-8">
+           <input type="hidden" name="reservation_token" value="<?php echo htmlspecialchars($token); ?>">
 
           <!-- RESIDENT INFO -->
           <section>
@@ -205,38 +208,87 @@ tailwind.config = {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-2">Full Name <span class="text-red-500">*</span></label>
-                <input type="text" id="resName" placeholder="e.g. Juan Dela Cruz" class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base">
-              </div>
+               <input 
+                  type="text" 
+                  id="resName"
+                  name="client_name"
+                  value="<?php echo htmlspecialchars($data['sender_name']); ?>"
+                  readonly
+                  class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base"> 
+                </div>
 
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-2">Resident Type <span class="text-red-500">*</span></label>
-                <select id="resType" class="zep-select w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base text-slate-500 cursor-pointer">
-                  <option value="" disabled selected>Select type</option>
-                  <option>New Tenant</option>
-                  <option>Existing Tenant</option>
-                  <option>Owner</option>
-                  <option>Buyer</option>
-                </select>
+                <input 
+                  type="text"
+                  id="resType"
+                  name="resident_type"
+                  value="<?php echo htmlspecialchars($resident_type); ?>"
+                  readonly
+                  class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
               </div>
 
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-2">Contact Number <span class="text-red-500">*</span></label>
-                <input type="tel" id="resContact" placeholder="+63 900 000 0000" class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base">
+                <input 
+                type="tel" 
+                id="resContact"
+                name="client_contact"
+                value="<?php echo htmlspecialchars($data['sender_contact']); ?>"
+                readonly
+                class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
               </div>
 
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-2">Email Address <span class="text-red-500">*</span></label>
-                <input type="email" id="resEmail" placeholder="you@example.com" class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base">
+                <input 
+                type="email" 
+                id="resEmail"
+                name="client_email"
+                value="<?php echo htmlspecialchars($data['sender_email']); ?>"
+                readonly
+                class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
               </div>
 
               <div class="md:col-span-2">
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Unit Type &amp; No. (Preference) <span class="text-red-500">*</span></label>
-                <input type="text" id="resUnit" placeholder="e.g. Studio A — 302" class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base">
-              </div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">
+                Unit Type &amp; No. <span class="text-red-500">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="resUnit"
+                value="<?php echo htmlspecialchars($data['unit_type'] . ' — Unit ' . $data['unit_number']); ?>"
+                readonly
+                class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">
+                Unit Owner
+              </label>
+              <input 
+                type="text"
+                id="unitOwnerName"
+                value="<?php echo htmlspecialchars($data['owner_name'] ?? 'No owner assigned'); ?>"
+                readonly
+                class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">
+                Owner Email / Contact
+              </label>
+              <input 
+                type="email"
+                id="unitOwnerEmail"
+                value="<?php echo htmlspecialchars($data['owner_email'] ?? 'No email available'); ?>"
+                readonly
+                class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
+            </div>
             </div>
           </section>
 
-          <div class="h-px bg-slate-200"></div>
+          <div class="h-px bg-slate-200 my-8"></div>
 
           <!-- LEASE TERM DETAILS -->
           <section>
@@ -247,92 +299,201 @@ tailwind.config = {
               <h3 class="font-bold text-slate-900 text-base uppercase tracking-wide">2. Lease Term Details</h3>
             </div>
 
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">
+                Transaction Type <span class="text-red-500">*</span>
+              </label>
+             <input 
+              type="text"
+              id="resTransactionType"
+              value="<?php echo htmlspecialchars($transaction_type); ?>"
+              readonly
+              class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
+            </div>
+
             <div class="space-y-5">
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-2">Reservation Type <span class="text-red-500">*</span></label>
-                <select id="resReservationType" class="zep-select w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base text-slate-500 cursor-pointer">
-                  <option value="" disabled selected>Select reservation type</option>
-                  <option value="new-lease">New Lease</option>
-                  <option value="lease-renewal">Lease Renewal</option>
-                  <option value="unit-transfer">Unit Transfer</option>
-                  <option value="short-term">Short-Term Stay</option>
-                </select>
-                 <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 space-y-5">Lease Duration <span class="text-red-400">*</span></label>
-                    <select id="resLeaseDuration" class="zep-select w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 cursor-pointer transition-all appearance-none" style="background-image:url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'14\' height=\'14\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'2\'%3E%3Cpath d=\'m6 9 6 6 6-6\'/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;">
-                    <option value="" disabled selected>Select lease duration</option>
-                    <option value="lease immediately">Lease Immediately</option>
-                    <option value="for the next 3 months">For the next 3 months</option>
-                    <option value="for the next 6 months">For the next 6 months</option>
-                    <option value="1 year">1 year</option>
-                    <option value="2 years">2 years</option>
-                    <option value="longer contract">Longer contract</option>
-                    <option value="still deciding">Still deciding</option>
-                    </select>
+                <input 
+                  type="text"
+                  id="resReservationType"
+                  name="reservation_type"
+                  value="<?php echo htmlspecialchars($reservation_type); ?>"
+                  readonly
+                  class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
+                 <?php if ($is_lease): ?>
+                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 space-y-5">
+                    Lease Duration <span class="text-red-400">*</span>
+                  </label>
+
+                  <input 
+                    type="text"
+                    id="resLeaseDuration"
+                    name="lease_duration"
+                    value="<?php echo htmlspecialchars($data['lease_duration'] ?? 'Not specified'); ?>"
+                    readonly
+                    class="zep-input w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-700">
+                <?php endif; ?>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label class="block text-sm font-semibold text-slate-700 mb-2">Move-in Date <span class="text-red-500">*</span></label>
-                  <input type="date" id="resMoveIn" class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base">
+                  <label class="block text-sm font-semibold text-slate-700 mb-2">
+                    <?php echo $is_lease ? 'Move-in Date' : 'Preferred Appointment / Turnover Date'; ?>
+                    <span class="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="date" 
+                    id="resMoveIn"
+                    name="move_in_date"
+                    required
+                    class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base">
                 </div>
 
-                <div>
-                  <label class="block text-sm font-semibold text-slate-700 mb-2">Move-out Date <span class="text-red-500">*</span></label>
-                  <input type="date" id="resLease" class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base">
-                </div>
+                <?php if ($is_lease): ?>
+                  <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                      Move-out Date <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="date" 
+                      id="resLease"
+                      name="move_out_date"
+                      required
+                      class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base">
+                  </div>
+                <?php endif; ?>
               </div>
             </div>
           </section>
 
-          <div class="h-px bg-slate-200"></div>
+          <div class="h-px bg-slate-200 my-8"></div>
             
           <!-- PAYMENT DETAILS -->
-          <section>
-            <div class="flex items-center gap-3 mb-5">
-              <svg class="w-5 h-5 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h.01M11 15h2M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"/>
-              </svg>
-              <h3 class="font-bold text-slate-900 text-base uppercase tracking-wide">3. Payment Details</h3>
-            </div>
+          <section class="pt-2">
+            <div class="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-8 items-start">
 
-            <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-5">
-              <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr_150px] gap-5 items-center">
-                <div>
-                  <label class="block text-sm font-semibold text-slate-700 mb-2">Reservation Fee (PHP) <span class="text-red-500">*</span></label>
-                  <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-base font-bold text-slate-500">₱</span>
-                    <input type="text" id="resAmount" value="100,000.00" readonly class="zep-input w-full h-12 pl-9 pr-5 bg-white border border-slate-200 rounded-xl text-base text-slate-500">
-                  </div>
+            <!-- LEFT: YOUR ORIGINAL STEPS -->
+            <div class="space-y-6">
+
+              <!-- STEP 1 -->
+              <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
+                  Step 1
+                </p>
+                <p class="font-bold text-slate-900">Reservation Fee</p>
+
+                <div class="mt-3 relative">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-base font-bold text-slate-500">₱</span>
+                 <input 
+                  type="text" 
+                  id="requiredAmountInput"
+                  readonly
+                  class="w-full h-12 pl-9 pr-5 bg-white border border-slate-200 rounded-xl text-base text-slate-500">
                 </div>
 
-                <div class="text-sm text-slate-600 leading-relaxed">
-                  <p class="font-bold text-slate-900 mb-1">Scan the QR code to pay</p>
-                  <p>Use your gcash to complete your payment.</p>
-                </div>
+                <p class="text-xs text-slate-500 mt-2">
+                 This is the required amount based on your selected payment option.
+                </p>
+              </div>
 
-                <div class="flex flex-col items-center">
-                  <p class="text-xs font-bold text-slate-800 tracking-wide mb-2">SCAN TO PAY</p>
-                  <div class="qr-grid">
-                    <div class="qr-grid w-48 h-48 flex items-center justify-center">
-                    <img src="/images/QR.jpg" alt="Reservation QR Code" class="w-full h-full object-contain rounded-xl shadow-sm">
-                    </div>
+
+              <!-- STEP 2 -->
+              <div>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
+                  Step 2
+                </p>
+                <p class="font-bold text-slate-900 mb-1">Scan to Pay</p>
+                <p class="text-sm text-slate-600 mb-4">
+                  Use GCash or any QR-supported app to complete your reservation.
+                </p>
+
+              <div class="flex justify-center my-5">                  <div onclick="openQRModal()"
+                    class="w-40 h-40 cursor-pointer hover:scale-105 transition-all duration-200">
+                    <img src="../images/QR.jpg" class="w-full h-full object-contain rounded-xl shadow-sm">
                   </div>
-                  <p class="text-xs text-slate-500 mt-2">Reference ID: <span class="font-bold">#101</span></p>
                 </div>
               </div>
+
+
+              <!-- STEP 3 -->
+              <div class="border-t pt-4">
+              <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">
+                Step 3
+              </p>
+
+              <label class="block text-sm font-semibold text-slate-700 mb-2">
+                GCash Reference Number <span class="text-red-500">*</span>
+              </label>
+
+              <input 
+                type="text"
+                name="payment_reference"
+                id="paymentReference"
+                placeholder="Enter your GCash reference number"
+                required
+                class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base">
             </div>
+
+            </div>
+
+
+            <!-- RIGHT: BREAKDOWN PANEL -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 h-fit">
+
+              <p class="text-xs font-bold text-slate-500 uppercase mb-3">
+                Payment Breakdown
+              </p>
+
+              <!-- TOTAL -->
+              <div class="mb-4">
+                <p class="text-xs text-slate-500"><?php echo htmlspecialchars($price_label); ?></p>
+                <p class="text-lg font-bold text-slate-900">
+                  ₱<?php echo number_format($price_basis, 2); ?>
+                </p>
+              </div>
+
+              <!-- DP SELECTOR -->
+              <div class="mb-4">
+                <p class="text-xs font-bold text-slate-600 mb-2">Down Payment Option</p>
+
+                <select 
+                  id="dpOption"
+                  name="payment_percentage"
+                  required
+                  class="w-full h-10 border border-slate-200 rounded-lg text-sm px-2">
+                  <option value="0.35">35% Down Payment</option>
+                  <option value="0.50">50% Down Payment</option>
+                </select>
+              </div>
+
+              <!-- BREAKDOWN -->
+              <div class="space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-slate-600">Required Amount</span>
+                <span class="font-semibold" id="dpAmount">₱0.00</span>
+              </div>
+
+              <div class="flex justify-between border-t pt-2">
+                <span class="text-slate-800 font-semibold">Payment Status</span>
+                <span class="font-bold text-amber-600">Pending Admin Review</span>
+              </div>
+            </div>
+
+            </div>
+          </div>
           </section>
 
           <!-- UPLOAD PROOF -->
-          <section>
-            <div class="flex items-center gap-3 mb-4">
+          <section class="pt-2">
+            <div class="flex items-center gap-3 mb-5">
               <svg class="w-5 h-5 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12V4m0 0l-4 4m4-4l4 4"/>
               </svg>
               <h3 class="font-bold text-slate-900 text-base uppercase tracking-wide">4. Upload Proof of Payment <span class="text-red-500">*</span></h3>
             </div>
 
-            <label for="proofUpload" class="upload-zone w-full min-h-[120px] rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer">
+            <label for="proofUpload" class="upload-zone w-full min-h-[140px] rounded-xl flex flex-col items-center justify-center gap-3 cursor-pointer">
               <svg class="w-9 h-9 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
               </svg>
@@ -341,26 +502,46 @@ tailwind.config = {
                 <p class="text-sm text-slate-500 mt-1">PNG, JPG, PDF up to 10MB</p>
               </div>
               <span id="uploadFileName" class="text-sm text-emerald-600 font-semibold hidden"></span>
-              <input type="file" id="proofUpload" accept=".png,.jpg,.jpeg,.pdf" class="hidden" onchange="handleUpload(this)">
+              <input 
+                type="file" 
+                name="payment_proof"
+                id="proofUpload" 
+                accept=".png,.jpg,.jpeg,.pdf" 
+                class="hidden" 
+                onchange="handleUpload(this)"
+                required>
             </label>
             <p class="text-xs text-slate-400 text-center mt-3">Scan the QR code using your preferred e-wallet or banking app to complete your payment.</p>
           </section>
 
-          <div class="h-px bg-slate-200"></div>
+          <div class="h-px bg-slate-200 my-8"></div>
 
           <!-- AGREEMENT + SUBMIT -->
-          <section>
-            <div class="flex items-start gap-3 mb-7">
-              <input type="checkbox" id="agreeCheck" class="mt-1 w-4 h-4 rounded border-slate-300 accent-slate-900 cursor-pointer">
+          <section class="pt-2">
+            <div class="flex items-start gap-3 mb-8">
+              <input 
+              type="checkbox" 
+              id="agreeCheck"
+              name="agreement"
+              required
+              class="mt-1 w-4 h-4 rounded border-slate-300 accent-slate-900 cursor-pointer">
               <label for="agreeCheck" class="text-sm text-slate-700 leading-relaxed cursor-pointer">
                 I agree to the <a href="#" class="text-slate-950 font-bold underline hover:no-underline">Terms and Conditions</a> and <a href="#" class="text-slate-950 font-bold underline hover:no-underline">Privacy Policy</a> of Zeppelin Suites.
                 I confirm that all information provided is accurate and complete.
               </label>
             </div>
 
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <p class="text-sm text-slate-400">Reservation ID: <span class="font-bold text-slate-700" style="font-family:'DM Mono',monospace">#101</span></p>
-              <button onclick="submitForm()" id="submitBtn" class="btn-press w-full sm:w-auto bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold px-10 py-3.5 rounded-xl tracking-widest transition-all">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pt-4">
+             <p class="text-sm text-slate-400">
+                Inquiry ID:
+                <span class="font-bold text-slate-700" style="font-family:'DM Mono',monospace">
+                  #<?php echo htmlspecialchars($data['inq_id']); ?>
+                </span>
+              </p>
+                <button 
+                type="submit"
+                id="submitBtn" 
+                class="btn-press w-full sm:w-auto bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold px-10 py-3.5 rounded-xl tracking-widest transition-all">
                 <span class="inline-flex items-center gap-2">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
@@ -370,7 +551,7 @@ tailwind.config = {
               </button>
             </div>
           </section>
-
+          </form>
         </div><!-- /formBody -->
 
         <!-- Expired overlay -->
@@ -471,7 +652,18 @@ tailwind.config = {
             For assistance and clarification, please contact our Sales Department.
           </p>
         </div>
+
+        <div class="rounded-xl border border-blue-200 bg-blue-50/80 p-5 mt-5">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">!</div>
+                <p class="text-blue-700 font-bold uppercase tracking-wide">Please Note</p>
+            </div>
+            <p class="text-sm leading-7 text-slate-800">
+               Completing this webform <span class="font-bold">enlists you for a reservation</span> and secures your intent to reserve the unit. You will be notified once the <span class="font-bold">reservation form is ready</span> for signing and notarization, if required. After submission, you must <span class="font-bold">meet with the owner, HOA, or authorized representative</span> to submit the signed Reservation Agreement and required IDs. </p>
+        </div>
       </div>
+
+      
 
       <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-7">
         <div class="flex items-center gap-3 mb-4">
@@ -527,6 +719,57 @@ tailwind.config = {
     <p class="text-slate-500">© 2024 Zeppelin Suites. All rights reserved.</p>
   </div>
 </footer>
+
+<?php if (isset($_GET['submitted']) && $_GET['submitted'] == '1'): ?>
+  <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-7 text-center">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
+        <svg class="w-9 h-9 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+
+      <h2 class="text-2xl font-bold text-slate-900 mb-2">Submit Complete!</h2>
+
+      <p class="text-slate-600 mb-6">
+        Your reservation form has been submitted successfully. Your selected unit is now on hold while the admin reviews your payment proof and details.
+      </p>
+
+      <button 
+        type="button"
+        onclick="closeModal('successModal')"
+        class="w-full bg-slate-900 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition-all">
+        Okay
+      </button>
+    </div>
+  </div>
+<?php endif; ?>
+
+
+<?php if (isset($_GET['already_submitted']) && $_GET['already_submitted'] == '1'): ?>
+  <div id="alreadySubmittedModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-7 text-center">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center">
+        <svg class="w-9 h-9 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+      </div>
+
+      <h2 class="text-2xl font-bold text-slate-900 mb-2">Already Submitted</h2>
+
+      <p class="text-slate-600 mb-6">
+        A reservation form has already been submitted for this approved unit. Please wait for admin review.
+      </p>
+
+      <button 
+        type="button"
+        onclick="closeModal('alreadySubmittedModal')"
+        class="w-full bg-slate-900 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition-all">
+        Okay
+      </button>
+    </div>
+  </div>
+<?php endif; ?>
 
 <script>
 // ======= Reservation timer configuration =======
@@ -655,16 +898,42 @@ document.querySelectorAll('.zep-input').forEach(el => {
 setInterval(updateStatus, 1000);
 updateStatus();
 
-const idTypeSelect = document.getElementById('idTypeSelect');
-  const otherIdDiv = document.getElementById('otherIdDiv');
-  
-  idTypeSelect.addEventListener('change', function() {
-    if(this.value === 'other'){
-      otherIdDiv.classList.remove('hidden');
-    } else {
-      otherIdDiv.classList.add('hidden');
-    }
+const priceBasis = <?php echo json_encode((float)$price_basis); ?>;
+const dpOption = document.getElementById("dpOption");
+const dpAmount = document.getElementById("dpAmount");
+const requiredAmountInput = document.getElementById("requiredAmountInput");
+
+function updatePaymentAmount() {
+  const percentage = parseFloat(dpOption.value);
+  const requiredAmount = priceBasis * percentage;
+
+  const formattedAmount = "₱" + requiredAmount.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   });
+
+  dpAmount.textContent = formattedAmount;
+  requiredAmountInput.value = requiredAmount.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+dpOption.addEventListener("change", updatePaymentAmount);
+updatePaymentAmount();
+
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+
+  if (modal) {
+    modal.remove();
+  }
+
+  const url = new URL(window.location.href);
+  url.searchParams.delete('submitted');
+  url.searchParams.delete('already_submitted');
+  window.history.replaceState({}, document.title, url.toString());
+}
 </script>
 
 </body>

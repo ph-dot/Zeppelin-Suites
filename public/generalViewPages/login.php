@@ -1,7 +1,6 @@
 <?php 
 require_once '../php_files/auth.php'; // Use your new auth file
 
-require_
 
 // Redirect if already logged in
 if (isset($_SESSION['user_id'])) {
@@ -59,29 +58,7 @@ if (isset($_SESSION['user_id'])) {
         <a href="../generalViewPages/aboutUs.html" class="text-sm text-zinc-500 hover:text-zinc-800">About Us</a>
         <a href="../generalViewPages/contact.php" class="text-sm text-zinc-500 hover:text-zinc-800">Contact</a>
         <a href="../generalViewPages/login.php" class="text-sm text-zinc-800 font-medium hover:text-zinc-800">Portal</a>
-  <a href="../generalViewPages/index.html">
-    <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
-  </a>
-  <div class="hidden min-[851px]:flex items-center gap-8">
-    <a href="../generalViewPages/index.html" class="text-sm text-zinc-500 hover:text-zinc-500 transition-colors">Home</a>
-    <a href="../generalViewPages/tour.html" class="text-sm text-zinc-500 hover:text-zinc-500 transition-colors">Take a Tour</a>
-    <div class="relative group">
-      <button class="flex items-center gap-1.5 text-sm text-zinc-500 cursor-pointer bg-transparent border-0 py-2 hover:text-zinc-800 transition-colors">
-        Browse Units
-        <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <div class="absolute top-full left-0 mt-1 w-44 bg-white border border-zinc-200 rounded-xl shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-        <a href="../generalViewPages/studioTypeA.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
-        <a href="../generalViewPages/studioTypeB.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
-        <a href="../generalViewPages/oneBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
-        <a href="../generalViewPages/twoBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
-      </div>
-    </div>
-    <a href="../generalViewPages/faq.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">FAQ</a>
-    <a href="../generalViewPages/aboutUs.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">About Us</a>
-    <a href="../generalViewPages/contact.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Contact</a>
-    <a href="../generalViewPages/login.html" class="text-sm text-zinc-800 font-medium hover:text-zinc-800 transition-colors">Portal</a>
-  </div>
+   </div>
   <button onclick="toggleMenu()" class="min-[851px]:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
     <span id="bar1" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
     <span id="bar2" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
