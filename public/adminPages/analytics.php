@@ -811,8 +811,7 @@ $selectedMeta = [
         <button onclick="toggleProfile()" class="flex items-center gap-2.5 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl px-3 py-1.5 transition-all btn-press active:scale-95">
           <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0">A</div>
           <div class="hidden sm:block text-left">
-            <p class="text-sm font-semibold text-slate-800 leading-none">Admin Name</p>
-            <p class="text-xs text-slate-400 mt-0.5">Admin</p>
+            <p class="text-sm font-semibold text-slate-800 leading-none">Admin User</p>
           </div>
           <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>

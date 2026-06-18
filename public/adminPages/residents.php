@@ -251,7 +251,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zeppelin Suites Admin — Residents</title>
+<title>Zeppelin Suites Admin - Residents</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],mono:['DM Mono','monospace']}}}}</script>
@@ -378,8 +378,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
         <button onclick="toggleProfile()" class="flex items-center gap-2.5 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl px-3 py-1.5 transition-all btn-press active:scale-95">
           <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0">A</div>
           <div class="hidden sm:block text-left">
-            <p class="text-sm font-semibold text-slate-800 leading-none">Admin Name</p>
-            <p class="text-xs text-slate-400 mt-0.5">Admin</p>
+            <p class="text-sm font-semibold text-slate-800 leading-none">Admin User</p>
           </div>
           <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
