@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Demo with QR</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            padding: 30px;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            width: 420px;
+            margin: auto;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h2 { text-align: center; }
+
+        select, input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .qr-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e6f4ea;
+            text-align: center;
+            border-radius: 10px;
+        }
+
+        .qr {
+            width: 150px;
+            height: 150px;
+            margin: 10px auto;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #999;
+            font-size: 12px;
+            color: #555;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            background: green;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: gray;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="box">
+
+    <h2>Reservation Payment Demo</h2>
+
+    <label>Select Payment Plan:</label>
+    <select id="plan" onchange="lockAmount()">
+        <option value="">-- Select --</option>
+        <option value="10000">20% Downpayment - ₱10,000</option>
+        <option value="25000">50% Downpayment - ₱25,000</option>
+        <option value="50000">Full Payment - ₱50,000</option>
+    </select>
+
+    <!-- QR SECTION -->
+    <div class="qr-box" id="qrBox" style="display:none;">
+        💳 Pay EXACT AMOUNT: <br>
+        <b id="amountText">₱0</b>
+
+        <div class="qr">
+            QR CODE HERE
+        </div>
+
+        Reference ID: <b id="refCode"></b>
+    </div>
+
+    <label>Enter Amount You Paid:</label>
+    <input type="number" id="paidAmount">
+
+    <button id="btn" onclick="submitPayment()" disabled>
+        Submit Payment
+    </button>
+
+    <div class="status" id="status"></div>
+
+</div>
+
+<script>
+
+let lockedAmount = 0;
+
+function lockAmount() {
+    let val = document.getElementById("plan").value;
+
+    if (!val) return;
+
+    lockedAmount = parseInt(val);
+
+    document.getElementById("amountText").innerText = "₱" + lockedAmount;
+
+    document.getElementById("refCode").innerText =
+        "RES-" + Math.floor(Math.random() * 9999);
+
+    document.getElementById("qrBox").style.display = "block";
+    document.getElementById("btn").disabled = false;
+}
+
+function submitPayment() {
+    let paid = parseInt(document.getElementById("paidAmount").value);
+
+    if (paid !== lockedAmount) {
+        document.getElementById("status").innerHTML =
+            "❌ Must pay exact amount!";
+        return;
+    }
+
+    document.getElementById("status").innerHTML =
+        "✅ Payment locked successfully!";
+}
+
+</script>
+
+</body>
+</html>
