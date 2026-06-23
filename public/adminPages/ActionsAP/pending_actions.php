@@ -207,7 +207,7 @@ if ($pendingActionsResult) {
       <p class="text-xs text-slate-400 mt-0.5">Items that still need admin review or follow-up.</p>
     </div>
     <div class="flex items-center gap-2">
-      <span class="bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-full" style="font-family:'DM Mono',monospace;">
+      <span class="bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-full">
         <?php echo pa_e($totalPendingActions); ?> total
       </span>
       <a href="inquiry.php" class="btn-press bg-slate-900 hover:bg-slate-700 active:scale-95 text-white text-xs font-semibold px-4 py-2 rounded-full transition-all">

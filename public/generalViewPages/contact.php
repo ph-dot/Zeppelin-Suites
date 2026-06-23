@@ -252,15 +252,6 @@
   </div>
 </section>
 
-<!-- ── FOOTER ────────────────────────────────────────────── -->
-<footer class="footer-bg py-14 px-6 md:px-16 lg:px-24 xl:px-32 text-center">
-  <p class="text-3xl font-black uppercase text-zinc-800 mb-2">Zeppelin Suites</p>
-  <p class="text-zinc-600 text-sm mb-6">Luxury Living in the Heart of Angeles City</p>
-  <div class="flex flex-wrap justify-center gap-6 text-sm text-zinc-600 mb-6">
-    <a href="../generalViewPages/index.html" class="hover:text-zinc-900">Home</a>
-    <a href="../generalViewPages/faq.html" class="hover:text-zinc-900">FAQ</a>
-    <a href="../generalViewPages/aboutUs.html" class="hover:text-zinc-900">About Us</a>
-    <a href="../generalViewPages/contact.php" class="hover:text-zinc-900">Contact</a>
 <!-- ── PREMIUM FOOTER ────────────────────────────────────────────── -->
 <footer class="bg-zinc-950 text-zinc-300 py-16 md:py-20 px-6 md:px-8 lg:px-16 xl:px-24">
   <div class="max-w-7xl mx-auto">
@@ -288,7 +279,7 @@
           <a href="../generalViewPages/tour.html" class="hover:text-white transition-colors">Virtual Tour</a>
           <a href="../generalViewPages/aboutUs.html" class="hover:text-white transition-colors">About Us</a>
           <a href="../generalViewPages/faq.html" class="hover:text-white transition-colors">FAQ</a>
-          <a href="../generalViewPages/contact.html" class="hover:text-white transition-colors">Contact</a>
+          <a href="../generalViewPages/contact.php" class="hover:text-white transition-colors">Contact</a>
         </div>
       </div>
 
