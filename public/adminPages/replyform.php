@@ -185,17 +185,7 @@
   </div>
 </aside>
 
-  <div class="notice-section px-2 py-4 border-t border-slate-100 shrink-0">
-    <button onclick="toggleNotice()" class="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition-all btn-press active:scale-95">
-      <span class="nav-label">Notice</span>
-      <svg class="notice-chevron w-3.5 h-3.5 text-slate-400 shrink-0" id="noticeChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-    </button>
-    <div class="notice-panel open px-2 pt-1 space-y-0.5" id="noticePanel">
-      <a href="#" class="flex items-center gap-2 py-1.5 px-3 text-xs text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span><span class="nav-label">Summer Vacation</span></a>
-      <a href="#" class="flex items-center gap-2 py-1.5 px-3 text-xs text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span><span class="nav-label">Employment Notice</span></a>
-    </div>
-  </div>
-</aside>
+
 
 <!-- ── MAIN WRAPPER ─────────────────────────────────────── -->
 <div class="main-wrapper h-screen flex flex-col" id="mainWrapper">
@@ -490,6 +480,80 @@ function closeEmailErrorModal() {
   if (modal) {
     modal.remove();
   }
+}
+
+let sidebarCollapsed = false;
+
+// Your existing sidebar functions (unchanged)
+function toggleCollapse() {
+  sidebarCollapsed = !sidebarCollapsed;
+  document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
+  document.getElementById('mainWrapper').classList.toggle('sidebar-collapsed', sidebarCollapsed);
+}
+function openMobileSidebar() { 
+  document.getElementById('sidebar').classList.add('open'); 
+  document.getElementById('overlay').classList.add('show'); 
+}
+function closeMobileSidebar() { 
+  document.getElementById('sidebar').classList.remove('open'); 
+  document.getElementById('overlay').classList.remove('show'); 
+}
+function toggleNotice() { 
+  document.getElementById('noticePanel').classList.toggle('open'); 
+  document.getElementById('noticeChevron').classList.toggle('rotated'); 
+}
+function toggleProfile() {
+  const dd = document.getElementById('profileDropdown'), ch = document.getElementById('profileChevron');
+  const open = dd.classList.toggle('open'); 
+  ch.style.transform = open ? 'rotate(180deg)' : '';
+}
+document.addEventListener('click', e => {
+  const w = document.getElementById('profileWrapper');
+  if (w && !w.contains(e.target)) { 
+    document.getElementById('profileDropdown').classList.remove('open'); 
+    document.getElementById('profileChevron').style.transform = ''; 
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const userName = '<?php echo htmlspecialchars($_SESSION["full_name"] ?? "Admin"); ?>';
+  const initials = '<?php echo $_SESSION["initial"] ?? "A"; ?>';
+  
+  document.getElementById('userName').textContent = userName;
+  document.getElementById('userInitials').textContent = initials;
+});
+
+let profileOpen = false;
+
+function toggleProfile() {
+  const dropdown = document.getElementById('profileDropdown');
+  const chevron = document.getElementById('profileChevron');
+  
+  dropdown.classList.toggle('hidden');  // Toggle hidden class
+  chevron.style.transform = dropdown.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+  const profileBtn = e.target.closest('button[onclick="toggleProfile()"]');
+  const profileWrapper = document.querySelector('.relative'); // Your profile container
+  
+  if (!profileWrapper.contains(e.target) && !profileBtn) {
+    document.getElementById('profileDropdown').classList.add('hidden');
+    document.getElementById('profileChevron').style.transform = 'rotate(0deg)';
+  }
+});
+
+function confirmLogout() {
+  document.getElementById('logoutModal').classList.remove('hidden');
+}
+
+function hideModal() {
+  document.getElementById('logoutModal').classList.add('hidden');
+}
+
+function doLogout() {
+  window.location.href = '/Zeppelin-Suites/public/php_files/logout_session.php'; // Your logout file
 }
 </script>
 </body>
