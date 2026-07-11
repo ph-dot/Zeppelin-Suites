@@ -331,6 +331,11 @@ $userData = requireRole($conn, ['admin']); ?>
           <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Submitted At</p>
           <p id="modalSubmittedAt" class="text-sm font-bold text-slate-800 mt-1">-</p>
         </div>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Resolved At</p>
+          <p id="modalResolvedAt" class="text-sm font-bold text-slate-800 mt-1">Not yet resolved</p>
+        </div>
       </div>
 
       <div class="bg-white border border-slate-200 rounded-xl p-4">
@@ -484,6 +489,7 @@ function openMaintenanceModal(row) {
   setText('modalOwnerEmail', row.dataset.ownerEmail);
   setText('modalCategoryPriority', `${row.dataset.category || '-'} / ${(row.dataset.priority || '-').toUpperCase()}`);
   setText('modalSubmittedAt', row.dataset.submittedAt);
+  setText('modalResolvedAt', row.dataset.resolvedAt || 'Not yet resolved');
   setText('modalSubject', row.dataset.subject);
   setText('modalDescription', row.dataset.description);
 
@@ -493,13 +499,10 @@ function openMaintenanceModal(row) {
   const photoBox = document.getElementById('modalPhotos');
   photoBox.innerHTML = '';
 
-  let photos = [];
-
-  try {
-    photos = JSON.parse(row.dataset.photos || '[]');
-  } catch (e) {
-    photos = [];
-  }
+  const photos = (row.dataset.photos || '')
+    .split('|')
+    .map(path => path.trim())
+    .filter(path => path !== '');
 
   if (!photos.length) {
     photoBox.innerHTML = "<p class='text-sm text-slate-400'>No photos uploaded.</p>";
@@ -542,21 +545,23 @@ function saveMaintenanceUpdate() {
   formData.append('status', status);
   formData.append('admin_remarks', remarks);
 
-  fetch('ActionsAP/updateMaintenanceStatus.php', {
+ fetch('ActionsAP/updateMaintenance.php', {
     method: 'POST',
     body: formData
   })
-  .then(response => response.json())
-  .then(data => {
-    alert(data.message);
+  .then(async response => {
+    const message = await response.text();
 
-    if (data.success) {
-      window.location.reload();
+    if (!response.ok) {
+      throw new Error(message || 'Unable to update maintenance request.');
     }
+
+    alert(message);
+    window.location.reload();
   })
   .catch(error => {
     console.error(error);
-    alert('Something went wrong while updating maintenance request.');
+    alert(error.message || 'Something went wrong while updating maintenance request.');
   });
 }
 

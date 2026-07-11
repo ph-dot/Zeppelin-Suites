@@ -97,8 +97,10 @@ if ($result && $result->num_rows > 0) {
         data-unit-current-status='" . $unit_current_status . "'
         data-owner-name='" . $unit_owner_name . "'>
 
-        <td class='px-4 py-3 font-semibold text-slate-900 whitespace-nowrap'>" . $unit_number . "</td>
-        <td class='px-3 py-3 text-slate-700 whitespace-nowrap'>" . $unit_type . "</td>
+        <td class='px-4 py-3 whitespace-nowrap'>
+                <div class='unit-num font-semibold text-slate-900'>" . $unit_number . "</div>
+                <div class='text-xs text-slate-400 mt-0.5'>" . $unit_type . "</div>
+        </td>
         <td class='px-3 py-3 text-slate-700 whitespace-nowrap'>" . $base_rate . "</td>
         <td class='px-3 py-3 text-slate-700 whitespace-nowrap'>" . $unit_owner_name . "</td>
         <td class='px-3 py-3 text-slate-700 whitespace-nowrap'>" . $price_value . "</td>
@@ -119,7 +121,7 @@ if ($result && $result->num_rows > 0) {
 } else {
     echo "
     <tr>
-        <td colspan='8' class='text-center px-5 py-12 text-slate-500'>
+        <td colspan='6' class='text-center px-5 py-12 text-slate-500'>
             No units found.
         </td>
     </tr>";

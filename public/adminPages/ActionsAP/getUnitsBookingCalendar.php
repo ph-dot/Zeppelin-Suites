@@ -1,26 +1,41 @@
 <?php
-require_once '../php_files/admin_auth.php';
-require_once '../php_files/db.php';
+require_once '../../php_files/db.php';
+require_once '../../php_files/admin_auth.php';
 
-// Fetch all units
-$unitsByType = [];
-$sql = "SELECT unit_type, unit_number, unit_id, unit_status, is_open_for_rent
-        FROM units_table
-        ORDER BY unit_type, unit_number";
+header('Content-Type: application/json');
+
+// MAIN SOURCE: reservation_table
+$sql = "
+    SELECT 
+        r.reservation_id,
+        r.unit_id,
+        r.start_date,
+        r.end_date,
+        r.status,
+        u.unit_number,
+        u.unit_type
+    FROM reservation_table r
+    LEFT JOIN units_table u ON r.unit_id = u.unit_id
+    WHERE r.status IN ('approved','paid','reserved','occupied')
+";
+
 $result = $conn->query($sql);
 
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $type = $row['unit_type'];
-        if (!isset($unitsByType[$type])) {
-            $unitsByType[$type] = [];
-        }
-        $unitsByType[$type][] = [          
-            'id' => $row['unit_id'],
-            'number' => $row['unit_number'],
-            'status' => $row['unit_status'],
-            'open' => $row['is_open_for_rent']
-        ];
-    }
+$events = [];
+
+while ($row = $result->fetch_assoc()) {
+
+    $status = strtolower($row['status']);
+
+    $events[] = [
+        "id" => $row['reservation_id'],
+        "title" => $row['unit_type'] . " " . $row['unit_number'] . " - " . strtoupper($status),
+        "start" => $row['start_date'],
+        "end" => $row['end_date'],
+        "status" => $status,
+        "unit_id" => $row['unit_id']
+    ];
 }
+
+echo json_encode($events);
 ?>

@@ -122,13 +122,25 @@ try {
         }
     }
 
-    $photoPathsJson = !empty($photoPaths) ? json_encode($photoPaths) : null;
+    $photoPathsValue = !empty($photoPaths)
+    ? implode(',', $photoPaths)
+    : null;
 
     $insertSql = "
-        INSERT INTO maintenance_requests
-            (unit_owner_id, unit_id, subject, category, description, priority, status, photo_paths, submitted_at)
-        VALUES
-            (?, ?, ?, ?, ?, ?, 'pending', ?, NOW())
+    INSERT INTO maintenance_requests (
+        submitted_by_user_id,
+        submitted_by_role,
+        unit_owner_id,
+        unit_id,
+        subject,
+        category,
+        description,
+        priority,
+        status,
+        photo_paths,
+        submitted_at
+    )
+    VALUES (?, 'unit owner', ?, ?, ?, ?, ?, ?, 'pending', ?, NOW())
     ";
 
     $stmt = $conn->prepare($insertSql);
@@ -138,14 +150,15 @@ try {
     }
 
     $stmt->bind_param(
-        "iisssss",
+        "iiisssss",
+        $owner_id,
         $owner_id,
         $unit_id,
         $subject,
         $category,
         $description,
         $priority,
-        $photoPathsJson
+        $photoPathsValue
     );
 
     if (!$stmt->execute()) {

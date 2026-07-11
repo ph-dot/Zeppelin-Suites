@@ -15,13 +15,14 @@ $sql = "
         m.admin_remarks,
         m.submitted_at,
         m.updated_at,
+        m.resolved_at,
         u.unit_number,
         u.unit_type,
         owner.full_name AS owner_name,
         owner.email AS owner_email
     FROM maintenance_requests m
     LEFT JOIN units_table u ON m.unit_id = u.unit_id
-    LEFT JOIN users_table owner ON u.unit_owner_id = owner.user_id
+    LEFT JOIN users_table owner ON m.unit_owner_id = owner.user_id
     ORDER BY m.submitted_at DESC
 ";
 
@@ -66,14 +67,18 @@ while ($row = $result->fetch_assoc()) {
     $status = $row['status'] ?? 'pending';
     $remarks = $row['admin_remarks'] ?? '';
     $submittedAt = $row['submitted_at'] ?? '-';
+    $resolvedAt = !empty($row['resolved_at']) ? $row['resolved_at'] : 'Not yet resolved';
 
     $photoPaths = [];
 
     if (!empty($row['photo_paths'])) {
-        $decodedPhotos = json_decode($row['photo_paths'], true);
+        $savedPhotos = explode(',', $row['photo_paths']);
 
-        if (is_array($decodedPhotos)) {
-            foreach ($decodedPhotos as $photo) {
+        foreach ($savedPhotos as $photo) {
+            $photo = str_replace('\\/', '/', $photo);
+            $photo = trim($photo, " \t\n\r\0\x0B[]\"'");
+
+            if (strpos($photo, 'uploads/maintenance/') === 0) {
                 $photoPaths[] = '../' . ltrim($photo, '/');
             }
         }
@@ -109,6 +114,7 @@ while ($row = $result->fetch_assoc()) {
         data-status="<?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?>"
         data-admin-remarks="<?= htmlspecialchars($remarks, ENT_QUOTES, 'UTF-8') ?>"
         data-submitted-at="<?= htmlspecialchars($submittedAt, ENT_QUOTES, 'UTF-8') ?>"
+        data-resolved-at="<?= htmlspecialchars($resolvedAt, ENT_QUOTES, 'UTF-8') ?>"
         data-photos="<?= $photoData ?>"
     >
         <td class="px-5 py-4 font-semibold text-slate-800 whitespace-nowrap">

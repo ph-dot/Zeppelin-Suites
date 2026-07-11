@@ -102,8 +102,13 @@ $user = requireRole($conn, ['unit owner']);
     </button>
     <div class="relative flex-1 max-w-sm">
       <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      <input type="text" placeholder="Search..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
-    </div>
+     <input
+        type="text"
+        id="searchInput"
+        placeholder="Search maintenance requests..."
+        oninput="filterTable()"
+        class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
+  </div>
     <div class="flex items-center gap-2 ml-auto">
       <button class="relative p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95">
         <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
@@ -161,7 +166,7 @@ $user = requireRole($conn, ['unit owner']);
               <tr class="border-b border-slate-100 bg-slate-50/60">
                 <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Request ID</th>
                 <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Unit No</th>
-                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Tenant</th>
+                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Category</th>
                 <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Issue</th>
                 <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Date Submitted</th>
                 <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Status</th>
@@ -188,7 +193,7 @@ $user = requireRole($conn, ['unit owner']);
 
 <!-- VIEW MODAL -->
 <div class="modal-backdrop fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4" id="viewModal" onclick="handleBackdropClick(event,'viewModal')">
-  <div class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100 overflow-hidden">
+  <div class="modal-card bg-white rounded-lg shadow-2xl w-full max-w-md border border-slate-100 overflow-hidden">
     <div class="bg-slate-900 px-6 py-4 flex items-center justify-between">
       <div>
         <h2 class="text-base font-bold text-white">Maintenance Request</h2>
@@ -198,21 +203,44 @@ $user = requireRole($conn, ['unit owner']);
         <svg class="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="p-6 space-y-4">
-      <div class="grid grid-cols-2 gap-4">
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Unit</p><p class="text-sm font-bold text-slate-900" id="mViewUnit" style="font-family:'DM Mono',monospace">—</p></div>
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Tenant</p><p class="text-sm text-slate-700" id="mViewTenant">—</p></div>
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Category</p><p class="text-sm text-slate-700" id="mViewCategory">—</p></div>
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Date</p><p class="text-sm text-slate-500" id="mViewDate" style="font-family:'DM Mono',monospace;font-size:11px">—</p></div>
-        <div class="col-span-2"><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Issue</p><p class="text-sm font-semibold text-slate-800" id="mViewIssue">—</p></div>
-        <div class="col-span-2"><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Description</p><p class="text-sm text-slate-600 leading-relaxed" id="mViewDesc">—</p></div>
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Status</p><span class="text-xs font-semibold px-2.5 py-1 rounded-full border" id="mViewStatus">—</span></div>
+    <div class="p-5 max-h-[70vh] overflow-y-auto">
+      <div class="grid grid-cols-[110px_minmax(0,1fr)] gap-x-4 gap-y-3 items-start">
+        <p class="text-xs font-medium text-slate-500">Unit:</p>
+        <p class="text-xs font-semibold text-slate-900" id="mViewUnit">—</p>
+
+        <p class="text-xs font-medium text-slate-500">Priority:</p>
+        <p class="text-xs text-slate-700" id="mViewPriority">—</p>
+
+        <p class="text-xs font-medium text-slate-500">Category:</p>
+        <p class="text-xs text-slate-700" id="mViewCategory">—</p>
+
+        <p class="text-xs font-medium text-slate-500">Status:</p>
+        <span class="justify-self-start text-xs font-semibold px-2.5 py-1 rounded-md border" id="mViewStatus">—</span>
+
+        <p class="text-xs font-medium text-slate-500">Date Submitted:</p>
+        <p class="text-xs text-slate-600" id="mViewDate" style="font-family:'DM Mono',monospace">—</p>
+
+        <p class="text-xs font-medium text-slate-500">Resolved Date:</p>
+        <p class="text-xs text-slate-600" id="mViewResolvedDate" style="font-family:'DM Mono',monospace">—</p>
+      </div>
+
+      <div class="border-t border-slate-200 mt-4 pt-4 grid grid-cols-[110px_minmax(0,1fr)] gap-x-4 gap-y-4 items-start">
+        <p class="text-xs font-medium text-slate-500">Issue:</p>
+        <p class="text-xs font-medium text-slate-800" id="mViewIssue">—</p>
+
+        <p class="text-xs font-medium text-slate-500">Description:</p>
+        <p class="text-xs text-slate-600 leading-relaxed" id="mViewDesc">—</p>
+
+        <p class="text-xs font-medium text-slate-500">Admin Remarks:</p>
+        <p class="text-xs text-slate-600 leading-relaxed" id="mViewRemarks">—</p>
+
+        <p class="text-xs font-medium text-slate-500">Photos:</p>
+        <div class="grid grid-cols-2 gap-2" id="mViewPhotos"></div>
       </div>
     </div>
     <div class="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50/60">
       <button onclick="closeModal('viewModal')" class="btn-press px-4 py-2 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-100 transition-all active:scale-95">Close</button>
-      <button class="btn-press bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all active:scale-95">Mark Resolved</button>
-    </div>
+   </div>
   </div>
 </div>
 
@@ -387,18 +415,59 @@ $user = requireRole($conn, ['unit owner']);
     const w = document.getElementById('profileWrapper');
     if (w && !w.contains(e.target)) { document.getElementById('profileDropdown').classList.remove('open'); document.getElementById('profileChevron').style.transform = ''; }
   });
-  function openViewModal(d) {
-    document.getElementById('mViewId').textContent = d.id;
-    document.getElementById('mViewUnit').textContent = d.unit;
-    document.getElementById('mViewTenant').textContent = d.tenant;
-    document.getElementById('mViewCategory').textContent = d.category;
-    document.getElementById('mViewDate').textContent = d.date;
-    document.getElementById('mViewIssue').textContent = d.issue;
-    document.getElementById('mViewDesc').textContent = d.desc;
+  function openViewModal(button) {
+    document.getElementById('mViewId').textContent = button.dataset.id || '—';
+    document.getElementById('mViewUnit').textContent = button.dataset.unit || '—';
+    document.getElementById('mViewPriority').textContent = button.dataset.priority || '—';
+    document.getElementById('mViewCategory').textContent = button.dataset.category || '—';
+    document.getElementById('mViewDate').textContent = button.dataset.date || '—';
+    document.getElementById('mViewResolvedDate').textContent = button.dataset.resolvedDate || 'Not yet resolved';
+    document.getElementById('mViewIssue').textContent = button.dataset.issue || '—';
+    document.getElementById('mViewDesc').textContent = button.dataset.description || 'No description provided.';
+    document.getElementById('mViewRemarks').textContent = button.dataset.remarks || 'No admin remarks yet.';
+
     const badge = document.getElementById('mViewStatus');
-    badge.textContent = d.status;
-    const colors = { 'Pending':'bg-amber-50 text-amber-700 border-amber-200', 'In Progress':'bg-blue-50 text-blue-700 border-blue-200', 'Resolved':'bg-emerald-50 text-emerald-700 border-emerald-200' };
-    badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full border ' + (colors[d.status] || 'bg-slate-100 text-slate-500 border-slate-200');
+    const status = button.dataset.status || 'Pending';
+    const colors = {
+      'pending': 'bg-amber-50 text-amber-700 border-amber-200',
+      'in progress': 'bg-blue-50 text-blue-700 border-blue-200',
+      'resolved': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      'cancelled': 'bg-red-50 text-red-700 border-red-200'
+    };
+
+    badge.textContent = status;
+    badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full border ' +
+      (colors[status.toLowerCase()] || 'bg-slate-50 text-slate-600 border-slate-200');
+
+    const container = document.getElementById('mViewPhotos');
+    container.innerHTML = '';
+
+    const photos = button.dataset.photos
+      ? button.dataset.photos.split(',')
+      : [];
+
+    if (photos.length === 0) {
+      const message = document.createElement('p');
+      message.textContent = 'No photos uploaded.';
+      message.className = 'col-span-2 text-sm text-slate-400';
+      container.appendChild(message);
+    } else {
+      photos.forEach(path => {
+        const link = document.createElement('a');
+        link.href = path.trim();
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+
+        const image = document.createElement('img');
+        image.src = path.trim();
+        image.alt = 'Maintenance request photo';
+        image.className = 'w-full h-28 object-cover rounded-md border border-slate-200 hover:opacity-90';
+
+        link.appendChild(image);
+        container.appendChild(link);
+      });
+    }
+
     document.getElementById('viewModal').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
@@ -438,33 +507,6 @@ $user = requireRole($conn, ['unit owner']);
     document.querySelectorAll('#mainBody tr').forEach(r => { r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none'; });
   }
 
-  function handleMaintenanceUpload(input) {
-  const fileNameDisplay = document.getElementById('maintenanceUploadFileName');
-
-  if (!fileNameDisplay) return;
-
-  if (!input.files || input.files.length === 0) {
-    fileNameDisplay.classList.add('hidden');
-    fileNameDisplay.textContent = '';
-    return;
-  }
-
-  if (input.files.length > 5) {
-    alert('You may upload up to 5 photos only.');
-    input.value = '';
-    fileNameDisplay.classList.add('hidden');
-    fileNameDisplay.textContent = '';
-    return;
-  }
-
-  const fileNames = Array.from(input.files).map(file => file.name);
-
-  fileNameDisplay.textContent = fileNames.length === 1
-    ? fileNames[0]
-    : `${fileNames.length} photos selected`;
-
-  fileNameDisplay.classList.remove('hidden');
-}
 </script>
 </body>
 </html>

@@ -27,7 +27,9 @@ $sql = "
         m.priority,
         m.status,
         m.photo_paths,
+        m.admin_remarks,
         m.submitted_at,
+        m.resolved_at,
         u.unit_number,
         u.unit_type
     FROM maintenance_requests m
@@ -92,19 +94,29 @@ while ($row = $result->fetch_assoc()) {
     $requestId = 'MR-' . str_pad($row['maintenance_id'], 3, '0', STR_PAD_LEFT);
     $unitLabel = trim(($row['unit_number'] ?? '') . ' - ' . ($row['unit_type'] ?? ''));
     $submittedDate = !empty($row['submitted_at']) ? date('M d, Y H:i', strtotime($row['submitted_at'])) : '-';
+    $resolvedDate = !empty($row['resolved_at']) ? date('M d, Y H:i', strtotime($row['resolved_at'])) : 'Not yet resolved';
+
+    $photoUrls = [];
+
+    if (!empty($row['photo_paths'])) {
+        $savedPhotos = explode(',', $row['photo_paths']);
+
+        foreach ($savedPhotos as $photo) {
+            $photo = str_replace('\\/', '/', $photo);
+            $photo = trim($photo, " \t\n\r\0\x0B[]\"'");
+
+            if (strpos($photo, 'uploads/maintenance/') === 0) {
+                $photoUrls[] = '../' . ltrim($photo, '/');
+            }
+        }
+    }
+
+    $photosValue = implode(',', $photoUrls);
+    $adminRemarks = $row['admin_remarks'] ?: 'No admin remarks yet.';
+    
 
     echo "
-    <tr class='group cursor-pointer transition-colors hover:bg-slate-50/50'
-        onclick=\"openViewModal({
-          id:'" . e($requestId) . "',
-          unit:'" . e($unitLabel) . "',
-          tenant:'N/A',
-          issue:'" . e($row['subject']) . "',
-          category:'" . e($row['category']) . "',
-          date:'" . e($submittedDate) . "',
-          status:'" . e(ucwords($row['status'])) . "',
-          desc:'" . e($row['description']) . "'
-        })\">
+    <tr class='group transition-colors hover:bg-slate-50/50'>
 
       <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap' style=\"font-family:'DM Mono',monospace\">
         " . e($requestId) . "
@@ -117,8 +129,8 @@ while ($row = $result->fetch_assoc()) {
       </td>
 
       <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600'>
-        N/A
-      </td>
+      " . e($row['category']) . "
+    </td>
 
       <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600'>
         " . e($row['subject']) . "
@@ -136,16 +148,18 @@ while ($row = $result->fetch_assoc()) {
         <button 
           type='button'
           class='btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap'
-          onclick=\"event.stopPropagation();openViewModal({
-            id:'" . e($requestId) . "',
-            unit:'" . e($unitLabel) . "',
-            tenant:'N/A',
-            issue:'" . e($row['subject']) . "',
-            category:'" . e($row['category']) . "',
-            date:'" . e($submittedDate) . "',
-            status:'" . e(ucwords($row['status'])) . "',
-            desc:'" . e($row['description']) . "'
-          })\">
+          data-id='" . e($requestId) . "'
+          data-unit='" . e($unitLabel) . "'
+          data-issue='" . e($row['subject']) . "'
+          data-category='" . e($row['category']) . "'
+          data-priority='" . e(ucfirst($row['priority'])) . "'
+          data-date='" . e($submittedDate) . "'
+          data-resolved-date='" . e($resolvedDate) . "'
+          data-status='" . e(ucwords($row['status'])) . "'
+          data-description='" . e($row['description']) . "'
+          data-remarks='" . e($adminRemarks) . "'
+          data-photos='" . e($photosValue) . "'
+          onclick='event.stopPropagation(); openViewModal(this)'>
           View
         </button>
       </td>

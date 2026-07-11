@@ -1,15 +1,9 @@
-<?php
-require_once '../php_files/admin_auth.php';
-require_once '../php_files/db.php';
-
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zeppelin Suites - Booking Calendar</title>
+<title>Zeppelin Suites — Booking Calendar</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],mono:['DM Mono','monospace']}}}}</script>
@@ -363,10 +357,6 @@ require_once '../php_files/db.php';
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span class="nav-label">Employees</span>
     </a>
-    <a href="../adminPages/analytics.html" data-tooltip="Analytics" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-      <span class="nav-label">Analytics</span>
-    </a>
     <a href="../adminPages/settingsAdmin.php" data-tooltip="Settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span class="nav-label">Settings</span>
@@ -457,33 +447,8 @@ require_once '../php_files/db.php';
             </label>
           </div>
 
-         <div id="unitTypeFilters" class="space-y-2 p-4">
-          <?php foreach($unitsByType as $type => $units): ?>
-              <div class="unit-type-block border-b pb-2">
-                      <!-- Unit type header + master checkbox -->
-                      <div class="unit-type-header flex items-center justify-between">
-                          <span class="font-semibold"><?= htmlspecialchars($type) ?></span>
-                          <input type="checkbox" class="unit-type-master" data-unit="<?= htmlspecialchars($type) ?>">
-                      </div>
-
-                      <!-- Individual room checkboxes -->
-                      <div class="room-list pl-4 mt-1 space-y-1">
-                          <?php foreach($units as $unit): ?>
-                              <label class="flex items-center gap-2 text-sm">
-                                  <input type="checkbox"
-                                        class="room-toggle"
-                                        data-unit="<?= htmlspecialchars($type) ?>"
-                                        data-room="<?= htmlspecialchars($unit['id']) ?>"
-                                        checked>
-                                  <?= htmlspecialchars($unit['number']) ?>
-                                  <?php if (!$unit['open']): ?>
-                                      <span class="text-red-500 text-xs">(Closed)</span>
-                                  <?php endif; ?>
-                              </label>
-                          <?php endforeach; ?>
-                      </div>
-                  </div>
-              <?php endforeach; ?>
+          <div class="space-y-2" id="unitTypeFilters">
+            <!-- Dynamically injected by JS from UNIT_TYPES config -->
           </div>
         </div>
 
@@ -705,10 +670,15 @@ require_once '../php_files/db.php';
 
 <!-- ═══════════════════════ JAVASCRIPT ═══════════════════════ -->
 <script>
-  let bookings = <?php echo json_encode($bookings); ?>;
 // ════════════════════════════════════════════
 // CONFIGURATION — Unit Types & Rooms
 // ════════════════════════════════════════════
+const UNIT_TYPES = [
+  { key: "Studio A",    rooms: ["101","102","103","104","105"] },
+  { key: "Studio B",    rooms: ["201","202","203","204","205"] },
+  { key: "One Bedroom", rooms: ["301","302","303"] },
+  { key: "Two Bedroom", rooms: ["401","402"] }
+];
 
 // Status → bar CSS class
 const STATUS_BAR = {
@@ -744,80 +714,132 @@ function saveToStorage() {
   localStorage.setItem("zepBookings", JSON.stringify(bookings));
 }
 
-
 // ════════════════════════════════════════════
 // FILTER STATE — which rooms are visible
 // ════════════════════════════════════════════
 // visibleRooms: Set of "UnitType::Room" keys
 let visibleRooms = new Set();
 
-
-
-// Initialize the sidebar checkboxes (PHP already generated the HTML)
 function buildFilterSidebar() {
-    const container = document.getElementById("unitTypeFilters");
-    
-    // Individual room checkbox toggle (use event delegation)
-    container.addEventListener("change", e => {
-        if (!e.target.classList.contains("room-toggle")) return;
-        
-        const k = e.target.dataset.unit + "::" + e.target.dataset.room;
-        e.target.checked ? visibleRooms.add(k) : visibleRooms.delete(k);
+  const container = document.getElementById("unitTypeFilters");
+  container.innerHTML = "";
 
-        // ✅ FIXED: Proper master checkbox sync
-        const unitKey = e.target.dataset.unit;
-        const masterCb = container.querySelector(`.unit-type-master[data-unit="${unitKey}"]`);
-        if (masterCb) {
-            const block = masterCb.closest(".unit-type-block");
-            const allRoomCbs = block.querySelectorAll(".room-toggle");
-            masterCb.checked = Array.from(allRoomCbs).every(cb => cb.checked);
-        }
+  UNIT_TYPES.forEach(ut => {
+    const block = document.createElement("div");
+    block.className = "unit-type-block";
 
-        updateSelectAll();
-        renderTimeline();
+    // Header row
+    const header = document.createElement("div");
+    header.className = "unit-type-header";
+    header.innerHTML = `
+      <input type="checkbox" class="unit-type-master w-3.5 h-3.5 rounded" data-unit="${ut.key}" checked>
+      <span class="text-xs font-bold text-slate-700">${ut.key}</span>
+      <svg class="unit-type-chevron open w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    `;
+    block.appendChild(header);
+
+    // Room list
+    const roomList = document.createElement("div");
+    roomList.className = "room-list open";
+    ut.rooms.forEach(room => {
+      const key = ut.key + "::" + room;
+      visibleRooms.add(key);
+
+      const item = document.createElement("label");
+      item.className = "room-item";
+      item.innerHTML = `
+        <input type="checkbox" class="room-toggle w-3.5 h-3.5 rounded" data-unit="${ut.key}" data-room="${room}" checked>
+        <span class="text-xs font-medium text-slate-600">Room ${room}</span>
+      `;
+      roomList.appendChild(item);
+    });
+    block.appendChild(roomList);
+
+    container.appendChild(block);
+
+    // Toggle collapse on header click (but not on checkbox click)
+    header.addEventListener("click", e => {
+      if (e.target.type === "checkbox") return;
+      const chevron = header.querySelector(".unit-type-chevron");
+      const isOpen = roomList.classList.toggle("open");
+      chevron.classList.toggle("open", isOpen);
     });
 
-    // Unit type blocks setup
-    container.querySelectorAll(".unit-type-block").forEach(block => {
-        const header = block.querySelector(".unit-type-header");
-        const roomList = block.querySelector(".room-list");
-        const masterCb = block.querySelector(".unit-type-master");
-
-        if (!roomList || !masterCb) return;
-
-        // Initialize visibleRooms from checked state
-        roomList.querySelectorAll(".room-toggle:checked").forEach(cb => {
-            visibleRooms.add(cb.dataset.unit + "::" + cb.dataset.room);
-        });
-
-        // Master checkbox toggle
-        masterCb.addEventListener("change", () => {
-            roomList.querySelectorAll(".room-toggle").forEach(cb => {
-                cb.checked = masterCb.checked;
-                const k = cb.dataset.unit + "::" + cb.dataset.room;
-                masterCb.checked ? visibleRooms.add(k) : visibleRooms.delete(k);
-            });
-            updateSelectAll();
-            renderTimeline();
-        });
-
-        // Collapse toggle (excluding checkbox clicks)
-        header.addEventListener("click", e => {
-            if (e.target.type === "checkbox") return;
-            const chevron = header.querySelector(".unit-type-chevron");
-            const isOpen = roomList.classList.toggle("hidden"); // or "open"
-            chevron.textContent = isOpen ? "▲" : "▼";
-        });
+    // Master checkbox: check/uncheck all rooms in this type
+    const masterCb = header.querySelector(".unit-type-master");
+    masterCb.addEventListener("change", () => {
+      roomList.querySelectorAll(".room-toggle").forEach(cb => {
+        cb.checked = masterCb.checked;
+        const k = cb.dataset.unit + "::" + cb.dataset.room;
+        masterCb.checked ? visibleRooms.add(k) : visibleRooms.delete(k);
+      });
+      updateSelectAll();
+      renderTimeline();
     });
+  });
+
+  // Individual room checkboxes
+  container.addEventListener("change", e => {
+    if (!e.target.classList.contains("room-toggle")) return;
+    const k = e.target.dataset.unit + "::" + e.target.dataset.room;
+    e.target.checked ? visibleRooms.add(k) : visibleRooms.delete(k);
+
+    // Sync master checkbox for this unit type
+    const unitKey = e.target.dataset.unit;
+    const allRoomCbs = container.querySelectorAll(`.room-toggle[data-unit="${unitKey}"]`);
+    const allChecked = Array.from(allRoomCbs).every(cb => cb.checked);
+    const masterCb = container.querySelector(`.unit-type-master[data-unit="${unitKey}"]`);
+    if (masterCb) masterCb.checked = allChecked;
+
+    updateSelectAll();
+    renderTimeline();
+  });
 }
 
-// Initialize on DOM ready
-document.addEventListener('DOMContentLoaded', function() {
-    buildFilterSidebar();
-    populateManualSelects();
-    // Initial render
-    renderTimeline();
-});
+function toggleSelectAll(cb) {
+  const allRoomCbs = document.querySelectorAll(".room-toggle");
+  const allMasterCbs = document.querySelectorAll(".unit-type-master");
+  allRoomCbs.forEach(r => {
+    r.checked = cb.checked;
+    const k = r.dataset.unit + "::" + r.dataset.room;
+    cb.checked ? visibleRooms.add(k) : visibleRooms.delete(k);
+  });
+  allMasterCbs.forEach(m => m.checked = cb.checked);
+  renderTimeline();
+}
+
+function updateSelectAll() {
+  const allRoomCbs = document.querySelectorAll(".room-toggle");
+  const allChecked = Array.from(allRoomCbs).every(cb => cb.checked);
+  document.getElementById("selectAllTypes").checked = allChecked;
+}
+
+// Populate manual mode unit-type select
+function populateManualSelects() {
+  const sel = document.getElementById("manual_unitType");
+  UNIT_TYPES.forEach(ut => {
+    const opt = document.createElement("option");
+    opt.value = ut.key;
+    opt.textContent = ut.key;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener("change", () => {
+    const roomSel = document.getElementById("manual_roomNumber");
+    roomSel.innerHTML = '<option value="">Select room…</option>';
+    const ut = UNIT_TYPES.find(u => u.key === sel.value);
+    if (ut) {
+      ut.rooms.forEach(r => {
+        const o = document.createElement("option");
+        o.value = r;
+        o.textContent = "Room " + r;
+        roomSel.appendChild(o);
+      });
+    }
+  });
+}
+
 // ════════════════════════════════════════════
 // TIMELINE RENDER
 // ════════════════════════════════════════════

@@ -204,11 +204,21 @@ while ($row = $result->fetch_assoc()) {
         </td>
 
         <td class='px-4 py-3.5 text-right'>
-            <button 
-                type='button' 
-                class='view-btn btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all' 
-                onclick=\"openEditModal(this.closest('tr'))\">
-                View
+            <button
+            type='button'
+            class='btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 px-2.5 py-1 rounded-full'
+            data-id='" . e($requestId) . "'
+            data-unit='" . e($unitLabel) . "'
+            data-issue='" . e($row['subject']) . "'
+            data-category='" . e($row['category']) . "'
+            data-priority='" . e(ucfirst($row['priority'])) . "'
+            data-date='" . e($submittedDate) . "'
+            data-status='" . e(ucwords($row['status'])) . "'
+            data-description='" . e($row['description']) . "'
+            data-remarks='" . e($adminRemarks) . "'
+            data-photos='" . e($photosValue) . "'
+            onclick='event.stopPropagation(); openViewModal(this)'>
+            View
             </button>
         </td>
     </tr>";

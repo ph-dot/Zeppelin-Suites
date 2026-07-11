@@ -211,8 +211,7 @@ if ($ownerResult && $ownerResult->num_rows > 0) {
             <table class="w-full text-sm" id="unitTable">
                 <thead>
                   <tr class="border-b border-slate-100 bg-slate-50/60">
-                      <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Unit Number</th>
-                      <th class="text-left px-3 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Unit Type</th>
+                      <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Unit</th>
                       <th class="text-left px-3 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Base Rate</th>
                       <th class="text-left px-3 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Unit Owner</th>
                       <th class="text-left px-3 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Lease Rate / Resale Price</th>
