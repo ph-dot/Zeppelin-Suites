@@ -1,8 +1,11 @@
 <?php
 require_once '../../php_files/admin_auth.php';
 require_once '../../php_files/db.php';
+require_once '../../php_files/sync_unit_status.php';
 
 header('Content-Type: application/json');
+
+syncExpiredUnitStatuses($conn);
 
 $inq_id = isset($_POST['inq_id']) ? (int)$_POST['inq_id'] : 0;
 $unit_ids_json = $_POST['unit_ids'] ?? '';
@@ -28,18 +31,28 @@ if (!is_array($unit_ids) || count($unit_ids) === 0) {
 $conn->begin_transaction();
 
 try {
+    // Only clear out a pending request for a unit that's being re-sent in
+    // THIS batch (so re-selecting the same unit resets it cleanly).
+    // Requests already sent to OTHER owners/units must be left alone -
+    // otherwise sending to a new owner would silently cancel requests
+    // still waiting on other owners.
     $deleteSql = "DELETE FROM owner_approval_requests 
                   WHERE inq_id = ? 
-                  AND request_status = 'pending'";
+                  AND request_status = 'pending'
+                  AND unit_id = ?";
     $deleteStmt = $conn->prepare($deleteSql);
-    $deleteStmt->bind_param("i", $inq_id);
-    $deleteStmt->execute();
+
+    foreach ($unit_ids as $unit_id) {
+        $unit_id_int = (int)$unit_id;
+        $deleteStmt->bind_param("ii", $inq_id, $unit_id_int);
+        $deleteStmt->execute();
+    }
     $deleteStmt->close();
 
     $selectUnitSql = "SELECT unit_id, unit_owner_id 
                       FROM units_table 
                       WHERE unit_id = ?
-                      AND unit_current_status = 'Ready for Occupancy'
+                      AND unit_current_status NOT IN ('Resale', 'On Hold', 'Under maintenance')
                       AND unit_owner_id IS NOT NULL";
 
     $insertSql = "INSERT INTO owner_approval_requests

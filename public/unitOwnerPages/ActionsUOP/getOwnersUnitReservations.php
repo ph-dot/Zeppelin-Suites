@@ -207,16 +207,15 @@ while ($row = $result->fetch_assoc()) {
             <button
             type='button'
             class='btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 px-2.5 py-1 rounded-full'
-            data-id='" . e($requestId) . "'
-            data-unit='" . e($unitLabel) . "'
-            data-issue='" . e($row['subject']) . "'
-            data-category='" . e($row['category']) . "'
-            data-priority='" . e(ucfirst($row['priority'])) . "'
-            data-date='" . e($submittedDate) . "'
-            data-status='" . e(ucwords($row['status'])) . "'
-            data-description='" . e($row['description']) . "'
-            data-remarks='" . e($adminRemarks) . "'
-            data-photos='" . e($photosValue) . "'
+            data-id='" . e($row['reservation_id']) . "'
+            data-unit='" . e($unitDisplay) . "'
+            data-issue='" . e($row['inquiry_type'] ?? '') . "'
+            data-category='" . e($row['reservation_type'] ?? '') . "'
+            data-priority=''
+            data-status='" . e($row['reservation_status'] ?? '') . "'
+            data-description='" . e($row['transaction_type'] ?? '') . "'
+            data-remarks=''
+            data-photos='" . e($proofUrl ?? '') . "'
             onclick='event.stopPropagation(); openViewModal(this)'>
             View
             </button>

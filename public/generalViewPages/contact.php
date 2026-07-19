@@ -14,9 +14,6 @@
     /* Input focus — matching login.html */
     .zep-input:focus { outline: none; border-color: #18181b; }
     .zep-select:focus { outline: none; border-color: #18181b; }
-    /* Success message */
-    .form-success { display: none; }
-    .form-success.show { display: flex; }
   </style>
 </head>
 <body class="bg-white text-zinc-900">
@@ -78,15 +75,7 @@
 
     <!-- ── LEFT: CONTACT FORM ────────────────────────────── -->
    <div class="lg:col-span-2 border border-zinc-200 rounded-2xl p-8 md:p-10">
-      <!-- Success message -->
-      <div id="formSuccess" class="form-success items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-4 mb-6 hidden">
-          <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          <p class="text-sm font-semibold text-emerald-700">Your inquiry has been submitted! We'll be in touch soon.</p>
-      </div>
-
-
+    
        <form id="contactForm" action="ActionsGV/inquiryInput.php" method="POST" class="space-y-6">
         <!-- Name -->
         <div>
@@ -131,8 +120,11 @@
   <div id="unit-preference" style="display: none;">
     <label class="block text-sm font-semibold text-zinc-800 mb-2">Unit Preference:</label>
     <div class="relative">
-      <select name="Preferred_unit_id" class="zep-select w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-600 appearance-none cursor-pointer focus:border-zinc-900 outline-none transition-colors">
-        <option value="" disabled selected>Choose option</option>
+      <select
+        name="Preferred_unit_id"
+        id="preferred_unit_id"
+        disabled
+        class="zep-select w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-600 appearance-none cursor-pointer focus:border-zinc-900 outline-none transition-colors"> <option value="" disabled selected>Choose option</option>
         <option>Studio Type A</option>
         <option>Studio Type B</option>
         <option>One Bedroom</option>
@@ -145,18 +137,77 @@
   </div>
 
   <!-- LEASE DURATION: WRAPPED IN A DIV WITH ID -->
+  <div id="preferred-move-in-container" style="display: none;">
+    <label
+      for="preferred_move_in_time"
+      class="block text-sm font-semibold text-zinc-800 mb-2">
+      Preferred Move-In Time:
+    </label>
+
+    <div class="relative">
+      <select
+        name="preferred_move_in_time"
+        id="preferred_move_in_time"
+        disabled
+        class="zep-select w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-600 appearance-none cursor-pointer focus:border-zinc-900 outline-none transition-colors">
+
+        <option value="" disabled selected>Choose option</option>
+        <option value="Immediately">Immediately</option>
+        <option value="Within 1 month">Within 1 month</option>
+        <option value="Within 1–3 months">Within 1–3 months</option>
+        <option value="Within 3–6 months">Within 3–6 months</option>
+        <option value="Not sure yet">Not sure yet</option>
+      </select>
+
+      <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center">
+        <svg width="12" height="8" viewBox="0 0 10 6" fill="none">
+          <path
+            d="m1 1 4 4 4-4"
+            stroke="#71717b"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Preferred Lease Duration -->
   <div id="lease-duration-container" style="display: none;">
-    <label for="lease_duration" class="block text-sm font-semibold text-zinc-800 mb-2">Preferred Lease Duration:</label>
-    <select name="lease_duration" id="lease_duration" class="zep-select w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-600">
-      <option value="" disabled selected>Choose option</option>
-      <option value="lease immediately">Lease Immediately</option>
-      <option value="for the next 3 months">For the next 3 months</option>
-      <option value="for the next 6 months">For the next 6 months</option>
-      <option value="1 year">1 year</option>
-      <option value="2 years">2 years</option>
-      <option value="longer contract">Longer contract</option>
-      <option value="still deciding">Still deciding</option>
-    </select>
+    <label
+      for="lease_duration"
+      class="block text-sm font-semibold text-zinc-800 mb-2">
+      Preferred Lease Duration:
+    </label>
+
+    <div class="relative">
+      <select
+        name="lease_duration"
+        id="lease_duration"
+        disabled
+        class="zep-select w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-600 appearance-none cursor-pointer focus:border-zinc-900 outline-none transition-colors">
+
+        <option value="" disabled selected>Choose option</option>
+        <option value="3 months">3 months</option>
+        <option value="6 months">6 months</option>
+        <option value="1 year">1 year</option>
+        <option value="2 years">2 years</option>
+        <option value="Longer than 2 years">Longer than 2 years</option>
+        <option value="Not sure yet">Not sure yet</option>
+      </select>
+
+      <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center">
+        <svg width="12" height="8" viewBox="0 0 10 6" fill="none">
+          <path
+            d="m1 1 4 4 4-4"
+            stroke="#71717b"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
   </div>
 
 
@@ -169,7 +220,7 @@
 
         <!-- Submit -->
         <div class="flex justify-end pt-2">
-          <button type="submit" class="btn-primary bg-zinc-900 text-white px-10 py-3.5 font-bold text-sm tracking-widest uppercase hover:bg-zinc-700 active:scale-95 transition-all rounded-full">
+          <button type="button" onclick="openInquiryModal()" class="btn-primary bg-zinc-900 text-white px-10 py-3.5 font-bold text-sm tracking-widest uppercase hover:bg-zinc-700 active:scale-95 transition-all rounded-full">
             Submit
           </button>
         </div>
@@ -343,6 +394,37 @@
   </div>
 </footer>
 
+<div id="inquiryModal" 
+class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-xl">
+
+        <h2 class="text-xl font-bold text-zinc-900 mb-3">
+            Confirm Submission
+        </h2>
+
+        <p class="text-sm text-zinc-600 mb-6">
+            Please confirm that all provided information is correct before submitting your inquiry.
+        </p>
+
+        <div class="flex justify-end gap-3">
+
+            <button onclick="closeInquiryModal()"
+            class="px-5 py-2 rounded-full border border-zinc-300">
+                Cancel
+            </button>
+
+            <button onclick="submitInquiry()"
+            class="px-5 py-2 rounded-full bg-zinc-900 text-white">
+                Confirm
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
 <script>
   let menuOpen = false;
 
@@ -369,47 +451,100 @@
     ch.style.transform = hidden ? 'rotate(180deg)' : '';
   }
 
-  function handleSubmit(e) {
-    e.preventDefault();
-    const success = document.getElementById('formSuccess');
-    const form = document.getElementById('contactForm');
-    form.reset();
-    success.classList.add('show');
-    success.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    setTimeout(() => success.classList.remove('show'), 6000);
-  }
-
   document.addEventListener("DOMContentLoaded", function () {
-    const inquiryTypeSelect = document.getElementById('inquiry_type');
-    const unitPreferenceDiv = document.getElementById('unit-preference');
-    // FIX: Target the new container ID instead of the parent of the select
-    const leaseDurationContainer = document.getElementById('lease-duration-container');
+  const inquiryTypeSelect = document.getElementById("inquiry_type");
 
-    function toggleFields() {
-      const value = inquiryTypeSelect.value;
+  const unitPreferenceContainer =
+    document.getElementById("unit-preference");
 
-      // Default: hide both
-      unitPreferenceDiv.style.display = 'none';
-      leaseDurationContainer.style.display = 'none';
+  const unitPreferenceSelect =
+    document.getElementById("preferred_unit_id");
 
-      if (value === 'Resale Inquiry') {
-        // Resale: Show Unit Preference only
-        unitPreferenceDiv.style.display = 'block';
-      } 
-      else if (value === 'Unit Reservation' || value === 'Lease Inquiry') {
-        // Reservation or Lease: Show BOTH
-        unitPreferenceDiv.style.display = 'block';
-        leaseDurationContainer.style.display = 'block';
-      }
-      // General Inquiry or Others: Leave both hidden (default)
+  const preferredMoveInContainer =
+    document.getElementById("preferred-move-in-container");
+
+  const preferredMoveInSelect =
+    document.getElementById("preferred_move_in_time");
+
+  const leaseDurationContainer =
+    document.getElementById("lease-duration-container");
+
+  const leaseDurationSelect =
+    document.getElementById("lease_duration");
+
+  function toggleFields() {
+    const inquiryType = inquiryTypeSelect.value;
+
+    const needsUnitPreference =
+      inquiryType === "Resale Inquiry" ||
+      inquiryType === "Unit Reservation" ||
+      inquiryType === "Lease Inquiry";
+
+    const needsLeaseDetails =
+      inquiryType === "Unit Reservation" ||
+      inquiryType === "Lease Inquiry";
+
+    // Unit preference
+    unitPreferenceContainer.style.display =
+      needsUnitPreference ? "block" : "none";
+
+    unitPreferenceSelect.disabled = !needsUnitPreference;
+    unitPreferenceSelect.required = needsUnitPreference;
+
+    // Move-in time
+    preferredMoveInContainer.style.display =
+      needsLeaseDetails ? "block" : "none";
+
+    preferredMoveInSelect.disabled = !needsLeaseDetails;
+    preferredMoveInSelect.required = needsLeaseDetails;
+
+    // Lease duration
+    leaseDurationContainer.style.display =
+      needsLeaseDetails ? "block" : "none";
+
+    leaseDurationSelect.disabled = !needsLeaseDetails;
+    leaseDurationSelect.required = needsLeaseDetails;
+
+    if (!needsUnitPreference) {
+      unitPreferenceSelect.value = "";
     }
 
-    // Run once on load to set initial state
-    toggleFields();
+    if (!needsLeaseDetails) {
+      preferredMoveInSelect.value = "";
+      leaseDurationSelect.value = "";
+    }
+  }
 
-    // Listen for changes
-    inquiryTypeSelect.addEventListener('change', toggleFields);
-  });
+  toggleFields();
+
+  inquiryTypeSelect.addEventListener("change", toggleFields);
+});
+
+function openInquiryModal() {
+  const form = document.getElementById("contactForm");
+
+  if (!form.reportValidity()) {
+    return;
+  }
+
+  document.getElementById("inquiryModal")
+    .classList.remove("hidden");
+
+  document.getElementById("inquiryModal")
+    .classList.add("flex");
+}
+
+function closeInquiryModal(){
+    document.getElementById("inquiryModal")
+    .classList.add("hidden");
+
+    document.getElementById("inquiryModal")
+    .classList.remove("flex");
+}
+
+function submitInquiry() {
+  document.getElementById("contactForm").requestSubmit();
+}
 </script>
 
 </body>

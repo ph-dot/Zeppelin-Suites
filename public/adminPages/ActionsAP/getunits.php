@@ -1,6 +1,9 @@
 <?php
 require_once '../php_files/admin_auth.php';
 require_once '../php_files/db.php';
+require_once '../php_files/sync_unit_status.php';
+
+syncExpiredUnitStatuses($conn);
 
 function clean($value) {
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');

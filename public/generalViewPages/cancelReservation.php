@@ -360,7 +360,7 @@ $unitName = trim(($reservation['unit_type'] ?? '') . ' Unit ' . ($reservation['u
 
       <button 
         type="button" 
-        onclick="submitCancelRequestForm()" 
+        onclick="submitCancelRequestForm(event)" 
         class="px-5 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl">
         Yes, Submit Request
       </button>
@@ -396,7 +396,7 @@ function closeConfirmCancelModal() {
   modal.classList.remove('flex');
 }
 
-function submitCancelRequestForm() {
+function submitCancelRequestForm(event) {
   const btn = event.currentTarget;
   btn.disabled = true;
   btn.textContent = 'Submitting...';

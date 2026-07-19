@@ -27,6 +27,7 @@ $sql = "SELECT
             i.sender_contact,
             i.inquiry_type,
             i.Preferred_unit_id,
+            i.preferred_move_in_time,
             i.lease_duration,
             i.message,
             i.status,
@@ -78,6 +79,7 @@ $sender_email = $inquiry['sender_email'] ?? '';
 $sender_contact = $inquiry['sender_contact'] ?? '';
 $inquiry_type = $inquiry['inquiry_type'] ?? 'Inquiry';
 $preferred_unit = $inquiry['Preferred_unit_id'] ?? '—';
+$preferred_move_in_time = $inquiry['preferred_move_in_time'] ?? '—';
 $lease_duration = $inquiry['lease_duration'] ?? '—';
 $message = $inquiry['message'] ?? '—';
 
@@ -96,6 +98,7 @@ if ($avatar === '') {
 }
 
 $is_general = stripos($inquiry_type, 'general') !== false || stripos($inquiry_type, 'other') !== false;
+$is_lease_flow = in_array( $inquiry_type, ['Unit Reservation', 'Lease Inquiry'], true);
 
 $unit_display = $preferred_unit ?: '—';
 $owner_display = '—';

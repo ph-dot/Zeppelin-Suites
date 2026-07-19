@@ -42,6 +42,13 @@ function getInquiryStatusDisplay($inquiry_status, $approval_status) {
     $inquiry_status = strtolower(trim((string)$inquiry_status));
     $approval_status = strtolower(trim((string)$approval_status));
 
+    if ($inquiry_status === 'officially booked') {
+        return [
+            'Officially Booked',
+            'bg-purple-50 text-purple-700 border-purple-100'
+        ];
+    }
+
     if ($inquiry_status === 'reservation submitted') {
         return ['Reservation Submitted', 'bg-blue-50 text-blue-700 border-blue-100'];
     }
@@ -105,6 +112,7 @@ $sql = "SELECT
             i.sender_email,
             i.sender_contact,
             i.inquiry_type,
+            i.preferred_move_in_time,
             i.lease_duration,
             i.message,
             i.status AS inquiry_status,
@@ -180,6 +188,7 @@ while ($row = $result->fetch_assoc()) {
         data-unit-type='" . clean($row['unit_type']) . "'
         data-fee='" . clean(peso($row['lease_rate'])) . "'
         data-lease='" . clean($row['lease_duration'] ?: '—') . "'
+        data-move-in='" .clean($row['preferred_move_in_time'] ?: '—') ."'
         data-message='" . clean($row['message']) . "'
         data-status='" . clean($ownerStatusText) . "'
         data-inquiry-status='" . clean($inquiryStatusText) . "'
@@ -213,10 +222,6 @@ while ($row = $result->fetch_assoc()) {
 
         <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap' style=\"font-family:'DM Mono',monospace\">
             " . clean(peso($row['lease_rate'])) . "
-        </td>
-
-        <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600'>
-            " . clean($row['lease_duration'] ?: '—') . "
         </td>
 
         <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap'>

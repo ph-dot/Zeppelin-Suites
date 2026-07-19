@@ -69,6 +69,7 @@ $sql = "SELECT
             i.sender_contact,
             i.inquiry_type,
             i.Preferred_unit_id,
+            i.preferred_move_in_time,
             i.message,
             DATE(i.timestamp) AS date_only,
             i.status,
@@ -90,6 +91,25 @@ $result = $stmt->get_result();
 
 $endItem = min($offset + $result->num_rows, $totalItems);
 
+// Look up who each pending/answered request actually went to, so the
+// admin modal can show real owner/unit info instead of a generic
+// "sent to available unit owners" message when reopened.
+$requestsStmt = $conn->prepare("
+    SELECT
+        r.request_id,
+        r.unit_id,
+        r.request_status,
+        r.requested_at,
+        r.responded_at,
+        u.unit_number,
+        owner.full_name AS owner_name
+    FROM owner_approval_requests r
+    LEFT JOIN units_table u ON r.unit_id = u.unit_id
+    LEFT JOIN users_table owner ON r.unit_owner_id = owner.user_id
+    WHERE r.inq_id = ?
+    ORDER BY r.requested_at ASC
+");
+
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         // Escape data to prevent XSS
@@ -98,11 +118,11 @@ if ($result->num_rows > 0) {
         $sender_contact = htmlspecialchars($row['sender_contact'] ?? '', ENT_QUOTES, 'UTF-8');
         $inquiry_type = htmlspecialchars($row['inquiry_type'] ?? '', ENT_QUOTES, 'UTF-8');
         $preferred_unit_id = htmlspecialchars($row['Preferred_unit_id'] ?? '', ENT_QUOTES, 'UTF-8');
+        $preferred_move_in_time = htmlspecialchars($row['preferred_move_in_time'] ?? '', ENT_QUOTES, 'UTF-8');
         $lease_duration = htmlspecialchars($row['lease_duration'] ?? '', ENT_QUOTES, 'UTF-8');
         $message = htmlspecialchars($row['message'] ?? '', ENT_QUOTES, 'UTF-8');
         $dateOnly = htmlspecialchars($row['date_only'] ?? '', ENT_QUOTES, 'UTF-8');
         $status = htmlspecialchars($row['status'] ?? 'pending', ENT_QUOTES, 'UTF-8'); // ✅ Default 'pending'
-
         $approval_status = htmlspecialchars($row['approval_status'] ?? 'not_requested', ENT_QUOTES, 'UTF-8');
         $approved_unit_number = htmlspecialchars($row['approved_unit_number'] ?? '', ENT_QUOTES, 'UTF-8');
         $approval_approved_at = htmlspecialchars($row['approval_approved_at_display'] ?? '', ENT_QUOTES, 'UTF-8');
@@ -112,21 +132,84 @@ if ($result->num_rows > 0) {
 
         $updateBadge = "";
 
-        if ($status_lower === 'responded') {
-            $displayStatus = 'Responded';
-            $status_class = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
-        } else {
-            $displayStatus = 'Pending';
-            $status_class = 'bg-amber-50 text-amber-700 border border-amber-200';
+        $statusMap = [
+            'pending' => [
+                'Pending',
+                'bg-amber-50 text-amber-700 border border-amber-200'
+            ],
 
-            if (
-                $approval_lower === 'requested' ||
-                $approval_lower === 'approved' ||
-                $approval_lower === 'declined'
-            ) {
-                $updateBadge = "<span class='ml-1 bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full'>UPDATED</span>";
-            }
+            'onhold' => [
+                'On Hold',
+                'bg-orange-50 text-orange-700 border border-orange-200'
+            ],
+
+            'responded' => [
+                'Responded',
+                'bg-emerald-50 text-emerald-700 border border-emerald-200'
+            ],
+
+            'declined' => [
+                'Declined',
+                'bg-red-50 text-red-700 border border-red-200'
+            ],
+
+            'reservation submitted' => [
+                'Reservation Submitted',
+                'bg-blue-50 text-blue-700 border border-blue-200'
+            ],
+
+            'officially booked' => [
+                'Officially Booked',
+                'bg-purple-50 text-purple-700 border border-purple-200'
+            ]
+        ];
+
+        if (isset($statusMap[$status_lower])) {
+            [$displayStatus, $status_class] = $statusMap[$status_lower];
+        } else {
+            $displayStatus = 'Unknown';
+            $status_class = 'bg-slate-50 text-slate-700 border border-slate-200';
         }
+
+        if (
+            $status_lower === 'pending' &&
+            in_array(
+                $approval_lower,
+                ['requested', 'approved', 'declined'],
+                true
+            )
+        ) {
+            $updateBadge = "
+                <span class='ml-1 bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full'>
+                    UPDATED
+                </span>
+            ";
+        }
+
+        // Fetch the list of owners this inquiry's request(s) went to
+        $requestsList = [];
+        $pendingRequestCount = 0;
+
+        $requestsStmt->bind_param("i", $row['inq_id']);
+        $requestsStmt->execute();
+        $requestsResult = $requestsStmt->get_result();
+
+        while ($reqRow = $requestsResult->fetch_assoc()) {
+            if (strtolower($reqRow['request_status']) === 'pending') {
+                $pendingRequestCount++;
+            }
+
+            $requestsList[] = [
+                'request_id'     => $reqRow['request_id'],
+                'unit_number'    => $reqRow['unit_number'] ?? 'Unknown unit',
+                'owner_name'     => $reqRow['owner_name'] ?? 'Unknown owner',
+                'request_status' => $reqRow['request_status'],
+                'requested_at'   => $reqRow['requested_at'],
+                'responded_at'   => $reqRow['responded_at'],
+            ];
+        }
+
+        $requestsJson = htmlspecialchars(json_encode($requestsList), ENT_QUOTES, 'UTF-8');
 
        echo "<tr class='inq-row' 
                 data-inq-id='" . (int)$row['inq_id'] . "'
@@ -134,11 +217,14 @@ if ($result->num_rows > 0) {
                 data-approval-status='{$approval_status}'
                 data-approved-unit='{$approved_unit_number}'
                 data-approved-at='{$approval_approved_at}'
+                data-requests='{$requestsJson}'
+                data-pending-count='{$pendingRequestCount}'
                 data-name='" . addslashes($sender_name) . "'
                 data-email='" . addslashes($sender_email) . "'
                 data-contact='" . addslashes($sender_contact) . "'
                 data-inquiry-type='" . addslashes($inquiry_type) . "'
                 data-unitpref='" . addslashes($preferred_unit_id) . "'
+                data-move-in-time='" . addslashes($preferred_move_in_time) . "'
                 data-lease-duration='" . addslashes($lease_duration) . "'
                 data-message='" . addslashes($message) . "'
                 onclick='openModal(this)'>
@@ -172,5 +258,6 @@ if ($result->num_rows > 0) {
 }
 
 $stmt->close();
+$requestsStmt->close();
 $conn->close();
 ?>

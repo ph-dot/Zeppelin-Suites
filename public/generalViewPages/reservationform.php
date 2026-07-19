@@ -111,13 +111,7 @@ tailwind.config = {
     <div class="flex items-center gap-7">
       <div class="w-[112px] flex flex-col items-center justify-center">
         <div class="logo-bars flex items-end justify-center gap-1.5 h-14 mb-2">
-          <span style="height:26px"></span>
-          <span style="height:40px"></span>
-          <span style="height:52px"></span>
-          <span style="height:64px"></span>
-          <span style="height:48px"></span>
-          <span style="height:34px"></span>
-          <span style="height:22px"></span>
+          <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
         </div>
         <div class="text-[11px] tracking-[0.35em] leading-tight text-slate-700 text-center font-semibold">
           ZEPPELIN<br>SUITES
@@ -539,8 +533,8 @@ tailwind.config = {
                 </span>
               </p>
                 <button 
-                type="submit"
-                id="submitBtn" 
+                type="button"
+                onclick="openReservationModal()"
                 class="btn-press w-full sm:w-auto bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold px-10 py-3.5 rounded-xl tracking-widest transition-all">
                 <span class="inline-flex items-center gap-2">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -564,18 +558,6 @@ tailwind.config = {
           <p class="text-xl font-bold text-slate-900 mb-2">Reservation Link Expired</p>
           <p class="text-sm text-slate-500 mb-6">This reservation link is no longer valid. Please submit a new inquiry to get a fresh reservation link.</p>
           <a href="../generalViewPages/contact.html" class="btn-press inline-block bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold px-8 py-3 rounded-xl tracking-wide transition-all">Submit New Inquiry</a>
-        </div>
-
-        <!-- Confirmed overlay -->
-        <div id="confirmedOverlay" class="hidden p-10 text-center">
-          <div class="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-          <p class="text-xl font-bold text-slate-900 mb-2">Reservation Confirmed!</p>
-          <p class="text-sm text-slate-500 mb-2">Reservation <span class="font-semibold text-slate-700" style="font-family:'DM Mono',monospace">#101</span> has been successfully submitted.</p>
-          <p class="text-xs text-slate-400">Our team will contact you within 24 hours to finalize your move-in details.</p>
         </div>
 
       </div><!-- /form card -->
@@ -720,56 +702,41 @@ tailwind.config = {
   </div>
 </footer>
 
-<?php if (isset($_GET['submitted']) && $_GET['submitted'] == '1'): ?>
-  <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-7 text-center">
-      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
-        <svg class="w-9 h-9 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-        </svg>
-      </div>
+<div id="reservationModal" 
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
 
-      <h2 class="text-2xl font-bold text-slate-900 mb-2">Submit Complete!</h2>
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-7">
 
-      <p class="text-slate-600 mb-6">
-        Your reservation form has been submitted successfully. Your selected unit is now on hold while the admin reviews your payment proof and details.
+      <h2 class="text-xl font-bold text-slate-900 mb-3">
+        Confirm Reservation Submission
+      </h2>
+
+      <p class="text-sm text-slate-600 leading-relaxed mb-6">
+        Please review your information and payment details before submitting your reservation.
+        Are you sure you want to continue?
       </p>
 
-      <button 
+      <div class="flex justify-end gap-3">
+
+        <button 
         type="button"
-        onclick="closeModal('successModal')"
-        class="w-full bg-slate-900 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition-all">
-        Okay
-      </button>
-    </div>
-  </div>
-<?php endif; ?>
+        onclick="closeReservationModal()"
+        class="px-5 py-2 border rounded-xl text-sm font-semibold">
+          Go Back
+        </button>
 
+        <button
+        type="button"
+        onclick="submitReservationForm()"
+        class="px-5 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold">
+          Yes, Submit
+        </button>
 
-<?php if (isset($_GET['already_submitted']) && $_GET['already_submitted'] == '1'): ?>
-  <div id="alreadySubmittedModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-7 text-center">
-      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center">
-        <svg class="w-9 h-9 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-        </svg>
       </div>
 
-      <h2 class="text-2xl font-bold text-slate-900 mb-2">Already Submitted</h2>
-
-      <p class="text-slate-600 mb-6">
-        A reservation form has already been submitted for this approved unit. Please wait for admin review.
-      </p>
-
-      <button 
-        type="button"
-        onclick="closeModal('alreadySubmittedModal')"
-        class="w-full bg-slate-900 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition-all">
-        Okay
-      </button>
     </div>
+
   </div>
-<?php endif; ?>
 
 <script>
 // ======= Reservation timer configuration =======
@@ -855,33 +822,6 @@ function updateStatus() {
   }
 }
 
-function submitForm() {
-  const now = new Date().getTime();
-
-  if (now > expiresAt || reservationStatus === 'expired') {
-    reservationStatus = 'expired';
-    updateStatus();
-    return;
-  }
-
-  const name = document.getElementById('resName').value.trim();
-  const email = document.getElementById('resEmail').value.trim();
-  const agree = document.getElementById('agreeCheck').checked;
-
-  if (!name || !email) {
-    if (!name) document.getElementById('resName').style.borderColor = '#ef4444';
-    if (!email) document.getElementById('resEmail').style.borderColor = '#ef4444';
-    return;
-  }
-
-  if (!agree) {
-    document.getElementById('agreeCheck').style.outline = '2px solid #ef4444';
-    return;
-  }
-
-  reservationStatus = 'confirmed';
-  updateStatus();
-}
 
 function handleUpload(input) {
   const label = document.getElementById('uploadFileName');
@@ -933,6 +873,28 @@ function closeModal(modalId) {
   url.searchParams.delete('submitted');
   url.searchParams.delete('already_submitted');
   window.history.replaceState({}, document.title, url.toString());
+}
+
+function openReservationModal(){
+
+    document.getElementById("reservationModal")
+    .classList.remove("hidden");
+
+    document.getElementById("reservationModal")
+    .classList.add("flex");
+
+}
+function closeReservationModal(){
+    document.getElementById("reservationModal")
+    .classList.add("hidden");
+
+    document.getElementById("reservationModal")
+    .classList.remove("flex");
+
+}
+function submitReservationForm(){
+    document.querySelector("form[action='ActionsGV/submitReservation.php']")
+    .submit();
 }
 </script>
 

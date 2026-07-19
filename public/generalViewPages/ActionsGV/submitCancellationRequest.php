@@ -92,12 +92,7 @@ try {
 
     $conn->commit();
 
-    echo "
-    <div style='font-family:Arial,sans-serif;max-width:600px;margin:80px auto;padding:24px;border:1px solid #ddd;border-radius:12px;'>
-      <h2>Cancellation Request Submitted</h2>
-      <p>Your cancellation request has been submitted successfully.</p>
-      <p>Zeppelin Suites administration will review your request.</p>
-    </div>";
+    header("Location: ../cancellationConfirmation.html");
     exit;
 
 } catch (Throwable $e) {

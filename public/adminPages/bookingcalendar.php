@@ -1,3 +1,9 @@
+<?php
+require_once '../php_files/auth.php';
+require_once '../php_files/db.php';
+
+$userData = requireRole($conn, ['admin']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -77,7 +83,7 @@
 .timeline-wrapper {
   overflow-x: auto;
   overflow-y: auto;
-  max-height: calc(100vh - 260px);
+  max-height: calc(100vh - 180px);
   position: relative;
 }
 
@@ -330,36 +336,30 @@
     <a href="../adminPages/inquiry.php" data-tooltip="Inquiry" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
       <span class="nav-label">Inquiry</span>
-      <span class="nav-badge ml-auto bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center shrink-0" style="font-size:10px;font-family:'DM Mono',monospace;">3</span>
-    </a>
+   </a>
     <a href="../adminPages/reservation.php" data-tooltip="Reservation" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
       <span class="nav-label">Reservation</span>
-      <span class="nav-badge ml-auto bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center shrink-0" style="font-size:10px;font-family:'DM Mono',monospace;">3</span>
+   </a>
+   <a href="../adminPages/bookingcalendar.php" data-tooltip="Booking Calendar" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg  class="nav-icon w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-range-icon lucide-calendar-range"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M17 14h-6"/><path d="M13 18H7"/><path d="M7 14h.01"/><path d="M17 18h.01"/></svg>
+      <span class="nav-label">Booking Calendar</span>
     </a>
     <a href="../adminPages/units.php" data-tooltip="Units" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V9a2 2 0 00-2-2h-3V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14m0 0H3m3 0h14m-7 0v-4h2v4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1m4 0h1M9 13h1m4 0h1"/></svg>
       <span class="nav-label">Units</span>
     </a>
-    <a href="../adminPages/roomsAdmin.php" data-tooltip="Rooms" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M7 6h10a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>
-      <span class="nav-label">Rooms</span>
-    </a>
-    <a href="../adminPages/bookingcalendar.php" data-tooltip="Booking Calendar" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-      <span class="nav-label">Booking Calendar</span>
-    </a>
     <a href="../adminPages/maintenance.php" data-tooltip="Maintenance" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span class="nav-label">Maintenance</span>
     </a>
-    <a href="../adminPages/employees.php" data-tooltip="Employees" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="../adminPages/residents.php" data-tooltip="residents" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      <span class="nav-label">Employees</span>
+      <spans class="nav-label">Residents</span>
     </a>
-    <a href="../adminPages/settingsAdmin.php" data-tooltip="Settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      <span class="nav-label">Settings</span>
+    <a href="../adminPages/analytics.php" data-tooltip="Analytics" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      <span class="nav-label">Analytics</span>
     </a>
   </nav>
   <div class="notice-section px-2 py-4 border-t border-slate-100 shrink-0">
@@ -393,9 +393,9 @@
       </button>
       <div class="relative" id="profileWrapper">
         <button onclick="toggleProfile()" class="flex items-center gap-2.5 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl px-3 py-1.5 transition-all btn-press active:scale-95">
-          <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0">A</div>
+          <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0"><?php echo htmlspecialchars($userData['initial']); ?></div>
           <div class="hidden sm:block text-left">
-            <p class="text-sm font-semibold text-slate-800 leading-none">Admin Name</p>
+            <p class="text-sm font-semibold text-slate-800 leading-none"><?php echo htmlspecialchars($userData['full_name']); ?></p>
             <p class="text-xs text-slate-400 mt-0.5">Admin</p>
           </div>
           <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -576,8 +576,50 @@
           <select id="status" class="zep-select w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
             <option value="Occupied">Occupied</option>
             <option value="Reserved">Reserved</option>
-            <option value="Maintenance">Maintenance</option>
           </select>
+          <p class="text-[11px] text-slate-400">Maintenance is set per-unit on the Units page, not per-booking.</p>
+        </div>
+      </div>
+
+      <!-- Reservation / payment details — required by the reservation record -->
+      <div class="border-t border-slate-100 pt-4 space-y-4">
+        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Reservation &amp; Payment</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-700 block">Inquiry Type</label>
+            <select id="inquiryType" class="zep-select w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
+              <option value="Unit Reservation">Unit Reservation</option>
+              <option value="Lease Inquiry">Lease Inquiry</option>
+              <option value="Resale Inquiry">Resale Inquiry</option>
+            </select>
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-700 block">Price Basis (₱)</label>
+            <input id="priceBasis" type="number" min="0" step="0.01" placeholder="e.g. 45000" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-700 block">Payment %</label>
+            <input id="paymentPercentage" type="number" min="0" max="100" step="1" value="50" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-700 block">Payment Method</label>
+            <input id="paymentMethod" type="text" value="GCash QR" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-700 block">Payment Reference <span class="text-red-400">*</span></label>
+            <input id="paymentReference" type="text" placeholder="e.g. GCash ref #" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-700 block">Payment Status</label>
+            <select id="paymentStatus" class="zep-select w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
+              <option value="verified">Verified</option>
+              <option value="pending review">Pending Review</option>
+            </select>
+          </div>
         </div>
       </div>
     </form>
@@ -629,11 +671,11 @@
       </div>
       <div class="space-y-1.5">
         <label class="text-xs font-semibold text-slate-700 block">Status</label>
-        <select id="edit_status" class="zep-select w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
+        <select id="edit_status" class="zep-select w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" disabled>
           <option value="Occupied">Occupied</option>
           <option value="Reserved">Reserved</option>
-          <option value="Maintenance">Maintenance</option>
         </select>
+        <p class="text-[11px] text-slate-400 mt-1">Status is computed automatically from the dates.</p>
       </div>
     </form>
     <div class="px-7 pb-6 flex items-center gap-3 justify-end border-t border-slate-100 pt-4">
@@ -671,47 +713,56 @@
 <!-- ═══════════════════════ JAVASCRIPT ═══════════════════════ -->
 <script>
 // ════════════════════════════════════════════
-// CONFIGURATION — Unit Types & Rooms
+// CONFIGURATION — Unit Types & Rooms are now loaded from the
+// database (see ActionsAP/getBookingCalendarData.php). These start
+// empty and get populated by loadCalendarData() on page load.
 // ════════════════════════════════════════════
-const UNIT_TYPES = [
-  { key: "Studio A",    rooms: ["101","102","103","104","105"] },
-  { key: "Studio B",    rooms: ["201","202","203","204","205"] },
-  { key: "One Bedroom", rooms: ["301","302","303"] },
-  { key: "Two Bedroom", rooms: ["401","402"] }
-];
+let UNIT_TYPES = [];   // [{ key: "Studio Type A", rooms: [{room,unitId,maintenance}, ...] }, ...]
+let bookings   = [];   // [{ id, guestName, email, phone, unitType, roomNumber, unitId, startDate, endDate, status }, ...]
 
 // Status → bar CSS class
 const STATUS_BAR = {
   "Occupied":    "bar-occupied",
-  "Reserved":    "bar-reserved",
-  "Maintenance": "bar-maintenance"
+  "Reserved":    "bar-reserved"
 };
 
 // Status → badge CSS class
 const STATUS_BADGE = {
   "Occupied":    "badge-occupied",
-  "Reserved":    "badge-reserved",
-  "Maintenance": "badge-maintenance"
+  "Reserved":    "badge-reserved"
 };
 
 // ════════════════════════════════════════════
-// DATA
+// DATA — fetched from the database
 // ════════════════════════════════════════════
-function getDateOffset(days) {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return d.toISOString().split("T")[0];
+async function loadCalendarData() {
+  try {
+    const res  = await fetch("ActionsAP/getBookingCalendarData.php");
+    const data = await res.json();
+    if (!data.success) {
+      showToast("⚠️ Could not load calendar data.");
+      return;
+    }
+    UNIT_TYPES = data.unitTypes;
+    bookings   = data.bookings;
+  } catch (err) {
+    console.error(err);
+    showToast("⚠️ Could not reach the server.");
+  }
 }
 
-let bookings = JSON.parse(localStorage.getItem("zepBookings") || "null") || [
-  { id:1, guestName:"Maria Santos",  email:"maria@example.com",  phone:"09171234567", unitType:"Studio A",    roomNumber:"101", startDate:getDateOffset(0),  endDate:getDateOffset(4),  status:"Occupied"    },
-  { id:2, guestName:"John Reyes",    email:"john@example.com",   phone:"09221234567", unitType:"One Bedroom", roomNumber:"301", startDate:getDateOffset(2),  endDate:getDateOffset(6),  status:"Reserved"    },
-  { id:3, guestName:"Ana Cruz",      email:"ana@example.com",    phone:"09331234567", unitType:"Studio B",    roomNumber:"202", startDate:getDateOffset(-2), endDate:getDateOffset(3),  status:"Occupied"    },
-  { id:4, guestName:"—",             email:"",                   phone:"",            unitType:"Two Bedroom", roomNumber:"401", startDate:getDateOffset(5),  endDate:getDateOffset(8),  status:"Maintenance" }
-];
+// Look up a room's unit_id from the loaded UNIT_TYPES config
+function findUnitId(unitType, room) {
+  const ut = UNIT_TYPES.find(u => u.key === unitType);
+  if (!ut) return null;
+  const r = ut.rooms.find(r => r.room === room);
+  return r ? r.unitId : null;
+}
 
-function saveToStorage() {
-  localStorage.setItem("zepBookings", JSON.stringify(bookings));
+function findRoomMeta(unitType, room) {
+  const ut = UNIT_TYPES.find(u => u.key === unitType);
+  if (!ut) return null;
+  return ut.rooms.find(r => r.room === room) || null;
 }
 
 // ════════════════════════════════════════════
@@ -744,14 +795,15 @@ function buildFilterSidebar() {
     const roomList = document.createElement("div");
     roomList.className = "room-list open";
     ut.rooms.forEach(room => {
-      const key = ut.key + "::" + room;
+      const key = ut.key + "::" + room.room;
       visibleRooms.add(key);
 
       const item = document.createElement("label");
       item.className = "room-item";
       item.innerHTML = `
-        <input type="checkbox" class="room-toggle w-3.5 h-3.5 rounded" data-unit="${ut.key}" data-room="${room}" checked>
-        <span class="text-xs font-medium text-slate-600">Room ${room}</span>
+        <input type="checkbox" class="room-toggle w-3.5 h-3.5 rounded" data-unit="${ut.key}" data-room="${room.room}" checked>
+        <span class="text-xs font-medium text-slate-600">Room ${room.room}</span>
+        ${room.maintenance ? '<span class="w-1.5 h-1.5 rounded-full dot-maintenance shrink-0 ml-auto" title="Under maintenance"></span>' : ''}
       `;
       roomList.appendChild(item);
     });
@@ -832,8 +884,9 @@ function populateManualSelects() {
     if (ut) {
       ut.rooms.forEach(r => {
         const o = document.createElement("option");
-        o.value = r;
-        o.textContent = "Room " + r;
+        o.value = r.room;
+        o.textContent = "Room " + r.room + (r.maintenance ? " (Under maintenance)" : "");
+        if (r.maintenance) o.disabled = true;
         roomSel.appendChild(o);
       });
     }
@@ -888,7 +941,7 @@ function renderTimeline() {
 
   UNIT_TYPES.forEach(ut => {
     // Filter rooms that are visible
-    const visRooms = ut.rooms.filter(r => visibleRooms.has(ut.key + "::" + r));
+    const visRooms = ut.rooms.filter(r => visibleRooms.has(ut.key + "::" + r.room));
     if (visRooms.length === 0) return;
 
     // Group header row
@@ -901,7 +954,8 @@ function renderTimeline() {
     tbody.appendChild(groupRow);
 
     // Each room row
-    visRooms.forEach(room => {
+    visRooms.forEach(roomMeta => {
+      const room = roomMeta.room;
       const tr = document.createElement("tr");
       tr.className = "room-row";
 
@@ -912,9 +966,23 @@ function renderTimeline() {
       labelTd.innerHTML = `<span class="block truncate">Room ${room}</span>`;
       tr.appendChild(labelTd);
 
+      // A room under maintenance is a unit-level state, not a dated
+      // booking — render the whole row as blocked and skip bookings.
+      if (roomMeta.maintenance) {
+        const td = document.createElement("td");
+        td.colSpan = totalDays;
+        td.className = "day-cell";
+        td.style.cursor = "not-allowed";
+        td.innerHTML = `<div class="cell-bar bar-single bar-maintenance" style="position:static;width:calc(100% - 8px);justify-content:center;">Under Maintenance</div>`;
+        td.addEventListener("click", () => showToast("🛠 This unit is under maintenance. Change its status on the Units page to book it."));
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
       // Get bookings for this room
       const roomBookings = bookings.filter(b =>
-        b.unitType === ut.key && b.roomNumber === room && b.status !== "Cancelled"
+        b.unitType === ut.key && b.roomNumber === room
       );
 
       // Day cells
@@ -1044,7 +1112,7 @@ document.getElementById("bookingModal").addEventListener("click", e => {
   if (e.target === e.currentTarget) closeBookingModal();
 });
 
-function saveBooking() {
+async function saveBooking() {
   const isManual = !document.getElementById("manualFields").classList.contains("hidden");
 
   const unitType  = isManual ? document.getElementById("manual_unitType").value  : document.getElementById("modal_unitType").value;
@@ -1056,6 +1124,13 @@ function saveBooking() {
   const phone     = document.getElementById("guestPhone").value.trim();
   const status    = document.getElementById("status").value;
 
+  const inquiryType        = document.getElementById("inquiryType").value;
+  const priceBasis         = document.getElementById("priceBasis").value;
+  const paymentPercentage  = document.getElementById("paymentPercentage").value;
+  const paymentMethod      = document.getElementById("paymentMethod").value.trim();
+  const paymentReference   = document.getElementById("paymentReference").value.trim();
+  const paymentStatus      = document.getElementById("paymentStatus").value;
+
   if (!guestName || !startDate || !endDate || !unitType || !room) {
     alert("Please fill in all required fields.");
     return;
@@ -1064,11 +1139,20 @@ function saveBooking() {
     alert("End date must be on or after the check-in date.");
     return;
   }
+  if (!paymentReference) {
+    alert("Payment reference is required.");
+    return;
+  }
+
+  const unitId = findUnitId(unitType, room);
+  if (!unitId) {
+    alert("Couldn't match that room to a unit — please re-select it.");
+    return;
+  }
 
   const conflict = bookings.some(b =>
     b.unitType === unitType &&
     b.roomNumber === room &&
-    b.status !== "Cancelled" &&
     startDate <= b.endDate &&
     endDate >= b.startDate
   );
@@ -1077,11 +1161,36 @@ function saveBooking() {
     return;
   }
 
-  bookings.push({ id: Date.now(), guestName, email, phone, unitType, roomNumber: room, startDate, endDate, status });
-  saveToStorage();
-  closeBookingModal();
-  renderTimeline();
-  showToast("✅ Booking saved for Room " + room + "!");
+  const fd = new FormData();
+  fd.append("unit_id", unitId);
+  fd.append("guestName", guestName);
+  fd.append("guestEmail", email);
+  fd.append("guestPhone", phone);
+  fd.append("startDate", startDate);
+  fd.append("endDate", endDate);
+  fd.append("status", status);
+  fd.append("inquiryType", inquiryType);
+  fd.append("priceBasis", priceBasis || 0);
+  fd.append("paymentPercentage", (parseFloat(paymentPercentage || 0) / 100));
+  fd.append("paymentMethod", paymentMethod);
+  fd.append("paymentReference", paymentReference);
+  fd.append("paymentStatus", paymentStatus);
+
+  try {
+    const res  = await fetch("ActionsAP/saveBookingCalendar.php", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!data.success) {
+      alert(data.message || "Could not save booking.");
+      return;
+    }
+    bookings.push(data.booking);
+    closeBookingModal();
+    renderTimeline();
+    showToast("✅ Booking saved for Room " + room + "!");
+  } catch (err) {
+    console.error(err);
+    alert("Could not reach the server.");
+  }
 }
 
 // ════════════════════════════════════════════
@@ -1138,14 +1247,29 @@ function editFromQuickView() {
   openEditModal(b);
 }
 
-function deleteFromQuickView() {
+async function deleteFromQuickView() {
   if (!qvBookingId) return;
-  if (!confirm("Delete this booking? This cannot be undone.")) return;
-  bookings = bookings.filter(b => b.id !== qvBookingId);
-  saveToStorage();
-  hideQuickView();
-  renderTimeline();
-  showToast("🗑 Booking deleted.");
+  if (!confirm("Delete this booking? This permanently removes the reservation record and cannot be undone.")) return;
+
+  const idToDelete = qvBookingId;
+  const fd = new FormData();
+  fd.append("reservation_id", idToDelete);
+
+  try {
+    const res  = await fetch("ActionsAP/deleteBookingCalendar.php", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!data.success) {
+      alert(data.message || "Could not delete booking.");
+      return;
+    }
+    bookings = bookings.filter(b => b.id !== idToDelete);
+    hideQuickView();
+    renderTimeline();
+    showToast("🗑 Booking deleted.");
+  } catch (err) {
+    console.error(err);
+    alert("Could not reach the server.");
+  }
 }
 
 // ════════════════════════════════════════════
@@ -1169,14 +1293,13 @@ document.getElementById("editModal").addEventListener("click", e => {
   if (e.target === e.currentTarget) closeEditModal();
 });
 
-function saveEdit() {
+async function saveEdit() {
   const id        = parseInt(document.getElementById("edit_bookingId").value);
   const guestName = document.getElementById("edit_guestName").value.trim();
   const email     = document.getElementById("edit_email").value.trim();
   const phone     = document.getElementById("edit_phone").value.trim();
   const startDate = document.getElementById("edit_startDate").value;
   const endDate   = document.getElementById("edit_endDate").value;
-  const status    = document.getElementById("edit_status").value;
 
   if (!guestName || !startDate || !endDate) {
     alert("Please fill in all required fields.");
@@ -1189,21 +1312,62 @@ function saveEdit() {
 
   const idx = bookings.findIndex(b => b.id === id);
   if (idx === -1) return;
-  bookings[idx] = { ...bookings[idx], guestName, email, phone, startDate, endDate, status };
-  saveToStorage();
-  closeEditModal();
-  renderTimeline();
-  showToast("✏️ Booking updated.");
+
+  const fd = new FormData();
+  fd.append("reservation_id", id);
+  fd.append("guestName", guestName);
+  fd.append("guestEmail", email);
+  fd.append("guestPhone", phone);
+  fd.append("startDate", startDate);
+  fd.append("endDate", endDate);
+
+  try {
+    const res  = await fetch("ActionsAP/updateBookingCalendar.php", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!data.success) {
+      alert(data.message || "Could not update booking.");
+      return;
+    }
+    const today = new Date().toISOString().split("T")[0];
+    const status = (startDate <= today && today <= endDate) ? "Occupied" : "Reserved";
+    bookings[idx] = { ...bookings[idx], guestName, email, phone, startDate, endDate, status };
+    closeEditModal();
+    renderTimeline();
+    showToast("✏️ Booking updated.");
+  } catch (err) {
+    console.error(err);
+    alert("Could not reach the server.");
+  }
 }
 
 // ════════════════════════════════════════════
 // CLEAR ALL
 // ════════════════════════════════════════════
-function clearBookings() {
-  if (!confirm("Clear ALL bookings? This cannot be undone.")) return;
-  bookings = [];
-  saveToStorage();
+async function clearBookings() {
+  if (bookings.length === 0) {
+    showToast("Nothing to clear.");
+    return;
+  }
+  if (!confirm(`Delete ALL ${bookings.length} bookings currently loaded? This permanently removes them and cannot be undone.`)) return;
+  const typed = prompt('Type DELETE to confirm clearing every booking on this calendar:');
+  if (typed !== "DELETE") return;
+
+  const ids = bookings.map(b => b.id);
+  let failed = 0;
+  for (const id of ids) {
+    try {
+      const fd = new FormData();
+      fd.append("reservation_id", id);
+      const res  = await fetch("ActionsAP/deleteBookingCalendar.php", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!data.success) failed++;
+    } catch (err) {
+      failed++;
+    }
+  }
+  await loadCalendarData();
   renderTimeline();
+  showToast(failed ? `Cleared with ${failed} error(s).` : "🗑 All bookings cleared.");
 }
 
 // ════════════════════════════════════════════
@@ -1261,65 +1425,20 @@ document.addEventListener("click", e => {
 // ════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════
-buildFilterSidebar();
-populateManualSelects();
-renderTimeline();
+(async function init() {
+  await loadCalendarData();
+  buildFilterSidebar();
+  populateManualSelects();
+  renderTimeline();
 
-// Scroll to today column on load
-setTimeout(() => {
-  const today = new Date().toISOString().split("T")[0];
-  const todayTh = document.querySelector(`th[data-date="${today}"]`);
-  if (todayTh) todayTh.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-}, 200);
+  // Scroll to today column on load
+  setTimeout(() => {
+    const today = new Date().toISOString().split("T")[0];
+    const todayTh = document.querySelector(`th[data-date="${today}"]`);
+    if (todayTh) todayTh.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, 200);
+})();
 </script>
 
 </body>
 </html>
-<?php
-/*
-╔══════════════════════════════════════════════════════════════════════════════╗
-║  SUGGESTED DATABASE SCHEMA CHANGES                                           ║
-║  Run the following SQL to align your bookings table with this calendar.      ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-
--- Add new status ENUM to support the three calendar states:
-ALTER TABLE bookings
-  MODIFY COLUMN status ENUM('Occupied','Reserved','Maintenance','Cancelled')
-    NOT NULL DEFAULT 'Reserved';
-
--- Add guest contact fields if not already present:
-ALTER TABLE bookings
-  ADD COLUMN IF NOT EXISTS email   VARCHAR(255) NULL AFTER guest_name,
-  ADD COLUMN IF NOT EXISTS phone   VARCHAR(30)  NULL AFTER email;
-
--- Recommended index for fast timeline queries (filter by room + date range):
-CREATE INDEX IF NOT EXISTS idx_bookings_room_dates
-  ON bookings (unit_type, room_number, start_date, end_date);
-
--- Full suggested table structure:
-CREATE TABLE IF NOT EXISTS bookings (
-  id           INT UNSIGNED      NOT NULL AUTO_INCREMENT,
-  guest_name   VARCHAR(255)      NOT NULL,
-  email        VARCHAR(255)      NULL,
-  phone        VARCHAR(30)       NULL,
-  unit_type    VARCHAR(100)      NOT NULL,   -- e.g. 'Studio A', 'One Bedroom'
-  room_number  VARCHAR(20)       NOT NULL,   -- e.g. '101', '301'
-  start_date   DATE              NOT NULL,
-  end_date     DATE              NOT NULL,
-  status       ENUM('Occupied','Reserved','Maintenance','Cancelled')
-                                 NOT NULL DEFAULT 'Reserved',
-  created_at   TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at   TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  INDEX idx_room_dates (unit_type, room_number, start_date, end_date)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- PHP fetch snippet (replace localStorage with DB data like so):
--- <?php
---   $pdo = new PDO("mysql:host=localhost;dbname=zeppelin", $user, $pass);
---   $stmt = $pdo->query("SELECT * FROM bookings WHERE status != 'Cancelled'");
---   $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
---   echo "<script>let bookings = " . json_encode($bookings) . ";</script>";
--- ?>
-*/
-?>
