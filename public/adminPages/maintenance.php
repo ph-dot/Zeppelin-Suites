@@ -200,35 +200,33 @@ $userData = requireRole($conn, ['admin']); ?>
 <!-- ── MAIN WRAPPER ─────────────────────────────────────── -->
 <div class="main-wrapper h-screen flex flex-col" id="mainWrapper">
 
+  <!-- TOP BAR — sticky -->
   <header class="glass-header border-b border-slate-100/80 px-4 md:px-6 py-3.5 flex items-center gap-4 shrink-0 z-30">
-  <button class="md:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95" onclick="openMobileSidebar()">
-    <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-  </button>
-  
-  <div class="relative flex-1 max-w-sm">
-    <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-    <input type="text" placeholder="Search maintenance..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
-  </div>
-  
-  <div class="flex items-center gap-2 ml-auto">
-    <button class="p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95 relative">
-      <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-      <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+    <button class="md:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95" onclick="openMobileSidebar()">
+      <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
-    
-     <div class="relative">
-        <button onclick="toggleProfile()" class="flex items-center gap-2.5 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl px-3 py-1.5 transition-all btn-press">
-          <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0" id="userInitials">A</div>
+
+    <div class="relative flex-1 max-w-sm">
+      <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" placeholder="Search Maintenance..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
+    </div>
+
+    <div class="flex items-center gap-2 ml-auto">
+      <button class="relative p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95">
+        <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+      </button>
+      <div class="relative" id="profileWrapper">
+        <button onclick="toggleProfile()" class="flex items-center gap-2.5 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl px-3 py-1.5 transition-all btn-press active:scale-95">
+          <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0">A</div>
           <div class="hidden sm:block text-left">
-            <p class="text-sm font-semibold text-slate-800 truncate" id="userName">Admin</p>
+            <p class="text-sm font-semibold text-slate-800 leading-none">Admin User</p>
           </div>
-          <svg class="w-3.5 h-3.5 text-slate-400" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
-        
-        <!-- Simple Dropdown -->
-        <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50 hidden" id="profileDropdown">
-          <div class="border-t border-slate-100 my-1"></div>
-          <button onclick="confirmLogout()" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg mx-1">Sign out</button>
+        <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl py-2 z-50 hidden" id="profileDropdown">
+          <div class="border-t border-slate-100 my-1 mx-3"></div>
+          <button onclick="confirmLogout()" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Sign out</button>
         </div>
       </div>
     </div>
@@ -417,16 +415,17 @@ $userData = requireRole($conn, ['admin']); ?>
     document.getElementById('noticeChevron').classList.toggle('rotated');
   }
   function toggleProfile() {
-    const dd = document.getElementById('profileDropdown');
-    const ch = document.getElementById('profileChevron');
-    const open = dd.classList.toggle('open');
-    ch.style.transform = open ? 'rotate(180deg)' : '';
+    const dropdown = document.getElementById('profileDropdown');
+    const chevron = document.getElementById('profileChevron');
+    dropdown.classList.toggle('hidden');
+    chevron.style.transform = dropdown.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
   }
-  document.addEventListener('click', e => {
-    const w = document.getElementById('profileWrapper');
-    if (w && !w.contains(e.target)) {
-      document.getElementById('profileDropdown').classList.remove('open');
-      document.getElementById('profileChevron').style.transform = '';
+  // Close dropdown on outside click
+  document.addEventListener('click', function(e) {
+    const profileWrapper = document.getElementById('profileWrapper');
+    if (!profileWrapper.contains(e.target)) {
+      document.getElementById('profileDropdown').classList.add('hidden');
+      document.getElementById('profileChevron').style.transform = 'rotate(0deg)';
     }
   });
   function toggleFacilities() {
@@ -445,25 +444,6 @@ $userData = requireRole($conn, ['admin']); ?>
 });
 
 let profileOpen = false;
-
-function toggleProfile() {
-  const dropdown = document.getElementById('profileDropdown');
-  const chevron = document.getElementById('profileChevron');
-  
-  dropdown.classList.toggle('hidden');  // Toggle hidden class
-  chevron.style.transform = dropdown.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
-}
-
-// Close dropdown on outside click
-document.addEventListener('click', function(e) {
-  const profileBtn = e.target.closest('button[onclick="toggleProfile()"]');
-  const profileWrapper = document.querySelector('.relative'); // Your profile container
-  
-  if (!profileWrapper.contains(e.target) && !profileBtn) {
-    document.getElementById('profileDropdown').classList.add('hidden');
-    document.getElementById('profileChevron').style.transform = 'rotate(0deg)';
-  }
-});
 
 function confirmLogout() {
   document.getElementById('logoutModal').classList.remove('hidden');

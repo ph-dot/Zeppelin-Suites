@@ -36,7 +36,7 @@ $user = requireRole($conn, ['unit owner']);
 .sidebar.collapsed .sidebar-link:hover::after { content:attr(data-tooltip); position:absolute; left:calc(100% + 10px); top:50%; transform:translateY(-50%); background:#0f172a; color:#fff; font-size:12px; padding:5px 10px; border-radius:8px; white-space:nowrap; z-index:999; box-shadow:0 4px 16px rgba(0,0,0,0.18); pointer-events:none; }
 .collapse-icon { transition:transform 0.3s ease; }
 .profile-dropdown { opacity:0; visibility:hidden; transform:translateY(-6px); transition:all 0.2s cubic-bezier(0.4,0,0.2,1); }
-.profile-dropdown.open { opacity:1; visibility:visible; transform:translateY(0); }
+.profile-dropdown:not(.hidden) { opacity:1; visibility:visible; transform:translateY(0); }
 .stat-card { transition:transform 0.22s ease,box-shadow 0.22s ease,border-color 0.22s ease; cursor:pointer; }
 .stat-card:hover { transform:translateY(-4px); box-shadow:0 20px 40px rgba(0,0,0,0.10); border-color:#0f172a; }
 .action-card { transition:all 0.22s ease; cursor:pointer; }
@@ -129,15 +129,26 @@ $user = requireRole($conn, ['unit owner']);
           </div>
           <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
-        <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl py-2 z-50" id="profileDropdown">
-          <a href="../php_files/logout_session.php" class="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-            Sign out
-          </a>    
-        </div>
+        <!-- Simple Dropdown -->
+          <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50 hidden" id="profileDropdown">
+            <div class="border-t border-slate-100 my-1"></div>
+            <button onclick="confirmLogout()" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg mx-1">Sign out</button>
+          </div>
       </div>
     </div>
   </header>
+
+  <!-- Simple Modal -->
+  <div id="logoutModal" class="fixed inset-0 bg-black/50 z-[999] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl p-6 w-full max-w-sm border shadow-xl">
+      <h3 class="text-lg font-bold text-slate-900 mb-2">Sign out?</h3>
+      <p class="text-sm text-slate-600 mb-6">Are you sure you want to logout?</p>
+      <div class="flex gap-3 justify-end">
+        <button onclick="hideModal()" class="px-4 py-2 text-sm hover:bg-slate-50 rounded-lg">Cancel</button>
+        <button onclick="doLogout()" class="px-4 py-2 text-sm text-white bg-red-500 hover:bg-red-600 rounded-lg">Logout</button>
+      </div>
+    </div>
+  </div>
 
   <!-- CONTENT -->
   <div class="main-scroll p-4 md:p-6 space-y-6">
@@ -153,7 +164,7 @@ $user = requireRole($conn, ['unit owner']);
       <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
         <div class="flex items-center justify-between mb-5">
           <h2 class="font-bold text-slate-900">Units Information</h2>
-          <a href="ownersUnit.html" class="btn-press text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors active:scale-95">View all units →</a>
+          <a href="ownersUnit.php" class="btn-press text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors active:scale-95">View all units →</a>
         </div>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <!-- Owned -->
@@ -209,7 +220,7 @@ $user = requireRole($conn, ['unit owner']);
           </table>
         </div>
         <div class="flex justify-end px-5 py-3 border-t border-slate-100">
-          <a href="tenants.html" class="btn-press text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors active:scale-95">view your tenants →</a>
+          <a href="tenants.php" class="btn-press text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors active:scale-95">view your tenants →</a>
         </div>
       </div>
 
@@ -233,7 +244,7 @@ $user = requireRole($conn, ['unit owner']);
             </table>
           </div>
           <div class="flex justify-end px-5 py-3 border-t border-slate-100 mt-auto">
-            <a href="ownersMaintenance.html" class="btn-press text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors active:scale-95">View maintenance →</a>
+            <a href="ownersMaintenance.php" class="btn-press text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors active:scale-95">View maintenance →</a>
           </div>
         </div>
 
@@ -251,7 +262,7 @@ $user = requireRole($conn, ['unit owner']);
             </div>
           </div>
           <div class="flex justify-end px-5 py-3 border-t border-slate-100 mt-auto">
-            <a href="ownersReservations.html" class="btn-press text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors active:scale-95">view reservation request →</a>
+            <a href="ownersReservations.php" class="btn-press text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors active:scale-95">view reservation request →</a>
           </div>
         </div>
 
@@ -269,14 +280,36 @@ $user = requireRole($conn, ['unit owner']);
   }
   function openMobileSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
   function closeMobileSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
-  function toggleProfile() {
-    const dd = document.getElementById('profileDropdown'), ch = document.getElementById('profileChevron');
-    const open = dd.classList.toggle('open'); ch.style.transform = open ? 'rotate(180deg)' : '';
+function toggleProfile() {
+  const dropdown = document.getElementById('profileDropdown');
+  const chevron = document.getElementById('profileChevron');
+  
+  dropdown.classList.toggle('hidden');  // Toggle hidden class
+  chevron.style.transform = dropdown.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+  const profileBtn = e.target.closest('button[onclick="toggleProfile()"]');
+  const profileWrapper = document.querySelector('.relative'); // Your profile container
+  
+  if (!profileWrapper.contains(e.target) && !profileBtn) {
+    document.getElementById('profileDropdown').classList.add('hidden');
+    document.getElementById('profileChevron').style.transform = 'rotate(0deg)';
   }
-  document.addEventListener('click', e => {
-    const w = document.getElementById('profileWrapper');
-    if (w && !w.contains(e.target)) { document.getElementById('profileDropdown').classList.remove('open'); document.getElementById('profileChevron').style.transform = ''; }
-  });
+});
+
+function confirmLogout() {
+  document.getElementById('logoutModal').classList.remove('hidden');
+}
+
+function hideModal() {
+  document.getElementById('logoutModal').classList.add('hidden');
+}
+
+function doLogout() {
+  window.location.href = '/Zeppelin-Suites/public/php_files/logout_session.php';  // Your logout file
+}
 </script>
 </body>
 </html>

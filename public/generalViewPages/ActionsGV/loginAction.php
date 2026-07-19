@@ -73,7 +73,7 @@ switch ($_SESSION['role']) {
         header("Location: ../../unitOwnerPages/overview.php");
         break;
     case 'tenant':
-        header("Location: ../../tenantPages/homeTenant.php");
+        header("Location: ../../tenantPages/homeTenant.html");
         break;
     default:
         error_log("Invalid role: " . $_SESSION['role']);

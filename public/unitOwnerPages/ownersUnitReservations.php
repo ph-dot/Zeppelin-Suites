@@ -151,12 +151,11 @@ $owner_id = (int)$userData['user_id']; ?>
           </div>
           <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
-        <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl py-2 z-50" id="profileDropdown">
-          <a href="../php_files/logout_session.php" class="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-            Sign out
-          </a>    
-        </div>
+        <!-- Simple Dropdown -->
+          <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50 hidden" id="profileDropdown">
+            <div class="border-t border-slate-100 my-1"></div>
+            <button onclick="confirmLogout()" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg mx-1">Sign out</button>
+          </div>
       </div>
     </div>
   </header>
@@ -700,33 +699,36 @@ function toggleNotice() {
   document.getElementById('noticeChevron')?.classList.toggle('rotated');
 }
 
-/* PROFILE */
 function toggleProfile() {
   const dropdown = document.getElementById('profileDropdown');
   const chevron = document.getElementById('profileChevron');
-
-  if (!dropdown) return;
-
-  dropdown.classList.toggle('hidden');
-
-  if (chevron) {
-    chevron.style.transform = dropdown.classList.contains('hidden') 
-      ? 'rotate(0deg)' 
-      : 'rotate(180deg)';
-  }
+  
+  dropdown.classList.toggle('hidden');  // Toggle hidden class
+  chevron.style.transform = dropdown.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
+// Close dropdown on outside click
 document.addEventListener('click', function(e) {
-  const profileWrapper = document.getElementById('profileWrapper');
   const profileBtn = e.target.closest('button[onclick="toggleProfile()"]');
-
-  if (profileWrapper && !profileWrapper.contains(e.target) && !profileBtn) {
-    document.getElementById('profileDropdown')?.classList.add('hidden');
-
-    const chevron = document.getElementById('profileChevron');
-    if (chevron) chevron.style.transform = 'rotate(0deg)';
+  const profileWrapper = document.querySelector('.relative'); // Your profile container
+  
+  if (!profileWrapper.contains(e.target) && !profileBtn) {
+    document.getElementById('profileDropdown').classList.add('hidden');
+    document.getElementById('profileChevron').style.transform = 'rotate(0deg)';
   }
 });
+
+function confirmLogout() {
+  document.getElementById('logoutModal').classList.remove('hidden');
+}
+
+function hideModal() {
+  document.getElementById('logoutModal').classList.add('hidden');
+}
+
+function doLogout() {
+  window.location.href = '/Zeppelin-Suites/public/php_files/logout_session.php';  // Your logout file
+}
 
 document.addEventListener('DOMContentLoaded', function() {
   const userName = '<?php echo htmlspecialchars($_SESSION["full_name"] ?? "Unit Owner"); ?>';
