@@ -393,7 +393,7 @@ $userData = requireRole($conn, ['admin']); ?>
       </a>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
       <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Price Basis</p>
         <p id="ef_price_basis" class="text-base font-bold text-slate-900 mt-1">-</p>
@@ -407,6 +407,12 @@ $userData = requireRole($conn, ['admin']); ?>
       <div class="bg-slate-900 rounded-xl p-4">
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Required Amount</p>
         <p id="ef_required_amount" class="text-lg font-bold text-white mt-1">-</p>
+      </div>
+
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Declared by Client</p>
+        <p id="ef_declared_amount" class="text-base font-bold text-slate-900 mt-1">-</p>
+        <p id="ef_amount_match_badge" class="text-xs font-bold mt-1"></p>
       </div>
 
       <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
@@ -442,6 +448,13 @@ $userData = requireRole($conn, ['admin']); ?>
         id="btnVerifyPayment"
         class="btn-press flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all">
         Payment Matches — Verify
+      </button>
+
+      <button 
+        type="button"
+        id="btnFlagPayment"
+        class="btn-press flex-1 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all">
+        Amount Unclear — Flag for Review
       </button>
 
       <button 
@@ -483,18 +496,27 @@ $userData = requireRole($conn, ['admin']); ?>
     </div>
   </section>
 
-  <!-- REQUIREMENT TRACKING -->
+  <!-- DOCUMENT TRACKING -->
   <section id="requirementTrackingSection" class="bg-slate-50 border border-slate-200 rounded-2xl p-5 hidden">
-    <div class="flex items-center gap-2 mb-5">
-      <div class="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center">
-        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6m-7 4h8m-8 4h5m-6 8h10a2 2 0 002-2V7.8a2 2 0 00-.6-1.4l-3.8-3.8A2 2 0 0013.2 2H7a2 2 0 00-2 2v15a2 2 0 002 2z"/>
-        </svg>
+    <div class="flex items-center justify-between gap-2 mb-5">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center">
+          <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6m-7 4h8m-8 4h5m-6 8h10a2 2 0 002-2V7.8a2 2 0 00-.6-1.4l-3.8-3.8A2 2 0 0013.2 2H7a2 2 0 00-2 2v15a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Document Tracking</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Only available after payment is verified.</p>
+        </div>
       </div>
-      <div>
-        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Requirement Tracking</h3>
-        <p class="text-xs text-slate-500 mt-0.5">Only available after payment is verified.</p>
-      </div>
+
+      <button
+        type="button"
+        id="btnEditDocuments"
+        class="hidden text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full active:scale-95 transition-all">
+        Edit Documents
+      </button>
     </div>
 
     <input type="hidden" id="process_reservation_id">
@@ -508,51 +530,43 @@ $userData = requireRole($conn, ['admin']); ?>
       </p>
     </div>
 
-<div id="requirementActionArea">
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <label class="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50">
-        <input type="checkbox" id="check_two_valid_ids" class="requirement-check w-4 h-4 rounded border-slate-300 accent-slate-900">
-        <span class="text-sm font-medium text-slate-700">Photocopy of 2 Valid IDs</span>
-      </label>
-
-      <label class="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50">
-        <input type="checkbox" id="check_tin_number" class="requirement-check w-4 h-4 rounded border-slate-300 accent-slate-900">
-        <span class="text-sm font-medium text-slate-700">TIN Number</span>
-      </label>
-
-      <label class="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50">
-        <input type="checkbox" id="check_reservation_agreement" class="requirement-check w-4 h-4 rounded border-slate-300 accent-slate-900">
-        <span class="text-sm font-medium text-slate-700">Reservation Agreement</span>
-      </label>
+    <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-200">
+            <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Document</th>
+            <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+            <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Storage</th>
+            <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Link</th>
+          </tr>
+        </thead>
+        <tbody id="documentsTableBody">
+          <tr>
+            <td colspan="4" class="px-4 py-6 text-center text-xs text-slate-400">Loading documents...</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+
+    <button
+      type="button"
+      id="btnSaveDocuments"
+      class="hidden mt-5 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all">
+      Save Documents
+    </button>
 
     <button 
       type="button"
-      id="btnSaveRequirements"
-      class="mt-5 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all">
-      Save Requirement Tracking
+      id="btnOfficiallyBooked"
+      class="hidden mt-3 w-full bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all">
+      Mark as Officially Booked
     </button>
-  </div>
 
-  <button 
-    type="button"
-    id="btnEditRequirements"
-    class="hidden mt-5 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all">
-    Edit Requirement Tracking
-  </button>
-
-  <button 
-    type="button"
-    id="btnOfficiallyBooked"
-    class="hidden mt-3 w-full bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all">
-    Mark as Officially Booked
-  </button>
-
-  <div class="mt-4 bg-white border border-slate-200 rounded-xl p-4">
-  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Last Updated By</p>
-  <p id="requirements_updated_by_display" class="text-sm font-semibold text-slate-800 mt-1">Not updated yet</p>
-  <p id="requirements_updated_at_display" class="text-xs text-slate-500 mt-1">-</p>
-</div>
+    <div class="mt-4 bg-white border border-slate-200 rounded-xl p-4">
+      <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Last Updated By</p>
+      <p id="requirements_updated_by_display" class="text-sm font-semibold text-slate-800 mt-1">Not updated yet</p>
+      <p id="requirements_updated_at_display" class="text-xs text-slate-500 mt-1">-</p>
+    </div>
   </section>
 
   <!-- CANCELLATION REQUEST -->
@@ -682,6 +696,46 @@ $userData = requireRole($conn, ['admin']); ?>
 </div>
 
 
+<!-- FLAG PAYMENT FOR REVIEW MODAL -->
+<div id="flagPaymentModal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/50 px-4">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+    <div class="bg-amber-500 px-6 py-4">
+      <h2 class="text-lg font-bold text-white">Flag Payment for Review?</h2>
+      <p class="text-sm text-amber-50 mt-1">Please confirm before proceeding.</p>
+    </div>
+
+    <div class="p-6">
+      <p class="text-sm text-slate-700 leading-relaxed">
+        Use this when the declared amount is close but not exact, or you need to follow up with the client before deciding.
+      </p>
+
+      <div class="mt-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+        <p class="text-xs text-amber-700 leading-relaxed">
+          This will hold the reservation as "Flagged for Review" — the unit stays on hold and no email is sent automatically. Nothing else changes until you verify or reject it later.
+        </p>
+      </div>
+
+      <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mt-5 mb-1.5">
+        Reason / Follow-up Notes <span class="text-red-500">*</span>
+      </label>
+      <textarea id="flagPaymentRemarks" rows="3" placeholder="Example: Declared amount is ₱200 short of the required amount, following up with client." class="zep-input w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 resize-none"></textarea>
+    </div>
+
+    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50">
+      <button type="button" onclick="closePaymentConfirmModal('flagPaymentModal')" class="px-5 py-2 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-100">
+        Cancel
+      </button>
+
+      <button type="button" onclick="confirmPaymentAction('flag')" class="px-5 py-2 text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-xl">
+        Yes, Flag for Review
+      </button>
+    </div>
+  </div>
+</div>
+  </div>
+</div>
+
+
 <script>
   let sidebarCollapsed = false;
   let editRow = null;
@@ -788,8 +842,27 @@ function openEditModal(row) {
   setText('ef_price_basis', row.dataset.priceBasis);
   setText('ef_payment_percentage', row.dataset.paymentPercentage);
   setText('ef_required_amount', row.dataset.requiredAmount);
+  setText('ef_declared_amount', row.dataset.declaredAmount || '-');
   setText('ef_payment_method', row.dataset.paymentMethod);
   setText('ef_payment_reference', row.dataset.paymentReference);
+
+  const matchBadge = document.getElementById('ef_amount_match_badge');
+  if (matchBadge) {
+    const matchStatus = row.dataset.amountMatchStatus || '';
+    if (matchStatus === 'match') {
+      matchBadge.textContent = 'Matches required amount';
+      matchBadge.className = 'text-xs font-bold mt-1 text-emerald-600';
+    } else if (matchStatus === 'short') {
+      matchBadge.textContent = 'Short of required amount';
+      matchBadge.className = 'text-xs font-bold mt-1 text-red-600';
+    } else if (matchStatus === 'over') {
+      matchBadge.textContent = 'Over required amount';
+      matchBadge.className = 'text-xs font-bold mt-1 text-amber-600';
+    } else {
+      matchBadge.textContent = '';
+      matchBadge.className = 'text-xs font-bold mt-1';
+    }
+  }
 
   setText('view_payment_status', row.dataset.paymentStatus || 'Payment Status');
   setText('view_reservation_status', row.dataset.reservationStatus || 'Reservation Status');
@@ -814,13 +887,9 @@ function openEditModal(row) {
     processId.value = row.dataset.reservationId || '';
   }
 
-  const twoIds = document.getElementById('check_two_valid_ids');
-  const tin = document.getElementById('check_tin_number');
-  const agreement = document.getElementById('check_reservation_agreement');
-
-  if (twoIds) twoIds.checked = row.dataset.twoValidIdsStatus === '1';
-  if (tin) tin.checked = row.dataset.tinNumberStatus === '1';
-  if (agreement) agreement.checked = row.dataset.reservationAgreementStatus === '1';
+  const reservationIdForDocs = row.dataset.reservationId || '';
+  documentsEditMode = false;
+  currentDocuments = [];
 
   setText(
     'requirements_updated_by_display',
@@ -834,7 +903,10 @@ function openEditModal(row) {
 
   updatePaymentDecisionUI(row.dataset.paymentStatus);
   updateRequirementDecisionUI(row.dataset.reservationStatus);
-  toggleOfficialButton();
+
+  if ((row.dataset.paymentStatus || '').toLowerCase() === 'verified' && reservationIdForDocs) {
+    loadDocuments(reservationIdForDocs);
+  }
 
   const cancellationSection = document.getElementById('cancellationRequestSection');
   const approveCancelBtn = document.getElementById('btnApproveCancellation');
@@ -948,19 +1020,20 @@ function updatePaymentDecisionUI(paymentStatus) {
 function updateRequirementDecisionUI(reservationStatus) {
   const status = (reservationStatus || '').toLowerCase();
 
-  const actionArea = document.getElementById('requirementActionArea');
   const display = document.getElementById('requirementDecisionDisplay');
   const label = document.getElementById('requirementDecisionLabel');
   const text = document.getElementById('requirementDecisionText');
-  const editBtn = document.getElementById('btnEditRequirements');
+  const editBtn = document.getElementById('btnEditDocuments');
+  const saveBtn = document.getElementById('btnSaveDocuments');
 
-  if (!actionArea || !display || !label || !text || !editBtn) return;
+  if (!display || !label || !text || !editBtn || !saveBtn) return;
 
   display.className = 'hidden mb-5 rounded-xl border px-4 py-3';
 
   if (status === 'requirements completed') {
-    actionArea.classList.add('hidden');
+    documentsEditMode = false;
     editBtn.classList.remove('hidden');
+    saveBtn.classList.add('hidden');
 
     display.classList.remove('hidden');
     display.classList.add('bg-emerald-50', 'border-emerald-200');
@@ -969,14 +1042,15 @@ function updateRequirementDecisionUI(reservationStatus) {
     text.className = 'text-sm font-semibold text-emerald-800';
 
     label.textContent = 'Requirements Completed';
-    text.textContent = 'All reservation requirements have been completed. You may now mark this reservation as officially booked.';
+    text.textContent = 'All reservation documents have been completed. You may now mark this reservation as officially booked.';
 
     return;
   }
 
   if (status === 'reserved') {
-    actionArea.classList.add('hidden');
+    documentsEditMode = false;
     editBtn.classList.add('hidden');
+    saveBtn.classList.add('hidden');
 
     display.classList.remove('hidden');
     display.classList.add('bg-emerald-50', 'border-emerald-200');
@@ -990,41 +1064,160 @@ function updateRequirementDecisionUI(reservationStatus) {
     return;
   }
 
-  actionArea.classList.remove('hidden');
+  // requirements pending / default state: table starts editable
+  documentsEditMode = true;
   editBtn.classList.add('hidden');
+  saveBtn.classList.remove('hidden');
   display.classList.add('hidden');
 }
 
-function toggleOfficialButton() {
+function refreshOfficialButton(reservationStatus, allCompleted) {
   const btn = document.getElementById('btnOfficiallyBooked');
   if (!btn) return;
 
-  const reservationStatus = (editRow?.dataset?.reservationStatus || '').toLowerCase();
+  const status = (reservationStatus || '').toLowerCase();
 
-  if (reservationStatus === 'reserved') {
+  if (status === 'reserved') {
     btn.classList.add('hidden');
     return;
   }
 
-  const allChecked =
-    document.getElementById('check_two_valid_ids')?.checked &&
-    document.getElementById('check_tin_number')?.checked &&
-    document.getElementById('check_reservation_agreement')?.checked;
-
-  if (allChecked || reservationStatus === 'requirements completed') {
+  if (allCompleted) {
     btn.classList.remove('hidden');
   } else {
     btn.classList.add('hidden');
   }
 }
 
-document.querySelectorAll('.requirement-check').forEach(check => {
-  check.addEventListener('change', toggleOfficialButton);
-});
+let currentDocuments = [];
+let documentsEditMode = false;
 
-document.getElementById('btnEditRequirements')?.addEventListener('click', function() {
-  document.getElementById('requirementActionArea')?.classList.remove('hidden');
-  document.getElementById('btnEditRequirements')?.classList.add('hidden');
+function escapeHtml(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
+}
+
+function escapeHtmlAttr(value) {
+  return escapeHtml(value).replace(/"/g, '&quot;');
+}
+
+function storageDisplayLabel(doc) {
+  if (doc.storage === 'dropbox') return 'Dropbox';
+  if (doc.storage === 'gdrive') return 'Google Drive';
+  if (doc.storage === 'other') return doc.storage_other_label || 'Other';
+  return '-';
+}
+
+function loadDocuments(reservationId) {
+  const tbody = document.getElementById('documentsTableBody');
+
+  if (tbody) {
+    tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-xs text-slate-400">Loading documents...</td></tr>';
+  }
+
+  fetch('ActionsAP/getReservationDocuments.php?reservation_id=' + encodeURIComponent(reservationId))
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        if (tbody) {
+          tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-xs text-red-500">' + escapeHtml(data.message || 'Failed to load documents.') + '</td></tr>';
+        }
+        return;
+      }
+
+      currentDocuments = data.documents || [];
+      renderDocumentsTable();
+      refreshOfficialButton(editRow?.dataset?.reservationStatus, data.all_completed);
+    })
+    .catch(error => {
+      console.error(error);
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-xs text-red-500">Something went wrong while loading documents.</td></tr>';
+      }
+    });
+}
+
+function renderDocumentsTable() {
+  const tbody = document.getElementById('documentsTableBody');
+  if (!tbody) return;
+
+  if (!currentDocuments.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-xs text-slate-400">No documents found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = currentDocuments.map(doc => {
+    if (!documentsEditMode) {
+      const statusBadge = doc.status === 'complete'
+        ? "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200'>Complete</span>"
+        : "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200'>Pending</span>";
+
+      const linkCell = doc.document_link
+        ? `<a href="${escapeHtmlAttr(doc.document_link)}" target="_blank" rel="noopener" class="text-xs font-semibold text-blue-600 hover:underline">View</a>`
+        : "<span class='text-xs text-slate-400'>-</span>";
+
+      return `
+        <tr class="border-b border-slate-100 last:border-0">
+          <td class="px-4 py-3 font-medium text-slate-700">${escapeHtml(doc.document_name)}</td>
+          <td class="px-4 py-3">${statusBadge}</td>
+          <td class="px-4 py-3 text-slate-600">${escapeHtml(storageDisplayLabel(doc))}</td>
+          <td class="px-4 py-3">${linkCell}</td>
+        </tr>
+      `;
+    }
+
+    const isOther = doc.storage === 'other';
+
+    return `
+      <tr class="border-b border-slate-100 last:border-0" data-document-id="${doc.document_id}">
+        <td class="px-4 py-3 font-medium text-slate-700">${escapeHtml(doc.document_name)}</td>
+        <td class="px-4 py-3">
+          <select class="doc-status-input text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white">
+            <option value="pending" ${doc.status !== 'complete' ? 'selected' : ''}>Pending</option>
+            <option value="complete" ${doc.status === 'complete' ? 'selected' : ''}>Complete</option>
+          </select>
+        </td>
+        <td class="px-4 py-3">
+          <div class="flex flex-col gap-1.5">
+            <select class="doc-storage-input text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white">
+              <option value="" ${!doc.storage ? 'selected' : ''}>Select storage</option>
+              <option value="dropbox" ${doc.storage === 'dropbox' ? 'selected' : ''}>Dropbox</option>
+              <option value="gdrive" ${doc.storage === 'gdrive' ? 'selected' : ''}>Google Drive</option>
+              <option value="other" ${isOther ? 'selected' : ''}>Other</option>
+            </select>
+            <input type="text" class="doc-storage-other-input text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white ${isOther ? '' : 'hidden'}" placeholder="Storage name" value="${escapeHtmlAttr(doc.storage_other_label || '')}">
+          </div>
+        </td>
+        <td class="px-4 py-3">
+          <input type="url" class="doc-link-input w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white" placeholder="https://..." value="${escapeHtmlAttr(doc.document_link || '')}">
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  if (documentsEditMode) {
+    tbody.querySelectorAll('.doc-storage-input').forEach(select => {
+      select.addEventListener('change', function() {
+        const otherInput = this.closest('td').querySelector('.doc-storage-other-input');
+        if (!otherInput) return;
+
+        if (this.value === 'other') {
+          otherInput.classList.remove('hidden');
+        } else {
+          otherInput.classList.add('hidden');
+          otherInput.value = '';
+        }
+      });
+    });
+  }
+}
+
+document.getElementById('btnEditDocuments')?.addEventListener('click', function() {
+  documentsEditMode = true;
+  renderDocumentsTable();
+  document.getElementById('btnEditDocuments')?.classList.add('hidden');
+  document.getElementById('btnSaveDocuments')?.classList.remove('hidden');
 });
 
 function openPaymentConfirmModal(action) {
@@ -1032,6 +1225,12 @@ function openPaymentConfirmModal(action) {
     document.getElementById('verifyPaymentRemarks').value = '';
     document.getElementById('verifyPaymentModal').classList.remove('hidden');
     document.getElementById('verifyPaymentModal').classList.add('flex');
+  }
+
+  if (action === 'flag') {
+    document.getElementById('flagPaymentRemarks').value = '';
+    document.getElementById('flagPaymentModal').classList.remove('hidden');
+    document.getElementById('flagPaymentModal').classList.add('flex');
   }
 
   if (action === 'reject') {
@@ -1060,6 +1259,17 @@ function confirmPaymentAction(action) {
   if (action === 'verify') {
     remarks = document.getElementById('verifyPaymentRemarks').value.trim();
     closePaymentConfirmModal('verifyPaymentModal');
+  }
+
+  if (action === 'flag') {
+    remarks = document.getElementById('flagPaymentRemarks').value.trim();
+
+    if (remarks === '') {
+      alert('Please enter a reason for flagging this payment.');
+      return;
+    }
+
+    closePaymentConfirmModal('flagPaymentModal');
   }
 
   if (action === 'reject') {
@@ -1100,11 +1310,32 @@ document.getElementById('btnVerifyPayment')?.addEventListener('click', function(
   openPaymentConfirmModal('verify');
 });
 
+document.getElementById('btnFlagPayment')?.addEventListener('click', function() {
+  openPaymentConfirmModal('flag');
+});
+
 document.getElementById('btnRejectPayment')?.addEventListener('click', function() {
   openPaymentConfirmModal('reject');
 });
 
-function saveRequirementTracking() {
+function collectDocumentsPayload() {
+  const rows = document.querySelectorAll('#documentsTableBody tr[data-document-id]');
+  const payload = [];
+
+  rows.forEach(row => {
+    payload.push({
+      document_id: row.dataset.documentId,
+      status: row.querySelector('.doc-status-input')?.value || 'pending',
+      storage: row.querySelector('.doc-storage-input')?.value || '',
+      storage_other_label: row.querySelector('.doc-storage-other-input')?.value || '',
+      document_link: row.querySelector('.doc-link-input')?.value || ''
+    });
+  });
+
+  return payload;
+}
+
+function saveDocuments() {
   const reservationId = document.getElementById('process_reservation_id')?.value;
 
   if (!reservationId) {
@@ -1112,13 +1343,18 @@ function saveRequirementTracking() {
     return;
   }
 
+  const documents = collectDocumentsPayload();
+
+  if (!documents.length) {
+    alert('No documents to save.');
+    return;
+  }
+
   const formData = new FormData();
   formData.append('reservation_id', reservationId);
-  formData.append('two_valid_ids_status', document.getElementById('check_two_valid_ids').checked ? '1' : '0');
-  formData.append('tin_number_status', document.getElementById('check_tin_number').checked ? '1' : '0');
-  formData.append('reservation_agreement_status', document.getElementById('check_reservation_agreement').checked ? '1' : '0');
+  formData.append('documents', JSON.stringify(documents));
 
-  fetch('ActionsAP/updateRequirementStatus.php', {
+  fetch('ActionsAP/updateReservationDocuments.php', {
     method: 'POST',
     body: formData
   })
@@ -1132,11 +1368,11 @@ function saveRequirementTracking() {
   })
   .catch(error => {
     console.error(error);
-    alert('Something went wrong while saving requirement tracking.');
+    alert('Something went wrong while saving document tracking.');
   });
 }
 
-document.getElementById('btnSaveRequirements')?.addEventListener('click', saveRequirementTracking);
+document.getElementById('btnSaveDocuments')?.addEventListener('click', saveDocuments);
 
 function markOfficiallyBooked() {
   const reservationId = document.getElementById('process_reservation_id')?.value;

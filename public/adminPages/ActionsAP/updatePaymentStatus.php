@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../php_files/admin_auth.php';
 require_once __DIR__ . '/../../php_files/db.php';
 require_once __DIR__ . '/../../php_files/email_config.php';
+require_once __DIR__ . '/../../php_files/document_requirements.php';
 
 require_once __DIR__ . '/../../phpmailer/src/Exception.php';
 require_once __DIR__ . '/../../phpmailer/src/PHPMailer.php';
@@ -32,12 +33,30 @@ if ($reservation_id <= 0) {
     exit;
 }
 
-if (!in_array($action, ['verify', 'reject'])) {
+if (!in_array($action, ['verify', 'reject', 'flag'])) {
     echo json_encode([
         'success' => false,
         'message' => 'Invalid action.'
     ]);
     exit;
+}
+
+function logPaymentVerification(mysqli $conn, int $reservationId, ?int $adminId, ?string $adminName, string $action, string $remarks): void {
+    $sql = "
+        INSERT INTO payment_verification_log (reservation_id, admin_id, admin_name, action, remarks)
+        VALUES (?, ?, ?, ?, ?)
+    ";
+
+    $stmt = $conn->prepare($sql);
+
+    if (!$stmt) {
+        error_log('logPaymentVerification failed: ' . $conn->error);
+        return;
+    }
+
+    $stmt->bind_param("iisss", $reservationId, $adminId, $adminName, $action, $remarks);
+    $stmt->execute();
+    $stmt->close();
 }
 
 function sendReservationEmail($toEmail, $toName, $subject, $bodyHtml, $bodyText) {
@@ -117,6 +136,13 @@ try {
         throw new Exception("Payment is already rejected.");
     }
 
+    if (in_array($reservation['payment_status'], ['verified', 'rejected'], true) && $action === 'flag') {
+        throw new Exception("This payment has already been " . $reservation['payment_status'] . " and can no longer be flagged.");
+    }
+
+    $adminId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+    $adminName = $_SESSION['full_name'] ?? 'Admin';
+
     $clientName = $reservation['client_name'];
     $clientEmail = $reservation['client_email'];
     $unitName = trim(($reservation['unit_type'] ?? '') . ' Unit ' . ($reservation['unit_number'] ?? ''));
@@ -162,6 +188,8 @@ try {
         }
 
         $stmt->close();
+
+        seedReservationDocuments($conn, $reservation_id);
 
         $subject = "Reservation Payment Verified - Next Steps";
 
@@ -254,6 +282,8 @@ Zeppelin Suites Administration
 
         sendReservationEmail($clientEmail, $clientName, $subject, $bodyHtml, $bodyText);
 
+        logPaymentVerification($conn, $reservation_id, $adminId, $adminName, 'verify', $remarks);
+
         $conn->commit();
 
         echo json_encode([
@@ -261,6 +291,41 @@ Zeppelin Suites Administration
             'message' => 'Payment verified successfully. Email notification sent to client.',
             'payment_status' => 'verified',
             'reservation_status' => 'requirements pending'
+        ]);
+        exit;
+    }
+
+    if ($action === 'flag') {
+        $updateFlagSql = "
+            UPDATE reservation_table
+            SET payment_status = 'flagged for review',
+                admin_payment_remarks = ?
+            WHERE reservation_id = ?
+        ";
+
+        $stmt = $conn->prepare($updateFlagSql);
+
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $conn->error);
+        }
+
+        $stmt->bind_param("si", $remarks, $reservation_id);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Failed to flag payment for review.");
+        }
+
+        $stmt->close();
+
+        logPaymentVerification($conn, $reservation_id, $adminId, $adminName, 'flag', $remarks);
+
+        $conn->commit();
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Payment flagged for review. The reservation is on hold until you verify or reject it.',
+            'payment_status' => 'flagged for review',
+            'reservation_status' => $reservation['reservation_status']
         ]);
         exit;
     }
@@ -370,6 +435,8 @@ Zeppelin Suites Administration
         ";
 
         sendReservationEmail($clientEmail, $clientName, $subject, $bodyHtml, $bodyText);
+
+        logPaymentVerification($conn, $reservation_id, $adminId, $adminName, 'reject', $remarks);
 
         $conn->commit();
 

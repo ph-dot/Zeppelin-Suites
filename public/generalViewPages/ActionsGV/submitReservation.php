@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../php_files/db.php';
+require_once __DIR__ . '/../../php_files/owner_notifications.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     die("Invalid request.");
@@ -8,6 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $reservation_token = trim($_POST['reservation_token'] ?? '');
 $payment_percentage = floatval($_POST['payment_percentage'] ?? 0);
 $payment_reference = trim($_POST['payment_reference'] ?? '');
+$declared_amount = floatval($_POST['declared_amount'] ?? 0);
 $move_in_date = trim($_POST['move_in_date'] ?? '');
 $move_out_date = trim($_POST['move_out_date'] ?? '');
 
@@ -15,12 +17,16 @@ if ($reservation_token === '') {
     die("Missing reservation token.");
 }
 
-if (!in_array($payment_percentage, [0.35, 0.50])) {
+if (!in_array($payment_percentage, [0.35, 0.50, 0.75, 1.00])) {
     die("Invalid payment percentage.");
 }
 
 if ($payment_reference === '') {
     die("GCash reference number is required.");
+}
+
+if ($declared_amount <= 0) {
+    die("Please enter the amount you sent.");
 }
 
 if ($move_in_date === '') {
@@ -38,13 +44,18 @@ $sql = "
         i.approved_unit_id,
         i.reservation_token_expires_at,
         u.unit_id,
+        u.unit_number,
         u.base_rate,
         u.lease_rate,
-        u.unit_current_status
+        u.unit_current_status,
+        owner.full_name AS owner_name,
+        owner.email AS owner_email
 
     FROM inquiry_table i
     INNER JOIN units_table u 
         ON i.approved_unit_id = u.unit_id
+    LEFT JOIN users_table owner
+        ON u.unit_owner_id = owner.user_id
 
     WHERE i.reservation_token = ?
     LIMIT 1
@@ -114,7 +125,7 @@ $required_amount =
 $conn->begin_transaction();
 
 try {
-//lock the unit
+//lock the unit row so concurrent submissions for the same unit are serialized
     $lockUnitSql = "
         SELECT unit_current_status FROM units_table
         WHERE unit_id = ?
@@ -129,22 +140,64 @@ try {
         ->get_result()
         ->fetch_assoc();
     $lockUnitStmt->close();
-//Check availability again while locked
-    if (
-        !$lockedUnit ||
-        !in_array(
-            $lockedUnit['unit_current_status'],
-            [
-                'Ready for Occupancy',
-                'Resale'
-            ]
-        )
-    ) {
 
+    $is_lease = (
+        $inquiry_type_normalized === 'unit reservation' ||
+        $inquiry_type_normalized === 'lease inquiry'
+    );
+
+    if (!$lockedUnit || $lockedUnit['unit_current_status'] === 'Under maintenance') {
         throw new Exception(
-            "This unit is no longer available."
+            "This unit is currently unavailable."
         );
+    }
 
+    if ($is_lease) {
+        // Lease-type units can carry several non-overlapping reservations over
+        // time (that's what the reservation form's calendar already shows).
+        // Real availability for a lease is decided by whether the CHOSEN dates
+        // overlap an existing active reservation — not by a single unit-wide
+        // status flag, which would incorrectly block unrelated future dates.
+        $overlapSql = "
+            SELECT reservation_id
+            FROM reservation_table
+            WHERE unit_id = ?
+              AND reservation_status NOT IN ('cancelled', 'rejected')
+              AND inquiry_type IN ('Lease Inquiry', 'Unit Reservation')
+              AND move_in_date IS NOT NULL
+              AND move_in_date <= ?
+              AND COALESCE(move_out_date, move_in_date) >= ?
+            FOR UPDATE
+        ";
+        $overlapStmt = $conn->prepare($overlapSql);
+        $overlapStmt->bind_param(
+            "iss",
+            $data['unit_id'],
+            $move_out_date,
+            $move_in_date
+        );
+        $overlapStmt->execute();
+        $overlapResult = $overlapStmt->get_result();
+
+        if ($overlapResult->num_rows > 0) {
+            throw new Exception(
+                "Those move-in/move-out dates overlap with an existing reservation on this unit. Please go back and choose different dates."
+            );
+        }
+        $overlapStmt->close();
+    } else {
+        // Resale is a one-time sale — once a buyer is mid-purchase, the whole
+        // unit is off the market for everyone else, regardless of "dates".
+        if (
+            !in_array(
+                $lockedUnit['unit_current_status'],
+                ['Ready for Occupancy', 'Resale']
+            )
+        ) {
+            throw new Exception(
+                "This unit is no longer available."
+            );
+        }
     }
 
 //check duplicate reservation
@@ -171,6 +224,35 @@ try {
         );
     }
     $checkStmt->close();
+
+//check for a GCash reference number already used on another ACTIVE reservation.
+//Rejected/cancelled reservations don't count, so a corrected resubmission
+//with the same reference (e.g. after a typo) is still allowed.
+    $dupRefSql = "
+        SELECT reservation_id
+        FROM reservation_table
+        WHERE payment_reference = ?
+        AND reservation_status NOT IN ('cancelled', 'rejected')
+        LIMIT 1
+    ";
+
+    $dupRefStmt = $conn->prepare($dupRefSql);
+    $dupRefStmt->bind_param("s", $payment_reference);
+    $dupRefStmt->execute();
+
+    $dupRefResult = $dupRefStmt->get_result();
+    if ($dupRefResult->num_rows > 0) {
+        throw new Exception(
+            "This GCash reference number has already been used for another reservation. If this is a mistake, please contact Zeppelin Suites administration."
+        );
+    }
+    $dupRefStmt->close();
+
+//compute how the client-declared amount compares to what's actually required
+    $amount_match_status = 'match';
+    if (abs($declared_amount - $required_amount) > 0.01) {
+        $amount_match_status = $declared_amount < $required_amount ? 'short' : 'over';
+    }
 
     //upload payment proof
     if (
@@ -275,6 +357,8 @@ try {
             required_amount,
             payment_method,
             payment_reference,
+            declared_amount,
+            amount_match_status,
             payment_proof,
             payment_status,
             reservation_status
@@ -300,6 +384,8 @@ try {
             'GCash QR',
             ?,
             ?,
+            ?,
+            ?,
             'pending review',
             'submitted'
 
@@ -313,7 +399,7 @@ try {
 
     $insertStmt->bind_param(
 
-        "iisssssssssdddss",
+        "iisssssssssdddsdss",
 
         $data['inq_id'],
         $data['unit_id'],
@@ -330,6 +416,8 @@ try {
         $payment_percentage,
         $required_amount,
         $payment_reference,
+        $declared_amount,
+        $amount_match_status,
         $db_file_path
 
     );
@@ -346,36 +434,40 @@ try {
 
     $insertStmt->close();
 
-//update unit status to "On Hold"
-    $updateUnitSql = "
-        UPDATE units_table
+//update unit status to "On Hold" — only for resale (single-buyer, whole-unit
+//sale). Lease units stay as-is: their availability is governed by the
+//per-date overlap check above, so other date ranges must remain bookable.
+    if (!$is_lease) {
+        $updateUnitSql = "
+            UPDATE units_table
 
-        SET unit_current_status = 'On Hold'
+            SET unit_current_status = 'On Hold'
 
-        WHERE unit_id = ?
-    ";
-
-
-    $updateUnitStmt =
-        $conn->prepare($updateUnitSql);
-
-
-    $updateUnitStmt->bind_param(
-        "i",
-        $data['unit_id']
-    );
+            WHERE unit_id = ?
+        ";
 
 
-    if (!$updateUnitStmt->execute()) {
+        $updateUnitStmt =
+            $conn->prepare($updateUnitSql);
 
-        throw new Exception(
-            "Failed to update unit."
+
+        $updateUnitStmt->bind_param(
+            "i",
+            $data['unit_id']
         );
 
+
+        if (!$updateUnitStmt->execute()) {
+
+            throw new Exception(
+                "Failed to update unit."
+            );
+
+        }
+
+
+        $updateUnitStmt->close();
     }
-
-
-    $updateUnitStmt->close();
 
 //update inquiry status to "reservation submitted"
     $updateInquirySql = "
@@ -410,6 +502,14 @@ try {
 
     //commit
     $conn->commit();
+
+    notifyOwnerOfNewReservation(
+        $data['owner_email'] ?? '',
+        $data['owner_name'] ?? 'Unit Owner',
+        $data['unit_number'] ?? '',
+        $data['sender_name'] ?? 'A tenant',
+        $move_in_date
+    );
 
     header("Location: ../reservationConfirmation.html?token=" .urlencode($reservation_token));
     exit();

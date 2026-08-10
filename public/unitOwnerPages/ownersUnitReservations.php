@@ -455,18 +455,27 @@ $owner_id = (int)$userData['user_id']; ?>
     </div>
   </section>
 
-  <!-- REQUIREMENT TRACKING -->
+  <!-- DOCUMENT TRACKING -->
   <section id="requirementTrackingSection" class="bg-slate-50 border border-slate-200 rounded-2xl p-5 hidden">
-    <div class="flex items-center gap-2 mb-5">
-      <div class="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center">
-        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6m-7 4h8m-8 4h5m-6 8h10a2 2 0 002-2V7.8a2 2 0 00-.6-1.4l-3.8-3.8A2 2 0 0013.2 2H7a2 2 0 00-2 2v15a2 2 0 002 2z"/>
-        </svg>
+    <div class="flex items-center justify-between gap-2 mb-5">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center">
+          <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6m-7 4h8m-8 4h5m-6 8h10a2 2 0 002-2V7.8a2 2 0 00-.6-1.4l-3.8-3.8A2 2 0 0013.2 2H7a2 2 0 00-2 2v15a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Document Tracking</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Only available after payment is verified.</p>
+        </div>
       </div>
-      <div>
-        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Requirement Tracking</h3>
-        <p class="text-xs text-slate-500 mt-0.5">Only available after payment is verified.</p>
-      </div>
+
+      <button
+        type="button"
+        id="btnEditDocuments"
+        class="hidden text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full active:scale-95 transition-all">
+        Edit Documents
+      </button>
     </div>
 
     <input type="hidden" id="process_reservation_id">
@@ -479,59 +488,43 @@ $owner_id = (int)$userData['user_id']; ?>
         -
       </p>
     </div>
-    
-    <div id="requirementDecisionDisplay" class="hidden mb-5 rounded-xl border px-4 py-3">
-  <p class="text-xs font-bold uppercase tracking-wide mb-1" id="requirementDecisionLabel">
-    Requirement Status
-  </p>
-  <p class="text-sm font-semibold" id="requirementDecisionText">
-    -
-  </p>
-</div>
 
-<div id="requirementActionArea">
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <label class="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50">
-        <input type="checkbox" id="check_two_valid_ids" class="requirement-check w-4 h-4 rounded border-slate-300 accent-slate-900">
-        <span class="text-sm font-medium text-slate-700">Photocopy of 2 Valid IDs</span>
-      </label>
-
-      <label class="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50">
-        <input type="checkbox" id="check_tin_number" class="requirement-check w-4 h-4 rounded border-slate-300 accent-slate-900">
-        <span class="text-sm font-medium text-slate-700">TIN Number</span>
-      </label>
-
-      <label class="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50">
-        <input type="checkbox" id="check_reservation_agreement" class="requirement-check w-4 h-4 rounded border-slate-300 accent-slate-900">
-        <span class="text-sm font-medium text-slate-700">Reservation Agreement</span>
-      </label>
+    <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-200">
+            <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Document</th>
+            <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+            <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Storage</th>
+            <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Link</th>
+          </tr>
+        </thead>
+        <tbody id="documentsTableBody">
+          <tr>
+            <td colspan="4" class="px-4 py-6 text-center text-xs text-slate-400">Loading documents...</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <div class="mt-5 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
       <p class="text-xs text-blue-700 leading-relaxed">
-        This is admin tracking only. No document upload is required here.
+        Only the admin can mark this reservation as officially booked, once all documents are complete.
       </p>
     </div>
 
-    <button 
+    <button
       type="button"
-      id="btnSaveRequirements"
-      class="mt-5 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all">
-      Save Requirement Tracking
+      id="btnSaveDocuments"
+      class="hidden mt-5 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all">
+      Save Documents
     </button>
-  </div>
 
-  <button 
-    type="button"
-    id="btnEditRequirements"
-    class="hidden mt-5 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all">
-    Edit Requirement Tracking
-  </button>
     <div class="mt-4 bg-white border border-slate-200 rounded-xl p-4">
-    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Last Updated By</p>
-    <p id="requirements_updated_by_display" class="text-sm font-semibold text-slate-800 mt-1">Not updated yet</p>
-    <p id="requirements_updated_at_display" class="text-xs text-slate-500 mt-1">-</p>
-  </div>
+      <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Last Updated By</p>
+      <p id="requirements_updated_by_display" class="text-sm font-semibold text-slate-800 mt-1">Not updated yet</p>
+      <p id="requirements_updated_at_display" class="text-xs text-slate-500 mt-1">-</p>
+    </div>
   </section>
 
   <!-- FOOTER -->
@@ -740,25 +733,14 @@ document.addEventListener('DOMContentLoaded', function() {
   if (nameEl) nameEl.textContent = userName;
   if (initialsEl) initialsEl.textContent = initials;
 
-  document.querySelectorAll('.requirement-check').forEach(check => {
-    check.addEventListener('change', function() {
-      // When owner edits a completed requirement set, allow saving again.
-      updateRequirementLiveState();
-    });
+  document.getElementById('btnEditDocuments')?.addEventListener('click', function() {
+    documentsEditMode = true;
+    renderDocumentsTable();
+    document.getElementById('btnEditDocuments')?.classList.add('hidden');
+    document.getElementById('btnSaveDocuments')?.classList.remove('hidden');
   });
 
-  const editBtn = document.getElementById('btnEditRequirements');
-  if (editBtn) {
-    editBtn.addEventListener('click', function() {
-      document.getElementById('requirementActionArea')?.classList.remove('hidden');
-      document.getElementById('btnEditRequirements')?.classList.add('hidden');
-    });
-  }
-
-  const saveBtn = document.getElementById('btnSaveRequirements');
-  if (saveBtn) {
-    saveBtn.addEventListener('click', saveRequirementTracking);
-  }
+  document.getElementById('btnSaveDocuments')?.addEventListener('click', saveDocuments);
 });
 
 /* LOGOUT */
@@ -860,16 +842,15 @@ function openEditModal(row) {
 
   setValue('process_reservation_id', row.dataset.reservationId);
 
-  const twoIds = document.getElementById('check_two_valid_ids');
-  const tin = document.getElementById('check_tin_number');
-  const agreement = document.getElementById('check_reservation_agreement');
-
-  if (twoIds) twoIds.checked = row.dataset.twoValidIdsStatus === '1';
-  if (tin) tin.checked = row.dataset.tinNumberStatus === '1';
-  if (agreement) agreement.checked = row.dataset.reservationAgreementStatus === '1';
+  documentsEditMode = false;
+  currentDocuments = [];
 
   updatePaymentDecisionUI(paymentStatus);
   updateRequirementSectionUI(paymentStatus, reservationStatus);
+
+  if (paymentStatus.toLowerCase() === 'verified' && row.dataset.reservationId) {
+    loadDocuments(row.dataset.reservationId);
+  }
 
   modal.classList.remove('hidden');
   modal.classList.add('flex');
@@ -945,19 +926,19 @@ function updatePaymentDecisionUI(paymentStatus) {
   text.textContent = 'HOA/Admin has not verified the payment yet. Requirement tracking is locked.';
 }
 
-/* REQUIREMENT UI */
+/* DOCUMENT TRACKING UI */
 function updateRequirementSectionUI(paymentStatus, reservationStatus) {
   const payment = (paymentStatus || '').toLowerCase();
   const status = (reservationStatus || '').toLowerCase();
 
   const section = document.getElementById('requirementTrackingSection');
-  const actionArea = document.getElementById('requirementActionArea');
   const display = document.getElementById('requirementDecisionDisplay');
   const label = document.getElementById('requirementDecisionLabel');
   const text = document.getElementById('requirementDecisionText');
-  const editBtn = document.getElementById('btnEditRequirements');
+  const editBtn = document.getElementById('btnEditDocuments');
+  const saveBtn = document.getElementById('btnSaveDocuments');
 
-  if (!section || !actionArea || !display || !label || !text || !editBtn) return;
+  if (!section || !display || !label || !text || !editBtn || !saveBtn) return;
 
   display.className = 'hidden mb-5 rounded-xl border px-4 py-3';
 
@@ -969,8 +950,9 @@ function updateRequirementSectionUI(paymentStatus, reservationStatus) {
   section.classList.remove('hidden');
 
   if (status === 'requirements completed') {
-    actionArea.classList.add('hidden');
+    documentsEditMode = false;
     editBtn.classList.remove('hidden');
+    saveBtn.classList.add('hidden');
 
     display.classList.remove('hidden');
     display.classList.add('bg-emerald-50', 'border-emerald-200');
@@ -979,13 +961,14 @@ function updateRequirementSectionUI(paymentStatus, reservationStatus) {
     text.className = 'text-sm font-semibold text-emerald-800';
 
     label.textContent = 'Requirements Completed';
-    text.textContent = 'All reservation requirements have been completed. You may edit tracking if needed.';
+    text.textContent = 'All reservation documents have been completed. You may edit tracking if needed.';
     return;
   }
 
   if (status === 'reserved') {
-    actionArea.classList.add('hidden');
+    documentsEditMode = false;
     editBtn.classList.add('hidden');
+    saveBtn.classList.add('hidden');
 
     display.classList.remove('hidden');
     display.classList.add('bg-emerald-50', 'border-emerald-200');
@@ -998,25 +981,154 @@ function updateRequirementSectionUI(paymentStatus, reservationStatus) {
     return;
   }
 
-  actionArea.classList.remove('hidden');
+  documentsEditMode = true;
   editBtn.classList.add('hidden');
+  saveBtn.classList.remove('hidden');
   display.classList.add('hidden');
 }
 
-function updateRequirementLiveState() {
-  const status = (editRow?.dataset?.reservationStatus || '').toLowerCase();
+let currentDocuments = [];
+let documentsEditMode = false;
 
-  if (status === 'reserved') return;
-
-  const actionArea = document.getElementById('requirementActionArea');
-  const editBtn = document.getElementById('btnEditRequirements');
-
-  if (actionArea) actionArea.classList.remove('hidden');
-  if (editBtn) editBtn.classList.add('hidden');
+function escapeHtml(value) {
+  const div = document.createElement('div');
+  div.textContent = value ?? '';
+  return div.innerHTML;
 }
 
-/* SAVE REQUIREMENTS - UNIT OWNER ONLY */
-function saveRequirementTracking() {
+function escapeHtmlAttr(value) {
+  return escapeHtml(value).replace(/"/g, '&quot;');
+}
+
+function storageDisplayLabel(doc) {
+  if (doc.storage === 'dropbox') return 'Dropbox';
+  if (doc.storage === 'gdrive') return 'Google Drive';
+  if (doc.storage === 'other') return doc.storage_other_label || 'Other';
+  return '-';
+}
+
+function loadDocuments(reservationId) {
+  const tbody = document.getElementById('documentsTableBody');
+
+  if (tbody) {
+    tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-xs text-slate-400">Loading documents...</td></tr>';
+  }
+
+  fetch('ActionsUOP/getOwnerReservationDocuments.php?reservation_id=' + encodeURIComponent(reservationId))
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        if (tbody) {
+          tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-xs text-red-500">' + escapeHtml(data.message || 'Failed to load documents.') + '</td></tr>';
+        }
+        return;
+      }
+
+      currentDocuments = data.documents || [];
+      renderDocumentsTable();
+    })
+    .catch(error => {
+      console.error(error);
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-xs text-red-500">Something went wrong while loading documents.</td></tr>';
+      }
+    });
+}
+
+function renderDocumentsTable() {
+  const tbody = document.getElementById('documentsTableBody');
+  if (!tbody) return;
+
+  if (!currentDocuments.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-xs text-slate-400">No documents found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = currentDocuments.map(doc => {
+    if (!documentsEditMode) {
+      const statusBadge = doc.status === 'complete'
+        ? "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200'>Complete</span>"
+        : "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200'>Pending</span>";
+
+      const linkCell = doc.document_link
+        ? `<a href="${escapeHtmlAttr(doc.document_link)}" target="_blank" rel="noopener" class="text-xs font-semibold text-blue-600 hover:underline">View</a>`
+        : "<span class='text-xs text-slate-400'>-</span>";
+
+      return `
+        <tr class="border-b border-slate-100 last:border-0">
+          <td class="px-4 py-3 font-medium text-slate-700">${escapeHtml(doc.document_name)}</td>
+          <td class="px-4 py-3">${statusBadge}</td>
+          <td class="px-4 py-3 text-slate-600">${escapeHtml(storageDisplayLabel(doc))}</td>
+          <td class="px-4 py-3">${linkCell}</td>
+        </tr>
+      `;
+    }
+
+    const isOther = doc.storage === 'other';
+
+    return `
+      <tr class="border-b border-slate-100 last:border-0" data-document-id="${doc.document_id}">
+        <td class="px-4 py-3 font-medium text-slate-700">${escapeHtml(doc.document_name)}</td>
+        <td class="px-4 py-3">
+          <select class="doc-status-input text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white">
+            <option value="pending" ${doc.status !== 'complete' ? 'selected' : ''}>Pending</option>
+            <option value="complete" ${doc.status === 'complete' ? 'selected' : ''}>Complete</option>
+          </select>
+        </td>
+        <td class="px-4 py-3">
+          <div class="flex flex-col gap-1.5">
+            <select class="doc-storage-input text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white">
+              <option value="" ${!doc.storage ? 'selected' : ''}>Select storage</option>
+              <option value="dropbox" ${doc.storage === 'dropbox' ? 'selected' : ''}>Dropbox</option>
+              <option value="gdrive" ${doc.storage === 'gdrive' ? 'selected' : ''}>Google Drive</option>
+              <option value="other" ${isOther ? 'selected' : ''}>Other</option>
+            </select>
+            <input type="text" class="doc-storage-other-input text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white ${isOther ? '' : 'hidden'}" placeholder="Storage name" value="${escapeHtmlAttr(doc.storage_other_label || '')}">
+          </div>
+        </td>
+        <td class="px-4 py-3">
+          <input type="url" class="doc-link-input w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white" placeholder="https://..." value="${escapeHtmlAttr(doc.document_link || '')}">
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  if (documentsEditMode) {
+    tbody.querySelectorAll('.doc-storage-input').forEach(select => {
+      select.addEventListener('change', function() {
+        const otherInput = this.closest('td').querySelector('.doc-storage-other-input');
+        if (!otherInput) return;
+
+        if (this.value === 'other') {
+          otherInput.classList.remove('hidden');
+        } else {
+          otherInput.classList.add('hidden');
+          otherInput.value = '';
+        }
+      });
+    });
+  }
+}
+
+function collectDocumentsPayload() {
+  const rows = document.querySelectorAll('#documentsTableBody tr[data-document-id]');
+  const payload = [];
+
+  rows.forEach(row => {
+    payload.push({
+      document_id: row.dataset.documentId,
+      status: row.querySelector('.doc-status-input')?.value || 'pending',
+      storage: row.querySelector('.doc-storage-input')?.value || '',
+      storage_other_label: row.querySelector('.doc-storage-other-input')?.value || '',
+      document_link: row.querySelector('.doc-link-input')?.value || ''
+    });
+  });
+
+  return payload;
+}
+
+/* SAVE DOCUMENTS - UNIT OWNER */
+function saveDocuments() {
   const reservationId = document.getElementById('process_reservation_id')?.value;
 
   if (!reservationId) {
@@ -1024,13 +1136,18 @@ function saveRequirementTracking() {
     return;
   }
 
+  const documents = collectDocumentsPayload();
+
+  if (!documents.length) {
+    alert('No documents to save.');
+    return;
+  }
+
   const formData = new FormData();
   formData.append('reservation_id', reservationId);
-  formData.append('two_valid_ids_status', document.getElementById('check_two_valid_ids')?.checked ? '1' : '0');
-  formData.append('tin_number_status', document.getElementById('check_tin_number')?.checked ? '1' : '0');
-  formData.append('reservation_agreement_status', document.getElementById('check_reservation_agreement')?.checked ? '1' : '0');
+  formData.append('documents', JSON.stringify(documents));
 
-  fetch('ActionsUOP/updateOwnerRequirementStatus.php', {
+  fetch('ActionsUOP/updateOwnerReservationDocuments.php', {
     method: 'POST',
     body: formData
   })
@@ -1044,7 +1161,7 @@ function saveRequirementTracking() {
   })
   .catch(error => {
     console.error(error);
-    alert('Something went wrong while saving requirement tracking.');
+    alert('Something went wrong while saving document tracking.');
   });
 }
 

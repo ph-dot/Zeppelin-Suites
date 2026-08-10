@@ -116,7 +116,7 @@ try {
         $expireStmt->close();
 
        $reservation_token = bin2hex(random_bytes(32));
-        $expires_at = date('Y-m-d H:i:s', strtotime('+7 days'));
+        $expires_at = date('Y-m-d H:i:s', strtotime('+30 days'));
 
         $updateInquirySql = "
             UPDATE inquiry_table

@@ -2,7 +2,7 @@
 $host = "localhost";
 $user = "root";
 $pass = "";
-$db   = "zepellin_database"; // CHANGE THIS
+$db   = "zepellin_test"; // CHANGE THIS
 
 $conn = new mysqli($host, $user, $pass, $db);
 

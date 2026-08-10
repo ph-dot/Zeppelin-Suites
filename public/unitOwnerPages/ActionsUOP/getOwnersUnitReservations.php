@@ -40,9 +40,6 @@ $sql = "
         r.payment_status,
         r.reservation_status,
         r.created_at,
-        r.two_valid_ids_status,
-        r.tin_number_status,
-        r.reservation_agreement_status,
         r.requirements_updated_by,
         r.requirements_updated_by_role,
         r.requirements_updated_at,
@@ -163,9 +160,6 @@ while ($row = $result->fetch_assoc()) {
         data-payment-proof='" . e($proofUrl) . "'
         data-payment-status='" . e($row['payment_status']) . "'
         data-reservation-status='" . e($row['reservation_status']) . "'
-        data-two-valid-ids-status='" . e($row['two_valid_ids_status']) . "'
-        data-tin-number-status='" . e($row['tin_number_status']) . "'
-        data-reservation-agreement-status='" . e($row['reservation_agreement_status']) . "'
         data-requirements-updated-by-name='" . e($row['requirements_updated_by_name'] ?? 'Not updated yet') . "'
         data-requirements-updated-by-role='" . e($row['requirements_updated_by_role'] ?? '-') . "'
         data-requirements-updated-at='" . e($row['requirements_updated_at'] ?? '-') . "'>
@@ -216,7 +210,7 @@ while ($row = $result->fetch_assoc()) {
             data-description='" . e($row['transaction_type'] ?? '') . "'
             data-remarks=''
             data-photos='" . e($proofUrl ?? '') . "'
-            onclick='event.stopPropagation(); openViewModal(this)'>
+            onclick='event.stopPropagation(); openEditModal(this.closest(\"tr\"))'>
             View
             </button>
         </td>

@@ -172,8 +172,8 @@ tailwind.config = {
         </div>
 
         <div class="rounded-xl border border-amber-200 bg-white/80 px-4 py-3 text-center min-w-[92px]">
-          <p class="font-mono text-xl font-bold text-orange-500 leading-none" id="statusMinutes">29 : 52</p>
-          <p class="text-[10px] font-bold text-orange-400 tracking-widest mt-1">MIN&nbsp;&nbsp;&nbsp;SEC</p>
+          <p class="font-mono text-xl font-bold text-orange-500 leading-none" id="statusMinutes">30 : 00</p>
+          <p class="text-[10px] font-bold text-orange-400 tracking-widest mt-1">DAYS&nbsp;&nbsp;&nbsp;HRS</p>
           <p class="hidden text-xs font-semibold mt-1" id="statusCountdown" style="font-family:'DM Mono',monospace"></p>
         </div>
       </div>
@@ -315,48 +315,90 @@ tailwind.config = {
                   value="<?php echo htmlspecialchars($reservation_type); ?>"
                   readonly
                   class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
-                 <?php if ($is_lease): ?>
-                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 space-y-5">
-                    Lease Duration <span class="text-red-400">*</span>
-                  </label>
-
-                  <input 
-                    type="text"
-                    id="resLeaseDuration"
-                    name="lease_duration"
-                    value="<?php echo htmlspecialchars($data['lease_duration'] ?? 'Not specified'); ?>"
-                    readonly
-                    class="zep-input w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-700">
-                <?php endif; ?>
               </div>
 
+              <?php if ($is_lease): ?>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                      Chosen Move-in Time <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="text"
+                      id="resMoveInTime"
+                      name="preferred_move_in_time_display"
+                      value="<?php echo htmlspecialchars($data['preferred_move_in_time'] ?? 'Not specified'); ?>"
+                      readonly
+                      class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                      Lease Duration <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="text"
+                      id="resLeaseDuration"
+                      name="lease_duration"
+                      value="<?php echo htmlspecialchars($data['lease_duration'] ?? 'Not specified'); ?>"
+                      readonly
+                      class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
+                  </div>
+                </div>
+              <?php endif; ?>
+
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
+                <div class="relative">
                   <label class="block text-sm font-semibold text-slate-700 mb-2">
                     <?php echo $is_lease ? 'Move-in Date' : 'Preferred Appointment / Turnover Date'; ?>
                     <span class="text-red-500">*</span>
                   </label>
-                  <input 
-                    type="date" 
-                    id="resMoveIn"
-                    name="move_in_date"
-                    required
-                    class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base">
+                  <button
+                    type="button"
+                    id="resMoveInTrigger"
+                    class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base flex items-center justify-between text-left">
+                    <span id="resMoveInDisplay" class="text-slate-400">Select a date</span>
+                    <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                  </button>
+                  <input type="hidden" id="resMoveIn" name="move_in_date">
+                  <div id="resMoveInCalendar" class="zep-calendar-panel hidden absolute left-0 z-30 mt-2 w-72 max-w-[90vw] bg-white border border-slate-200 rounded-xl shadow-xl p-4"></div>
+                  <p class="text-xs text-slate-400 mt-1.5" id="resMoveInHint">Dates already reserved for this unit are shown in red and can't be selected.</p>
                 </div>
 
                 <?php if ($is_lease): ?>
-                  <div>
+                  <div class="relative">
                     <label class="block text-sm font-semibold text-slate-700 mb-2">
                       Move-out Date <span class="text-red-500">*</span>
                     </label>
-                    <input 
-                      type="date" 
-                      id="resLease"
-                      name="move_out_date"
-                      required
-                      class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base">
+                    <button
+                      type="button"
+                      id="resLeaseTrigger"
+                      class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base flex items-center justify-between text-left">
+                      <span id="resLeaseDisplay" class="text-slate-400">Select a date</span>
+                      <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      </svg>
+                    </button>
+                    <input type="hidden" id="resLease" name="move_out_date">
+                    <div id="resLeaseCalendar" class="zep-calendar-panel hidden absolute left-0 z-30 mt-2 w-72 max-w-[90vw] bg-white border border-slate-200 rounded-xl shadow-xl p-4"></div>
+                    <p class="text-xs text-slate-400 mt-1.5" id="resLeaseHint">Pick your Move-in Date first — dates that would overlap another tenant's stay are blocked.</p>
                   </div>
                 <?php endif; ?>
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                  Remarks / Special Requests <span class="text-slate-400 font-normal normal-case">(optional)</span>
+                </label>
+                <textarea 
+                  id="resRemarks"
+                  name="remarks"
+                  rows="3"
+                  maxlength="500"
+                  placeholder="Anything else you'd like us to know about your reservation..."
+                  class="zep-input w-full px-5 py-3 bg-white border border-slate-300 rounded-xl text-base resize-none"></textarea>
               </div>
             </div>
           </section>
@@ -427,6 +469,26 @@ tailwind.config = {
                 placeholder="Enter your GCash reference number"
                 required
                 class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base">
+
+              <label class="block text-sm font-semibold text-slate-700 mb-2 mt-4">
+                Amount You Sent <span class="text-red-500">*</span>
+              </label>
+
+              <div class="relative">
+                <span class="absolute left-5 top-1/2 -translate-y-1/2 text-base font-bold text-slate-500">₱</span>
+                <input 
+                  type="number"
+                  name="declared_amount"
+                  id="declaredAmount"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  required
+                  class="zep-input w-full h-12 pl-9 pr-5 bg-white border border-slate-300 rounded-xl text-base">
+              </div>
+              <p class="text-xs text-slate-500 mt-2">
+                Enter the exact amount shown in your GCash payment confirmation. This is compared against your required amount during admin review.
+              </p>
             </div>
 
             </div>
@@ -458,6 +520,8 @@ tailwind.config = {
                   class="w-full h-10 border border-slate-200 rounded-lg text-sm px-2">
                   <option value="0.35">35% Down Payment</option>
                   <option value="0.50">50% Down Payment</option>
+                  <option value="0.75">75% Down Payment</option>
+                  <option value="1.00">Full Payment</option>
                 </select>
               </div>
 
@@ -740,12 +804,23 @@ tailwind.config = {
 
 <script>
 // ======= Reservation timer configuration =======
-const expirationSeconds = 30 * 60; // 30 minutes for demo. Change to 30 * 24 * 60 * 60 for 30 days.
+// The link is valid for 30 days from the moment it was generated (server-side),
+// NOT from the moment this page happens to be opened — so it keeps counting
+// down even if the recipient never opens it right away.
+const expirationSeconds = 30 * 24 * 60 * 60; // 30 days
 let reservationStatus = 'pending';
 const reservationId = 101;
 
-const createdAt = new Date().getTime();
-const expiresAt = createdAt + expirationSeconds * 1000;
+<?php
+  // Real expiry timestamp set when the reservation token was created (see
+  // respondApprovalRequest.php). Falls back to "now + 30 days" only if for
+  // some reason it isn't set, so the timer never silently breaks.
+  $expiresAtMs = !empty($data['reservation_token_expires_at'])
+      ? strtotime($data['reservation_token_expires_at']) * 1000
+      : (time() + 30 * 24 * 60 * 60) * 1000;
+?>
+const expiresAt = <?php echo (int)$expiresAtMs; ?>;
+const createdAt = expiresAt - expirationSeconds * 1000;
 const circumference = 2 * Math.PI * 17;
 
 function updateStatus() {
@@ -797,28 +872,29 @@ function updateStatus() {
   }
 
   const remaining = Math.ceil((expiresAt - now) / 1000);
-  const mins = Math.floor(remaining / 60);
-  const secs = remaining % 60;
+  const days = Math.floor(remaining / 86400);
+  const hours = Math.floor((remaining % 86400) / 3600);
   const fraction = remaining / expirationSeconds;
   const offset = circumference * (1 - fraction);
+  const isUrgent = remaining <= 24 * 60 * 60; // last day
 
   title.textContent = 'Reservation Pending';
   title.className = 'font-bold text-amber-800';
-  msg.textContent = 'Please complete the form and submit before the timer expires.';
+  msg.textContent = 'Please complete the form and submit before the reservation link expires.';
   msg.className = 'text-sm text-slate-600 mt-1';
 
-  minutesBox.textContent = `${String(mins).padStart(2, '0')} : ${String(secs).padStart(2, '0')}`;
-  countdown.textContent = `Time remaining: ${remaining} second${remaining !== 1 ? 's' : ''}`;
+  minutesBox.textContent = `${String(days).padStart(2, '0')} : ${String(hours).padStart(2, '0')}`;
+  countdown.textContent = `Time remaining: ${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}`;
 
   if (ring) {
     ring.style.strokeDasharray = circumference;
     ring.style.strokeDashoffset = offset;
-    ring.setAttribute('stroke', remaining <= 60 ? '#ef4444' : '#b7791f');
+    ring.setAttribute('stroke', isUrgent ? '#ef4444' : '#b7791f');
   }
 
   if (ringLabel) {
-    ringLabel.textContent = mins > 0 ? mins : secs;
-    ringLabel.className = `absolute inset-0 flex items-center justify-center text-[10px] font-bold ${remaining <= 60 ? 'text-red-500' : 'text-amber-700'}`;
+    ringLabel.textContent = days > 0 ? days : hours;
+    ringLabel.className = `absolute inset-0 flex items-center justify-center text-[10px] font-bold ${isUrgent ? 'text-red-500' : 'text-amber-700'}`;
   }
 }
 
@@ -837,6 +913,212 @@ document.querySelectorAll('.zep-input').forEach(el => {
 
 setInterval(updateStatus, 1000);
 updateStatus();
+
+// ======= Unit availability (blocked dates) for the calendar picker =======
+// Existing reservations on this unit (not cancelled/rejected) — rendered as
+// red, unselectable dates so two tenants/buyers can't be booked over each other.
+const blockedRanges = <?php echo json_encode($blocked_ranges); ?>;
+console.log('Blocked ranges for unit #<?php echo (int)$data['unit_id']; ?>:', blockedRanges);
+
+function expandRangeToDates(start, end) {
+  const dates = [];
+  let d = new Date(start + 'T00:00:00');
+  const endD = new Date(end + 'T00:00:00');
+  while (d <= endD) {
+    dates.push(toISODate(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return dates;
+}
+
+function toISODate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function formatDisplayDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+const blockedDateSet = new Set();
+blockedRanges.forEach(r => expandRangeToDates(r.start, r.end).forEach(d => blockedDateSet.add(d)));
+const sortedBlockedDates = Array.from(blockedDateSet).sort();
+
+function firstBlockedOnOrAfter(dateStr) {
+  for (const b of sortedBlockedDates) {
+    if (b >= dateStr) return b;
+  }
+  return null;
+}
+
+const todayISO = toISODate(new Date());
+
+// ======= Generic calendar picker =======
+function initDatePicker({ triggerId, panelId, hiddenId, displayId, hintId, minDateFn, isDisabledFn, guardFn, onSelect }) {
+  const trigger = document.getElementById(triggerId);
+  const panel = document.getElementById(panelId);
+  const hidden = document.getElementById(hiddenId);
+  const display = document.getElementById(displayId);
+  const hint = hintId ? document.getElementById(hintId) : null;
+  if (!trigger || !panel || !hidden || !display) return null;
+
+  let viewDate = new Date();
+  viewDate.setDate(1);
+
+  function isDisabled(dateStr) {
+    const min = minDateFn ? minDateFn() : null;
+    if (min && dateStr < min) return true;
+    if (blockedDateSet.has(dateStr)) return true;
+    if (isDisabledFn && isDisabledFn(dateStr)) return true;
+    return false;
+  }
+
+  function render() {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const startWeekday = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const selected = hidden.value;
+
+    let html = `
+      <div class="flex items-center justify-between mb-3">
+        <button type="button" data-nav="prev" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 font-bold">&#8249;</button>
+        <p class="text-sm font-bold text-slate-800">${monthNames[month]} ${year}</p>
+        <button type="button" data-nav="next" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 font-bold">&#8250;</button>
+      </div>
+      <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 mb-1">
+        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+      </div>
+      <div class="grid grid-cols-7 gap-1 text-sm">`;
+
+    for (let i = 0; i < startWeekday; i++) html += `<span></span>`;
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const blocked = blockedDateSet.has(dateStr);
+      const disabled = isDisabled(dateStr);
+      const isSelected = dateStr === selected;
+
+      let cls = 'w-9 h-9 flex items-center justify-center rounded-lg text-xs font-semibold ';
+      if (isSelected) {
+        cls += 'bg-slate-900 text-white';
+      } else if (blocked) {
+        cls += 'bg-red-100 text-red-500 cursor-not-allowed';
+      } else if (disabled) {
+        cls += 'text-slate-300 cursor-not-allowed';
+      } else {
+        cls += 'text-slate-700 hover:bg-slate-100 cursor-pointer';
+      }
+
+      html += `<button type="button" data-date="${dateStr}" title="${blocked ? 'Already reserved' : ''}" ${disabled ? 'disabled' : ''} class="${cls}">${day}</button>`;
+    }
+
+    html += `</div>
+      <div class="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100 text-[10px] font-semibold">
+        <span class="flex items-center gap-1 text-slate-500"><span class="w-2.5 h-2.5 rounded-full bg-red-200 inline-block"></span> Reserved</span>
+        <span class="flex items-center gap-1 text-slate-500"><span class="w-2.5 h-2.5 rounded-full bg-slate-900 inline-block"></span> Selected</span>
+      </div>`;
+
+    panel.innerHTML = html;
+
+    panel.querySelectorAll('[data-nav]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        viewDate.setMonth(viewDate.getMonth() + (btn.dataset.nav === 'next' ? 1 : -1));
+        render();
+      });
+    });
+
+    panel.querySelectorAll('[data-date]:not([disabled])').forEach(btn => {
+      btn.addEventListener('click', () => {
+        hidden.value = btn.dataset.date;
+        display.textContent = formatDisplayDate(btn.dataset.date);
+        display.classList.remove('text-slate-400');
+        display.classList.add('text-slate-900');
+        panel.classList.add('hidden');
+        if (onSelect) onSelect(btn.dataset.date);
+        render();
+      });
+    });
+  }
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (guardFn && !guardFn()) return;
+    document.querySelectorAll('.zep-calendar-panel').forEach(p => { if (p !== panel) p.classList.add('hidden'); });
+    const willOpen = panel.classList.contains('hidden');
+    panel.classList.toggle('hidden');
+    if (willOpen) {
+      if (hidden.value) viewDate = new Date(hidden.value + 'T00:00:00');
+      render();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (panel.classList.contains('hidden')) return;
+    if (!panel.contains(e.target) && e.target !== trigger && !trigger.contains(e.target)) {
+      panel.classList.add('hidden');
+    }
+  });
+
+  return { render, refresh: render, flashHint: () => {
+    if (!hint) return;
+    const original = hint.textContent;
+    const originalClass = hint.className;
+    hint.textContent = 'Please select a Move-in Date first.';
+    hint.className = 'text-xs text-red-500 font-semibold mt-1.5';
+    setTimeout(() => { hint.textContent = original; hint.className = originalClass; }, 2500);
+  }};
+}
+
+const moveInPicker = initDatePicker({
+  triggerId: 'resMoveInTrigger',
+  panelId: 'resMoveInCalendar',
+  hiddenId: 'resMoveIn',
+  displayId: 'resMoveInDisplay',
+  hintId: 'resMoveInHint',
+  minDateFn: () => todayISO,
+  onSelect: (dateStr) => {
+    const moveOutHidden = document.getElementById('resLease');
+    if (moveOutHidden && moveOutHidden.value && moveOutHidden.value < dateStr) {
+      moveOutHidden.value = '';
+      const moveOutDisplay = document.getElementById('resLeaseDisplay');
+      if (moveOutDisplay) {
+        moveOutDisplay.textContent = 'Select a date';
+        moveOutDisplay.classList.add('text-slate-400');
+        moveOutDisplay.classList.remove('text-slate-900');
+      }
+    }
+    if (moveOutPicker) moveOutPicker.refresh();
+  }
+});
+
+let moveOutPicker = null;
+if (document.getElementById('resLeaseTrigger')) {
+  moveOutPicker = initDatePicker({
+    triggerId: 'resLeaseTrigger',
+    panelId: 'resLeaseCalendar',
+    hiddenId: 'resLease',
+    displayId: 'resLeaseDisplay',
+    hintId: 'resLeaseHint',
+    minDateFn: () => document.getElementById('resMoveIn').value || todayISO,
+    isDisabledFn: (dateStr) => {
+      const moveIn = document.getElementById('resMoveIn').value;
+      if (!moveIn) return true;
+      const limit = firstBlockedOnOrAfter(moveIn);
+      return limit ? dateStr >= limit : false;
+    },
+    guardFn: () => {
+      const moveIn = document.getElementById('resMoveIn').value;
+      if (!moveIn) {
+        if (moveOutPicker) moveOutPicker.flashHint();
+        return false;
+      }
+      return true;
+    }
+  });
+}
 
 const priceBasis = <?php echo json_encode((float)$price_basis); ?>;
 const dpOption = document.getElementById("dpOption");
@@ -876,6 +1158,22 @@ function closeModal(modalId) {
 }
 
 function openReservationModal(){
+    const moveIn = document.getElementById('resMoveIn');
+    const moveOut = document.getElementById('resLease');
+
+    if (moveIn && !moveIn.value) {
+      document.getElementById('resMoveInHint').textContent = 'Please select a date before submitting.';
+      document.getElementById('resMoveInHint').className = 'text-xs text-red-500 font-semibold mt-1.5';
+      document.getElementById('resMoveInTrigger').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    if (moveOut && !moveOut.value) {
+      document.getElementById('resLeaseHint').textContent = 'Please select a date before submitting.';
+      document.getElementById('resLeaseHint').className = 'text-xs text-red-500 font-semibold mt-1.5';
+      document.getElementById('resLeaseTrigger').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
 
     document.getElementById("reservationModal")
     .classList.remove("hidden");

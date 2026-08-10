@@ -153,7 +153,7 @@ $user = requireRole($conn, ['unit owner']);
  
  <div class="main-scroll p-4 md:p-6 space-y-6">
   <div class="max-w-screen-xl mx-auto space-y-6">
-    <h1 class="text-xl font-bold text-slate-900">Unit Reservation Requests</h1>
+    <h1 class="text-xl font-bold text-slate-900">Inquiries</h1>
 
     <?php if (!empty($_SESSION['success_message'])): ?>
       <div class="bg-emerald-50 border border-emerald-100 text-emerald-700 px-4 py-3 rounded-xl text-sm font-semibold">

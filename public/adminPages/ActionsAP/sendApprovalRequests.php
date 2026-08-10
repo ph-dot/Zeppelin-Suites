@@ -49,11 +49,15 @@ try {
     }
     $deleteStmt->close();
 
-    $selectUnitSql = "SELECT unit_id, unit_owner_id 
-                      FROM units_table 
-                      WHERE unit_id = ?
-                      AND unit_current_status NOT IN ('Resale', 'On Hold', 'Under maintenance')
-                      AND unit_owner_id IS NOT NULL";
+    require_once '../../php_files/owner_notifications.php';
+
+    $selectUnitSql = "SELECT u.unit_id, u.unit_number, u.unit_owner_id,
+                              owner.full_name AS owner_name, owner.email AS owner_email
+                      FROM units_table u
+                      LEFT JOIN users_table owner ON u.unit_owner_id = owner.user_id
+                      WHERE u.unit_id = ?
+                      AND u.unit_current_status NOT IN ('Resale', 'On Hold', 'Under maintenance')
+                      AND u.unit_owner_id IS NOT NULL";
 
     $insertSql = "INSERT INTO owner_approval_requests
                   (inq_id, unit_id, unit_owner_id, request_status)
@@ -63,6 +67,7 @@ try {
     $insertStmt = $conn->prepare($insertSql);
 
     $inserted = 0;
+    $notifyList = [];
 
     foreach ($unit_ids as $unit_id) {
         $unit_id = (int)$unit_id;
@@ -77,6 +82,12 @@ try {
             $insertStmt->bind_param("iii", $inq_id, $unit_id, $unit_owner_id);
             $insertStmt->execute();
             $inserted++;
+
+            $notifyList[] = [
+                'unit_number' => $row['unit_number'],
+                'owner_name'  => $row['owner_name'],
+                'owner_email' => $row['owner_email'],
+            ];
         }
     }
 
@@ -97,6 +108,14 @@ try {
     $updateStmt->close();
 
     $conn->commit();
+
+    foreach ($notifyList as $n) {
+        notifyOwnerOfApprovalRequest(
+            $n['owner_email'] ?? '',
+            $n['owner_name'] ?? 'Unit Owner',
+            $n['unit_number'] ?? ''
+        );
+    }
 
     echo json_encode([
         'success' => true,
