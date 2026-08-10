@@ -2,6 +2,53 @@
 require_once __DIR__ . '/../php_files/auth.php';
 
 $user = requireRole($conn, ['unit owner']);
+$ownerId = (int)$user['user_id'];
+
+/* ── Live data ──────────────────────────────────────────────
+   Front-end/layout unchanged — just listing whoever is
+   currently booked (Occupied/Reserved) into one of this
+   owner's units. */
+function tn_e($value) {
+    return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
+}
+
+function tn_date($value) {
+    if (empty($value) || $value === '0000-00-00') return '—';
+    $ts = strtotime((string)$value);
+    return $ts ? date('M j, Y', $ts) : '—';
+}
+
+$tenants = [];
+$stmt = $conn->prepare("
+    SELECT r.unit_id, r.client_name, r.client_email, r.client_contact, r.move_in_date, r.move_out_date,
+           u.unit_number, u.unit_type, u.unit_current_status
+    FROM reservation_table r
+    JOIN units_table u ON u.unit_id = r.unit_id
+    WHERE u.unit_owner_id = ?
+      AND r.officially_booked_at IS NOT NULL
+      AND u.unit_current_status IN ('Occupied', 'Reserved')
+    ORDER BY r.officially_booked_at DESC
+");
+if ($stmt) {
+    $stmt->bind_param('i', $ownerId);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while ($row = $res->fetch_assoc()) {
+        // Ordered latest-first, so the first row seen per unit is the current tenant
+        if (!isset($tenants[$row['unit_id']])) {
+            $tenants[$row['unit_id']] = $row;
+        }
+    }
+    $stmt->close();
+}
+$tenants = array_values($tenants);
+
+$unitBadgeClasses = [
+    'studio type a' => 'bg-purple-50 text-purple-700 border-purple-100',
+    'studio type b' => 'bg-rose-50 text-rose-700 border-rose-100',
+    'one bedroom'   => 'bg-blue-50 text-blue-700 border-blue-100',
+    'two bedroom'   => 'bg-amber-50 text-amber-700 border-amber-100',
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -58,7 +105,7 @@ $user = requireRole($conn, ['unit owner']);
 <!-- SIDEBAR -->
 <aside class="sidebar fixed left-0 top-0 h-full border-r border-slate-100/80 flex flex-col z-50 md:z-40 shadow-2xl md:shadow-none" id="sidebar">
   <div class="px-4 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
-    <a href="overview.html" class="sidebar-logo shrink-0 flex items-center">
+    <a href="overview.php" class="sidebar-logo shrink-0 flex items-center">
       <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" class="h-10 w-auto object-contain" onerror="this.outerHTML='<span class=\'font-bold text-slate-900 text-sm\'>ZEPPELIN SUITES</span>'">
     </a>
     <button onclick="toggleCollapse()" class="hidden md:flex btn-press p-1.5 rounded-lg hover:bg-slate-100 transition-colors active:scale-95 shrink-0 ml-1">
@@ -158,29 +205,47 @@ $user = requireRole($conn, ['unit owner']);
               </tr>
             </thead>
             <tbody id="tenantsBody">
-              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openTenantModal({name:'John Doe',unit:'C505',type:'One Bedroom',moveIn:'Jan 1, 2026',leaseEnd:'Dec 31, 2026',contact:'09xx xxx xxxx',email:'john.doe@email.com',status:'Active'})">
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap">John Doe</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">C505</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Jan 1, 2026</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Dec 31, 2026</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">09xx xxx xxxx</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-100">Active</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openTenantModal({name:'John Doe',unit:'C505',type:'One Bedroom',moveIn:'Jan 1, 2026',leaseEnd:'Dec 31, 2026',contact:'09xx xxx xxxx',email:'john.doe@email.com',status:'Active'})">View</button></td>
-              </tr>
-              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openTenantModal({name:'Maria Santos',unit:'A104',type:'Two Bedroom',moveIn:'Feb 1, 2026',leaseEnd:'Jan 31, 2027',contact:'09yy yyy yyyy',email:'maria.s@email.com',status:'Reserved'})">
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap">Maria Santos</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">A104</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Feb 1, 2026</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">Jan 31, 2027</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace">09yy yyy yyyy</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-yellow-50 text-yellow-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-yellow-100">Reserved</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openTenantModal({name:'Maria Santos',unit:'A104',type:'Two Bedroom',moveIn:'Feb 1, 2026',leaseEnd:'Jan 31, 2027',contact:'09yy yyy yyyy',email:'maria.s@email.com',status:'Reserved'})">View</button></td>
-              </tr>
+              <?php if (empty($tenants)): ?>
+                <tr>
+                  <td colspan="7" class="px-4 py-10 text-center text-sm text-slate-400">No tenants under your units yet.</td>
+                </tr>
+              <?php else: ?>
+                <?php foreach ($tenants as $tenant): ?>
+                  <?php
+                    $isActive = strtolower($tenant['unit_current_status']) === 'occupied';
+                    $statusLabel = $isActive ? 'Active' : 'Reserved';
+                    $statusClass = $isActive
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                        : 'bg-yellow-50 text-yellow-700 border-yellow-100';
+                    $typeClass = $unitBadgeClasses[strtolower($tenant['unit_type'])] ?? 'bg-slate-100 text-slate-500 border-slate-200';
+                    $modalData = [
+                        'name' => $tenant['client_name'],
+                        'unit' => $tenant['unit_number'],
+                        'type' => $tenant['unit_type'],
+                        'moveIn' => tn_date($tenant['move_in_date']),
+                        'leaseEnd' => tn_date($tenant['move_out_date']),
+                        'contact' => $tenant['client_contact'] ?: '—',
+                        'email' => $tenant['client_email'] ?: '—',
+                        'status' => $statusLabel,
+                    ];
+                    $modalJson = htmlspecialchars(json_encode($modalData), ENT_QUOTES, 'UTF-8');
+                  ?>
+                  <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openTenantModal(<?= $modalJson ?>)">
+                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap"><?= tn_e($tenant['client_name']) ?></td>
+                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="<?= tn_e($typeClass) ?> text-xs font-semibold px-2.5 py-0.5 rounded-full border"><?= tn_e($tenant['unit_number']) ?></span></td>
+                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= tn_e(tn_date($tenant['move_in_date'])) ?></td>
+                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= tn_e(tn_date($tenant['move_out_date'])) ?></td>
+                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= tn_e($tenant['client_contact'] ?: '—') ?></td>
+                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="<?= tn_e($statusClass) ?> text-xs font-semibold px-2.5 py-0.5 rounded-full border"><?= tn_e($statusLabel) ?></span></td>
+                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openTenantModal(<?= $modalJson ?>)">View</button></td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php endif; ?>
             </tbody>
           </table>
         </div>
         <div class="flex items-center justify-between px-5 py-3.5 border-t border-slate-100">
-          <p class="text-xs text-slate-400">Showing 2 tenants</p>
+          <p class="text-xs text-slate-400">Showing <?= tn_e(count($tenants)) ?> tenant<?= count($tenants) === 1 ? '' : 's' ?></p>
           <div class="flex items-center gap-1">
             <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95"><svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
             <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border bg-slate-900 border-slate-900 text-white text-xs font-bold active:scale-95">1</button>

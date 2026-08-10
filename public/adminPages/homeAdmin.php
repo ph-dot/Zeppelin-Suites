@@ -4,6 +4,21 @@ require_once '../php_files/db.php';
 
 // This populates $_SESSION['full_name'] and $_SESSION['initial']
 $userData = requireRole($conn, ['admin']);  // Change 'admin' to your allowed roles
+
+/* ── Home snapshot stats ───────────────────────────────────
+   Simple portfolio counts only — no rates/trends/charts here,
+   those live on the Analytics page. This is just "what do I
+   have, right now". */
+function homeCount(mysqli $conn, string $sql): int {
+    $result = $conn->query($sql);
+    if (!$result) return 0;
+    $row = $result->fetch_row();
+    return (int)($row[0] ?? 0);
+}
+
+$totalUnits    = homeCount($conn, "SELECT COUNT(*) FROM units_table");
+$occupiedUnits = homeCount($conn, "SELECT COUNT(*) FROM units_table WHERE unit_current_status = 'Occupied'");
+$availableUnits = homeCount($conn, "SELECT COUNT(*) FROM units_table WHERE unit_current_status IN ('Ready for Occupancy','Resale','On Hold')");
 ?>
 
 
@@ -261,49 +276,56 @@ $userData = requireRole($conn, ['admin']);  // Change 'admin' to your allowed ro
 
       <!-- Overview header -->
       <div class="flex items-center justify-between">
-        <h1 class="text-xl font-bold text-slate-900">Overview</h1>
-        <select class="zep-select btn-press active:scale-95 text-sm border border-slate-200 rounded-full px-4 py-1.5 bg-white text-slate-600 cursor-pointer transition-all">
-          <option>Daily</option><option>Weekly</option><option>Monthly</option>
-        </select>
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">Overview</h1>
+          <p class="text-xs text-slate-400 mt-0.5">Your portfolio at a glance.</p>
+        </div>
+        <a href="analytics.php" class="btn-press active:scale-95 text-sm border border-slate-200 rounded-full px-4 py-1.5 bg-white text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          View Analytics
+        </a>
       </div>
 
-      <!-- Summary stat cards -->
+      <!-- Summary stat cards — plain counts only, trends/rates live on Analytics -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="stat-card bg-white rounded-2xl p-4 border border-slate-100">
           <div class="flex items-center gap-2 mb-3">
-            <div class="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
-              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+            <div class="w-8 h-8 bg-slate-50 rounded-xl flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M5 21V7l8-4v18M13 21V9l6 3v9M9 9h.01M9 13h.01M9 17h.01"/></svg>
             </div>
-            <span class="text-sm font-semibold text-slate-600">All Units Occupied</span>
+            <span class="text-sm font-semibold text-slate-600">Total Units</span>
           </div>
-          <p class="text-2xl font-bold text-slate-900" style="font-family:'DM Mono',monospace">—</p>
-          <p class="text-xs text-emerald-500 font-semibold mt-1">↑ X% <span class="text-slate-400 font-normal">Last X Days</span></p>
+          <p class="text-2xl font-bold text-slate-900" style="font-family:'DM Mono',monospace"><?php echo htmlspecialchars((string)$totalUnits); ?></p>
+          <p class="text-xs text-slate-400 font-normal mt-1">Across all buildings</p>
         </div>
-        
+
+        <div class="stat-card bg-white rounded-2xl p-4 border border-slate-100">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            </div>
+            <span class="text-sm font-semibold text-slate-600">Occupied</span>
+          </div>
+          <p class="text-2xl font-bold text-slate-900" style="font-family:'DM Mono',monospace"><?php echo htmlspecialchars((string)$occupiedUnits); ?></p>
+          <p class="text-xs text-slate-400 font-normal mt-1">Currently tenanted</p>
+        </div>
+
         <div class="stat-card bg-white rounded-2xl p-4 border border-slate-100">
           <div class="flex items-center gap-2 mb-3">
             <div class="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
-              <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+              <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
             </div>
-            <span class="text-sm font-semibold text-slate-600">Maintenance</span>
+            <span class="text-sm font-semibold text-slate-600">Available</span>
           </div>
-          <p class="text-2xl font-bold text-slate-900" style="font-family:'DM Mono',monospace">—</p>
-          <p class="text-xs text-blue-500 font-semibold mt-1">↑ XX <span class="text-slate-400 font-normal">Last X Days</span></p>
-        </div>
-        <div class="stat-card bg-white rounded-2xl p-4 border border-slate-100">
-          <div class="flex items-center gap-2 mb-3">
-            <div class="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center shrink-0">
-              <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            </div>
-            <span class="text-sm font-semibold text-slate-600">Inquiry</span>
-          </div>
-          <p class="text-2xl font-bold text-slate-900" style="font-family:'DM Mono',monospace">—</p>
-          <p class="text-xs text-amber-500 font-semibold mt-1">↑ XX <span class="text-slate-400 font-normal">Last X Days</span></p>
+          <p class="text-2xl font-bold text-slate-900" style="font-family:'DM Mono',monospace"><?php echo htmlspecialchars((string)$availableUnits); ?></p>
+          <p class="text-xs text-slate-400 font-normal mt-1">Ready, resale, or on hold</p>
         </div>
       </div>
 
-      <!-- Pending actions -->
-      <?php include __DIR__ . '/ActionsAP/pending_actions.php'; ?>
+      <!-- Pending actions (auto-refreshes on an interval, see script below) -->
+      <div id="pendingActionsWrap">
+        <?php include __DIR__ . '/ActionsAP/pending_actions.php'; ?>
+      </div>
 
     </div><!-- /left col -->
 
@@ -396,6 +418,33 @@ function hideModal() {
 function doLogout() {
   window.location.href = '/Zeppelin-Suites/public/php_files/logout_session.php';  // Your logout file
 }
+
+// ── Keep "Pending Admin Actions" in sync with the database ──
+// The widget is plain server-rendered PHP, so without this it only
+// ever reflects the moment the page first loaded. This re-fetches
+// it on an interval and whenever you come back to the tab.
+const PENDING_ACTIONS_URL = 'ActionsAP/pending_actions.php';
+const PENDING_ACTIONS_POLL_MS = 20000; // 20s
+
+async function refreshPendingActions() {
+  try {
+    const res = await fetch(PENDING_ACTIONS_URL, { credentials: 'same-origin', cache: 'no-store' });
+    if (!res.ok) return;
+    const html = await res.text();
+    // Guard against getting a login-redirect page back instead of the fragment
+    if (!html.includes('Pending Admin Actions')) return;
+    document.getElementById('pendingActionsWrap').innerHTML = html;
+  } catch (err) {
+    // Silent fail — keep showing the last good data rather than erroring the page
+    console.warn('Pending actions refresh failed:', err);
+  }
+}
+
+setInterval(refreshPendingActions, PENDING_ACTIONS_POLL_MS);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') refreshPendingActions();
+});
+
 </script>
 </body>
 </html>

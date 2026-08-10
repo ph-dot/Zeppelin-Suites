@@ -2,6 +2,85 @@
 require_once __DIR__ . '/../php_files/auth.php';
 
 $user = requireRole($conn, ['unit owner']);
+$ownerId = (int)$user['user_id'];
+
+/* ── Live data for this page ────────────────────────────────
+   Front-end/layout is unchanged — just wiring real numbers in
+   place of the old placeholders ("#", hardcoded rows). */
+function ov_e($value) {
+    return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
+}
+
+function ov_count(mysqli $conn, string $sql, int $ownerId): int {
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) return 0;
+    $stmt->bind_param('i', $ownerId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result ? $result->fetch_row() : null;
+    $stmt->close();
+    return (int)($row[0] ?? 0);
+}
+
+$ownedUnits     = ov_count($conn, "SELECT COUNT(*) FROM units_table WHERE unit_owner_id = ?", $ownerId);
+$occupiedUnits  = ov_count($conn, "SELECT COUNT(*) FROM units_table WHERE unit_owner_id = ? AND unit_current_status = 'Occupied'", $ownerId);
+$availableUnits = ov_count($conn, "SELECT COUNT(*) FROM units_table WHERE unit_owner_id = ? AND unit_current_status = 'Ready for Occupancy'", $ownerId);
+$reservedUnits  = ov_count($conn, "SELECT COUNT(*) FROM units_table WHERE unit_owner_id = ? AND unit_current_status = 'Reserved'", $ownerId);
+
+// Recent tenants — reservations officially booked into units this owner owns
+$recentTenants = [];
+$stmt = $conn->prepare("
+    SELECT r.client_name, r.client_contact, r.move_in_date, u.unit_number
+    FROM reservation_table r
+    JOIN units_table u ON u.unit_id = r.unit_id
+    WHERE u.unit_owner_id = ? AND r.officially_booked_at IS NOT NULL
+    ORDER BY r.officially_booked_at DESC
+    LIMIT 5
+");
+if ($stmt) {
+    $stmt->bind_param('i', $ownerId);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while ($row = $res->fetch_assoc()) { $recentTenants[] = $row; }
+    $stmt->close();
+}
+
+// Maintenance requests logged against this owner's units
+$maintenanceRequests = [];
+$stmt = $conn->prepare("
+    SELECT m.maintenance_id, m.status, u.unit_number
+    FROM maintenance_requests m
+    LEFT JOIN units_table u ON u.unit_id = m.unit_id
+    WHERE m.unit_owner_id = ?
+    ORDER BY m.submitted_at DESC
+    LIMIT 5
+");
+if ($stmt) {
+    $stmt->bind_param('i', $ownerId);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while ($row = $res->fetch_assoc()) { $maintenanceRequests[] = $row; }
+    $stmt->close();
+}
+
+// Pending reservation requests waiting on this owner's approval
+$reservationRequests = [];
+$stmt = $conn->prepare("
+    SELECT oar.request_id, i.sender_name, un.unit_number
+    FROM owner_approval_requests oar
+    LEFT JOIN inquiry_table i ON i.inq_id = oar.inq_id
+    LEFT JOIN units_table un ON un.unit_id = oar.unit_id
+    WHERE oar.unit_owner_id = ? AND oar.request_status = 'pending'
+    ORDER BY oar.requested_at DESC
+    LIMIT 5
+");
+if ($stmt) {
+    $stmt->bind_param('i', $ownerId);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while ($row = $res->fetch_assoc()) { $reservationRequests[] = $row; }
+    $stmt->close();
+}
 ?>
 
 <!DOCTYPE html>
@@ -59,7 +138,7 @@ $user = requireRole($conn, ['unit owner']);
 <!-- SIDEBAR -->
 <aside class="sidebar fixed left-0 top-0 h-full border-r border-slate-100/80 flex flex-col z-50 md:z-40 shadow-2xl md:shadow-none" id="sidebar">
   <div class="px-4 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
-    <a href="overview.html" class="sidebar-logo shrink-0 flex items-center">
+    <a href="overview.php" class="sidebar-logo shrink-0 flex items-center">
       <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" class="h-10 w-auto object-contain" onerror="this.outerHTML='<span class=\'font-bold text-slate-900 text-sm tracking-tight\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest text-slate-500\'>SUITES</span></span>'">
     </a>
     <button onclick="toggleCollapse()" class="hidden md:flex btn-press p-1.5 rounded-lg hover:bg-slate-100 transition-colors active:scale-95 shrink-0 ml-1">
@@ -145,7 +224,7 @@ $user = requireRole($conn, ['unit owner']);
 
       <!-- Welcome -->
       <div>
-        <h1 class="text-xl font-bold text-slate-900">Welcome Back, <span class="text-slate-500 font-normal">{Unit Owner Name}</span></h1>
+        <h1 class="text-xl font-bold text-slate-900">Welcome Back, <span class="text-slate-500 font-normal"><?= ov_e($user['full_name'] ?? 'Unit Owner') ?></span></h1>
         <p class="text-xs text-slate-400 mt-0.5">Here's what's happening with your properties today.</p>
       </div>
 
@@ -153,30 +232,30 @@ $user = requireRole($conn, ['unit owner']);
       <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
         <div class="flex items-center justify-between mb-5">
           <h2 class="font-bold text-slate-900">Units Information</h2>
-          <a href="ownersUnit.html" class="btn-press text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors active:scale-95">View all units →</a>
+          <a href="ownersUnit.php" class="btn-press text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors active:scale-95">View all units →</a>
         </div>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <!-- Owned -->
           <div class="stat-card bg-blue-50 rounded-2xl p-4 border border-blue-100">
-            <p class="text-3xl font-bold text-blue-700 mb-1" style="font-family:'DM Mono',monospace">#</p>
+            <p class="text-3xl font-bold text-blue-700 mb-1" style="font-family:'DM Mono',monospace"><?= ov_e($ownedUnits) ?></p>
             <p class="text-sm font-semibold text-blue-600">Owned</p>
             <p class="text-xs text-blue-400 mt-1">Total units owned</p>
           </div>
           <!-- Occupied -->
           <div class="stat-card bg-orange-50 rounded-2xl p-4 border border-orange-100">
-            <p class="text-3xl font-bold text-orange-600 mb-1" style="font-family:'DM Mono',monospace">#</p>
+            <p class="text-3xl font-bold text-orange-600 mb-1" style="font-family:'DM Mono',monospace"><?= ov_e($occupiedUnits) ?></p>
             <p class="text-sm font-semibold text-orange-500">Occupied</p>
             <p class="text-xs text-orange-400 mt-1">Currently tenanted</p>
           </div>
           <!-- Available -->
           <div class="stat-card bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
-            <p class="text-3xl font-bold text-emerald-600 mb-1" style="font-family:'DM Mono',monospace">#</p>
+            <p class="text-3xl font-bold text-emerald-600 mb-1" style="font-family:'DM Mono',monospace"><?= ov_e($availableUnits) ?></p>
             <p class="text-sm font-semibold text-emerald-600">Available</p>
             <p class="text-xs text-emerald-400 mt-1">Ready for occupancy</p>
           </div>
           <!-- Reserved -->
           <div class="stat-card bg-yellow-50 rounded-2xl p-4 border border-yellow-100">
-            <p class="text-3xl font-bold text-yellow-600 mb-1" style="font-family:'DM Mono',monospace">#</p>
+            <p class="text-3xl font-bold text-yellow-600 mb-1" style="font-family:'DM Mono',monospace"><?= ov_e($reservedUnits) ?></p>
             <p class="text-sm font-semibold text-yellow-600">Reserved</p>
             <p class="text-xs text-yellow-400 mt-1">Awaiting move-in</p>
           </div>
@@ -199,17 +278,25 @@ $user = requireRole($conn, ['unit owner']);
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
-              <tr class="hover:bg-slate-50/60 transition-colors">
-                <td class="px-5 py-3.5 font-semibold text-slate-800 whitespace-nowrap">John Doe</td>
-                <td class="px-4 py-3.5 text-slate-500 text-sm" style="font-family:'DM Mono',monospace">09xx xxx xxxx</td>
-                <td class="px-4 py-3.5"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">Unit C505</span></td>
-                <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace">month - day - year</td>
-              </tr>
+              <?php if (empty($recentTenants)): ?>
+                <tr>
+                  <td colspan="4" class="px-5 py-10 text-center text-sm text-slate-400">No tenants yet.</td>
+                </tr>
+              <?php else: ?>
+                <?php foreach ($recentTenants as $tenant): ?>
+                  <tr class="hover:bg-slate-50/60 transition-colors">
+                    <td class="px-5 py-3.5 font-semibold text-slate-800 whitespace-nowrap"><?= ov_e($tenant['client_name']) ?></td>
+                    <td class="px-4 py-3.5 text-slate-500 text-sm" style="font-family:'DM Mono',monospace"><?= ov_e($tenant['client_contact'] ?: '—') ?></td>
+                    <td class="px-4 py-3.5"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">Unit <?= ov_e($tenant['unit_number']) ?></span></td>
+                    <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= ov_e($tenant['move_in_date'] ? date('M d, Y', strtotime($tenant['move_in_date'])) : '—') ?></td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php endif; ?>
             </tbody>
           </table>
         </div>
         <div class="flex justify-end px-5 py-3 border-t border-slate-100">
-          <a href="tenants.html" class="btn-press text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors active:scale-95">view your tenants →</a>
+          <a href="tenants.php" class="btn-press text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors active:scale-95">view your tenants →</a>
         </div>
       </div>
 
@@ -224,16 +311,33 @@ $user = requireRole($conn, ['unit owner']);
           <div class="overflow-x-auto flex-1">
             <table class="w-full text-sm">
               <tbody class="divide-y divide-slate-50">
-                <tr class="hover:bg-slate-50/60 transition-colors">
-                  <td class="px-5 py-3.5 font-semibold text-slate-800 whitespace-nowrap" style="font-family:'DM Mono',monospace">1</td>
-                  <td class="px-4 py-3.5"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">Unit c505</span></td>
-                  <td class="px-4 py-3.5"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">Pending</span></td>
-                </tr>
+                <?php if (empty($maintenanceRequests)): ?>
+                  <tr>
+                    <td colspan="3" class="px-5 py-10 text-center text-sm text-slate-400">No maintenance requests.</td>
+                  </tr>
+                <?php else: ?>
+                  <?php
+                  $maintStatusClasses = [
+                      'pending'     => 'bg-amber-50 text-amber-700 border-amber-100',
+                      'in progress' => 'bg-blue-50 text-blue-700 border-blue-100',
+                      'resolved'    => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                      'cancelled'   => 'bg-red-50 text-red-700 border-red-100',
+                  ];
+                  ?>
+                  <?php foreach ($maintenanceRequests as $req): ?>
+                    <?php $statusClass = $maintStatusClasses[strtolower($req['status'])] ?? 'bg-slate-50 text-slate-700 border-slate-100'; ?>
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                      <td class="px-5 py-3.5 font-semibold text-slate-800 whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= ov_e($req['maintenance_id']) ?></td>
+                      <td class="px-4 py-3.5"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">Unit <?= ov_e($req['unit_number'] ?? 'N/A') ?></span></td>
+                      <td class="px-4 py-3.5"><span class="<?= ov_e($statusClass) ?> text-xs font-semibold px-2.5 py-0.5 rounded-full border"><?= ov_e(ucwords($req['status'])) ?></span></td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
           <div class="flex justify-end px-5 py-3 border-t border-slate-100 mt-auto">
-            <a href="ownersMaintenance.html" class="btn-press text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors active:scale-95">View maintenance →</a>
+            <a href="ownersMaintenance.php" class="btn-press text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors active:scale-95">View maintenance →</a>
           </div>
         </div>
 
@@ -242,16 +346,36 @@ $user = requireRole($conn, ['unit owner']);
           <div class="px-5 py-4 border-b border-slate-100">
             <h2 class="font-bold text-slate-900">Reservation Request</h2>
           </div>
-          <div class="flex-1 flex items-center justify-center py-8 px-5">
-            <div class="text-center">
-              <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          <?php if (empty($reservationRequests)): ?>
+            <div class="flex-1 flex items-center justify-center py-8 px-5">
+              <div class="text-center">
+                <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                </div>
+                <p class="text-sm text-slate-400">No pending reservation requests</p>
               </div>
-              <p class="text-sm text-slate-400">No pending reservation requests</p>
             </div>
-          </div>
+          <?php else: ?>
+            <div class="overflow-x-auto flex-1">
+              <table class="w-full text-sm">
+                <tbody class="divide-y divide-slate-50">
+                  <?php foreach ($reservationRequests as $reqItem): ?>
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                      <td class="px-5 py-3.5">
+                        <p class="font-semibold text-slate-800 whitespace-nowrap"><?= ov_e($reqItem['sender_name'] ?? 'Unknown') ?></p>
+                        <p class="text-xs text-slate-400">Unit <?= ov_e($reqItem['unit_number'] ?? 'N/A') ?></p>
+                      </td>
+                      <td class="px-4 py-3.5 text-right">
+                        <a href="ownersReservations.php" class="btn-press inline-flex items-center justify-center text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full active:scale-95 transition-all">Respond</a>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+          <?php endif; ?>
           <div class="flex justify-end px-5 py-3 border-t border-slate-100 mt-auto">
-            <a href="ownersReservations.html" class="btn-press text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors active:scale-95">view reservation request →</a>
+            <a href="ownersReservations.php" class="btn-press text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors active:scale-95">view reservation request →</a>
           </div>
         </div>
 

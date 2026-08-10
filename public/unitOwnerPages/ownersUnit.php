@@ -2,6 +2,73 @@
 require_once __DIR__ . '/../php_files/auth.php';
 
 $user = requireRole($conn, ['unit owner']);
+$ownerId = (int)$user['user_id'];
+
+/* ── Live data ──────────────────────────────────────────────
+   Front-end/layout unchanged — just grabbing the units that
+   belong to this owner, and whoever is currently booked into
+   each one (if anyone). */
+function ou_e($value) {
+    return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
+}
+
+$units = [];
+$stmt = $conn->prepare("
+    SELECT unit_id, unit_number, unit_type, unit_current_status, base_rate, lease_rate
+    FROM units_table
+    WHERE unit_owner_id = ?
+    ORDER BY unit_number
+");
+if ($stmt) {
+    $stmt->bind_param('i', $ownerId);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while ($row = $res->fetch_assoc()) { $units[] = $row; }
+    $stmt->close();
+}
+
+// Latest officially-booked reservation per unit (i.e. the current/most recent tenant, if any)
+$tenantByUnit = [];
+$stmt = $conn->prepare("
+    SELECT r.unit_id, r.client_name, r.client_contact, r.move_in_date, r.move_out_date
+    FROM reservation_table r
+    JOIN units_table u ON u.unit_id = r.unit_id
+    WHERE u.unit_owner_id = ? AND r.officially_booked_at IS NOT NULL
+    ORDER BY r.officially_booked_at DESC
+");
+if ($stmt) {
+    $stmt->bind_param('i', $ownerId);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while ($row = $res->fetch_assoc()) {
+        // Ordered latest-first, so the first row seen per unit is the current one
+        if (!isset($tenantByUnit[$row['unit_id']])) {
+            $tenantByUnit[$row['unit_id']] = $row;
+        }
+    }
+    $stmt->close();
+}
+
+$unitStatusClasses = [
+    'occupied'             => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    'reserved'             => 'bg-yellow-50 text-yellow-700 border-yellow-100',
+    'ready for occupancy'  => 'bg-slate-100 text-slate-500 border-slate-200',
+    'resale'               => 'bg-purple-50 text-purple-700 border-purple-100',
+    'on hold'              => 'bg-orange-50 text-orange-700 border-orange-100',
+    'under maintenance'    => 'bg-red-50 text-red-700 border-red-100',
+];
+$unitTypeClasses = [
+    'studio type a' => 'bg-purple-50 text-purple-700 border-purple-100',
+    'studio type b' => 'bg-rose-50 text-rose-700 border-rose-100',
+    'one bedroom'   => 'bg-blue-50 text-blue-700 border-blue-100',
+    'two bedroom'   => 'bg-amber-50 text-amber-700 border-amber-100',
+];
+
+function ou_date($value) {
+    if (empty($value) || $value === '0000-00-00') return '—';
+    $ts = strtotime((string)$value);
+    return $ts ? date('M j, Y', $ts) : '—';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -156,39 +223,45 @@ $user = requireRole($conn, ['unit owner']);
               </tr>
             </thead>
             <tbody id="unitsBody">
-              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openUnitModal({no:'C505',type:'One Bedroom',status:'Occupied',tenant:'John Doe',floor:'5th Floor',area:'45 sqm',contact:'09xx xxx xxxx',moveIn:'Jan 1, 2026',leaseEnd:'Dec 31, 2026'})">
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap" style="font-family:'DM Mono',monospace">C505</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">One Bedroom</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-100">Occupied</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">John Doe</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openUnitModal({no:'C505',type:'One Bedroom',status:'Occupied',tenant:'John Doe',floor:'5th Floor',area:'45 sqm',contact:'09xx xxx xxxx',moveIn:'Jan 1, 2026',leaseEnd:'Dec 31, 2026'})">View</button></td>
-              </tr>
-              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openUnitModal({no:'B302',type:'Studio Type A',status:'Available',tenant:'—',floor:'3rd Floor',area:'28 sqm',contact:'—',moveIn:'—',leaseEnd:'—'})">
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap" style="font-family:'DM Mono',monospace">B302</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-purple-50 text-purple-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-purple-100">Studio Type A</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-slate-100 text-slate-500 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-200">Available</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 text-slate-400">—</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openUnitModal({no:'B302',type:'Studio Type A',status:'Available',tenant:'—',floor:'3rd Floor',area:'28 sqm',contact:'—',moveIn:'—',leaseEnd:'—'})">View</button></td>
-              </tr>
-              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openUnitModal({no:'A104',type:'Two Bedroom',status:'Reserved',tenant:'Maria Santos',floor:'1st Floor',area:'68 sqm',contact:'09yy yyy yyyy',moveIn:'Feb 1, 2026',leaseEnd:'Jan 31, 2027'})">
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap" style="font-family:'DM Mono',monospace">A104</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-100">Two Bedroom</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-yellow-50 text-yellow-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-yellow-100">Reserved</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600">Maria Santos</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openUnitModal({no:'A104',type:'Two Bedroom',status:'Reserved',tenant:'Maria Santos',floor:'1st Floor',area:'68 sqm',contact:'09yy yyy yyyy',moveIn:'Feb 1, 2026',leaseEnd:'Jan 31, 2027'})">View</button></td>
-              </tr>
-              <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openUnitModal({no:'D701',type:'Studio Type B',status:'Available',tenant:'—',floor:'7th Floor',area:'32 sqm',contact:'—',moveIn:'—',leaseEnd:'—'})">
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap" style="font-family:'DM Mono',monospace">D701</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-rose-50 text-rose-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-rose-100">Studio Type B</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="bg-slate-100 text-slate-500 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-200">Available</span></td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 text-slate-400">—</td>
-                <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openUnitModal({no:'D701',type:'Studio Type B',status:'Available',tenant:'—',floor:'7th Floor',area:'32 sqm',contact:'—',moveIn:'—',leaseEnd:'—'})">View</button></td>
-              </tr>
+              <?php if (empty($units)): ?>
+                <tr>
+                  <td colspan="5" class="px-4 py-10 text-center text-sm text-slate-400">No units are registered under your account yet.</td>
+                </tr>
+              <?php else: ?>
+                <?php foreach ($units as $unit): ?>
+                  <?php
+                    $tenant = $tenantByUnit[$unit['unit_id']] ?? null;
+                    $statusKey = strtolower($unit['unit_current_status']);
+                    $statusClass = $unitStatusClasses[$statusKey] ?? 'bg-slate-100 text-slate-500 border-slate-200';
+                    $typeClass = $unitTypeClasses[strtolower($unit['unit_type'])] ?? 'bg-slate-100 text-slate-500 border-slate-200';
+                    $tenantName = $tenant['client_name'] ?? '—';
+                    $modalData = [
+                        'no' => $unit['unit_number'],
+                        'type' => $unit['unit_type'],
+                        'status' => $unit['unit_current_status'],
+                        'tenant' => $tenantName,
+                        'floor' => '—',
+                        'area' => '—',
+                        'contact' => $tenant['client_contact'] ?? '—',
+                        'moveIn' => $tenant ? ou_date($tenant['move_in_date']) : '—',
+                        'leaseEnd' => $tenant ? ou_date($tenant['move_out_date']) : '—',
+                    ];
+                    $modalJson = htmlspecialchars(json_encode($modalData), ENT_QUOTES, 'UTF-8');
+                  ?>
+                  <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openUnitModal(<?= $modalJson ?>)">
+                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= ou_e($unit['unit_number']) ?></td>
+                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="<?= ou_e($typeClass) ?> text-xs font-semibold px-2.5 py-0.5 rounded-full border"><?= ou_e($unit['unit_type']) ?></span></td>
+                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="<?= ou_e($statusClass) ?> text-xs font-semibold px-2.5 py-0.5 rounded-full border"><?= ou_e($unit['unit_current_status']) ?></span></td>
+                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 <?= $tenant ? '' : 'text-slate-400' ?>"><?= ou_e($tenantName) ?></td>
+                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openUnitModal(<?= $modalJson ?>)">View</button></td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php endif; ?>
             </tbody>
           </table>
         </div>
         <div class="flex items-center justify-between px-5 py-3.5 border-t border-slate-100">
-          <p class="text-xs text-slate-400">Showing 4 units</p>
+          <p class="text-xs text-slate-400">Showing <?= ou_e(count($units)) ?> unit<?= count($units) === 1 ? '' : 's' ?></p>
           <div class="flex items-center gap-1">
             <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95"><svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
             <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border bg-slate-900 border-slate-900 text-white text-xs font-bold active:scale-95">1</button>

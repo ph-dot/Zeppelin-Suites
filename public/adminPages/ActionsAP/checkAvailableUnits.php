@@ -104,6 +104,11 @@ elseif (strpos($leaseDuration, 'longer') !== false) {
     $months = 36;
 }
 
+// Business rule: shortest lease/stay the company will book is 30 days.
+// A unit whose free gap before its next reservation is shorter than this
+// isn't actually rentable, so it shouldn't be listed at all.
+const MIN_STAY_DAYS = 30;
+
 // FIND UNITS
 $sql = "
 SELECT 
@@ -113,18 +118,15 @@ SELECT
     u.lease_rate,
     u.unit_owner_id,
     owner.full_name AS owner_name,
-    MAX(
-        CASE
-            WHEN LOWER(r.reservation_status) NOT IN ('cancelled','rejected')
-            THEN r.move_out_date
-            ELSE NULL
-        END
-    ) AS latest_move_out
+    MAX(r.move_out_date) AS latest_move_out
 FROM units_table u
 LEFT JOIN users_table owner
     ON u.unit_owner_id = owner.user_id
 LEFT JOIN reservation_table r
     ON u.unit_id = r.unit_id
+    AND LOWER(r.reservation_status) NOT IN ('cancelled','rejected')
+    AND r.move_in_date <= CURDATE()
+    AND r.move_out_date >= CURDATE()
 WHERE u.unit_type = ?
 AND u.unit_current_status NOT IN ('Resale', 'On Hold', 'Under maintenance')
 AND u.unit_owner_id IS NOT NULL
@@ -149,9 +151,9 @@ if (!$stmt) {
 $stmt->bind_param("si", $unit_type, $inq_id);
 $stmt->execute();
 $result = $stmt->get_result();
-$units = [];
+$candidates = [];
 
-// CHECK EACH UNIT AVAILABILITY
+// CHECK EACH UNIT'S IMMEDIATE AVAILABILITY (ignoring future bookings for now)
 while ($row = $result->fetch_assoc()) {
     // If no reservation, available today
     if ($row['latest_move_out'] === null) {
@@ -160,14 +162,113 @@ while ($row = $result->fetch_assoc()) {
         $availableDate = new DateTime($row['latest_move_out']);
     }
     // Check customer preference only for future available units
-// Units available today can still be suggested
+    // Units available today can still be suggested
 
     if ($availableDate > $latestMoveIn) {
         continue;
     }
-    // Calculate lease end
+
+    $candidates[$row['unit_id']] = [
+        'row' => $row,
+        'availableDate' => $availableDate
+    ];
+}
+
+// FETCH EVERY UPCOMING RESERVATION (not just the first one) FOR EACH CANDIDATE
+// UNIT, sorted by move-in date. A unit that's blocked by a booking starting
+// too soon (gap < MIN_STAY_DAYS) isn't necessarily unrentable for this
+// inquiry - it may open back up again once that booking's own move-out date
+// passes (e.g. a "not sure yet" customer with a 6-month window doesn't care
+// that the unit is briefly booked next week if it's free again next month).
+// We need the full list per unit so we can walk past those short bookings
+// instead of giving up at the first one.
+$bookingsByUnit = [];
+if (!empty($candidates)) {
+    $unitIds = array_keys($candidates);
+    $placeholders = implode(',', array_fill(0, count($unitIds), '?'));
+    $types = str_repeat('i', count($unitIds));
+
+    $nextStmt = $conn->prepare("
+        SELECT unit_id, move_in_date, move_out_date
+        FROM reservation_table
+        WHERE unit_id IN ($placeholders)
+        AND LOWER(reservation_status) NOT IN ('cancelled','rejected')
+        AND move_in_date IS NOT NULL
+        ORDER BY move_in_date ASC
+    ");
+    $nextStmt->bind_param($types, ...$unitIds);
+    $nextStmt->execute();
+    $nextResult = $nextStmt->get_result();
+
+    while ($nextRow = $nextResult->fetch_assoc()) {
+        $bookingsByUnit[$nextRow['unit_id']][] = [
+            'move_in'  => new DateTime($nextRow['move_in_date']),
+            'move_out' => $nextRow['move_out_date'] ? new DateTime($nextRow['move_out_date']) : null,
+        ];
+    }
+    $nextStmt->close();
+}
+
+$units = [];
+foreach ($candidates as $unitId => $candidate) {
+    $row = $candidate['row'];
+    $availableDate = $candidate['availableDate'];
+
+    $limitedAvailability = false;
+    $nextBookingDate = null;
+    $cappingBookingMoveIn = null;
+
+    // Walk the unit's upcoming bookings in order. If one starts too soon to
+    // satisfy the minimum stay, jump availableDate past it (to its move-out)
+    // and keep looking - don't drop the unit just because the very next
+    // booking is too close. Stop at the first booking that leaves a real gap;
+    // that one caps the lease window.
+    foreach (($bookingsByUnit[$unitId] ?? []) as $booking) {
+        if ($booking['move_in'] <= $availableDate) {
+            continue;
+        }
+
+        $gapDays = (int) $availableDate->diff($booking['move_in'])->days;
+
+        if ($gapDays < MIN_STAY_DAYS) {
+            if ($booking['move_out'] === null) {
+                // Open-ended booking with no known move-out date - we can't
+                // tell when the unit would free up again, so give up on it.
+                $availableDate = null;
+                break;
+            }
+            $availableDate = clone $booking['move_out'];
+            continue;
+        }
+
+        $cappingBookingMoveIn = clone $booking['move_in'];
+        break;
+    }
+
+    if ($availableDate === null) {
+        continue;
+    }
+
+    // The real opening we landed on (possibly after skipping past several
+    // short bookings) still has to fall inside the customer's stated
+    // move-in window.
+    if ($availableDate > $latestMoveIn) {
+        continue;
+    }
+
+    // Calculate lease end based on requested duration
     $leaseEnd = clone $availableDate;
     $leaseEnd->modify("+".$months." months");
+
+    // If a booking follows this opening within the requested lease term,
+    // cap the displayed availability window there instead of showing a
+    // lease period that runs straight through it.
+    if ($cappingBookingMoveIn !== null && $cappingBookingMoveIn < $leaseEnd) {
+        $leaseEnd = clone $cappingBookingMoveIn;
+        $limitedAvailability = true;
+        $nextBookingDate = $cappingBookingMoveIn->format('F d, Y');
+    }
+
     $units[] = [
         'unit_id' => $row['unit_id'],
         'unit_number' => $row['unit_number'],
@@ -178,7 +279,9 @@ while ($row = $result->fetch_assoc()) {
         'availability_start' =>
             $availableDate->format('F d, Y'),
         'availability_end' =>
-            $leaseEnd->format('F d, Y')
+            $leaseEnd->format('F d, Y'),
+        'limited_availability' => $limitedAvailability,
+        'next_booking_date' => $nextBookingDate
     ];
 }
 

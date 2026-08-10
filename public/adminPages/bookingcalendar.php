@@ -901,7 +901,7 @@ let currentDate = new Date();
 function renderTimeline() {
   const year  = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  const today = new Date().toISOString().split("T")[0];
+  const today = toLocalISODate(new Date());
 
   const lastDay   = new Date(year, month + 1, 0);
   const totalDays = lastDay.getDate();
@@ -1040,7 +1040,21 @@ function renderTimeline() {
 
 function formatDate(year, month, day) {
   const d = new Date(year, month, day);
-  return d.toISOString().split("T")[0];
+  return toLocalISODate(d);
+}
+
+// Timezone-safe date helpers. `.toISOString()` converts through UTC, which
+// silently shifts the date by ±1 day whenever the browser's timezone isn't
+// UTC (e.g. UTC+8 pushes local midnight back into the previous UTC day).
+// These helpers stay in local time throughout, so calendar columns line up
+// with the actual local calendar date.
+function toLocalISODate(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+function parseLocalDate(dateStr) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d);
 }
 
 function changeMonth(dir) {
@@ -1077,9 +1091,9 @@ function openBookingModal(unitType, room, startDate) {
   document.getElementById("modal_startDisplay").textContent = startDate ? formatDisplayDate(startDate) : "—";
 
   if (startDate) {
-    const next = new Date(startDate);
+    const next = parseLocalDate(startDate);
     next.setDate(next.getDate() + 1);
-    document.getElementById("endDate").value = next.toISOString().split("T")[0];
+    document.getElementById("endDate").value = toLocalISODate(next);
   } else {
     document.getElementById("endDate").value = "";
   }
@@ -1093,9 +1107,9 @@ function openBookingModal(unitType, room, startDate) {
   document.getElementById("modal_roomDisplay").textContent = room ? "Room " + room : "—";
   document.getElementById("modal_startDisplay").textContent = startDate ? formatDisplayDate(startDate) : "—";
   if (startDate) {
-    const next = new Date(startDate);
+    const next = parseLocalDate(startDate);
     next.setDate(next.getDate() + 1);
-    document.getElementById("endDate").value = next.toISOString().split("T")[0];
+    document.getElementById("endDate").value = toLocalISODate(next);
   }
 
   modal.classList.add("open");
@@ -1328,7 +1342,7 @@ async function saveEdit() {
       alert(data.message || "Could not update booking.");
       return;
     }
-    const today = new Date().toISOString().split("T")[0];
+    const today = toLocalISODate(new Date());
     const status = (startDate <= today && today <= endDate) ? "Occupied" : "Reserved";
     bookings[idx] = { ...bookings[idx], guestName, email, phone, startDate, endDate, status };
     closeEditModal();
@@ -1433,7 +1447,7 @@ document.addEventListener("click", e => {
 
   // Scroll to today column on load
   setTimeout(() => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = toLocalISODate(new Date());
     const todayTh = document.querySelector(`th[data-date="${today}"]`);
     if (todayTh) todayTh.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }, 200);

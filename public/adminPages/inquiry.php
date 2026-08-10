@@ -1110,6 +1110,20 @@ function checkAvailableUnits() {
           maximumFractionDigits: 2
         });
 
+        const limitedNote = unit.limited_availability
+          ? `<p class="text-xs text-amber-600 mt-1">
+               ⚠ Already booked starting ${unit.next_booking_date} — only free until then.
+             </p>`
+          : "";
+
+        const badge = unit.limited_availability
+          ? `<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100 shrink-0">
+               Limited
+             </span>`
+          : `<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 shrink-0">
+               Available
+             </span>`;
+
         return `
           <div class="flex items-center gap-3 bg-white border border-slate-100 rounded-xl px-3 py-2">
             <input 
@@ -1133,11 +1147,10 @@ function checkAvailableUnits() {
                   -
                   ${unit.availability_end}
                 </p>
+                ${limitedNote}
               </div>
 
-              <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 shrink-0">
-                Available
-              </span>
+              ${badge}
             </div>
           </div>
         `;

@@ -67,7 +67,7 @@ if (!function_exists('badge')) {
             return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200'>" . e(ucwords($text)) . "</span>";
         }
 
-        if ($status === 'pending review' || $status === 'submitted' || $status === 'under review' || $status === 'requirements pending' || $status === 'requested') {
+        if ($status === 'pending review' || $status === 'submitted' || $status === 'under review' || $status === 'requirements pending' || $status === 'requested' || $status === 'flagged for review') {
             return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200'>" . e(ucwords($text)) . "</span>";
         }
 
@@ -102,14 +102,13 @@ $sql = "
         r.required_amount,
         r.payment_method,
         r.payment_reference,
+        r.declared_amount,
+        r.amount_match_status,
         r.payment_proof,
         r.payment_status,
         r.reservation_status,
         r.admin_remarks,
         r.created_at,
-        r.two_valid_ids_status,
-        r.tin_number_status,
-        r.reservation_agreement_status,
         r.payment_verified_at,
         r.payment_rejected_at,
         r.admin_payment_remarks,
@@ -218,6 +217,8 @@ while ($row = $result->fetch_assoc()) {
         data-price-basis='" . e(peso($row['price_basis'])) . "'
         data-payment-percentage='" . e(percent_text($row['payment_percentage'])) . "'
         data-required-amount='" . e(peso($row['required_amount'])) . "'
+        data-declared-amount='" . e(peso($row['declared_amount'])) . "'
+        data-amount-match-status='" . e($row['amount_match_status'] ?? '') . "'
         data-payment-method='" . e($row['payment_method']) . "'
         data-payment-reference='" . e($row['payment_reference']) . "'
         data-payment-proof='" . e($proofUrl) . "'
@@ -227,9 +228,6 @@ while ($row = $result->fetch_assoc()) {
         data-admin-payment-remarks='" . e($row['admin_payment_remarks'] ?? '') . "'
         data-payment-verified-at='" . e(format_datetime_text($row['payment_verified_at'] ?? null)) . "'
         data-payment-rejected-at='" . e(format_datetime_text($row['payment_rejected_at'] ?? null)) . "'
-        data-two-valid-ids-status='" . e((int)$row['two_valid_ids_status']) . "'
-        data-tin-number-status='" . e((int)$row['tin_number_status']) . "'
-        data-reservation-agreement-status='" . e((int)$row['reservation_agreement_status']) . "'
         data-requirements-updated-by-name='" . e($row['requirements_updated_by_name'] ?? 'Not updated yet') . "'
         data-requirements-updated-by-role='" . e($row['requirements_updated_by_role'] ?? '-') . "'
         data-requirements-updated-at='" . e(format_datetime_text($row['requirements_updated_at'] ?? null)) . "'
@@ -267,7 +265,18 @@ while ($row = $result->fetch_assoc()) {
         </td>
 
         <td class='px-4 py-3.5 whitespace-nowrap'>
-            " . badge($row['payment_status']) . "
+            <div class='flex items-center gap-2'>
+                " . badge($row['payment_status']) . "
+                " . (
+                    in_array($row['amount_match_status'] ?? '', ['short', 'over'], true)
+                    ? "<span
+                        title='Declared amount does not match required amount'
+                        class='w-6 h-6 inline-flex items-center justify-center rounded-full bg-amber-50 text-amber-600 border border-amber-200'>
+                        <span class='text-xs font-black'>!</span>
+                    </span>"
+                    : ""
+                ) . "
+            </div>
         </td>
 
         <td class='px-4 py-3.5 whitespace-nowrap'>

@@ -43,9 +43,6 @@ try {
             r.unit_id,
             r.payment_status,
             r.reservation_status,
-            r.two_valid_ids_status,
-            r.tin_number_status,
-            r.reservation_agreement_status,
             r.move_in_date,
             r.move_out_date,
 
@@ -81,12 +78,26 @@ try {
         throw new Exception("Requirements must be completed before officially booking.");
     }
 
-    if (
-        (int)$reservation['two_valid_ids_status'] !== 1 ||
-        (int)$reservation['tin_number_status'] !== 1 ||
-        (int)$reservation['reservation_agreement_status'] !== 1
-    ) {
-        throw new Exception("All requirements must be checked before officially booking.");
+    $docCheckSql = "
+        SELECT
+            COUNT(*) AS total,
+            SUM(status = 'complete') AS completed
+        FROM reservation_documents
+        WHERE reservation_id = ?
+    ";
+
+    $docCheckStmt = $conn->prepare($docCheckSql);
+    $docCheckStmt->bind_param("i", $reservation_id);
+    $docCheckStmt->execute();
+    $docCounts = $docCheckStmt->get_result()->fetch_assoc();
+    $docCheckStmt->close();
+
+    $allDocumentsComplete = $docCounts
+        && (int)$docCounts['total'] > 0
+        && (int)$docCounts['completed'] === (int)$docCounts['total'];
+
+    if (!$allDocumentsComplete) {
+        throw new Exception("All documents must be marked complete before officially booking.");
     }
 
     $unit_id = (int)$reservation['unit_id'];
