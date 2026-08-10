@@ -35,7 +35,7 @@ if (!$result) {
             Error loading maintenance requests.
         </td>
     </tr>';
-    exit;
+    return;
 }
 
 if ($result->num_rows === 0) {
@@ -45,7 +45,7 @@ if ($result->num_rows === 0) {
             No maintenance requests found.
         </td>
     </tr>';
-    exit;
+    return;
 }
 
 while ($row = $result->fetch_assoc()) {
