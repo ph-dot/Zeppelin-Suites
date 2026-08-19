@@ -55,6 +55,35 @@ function format_date_short($date) {
     return date('M d, Y', strtotime($date));
 }
 
+function render_resident_row($resident) {
+    ob_start();
+    ?>
+    <tr class="emp-row cursor-pointer" data-status="<?= e(strtolower($resident['resident_status'])) ?>">
+        <td class="px-4 py-3.5"><input type="checkbox" class="row-check rounded border-slate-300 w-4 h-4 cursor-pointer"></td>
+        <td class="px-4 py-3.5 font-semibold emp-name text-slate-800 whitespace-nowrap"><?= e($resident['full_name']) ?></td>
+        <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap"><?= e($resident['email']) ?></td>
+        <td class="px-4 py-3.5 text-slate-600 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= e($resident['contact'] ?: '—') ?></td>
+        <td class="px-4 py-3.5 text-slate-600 text-xs whitespace-nowrap"><?= e(format_role($resident['user_role'])) ?></td>
+        <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= e(format_date_short($resident['created_at'])) ?></td>
+        <td class="px-4 py-3.5"><?= status_badge($resident['resident_status']) ?></td>
+        <td class="px-4 py-3.5 text-right whitespace-nowrap">
+            <button
+                type="button"
+                class="view-btn btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all"
+                data-id="<?= (int)$resident['user_id'] ?>"
+                data-name="<?= e($resident['full_name']) ?>"
+                data-email="<?= e($resident['email']) ?>"
+                data-contact="<?= e($resident['contact']) ?>"
+                data-role="<?= e($resident['user_role']) ?>"
+                data-status="<?= e($resident['resident_status']) ?>"
+                data-date="<?= e(format_date_short($resident['created_at'])) ?>"
+                onclick="openResidentModal(this)">View</button>
+        </td>
+    </tr>
+    <?php
+    return ob_get_clean();
+}
+
 $allowed_roles = ['unit owner', 'tenant'];
 $allowed_statuses = ['Active', 'Inactive'];
 
@@ -204,6 +233,7 @@ if (in_array($status_filter, $allowed_statuses, true)) {
 
 $where_sql = implode(' AND ', $where);
 
+// Stats always reflect the WHOLE table, independent of search/filter state.
 $stats_sql = "
     SELECT
       COUNT(*) AS total_residents,
@@ -240,6 +270,21 @@ if (!$list_stmt) {
     while ($row = $list_result->fetch_assoc()) {
         $residents[] = $row;
     }
+}
+
+// AJAX endpoint: returns just the table rows as HTML, used for live search/filter.
+// Reuses everything above (search/role/status parsing + the $residents query) —
+// only the response and exit differ from a normal page load.
+if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
+    header('Content-Type: text/html; charset=UTF-8');
+    if (empty($residents)) {
+        echo '<tr><td colspan="8" class="px-4 py-10 text-center text-slate-500 text-sm">No residents found.</td></tr>';
+    } else {
+        foreach ($residents as $resident) {
+            echo render_resident_row($resident);
+        }
+    }
+    exit();
 }
 
 $success_message = $_SESSION['success_message'] ?? '';
@@ -301,6 +346,8 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
 .zep-select:focus { outline:none; border-color:#0f172a; box-shadow:0 0 0 3px rgba(15,23,42,0.07); }
 .glass-header { background:rgba(255,255,255,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
 .main-scroll { height:calc(100vh - 65px); overflow-y:auto; }
+.search-spinner { display:none; }
+.search-spinner.show { display:inline-block; }
 </style>
 </head>
 <body class="bg-slate-50 text-slate-800 overflow-hidden">
@@ -371,7 +418,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
     </button>
     <div class="relative flex-1 max-w-sm">
       <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      <input type="text" id="searchInput" oninput="filterTable()" value="<?= e($search) ?>" placeholder="Search residents..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
+      <input type="text" id="headerSearchInput" placeholder="Search residents..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
     </div>
     <div class="flex items-center gap-2 ml-auto">
       <button class="relative p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95">
@@ -417,21 +464,26 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
           <p class="text-sm text-slate-500 mt-1">Manage unit owner and tenant accounts from users_table.</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
-          <form method="GET" class="flex items-center gap-2 flex-wrap">
-            <input type="text" name="search" value="<?= e($search) ?>" placeholder="Search name, email, contact..." class="zep-input px-4 py-2 text-sm border border-slate-200 rounded-full bg-white min-w-56">
-            <select name="role" class="zep-select px-3 py-2 text-sm border border-slate-200 rounded-full bg-white">
+          <div class="flex items-center gap-2 flex-wrap" id="filterBar">
+            <div class="relative">
+              <input type="text" id="searchInput" value="<?= e($search) ?>" placeholder="Search name, email, contact..." class="zep-input px-4 py-2 text-sm border border-slate-200 rounded-full bg-white min-w-56">
+              <svg id="searchSpinner" class="search-spinner absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+            </div>
+            <select id="roleFilter" class="zep-select px-3 py-2 text-sm border border-slate-200 rounded-full bg-white">
               <option value="">All roles</option>
               <option value="unit owner" <?= $role_filter === 'unit owner' ? 'selected' : '' ?>>Unit Owner</option>
               <option value="tenant" <?= $role_filter === 'tenant' ? 'selected' : '' ?>>Tenant</option>
             </select>
-            <select name="status" class="zep-select px-3 py-2 text-sm border border-slate-200 rounded-full bg-white">
+            <select id="statusFilter" class="zep-select px-3 py-2 text-sm border border-slate-200 rounded-full bg-white">
               <option value="">All statuses</option>
               <option value="Active" <?= $status_filter === 'Active' ? 'selected' : '' ?>>Active</option>
               <option value="Inactive" <?= $status_filter === 'Inactive' ? 'selected' : '' ?>>Inactive</option>
             </select>
-            <button type="submit" class="btn-press px-4 py-2 text-sm font-semibold border border-slate-200 text-slate-600 rounded-full hover:bg-slate-50 transition-all active:scale-95">Filter</button>
             <a href="residents.php" class="btn-press px-4 py-2 text-sm font-semibold border border-slate-200 text-slate-500 rounded-full hover:bg-slate-50 transition-all active:scale-95">Reset</a>
-          </form>
+          </div>
           <button type="button" onclick="openAddResidentModal()" class="btn-press bg-slate-900 hover:bg-slate-700 active:scale-95 text-white text-sm font-semibold px-4 py-2 rounded-full transition-all">
             + Add Resident
           </button>
@@ -495,28 +547,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
                 </tr>
               <?php else: ?>
                 <?php foreach ($residents as $resident): ?>
-                  <tr class="emp-row cursor-pointer" data-status="<?= e(strtolower($resident['resident_status'])) ?>">
-                    <td class="px-4 py-3.5"><input type="checkbox" class="row-check rounded border-slate-300 w-4 h-4 cursor-pointer"></td>
-                    <td class="px-4 py-3.5 font-semibold emp-name text-slate-800 whitespace-nowrap"><?= e($resident['full_name']) ?></td>
-                    <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap"><?= e($resident['email']) ?></td>
-                    <td class="px-4 py-3.5 text-slate-600 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= e($resident['contact'] ?: '—') ?></td>
-                    <td class="px-4 py-3.5 text-slate-600 text-xs whitespace-nowrap"><?= e(format_role($resident['user_role'])) ?></td>
-                    <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= e(format_date_short($resident['created_at'])) ?></td>
-                    <td class="px-4 py-3.5"><?= status_badge($resident['resident_status']) ?></td>
-                    <td class="px-4 py-3.5 text-right whitespace-nowrap">
-                      <button
-                        type="button"
-                        class="view-btn btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all"
-                        data-id="<?= (int)$resident['user_id'] ?>"
-                        data-name="<?= e($resident['full_name']) ?>"
-                        data-email="<?= e($resident['email']) ?>"
-                        data-contact="<?= e($resident['contact']) ?>"
-                        data-role="<?= e($resident['user_role']) ?>"
-                        data-status="<?= e($resident['resident_status']) ?>"
-                        data-date="<?= e(format_date_short($resident['created_at'])) ?>"
-                        onclick="openResidentModal(this)">View</button>
-                    </td>
-                  </tr>
+                  <?= render_resident_row($resident) ?>
                 <?php endforeach; ?>
               <?php endif; ?>
             </tbody>
@@ -525,7 +556,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
 
         <div class="flex items-center justify-between px-5 py-3.5 border-t border-slate-100 flex-wrap gap-3">
           <p class="text-xs text-slate-500">
-            Showing <span class="font-semibold text-slate-700"><?= count($residents) ?></span>
+            Showing <span class="font-semibold text-slate-700" id="resultCount"><?= count($residents) ?></span>
             of <span class="font-semibold text-slate-700"><?= (int)$stats['total_residents'] ?></span> residents
           </p>
           <p class="text-xs text-slate-400">Use View to edit account details or change Active/Inactive status.</p>
@@ -688,14 +719,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
   function doLogout() {
     window.location.href = '/Zeppelin-Suites/public/php_files/logout_session.php';
   }
-  function filterTable() {
-    const input = document.getElementById('searchInput');
-    if (!input) return;
-    const q = input.value.toLowerCase();
-    document.querySelectorAll('#empBody tr').forEach(r => {
-      r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
-    });
-  }
   function toggleAll(cb) { document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked); }
   function setView(v) {
     const t = document.getElementById('viewTable'), g = document.getElementById('viewGrid');
@@ -748,6 +771,75 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
   }
   function quickToggleStatus() {
     document.getElementById('toggleStatusForm').submit();
+  }
+
+  // ---- Live search / filter (AJAX, no page reload) ----
+  const searchInput = document.getElementById('searchInput');
+  const headerSearchInput = document.getElementById('headerSearchInput');
+  const roleFilter = document.getElementById('roleFilter');
+  const statusFilter = document.getElementById('statusFilter');
+  const empBody = document.getElementById('empBody');
+  const resultCount = document.getElementById('resultCount');
+  const searchSpinner = document.getElementById('searchSpinner');
+
+  let searchTimer = null;
+  let activeRequest = null;
+
+  function scheduleSearch(delay) {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(runSearch, delay);
+  }
+
+  function runSearch() {
+    const search = searchInput.value.trim();
+    const role = roleFilter.value;
+    const status = statusFilter.value;
+
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (role) params.set('role', role);
+    if (status) params.set('status', status);
+    params.set('ajax', '1');
+
+    if (activeRequest) activeRequest.abort();
+    const controller = new AbortController();
+    activeRequest = controller;
+
+    searchSpinner.classList.add('show');
+
+    fetch('residents.php?' + params.toString(), { signal: controller.signal })
+      .then(res => res.text())
+      .then(html => {
+        empBody.innerHTML = html;
+        const rowCount = empBody.querySelectorAll('tr[data-status]').length;
+        resultCount.textContent = rowCount;
+
+        // Keep the URL (and back/refresh behavior) in sync without reloading.
+        const displayParams = new URLSearchParams();
+        if (search) displayParams.set('search', search);
+        if (role) displayParams.set('role', role);
+        if (status) displayParams.set('status', status);
+        const qs = displayParams.toString();
+        history.replaceState(null, '', 'residents.php' + (qs ? '?' + qs : ''));
+      })
+      .catch(err => {
+        if (err.name !== 'AbortError') console.error('Search failed:', err);
+      })
+      .finally(() => {
+        searchSpinner.classList.remove('show');
+      });
+  }
+
+  searchInput.addEventListener('input', () => scheduleSearch(300));
+  roleFilter.addEventListener('change', () => scheduleSearch(0));
+  statusFilter.addEventListener('change', () => scheduleSearch(0));
+
+  // Header search bar mirrors the main search field and drives the same live search.
+  if (headerSearchInput) {
+    headerSearchInput.addEventListener('input', () => {
+      searchInput.value = headerSearchInput.value;
+      scheduleSearch(300);
+    });
   }
 </script>
 </body>
