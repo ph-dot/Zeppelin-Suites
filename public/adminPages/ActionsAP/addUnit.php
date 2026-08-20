@@ -88,6 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $owner_assignment = $_POST['owner_assignment'] ?? 'none';
     $unit_owner_id = null;
 
+    $floor_number = isset($_POST['floor_number']) ? max(1, min(10, (int)$_POST['floor_number'])) : 1;
+
     $unit_number = getNextUnitNumber($conn, $unit_type, $unitMap);
     if ($unit_number === false) die("Invalid unit type.");
 
@@ -149,14 +151,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Insert unit
        $insertUnitSql = "INSERT INTO units_table 
-                    (unit_type, unit_number, base_rate, lease_rate, unit_owner_id, unit_current_status, created_at)
-                  VALUES (?, ?, ?, ?, ?, ?, NOW())";
+                    (unit_type, unit_number, floor_number, base_rate, lease_rate, unit_owner_id, unit_current_status, created_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
 
         $insertUnitStmt = $conn->prepare($insertUnitSql);
         $insertUnitStmt->bind_param(
-            "ssddis",
+            "ssiddss",
             $unit_type,
             $unit_number,
+            $floor_number,
             $base_rate,
             $lease_rate,
             $unit_owner_id,

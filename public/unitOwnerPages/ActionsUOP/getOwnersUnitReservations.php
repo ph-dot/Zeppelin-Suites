@@ -136,33 +136,8 @@ while ($row = $result->fetch_assoc()) {
     $submittedDate = !empty($row['created_at']) ? date('Y-m-d', strtotime($row['created_at'])) : '-';
 
     echo "
-    <tr class='res-row cursor-pointer'
-        data-reservation-id='" . e($row['reservation_id']) . "'
-        data-inquiry-id='" . e($row['inq_id']) . "'
-        data-unit-id='" . e($row['unit_id']) . "'
-        data-client-name='" . e($row['client_name']) . "'
-        data-client-email='" . e($row['client_email']) . "'
-        data-client-contact='" . e($row['client_contact']) . "'
-        data-inquiry-type='" . e($row['inquiry_type']) . "'
-        data-resident-type='" . e($row['resident_type']) . "'
-        data-transaction-type='" . e($row['transaction_type']) . "'
-        data-reservation-type='" . e($row['reservation_type']) . "'
-        data-unit='" . e($unitDisplay) . "'
-        data-owner-name='" . e($row['owner_name'] ?? 'No owner assigned') . "'
-        data-owner-email='" . e($row['owner_email'] ?? '-') . "'
-        data-move-in='" . e($row['move_in_date']) . "'
-        data-move-out='" . e($row['move_out_date']) . "'
-        data-price-basis='" . e(peso($row['price_basis'])) . "'
-        data-payment-percentage='" . e(((float)$row['payment_percentage'] * 100) . '%') . "'
-        data-required-amount='" . e(peso($row['required_amount'])) . "'
-        data-payment-method='" . e($row['payment_method']) . "'
-        data-payment-reference='" . e($row['payment_reference']) . "'
-        data-payment-proof='" . e($proofUrl) . "'
-        data-payment-status='" . e($row['payment_status']) . "'
-        data-reservation-status='" . e($row['reservation_status']) . "'
-        data-requirements-updated-by-name='" . e($row['requirements_updated_by_name'] ?? 'Not updated yet') . "'
-        data-requirements-updated-by-role='" . e($row['requirements_updated_by_role'] ?? '-') . "'
-        data-requirements-updated-at='" . e($row['requirements_updated_at'] ?? '-') . "'>
+    <tr class='res-row cursor-pointer hover:bg-slate-50 transition-colors'
+        onclick=\"window.location.href='ownersViewReservation.php?reservation_id=" . e($row['reservation_id']) . "'\">
 
         <td class='px-4 py-3.5 font-semibold text-slate-700 whitespace-nowrap' style=\"font-family:'DM Mono',monospace\">
             {$reservationId}
@@ -198,21 +173,12 @@ while ($row = $result->fetch_assoc()) {
         </td>
 
         <td class='px-4 py-3.5 text-right'>
-            <button
-            type='button'
-            class='btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 px-2.5 py-1 rounded-full'
-            data-id='" . e($row['reservation_id']) . "'
-            data-unit='" . e($unitDisplay) . "'
-            data-issue='" . e($row['inquiry_type'] ?? '') . "'
-            data-category='" . e($row['reservation_type'] ?? '') . "'
-            data-priority=''
-            data-status='" . e($row['reservation_status'] ?? '') . "'
-            data-description='" . e($row['transaction_type'] ?? '') . "'
-            data-remarks=''
-            data-photos='" . e($proofUrl ?? '') . "'
-            onclick='event.stopPropagation(); openEditModal(this.closest(\"tr\"))'>
-            View
-            </button>
+            <a
+                href='ownersViewReservation.php?reservation_id=" . e($row['reservation_id']) . "'
+                class='view-btn btn-press inline-flex items-center text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all'
+                onclick='event.stopPropagation();'>
+                View
+            </a>
         </td>
     </tr>";
 }

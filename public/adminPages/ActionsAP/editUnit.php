@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Detect action via hidden input or button name
     $action = $_POST['action_type'] ?? (isset($_POST['update_unit']) ? 'update' : (isset($_POST['delete_unit']) ? 'delete' : 'update'));
 
+    $floor_number = isset($_POST['floor_number']) ? max(1, min(10, (int)$_POST['floor_number'])) : 1;
     $unit_type = $_POST['unit_type'] ?? '';
     $base_rate = (float) ($_POST['base_rate'] ?? 0);
     $lease_rate = $_POST['lease_rate'] !== '' ? (float) $_POST['lease_rate'] : 0;
@@ -47,14 +48,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // UPDATE UNIT
     // =========================
     if ($action === 'update') {
-        $sql = "UPDATE units_table SET unit_type=?, base_rate=?, lease_rate=?, unit_current_status=?, unit_owner_id=? WHERE unit_id=?";
+        $sql = "UPDATE units_table SET unit_type=?, floor_number=?, base_rate=?, lease_rate=?, unit_current_status=?, unit_owner_id=? WHERE unit_id=?";
         $stmt = $conn->prepare($sql);
         if (!$stmt) die("Prepare failed (update unit): ".$conn->error);
 
         // Bind parameters
         $stmt->bind_param(
-            "sddsii",
+            "siddsii",
             $unit_type,           // s = string
+            $floor_number,        // i = integer
             $base_rate,           // d = double/decimal
             $lease_rate,          // d = double/decimal
             $unit_current_status, // s = string (ENUM)
