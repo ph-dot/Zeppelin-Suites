@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,10 +9,18 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
-    * { font-family: "Geist", sans-serif; }
-    
-    .btn-primary { transition: all 0.15s ease; }
-    .btn-primary:active { transform: scale(0.95); }
+
+    * {
+      font-family: "Geist", sans-serif;
+    }
+
+    .btn-primary {
+      transition: all 0.15s ease;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.95);
+    }
 
     .tour-select {
       appearance: none;
@@ -21,19 +30,22 @@
       background-position: right 16px center;
       background-size: 16px;
     }
-    .tour-select:focus { 
-      outline: none; 
-      border-color: #18181b; 
-      box-shadow: 0 0 0 3px rgba(24,24,27,0.07); 
+
+    .tour-select:focus {
+      outline: none;
+      border-color: #18181b;
+      box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.07);
     }
 
     .thumbnail {
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
+
     .thumbnail:hover {
       transform: scale(1.03);
       box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
     }
+
     .thumbnail.active {
       border-color: #18181b;
       box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.15);
@@ -43,281 +55,339 @@
       scrollbar-width: thin;
       scrollbar-color: #71717a #e4e4e7;
     }
+
     .gallery-container::-webkit-scrollbar {
       height: 6px;
     }
+
     .gallery-container::-webkit-scrollbar-thumb {
       background-color: #71717a;
       border-radius: 20px;
     }
 
-    #panorama { width: 100%; height: 100%; display: none; }
-    .footer-bg { background-color: #c4c4c4; }
+    #panorama {
+      width: 100%;
+      height: 100%;
+      display: none;
+    }
+
+    .footer-bg {
+      background-color: #c4c4c4;
+    }
   </style>
 </head>
+
 <body class="bg-white text-zinc-900">
 
-<nav class="sticky top-0 w-full bg-white/80 backdrop-blur-md px-6 md:px-16 lg:px-24 xl:px-32 py-4 flex items-center justify-between z-50 border-b border-zinc-200/50">
-  <!-- Your existing navbar remains unchanged -->
-  <a href="../generalViewPages/index.html">
-    <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
-  </a>
-  <div class="hidden min-[851px]:flex items-center gap-8">
-    <a href="../generalViewPages/index.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Home</a>
-    <a href="../generalViewPages/tour.html" class="text-sm text-zinc-800 font-medium transition-colors">Take a Tour</a>
-    <div class="relative group">
-        <button class="flex items-center gap-1.5 text-sm text-zinc-500 cursor-pointer bg-transparent border-0 py-2 hover:text-zinc-800 transition-colors">
+  <nav
+    class="sticky top-0 w-full bg-white/80 backdrop-blur-md px-6 md:px-16 lg:px-24 xl:px-32 py-4 flex items-center justify-between z-50 border-b border-zinc-200/50">
+    <!-- Your existing navbar remains unchanged -->
+    <a href="../generalViewPages/index.html">
+      <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;"
+        onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
+    </a>
+    <div class="hidden min-[851px]:flex items-center gap-8">
+      <a href="../generalViewPages/index.html"
+        class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Home</a>
+      <a href="../generalViewPages/tour.html" class="text-sm text-zinc-800 font-medium transition-colors">Take a
+        Tour</a>
+      <div class="relative group">
+        <button
+          class="flex items-center gap-1.5 text-sm text-zinc-500 cursor-pointer bg-transparent border-0 py-2 hover:text-zinc-800 transition-colors">
           Browse Units
-          <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <div class="absolute top-full left-0 mt-1 w-44 bg-white border border-zinc-200 rounded-xl shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-          <a href="../generalViewPages/studioTypeA.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
-          <a href="../generalViewPages/studioTypeB.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
-          <a href="../generalViewPages/oneBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
-          <a href="../generalViewPages/twoBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
-        </div>
-      </div>
-    <a href="../generalViewPages/faq.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">FAQ</a>
-    <a href="../generalViewPages/aboutUs.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">About Us</a>
-    <a href="../generalViewPages/contact.php" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Contact</a>
-    <a href="../generalViewPages/login.php" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Portal</a>
-  </div>
-  <!-- Mobile menu remains the same -->
-  <button onclick="toggleMenu()" class="min-[851px]:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
-    <span id="bar1" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
-    <span id="bar2" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
-    <span id="bar3" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
-  </button>
-  <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 min-[851px]:hidden z-50 hidden">
-    <a href="../generalViewPages/index.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-900 font-medium hover:bg-zinc-50">Home</a>
-    <a href="../generalViewPages/tour.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Take a Tour</a>
-    <button onclick="toggleDropdown('mobileDropdown','mobileChevron')" class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50 bg-transparent border-0 cursor-pointer">
-      Browse Units
-      <svg id="mobileChevron" class="transition-transform" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-    <div id="mobileDropdown" class="hidden flex-col pl-4">
-      <a href="../generalViewPages/studioTypeA.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
-      <a href="../generalViewPages/studioTypeB.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
-      <a href="../generalViewPages/oneBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
-      <a href="../generalViewPages/twoBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
-    </div>
-    <a href="../generalViewPages/faq.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">FAQ</a>
-    <a href="../generalViewPages/aboutUs.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">About Us</a>
-    <a href="../generalViewPages/contact.php" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Contact</a>
-    <a href="../generalViewPages/login.php" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Portal</a>
-  </div>
-</nav>
-
-<section class="bg-zinc-950 text-white py-16 px-6 text-center">
-  <p class="text-xs tracking-[0.25em] uppercase text-zinc-400 mb-3 font-medium">Immersive Experience</p>
-  <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-4">Explore Zeppelin Suites</h1>
-</section>
-
-<section class="px-6 md:px-16 lg:px-24 xl:px-32 py-14">
-  <div class="max-w-5xl mx-auto">
-
-    <!-- Unit Selector -->
-    <div class="mb-8 text-center">
-      <p class="text-xs tracking-widest uppercase text-zinc-400 font-semibold mb-3">Select a unit to view</p>
-      <div class="relative max-w-sm mx-auto">
-        <select id="tourSelect" onchange="changeTour(this.value)" 
-                class="tour-select w-full border-2 border-zinc-900 rounded-xl px-5 py-4 text-base font-bold text-zinc-900 bg-white cursor-pointer pr-12">
-          <option value="">— Choose a Unit Type —</option>
-          <option value="studio-a">Studio Type A</option>
-          <option value="studio-b">Studio Type B</option>
-          <option value="one-bedroom">One Bedroom</option>
-          <option value="two-bedroom">Two Bedroom</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Main Panorama Viewer -->
-    <div id="tourArea" class="tour-frame bg-zinc-100 rounded-3xl overflow-hidden border-2 border-zinc-200 relative" style="height: 520px;">
-      <div id="tourContainer" class="flex flex-col items-center justify-center h-full text-center px-6 transition-opacity duration-300">
-        <div id="statusIcon" class="w-16 h-16 bg-zinc-200 rounded-2xl flex items-center justify-center mb-4 transition-all">
-          <svg class="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.262a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+            <path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
-        </div>
-        <div id="tourText">
-          <p class="text-zinc-500 font-semibold mb-1">No unit selected</p>
-          <p class="text-zinc-400 text-sm">Choose a unit type from the dropdown to start.</p>
-        </div>
-        <button id="startTourBtn" onclick="launchVR()" 
-                class="hidden mt-6 bg-zinc-900 text-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-zinc-800 shadow-xl btn-primary">
-          Start 360° Walkthrough
         </button>
+        <div
+          class="absolute top-full left-0 mt-1 w-44 bg-white border border-zinc-200 rounded-xl shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+          <a href="../generalViewPages/studioTypeA.html"
+            class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
+          <a href="../generalViewPages/studioTypeB.html"
+            class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
+          <a href="../generalViewPages/oneBedroom.html"
+            class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
+          <a href="../generalViewPages/twoBedroom.html"
+            class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
+        </div>
+      </div>
+      <a href="../generalViewPages/faq.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">FAQ</a>
+      <a href="../generalViewPages/aboutUs.html"
+        class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">About Us</a>
+      <a href="../generalViewPages/contact.php"
+        class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Contact</a>
+      <a href="../generalViewPages/login.php"
+        class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Portal</a>
+    </div>
+    <!-- Mobile menu remains the same -->
+    <button onclick="toggleMenu()"
+      class="min-[851px]:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
+      <span id="bar1" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+      <span id="bar2" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+      <span id="bar3" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+    </button>
+    <div id="mobileMenu"
+      class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 min-[851px]:hidden z-50 hidden">
+      <a href="../generalViewPages/index.html"
+        class="px-4 py-2.5 rounded-lg text-sm text-zinc-900 font-medium hover:bg-zinc-50">Home</a>
+      <a href="../generalViewPages/tour.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Take
+        a Tour</a>
+      <button onclick="toggleDropdown('mobileDropdown','mobileChevron')"
+        class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50 bg-transparent border-0 cursor-pointer">
+        Browse Units
+        <svg id="mobileChevron" class="transition-transform" width="10" height="6" viewBox="0 0 10 6" fill="none">
+          <path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+      <div id="mobileDropdown" class="hidden flex-col pl-4">
+        <a href="../generalViewPages/studioTypeA.html"
+          class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
+        <a href="../generalViewPages/studioTypeB.html"
+          class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
+        <a href="../generalViewPages/oneBedroom.html"
+          class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
+        <a href="../generalViewPages/twoBedroom.html"
+          class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
+      </div>
+      <a href="../generalViewPages/faq.html"
+        class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">FAQ</a>
+      <a href="../generalViewPages/aboutUs.html"
+        class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">About Us</a>
+      <a href="../generalViewPages/contact.php"
+        class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Contact</a>
+      <a href="../generalViewPages/login.php"
+        class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Portal</a>
+    </div>
+  </nav>
+
+  <section class="bg-zinc-950 text-white py-16 px-6 text-center">
+    <p class="text-xs tracking-[0.25em] uppercase text-zinc-400 mb-3 font-medium">Immersive Experience</p>
+    <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-4">Explore Zeppelin Suites</h1>
+  </section>
+
+  <section class="px-6 md:px-16 lg:px-24 xl:px-32 py-14">
+    <div class="max-w-5xl mx-auto">
+
+      <!-- Unit Selector -->
+      <div class="mb-8 text-center">
+        <p class="text-xs tracking-widest uppercase text-zinc-400 font-semibold mb-3">Select a unit to view</p>
+        <div class="relative max-w-sm mx-auto">
+          <select id="tourSelect" onchange="changeTour(this.value)"
+            class="tour-select w-full border-2 border-zinc-900 rounded-xl px-5 py-4 text-base font-bold text-zinc-900 bg-white cursor-pointer pr-12">
+            <option value="">— Choose a Unit Type —</option>
+            <option value="amenities">Amenities</option>
+            <option value="studio-a">Studio Type A</option>
+            <option value="studio-b">Studio Type B</option>
+            <option value="one-bedroom">One Bedroom</option>
+            <option value="two-bedroom">Two Bedroom</option>
+          </select>
+        </div>
       </div>
 
-      <div id="panorama"></div>
-    </div>
-
-    <!-- NEW: Dynamic Thumbnail Gallery -->
-    <div id="gallerySection" class="mt-8 hidden">
-      <p class="text-xs tracking-widest uppercase text-zinc-400 font-semibold mb-4 px-1">Explore Different Rooms</p>
-      <div id="galleryContainer" 
-           class="gallery-container flex gap-4 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-thin">
-        <!-- Thumbnails populated by JavaScript -->
-      </div>
-    </div>
-
-    <div class="mt-12 text-center">
-      <a href="../generalViewPages/contact.php" 
-         class="bg-zinc-900 text-white px-8 py-4 rounded-full font-semibold text-sm hover:bg-zinc-700 transition-all btn-primary inline-block">
-        Book a Physical Viewing
-      </a>
-    </div>
-
-  </div>
-</section>
-
-<!-- ── PREMIUM FOOTER ────────────────────────────────────────────── -->
-<footer class="bg-zinc-950 text-zinc-300 py-16 md:py-20 px-6 md:px-8 lg:px-16 xl:px-24">
-  <div class="max-w-7xl mx-auto">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-x-12 gap-y-14">
-      
-      <!-- Brand -->
-      <div class="sm:col-span-5 flex flex-col items-center lg:items-start">
-        <a href="../generalViewPages/index.html" class="inline-block mb-8">
-          <div class="font-bold tracking-tighter text-white leading-none text-center lg:text-left">
-            <span class="text-5xl md:text-6xl">ZEPPELIN</span><br>
-            <span class="text-xl md:text-2xl tracking-[0.25em] font-light text-zinc-400">SUITES</span>
+      <!-- Main Panorama Viewer -->
+      <div id="tourArea" class="tour-frame bg-zinc-100 rounded-3xl overflow-hidden border-2 border-zinc-200 relative"
+        style="height: 520px;">
+        <div id="tourContainer"
+          class="flex flex-col items-center justify-center h-full text-center px-6 transition-opacity duration-300">
+          <div id="statusIcon"
+            class="w-16 h-16 bg-zinc-200 rounded-2xl flex items-center justify-center mb-4 transition-all">
+            <svg class="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.262a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+            </svg>
           </div>
+          <div id="tourText">
+            <p class="text-zinc-500 font-semibold mb-1">No unit selected</p>
+            <p class="text-zinc-400 text-sm">Choose a unit type from the dropdown to start.</p>
+          </div>
+          <button id="startTourBtn" onclick="launchVR()"
+            class="hidden mt-6 bg-zinc-900 text-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-zinc-800 shadow-xl btn-primary">
+            Start 360° Walkthrough
+          </button>
+        </div>
+
+        <div id="panorama"></div>
+      </div>
+
+      <!-- NEW: Dynamic Thumbnail Gallery -->
+      <div id="gallerySection" class="mt-8 hidden">
+        <p class="text-xs tracking-widest uppercase text-zinc-400 font-semibold mb-4 px-1">Explore Different Rooms</p>
+        <div id="galleryContainer"
+          class="gallery-container flex gap-4 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-thin">
+          <!-- Thumbnails populated by JavaScript -->
+        </div>
+      </div>
+
+      <div class="mt-12 text-center">
+        <a href="../generalViewPages/contact.php"
+          class="bg-zinc-900 text-white px-8 py-4 rounded-full font-semibold text-sm hover:bg-zinc-700 transition-all btn-primary inline-block">
+          Book a Physical Viewing
         </a>
-        <p class="text-zinc-400 text-center lg:text-left max-w-sm leading-relaxed text-sm md:text-base px-4 md:px-0">
-          Experience unparalleled luxury in the heart of Angeles City. 
-          Zeppelin Suites redefines modern living with sophisticated design and exceptional amenities.
-        </p>
       </div>
 
-      <!-- Explore -->
-      <div class="lg:col-span-2 items-center lg:items-start">
-        <h3 class="font-semibold text-white mb-5 tracking-wider text-sm text-center sm:text-left">EXPLORE</h3>
-        <div class="flex flex-col gap-3 text-sm text-center sm:text-left">
-          <a href="../generalViewPages/index.html" class="hover:text-white transition-colors">Home</a>
-          <a href="../generalViewPages/tour.html" class="hover:text-white transition-colors">Virtual Tour</a>
-          <a href="../generalViewPages/aboutUs.html" class="hover:text-white transition-colors">About Us</a>
-          <a href="../generalViewPages/faq.html" class="hover:text-white transition-colors">FAQ</a>
-          <a href="../generalViewPages/contact.php" class="hover:text-white transition-colors">Contact</a>
-        </div>
-      </div>
+    </div>
+  </section>
 
-      <!-- Units -->
-      <div class="lg:col-span-2">
-        <h3 class="font-semibold text-white mb-5 tracking-wider text-sm text-center sm:text-left">UNITS</h3>
-        <div class="flex flex-col gap-3 text-sm text-center sm:text-left">
-          <a href="../generalViewPages/studioTypeA.html" class="hover:text-white transition-colors">Studio Type A</a>
-          <a href="../generalViewPages/studioTypeB.html" class="hover:text-white transition-colors">Studio Type B</a>
-          <a href="../generalViewPages/oneBedroom.html" class="hover:text-white transition-colors">One Bedroom</a>
-          <a href="../generalViewPages/twoBedroom.html" class="hover:text-white transition-colors">Two Bedroom</a>
-        </div>
-      </div>
+  <!-- ── PREMIUM FOOTER ────────────────────────────────────────────── -->
+  <footer class="bg-zinc-950 text-zinc-300 py-16 md:py-20 px-6 md:px-8 lg:px-16 xl:px-24">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-x-12 gap-y-14">
 
-      <!-- Connect -->
-      <div class="sm:col-span-2">
-        <h3 class="font-semibold text-white mb-5 tracking-wider text-sm text-center sm:text-left">CONNECT WITH US</h3>
-        
-        <div class="flex gap-6 mb-8 justify-center sm:justify-start">
-          <a href="https://www.facebook.com/zeppilinsuites2015" target="_blank" class="text-zinc-400 hover:text-white transition-all hover:scale-110">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
-            </svg>
+        <!-- Brand -->
+        <div class="sm:col-span-5 flex flex-col items-center lg:items-start">
+          <a href="../generalViewPages/index.html" class="inline-block mb-8">
+            <div class="font-bold tracking-tighter text-white leading-none text-center lg:text-left">
+              <span class="text-5xl md:text-6xl">ZEPPELIN</span><br>
+              <span class="text-xl md:text-2xl tracking-[0.25em] font-light text-zinc-400">SUITES</span>
+            </div>
           </a>
-          <a href="https://www.instagram.com/zeppelinsuites" target="_blank" class="text-zinc-400 hover:text-white transition-all hover:scale-110">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-            </svg>
-          </a>
+          <p class="text-zinc-400 text-center lg:text-left max-w-sm leading-relaxed text-sm md:text-base px-4 md:px-0">
+            Experience unparalleled luxury in the heart of Angeles City.
+            Zeppelin Suites redefines modern living with sophisticated design and exceptional amenities.
+          </p>
         </div>
 
-        <div class="space-y-5 text-sm text-center sm:text-left">
-          <div>
-            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Address</p>
-            <p class="text-zinc-300">Fields Avenue, Angeles City, Pampanga</p>
+        <!-- Explore -->
+        <div class="lg:col-span-2 items-center lg:items-start">
+          <h3 class="font-semibold text-white mb-5 tracking-wider text-sm text-center sm:text-left">EXPLORE</h3>
+          <div class="flex flex-col gap-3 text-sm text-center sm:text-left">
+            <a href="../generalViewPages/index.html" class="hover:text-white transition-colors">Home</a>
+            <a href="../generalViewPages/tour.html" class="hover:text-white transition-colors">Virtual Tour</a>
+            <a href="../generalViewPages/aboutUs.html" class="hover:text-white transition-colors">About Us</a>
+            <a href="../generalViewPages/faq.html" class="hover:text-white transition-colors">FAQ</a>
+            <a href="../generalViewPages/contact.php" class="hover:text-white transition-colors">Contact</a>
           </div>
-          <div>
-            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Phone</p>
-            <a href="tel:+645 304 3016" class="hover:text-white block">+645 304 3016</a>
-            <a href="tel:+639982243692" class="hover:text-white block">+63 998 224 3692</a>
-            <a href="tel:+639164491253" class="hover:text-white block">+63 916 449 1253</a>
+        </div>
+
+        <!-- Units -->
+        <div class="lg:col-span-2">
+          <h3 class="font-semibold text-white mb-5 tracking-wider text-sm text-center sm:text-left">UNITS</h3>
+          <div class="flex flex-col gap-3 text-sm text-center sm:text-left">
+            <a href="../generalViewPages/studioTypeA.html" class="hover:text-white transition-colors">Studio Type A</a>
+            <a href="../generalViewPages/studioTypeB.html" class="hover:text-white transition-colors">Studio Type B</a>
+            <a href="../generalViewPages/oneBedroom.html" class="hover:text-white transition-colors">One Bedroom</a>
+            <a href="../generalViewPages/twoBedroom.html" class="hover:text-white transition-colors">Two Bedroom</a>
           </div>
-          <div>
-            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Email</p>
-            <a href="mailto:info@zeppelinsuites.com" class="text-amber-600 hover:text-amber-500">info@zeppelinsuites.com</a>
+        </div>
+
+        <!-- Connect -->
+        <div class="sm:col-span-2">
+          <h3 class="font-semibold text-white mb-5 tracking-wider text-sm text-center sm:text-left">CONNECT WITH US</h3>
+
+          <div class="flex gap-6 mb-8 justify-center sm:justify-start">
+            <a href="https://www.facebook.com/zeppilinsuites2015" target="_blank"
+              class="text-zinc-400 hover:text-white transition-all hover:scale-110">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+              </svg>
+            </a>
+            <a href="https://www.instagram.com/zeppelinsuites" target="_blank"
+              class="text-zinc-400 hover:text-white transition-all hover:scale-110">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+              </svg>
+            </a>
           </div>
+
+          <div class="space-y-5 text-sm text-center sm:text-left">
+            <div>
+              <p class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Address</p>
+              <p class="text-zinc-300">Fields Avenue, Angeles City, Pampanga</p>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Phone</p>
+              <a href="tel:+645 304 3016" class="hover:text-white block">+645 304 3016</a>
+              <a href="tel:+639982243692" class="hover:text-white block">+63 998 224 3692</a>
+              <a href="tel:+639164491253" class="hover:text-white block">+63 916 449 1253</a>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Email</p>
+              <a href="mailto:info@zeppelinsuites.com"
+                class="text-amber-600 hover:text-amber-500">info@zeppelinsuites.com</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div
+        class="border-t border-zinc-800 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-zinc-500">
+        <p class="text-center md:text-left">© 2026 Zeppelin Suites. All rights reserved.</p>
+        <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center md:justify-start">
+          <a href="../generalViewPages/privacy-policy.htm" class="hover:text-zinc-300 transition-colors">Privacy
+            Policy</a>
+          <a href="../generalViewPages/terms-of-service.htm" class="hover:text-zinc-300 transition-colors">Terms of
+            Service</a>
         </div>
       </div>
     </div>
+  </footer>
 
-    <!-- Bottom Bar -->
-    <div class="border-t border-zinc-800 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-zinc-500">
-      <p class="text-center md:text-left">© 2026 Zeppelin Suites. All rights reserved.</p>
-      <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center md:justify-start">
-        <a href="../generalViewPages/privacy-policy.htm" class="hover:text-zinc-300 transition-colors">Privacy Policy</a>
-        <a href="../generalViewPages/terms-of-service.htm" class="hover:text-zinc-300 transition-colors">Terms of Service</a>
-      </div>
-    </div>
-  </div>
-</footer>
+  <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.js"></script>
+  <script>
+    let menuOpen = false;
+    function toggleMenu() {
+      menuOpen = !menuOpen;
+      const menu = document.getElementById('mobileMenu');
+      const bar1 = document.getElementById('bar1');
+      const bar2 = document.getElementById('bar2');
+      const bar3 = document.getElementById('bar3');
+      menu.classList.toggle('hidden', !menuOpen);
+      menu.classList.toggle('flex', menuOpen);
+      bar1.style.transform = menuOpen ? 'translateY(8px) rotate(45deg)' : '';
+      bar2.style.opacity = menuOpen ? '0' : '1';
+      bar3.style.transform = menuOpen ? 'translateY(-8px) rotate(-45deg)' : '';
+    }
 
-<script>
-  let menuOpen = false;
-  function toggleMenu() {
-    menuOpen = !menuOpen;
-    const menu = document.getElementById('mobileMenu');
-    const bar1 = document.getElementById('bar1');
-    const bar2 = document.getElementById('bar2');
-    const bar3 = document.getElementById('bar3');
-    menu.classList.toggle('hidden', !menuOpen);
-    menu.classList.toggle('flex', menuOpen);
-    bar1.style.transform = menuOpen ? 'translateY(8px) rotate(45deg)' : '';
-    bar2.style.opacity = menuOpen ? '0' : '1';
-    bar3.style.transform = menuOpen ? 'translateY(-8px) rotate(-45deg)' : '';
-  }
+    function toggleDropdown(id, chevronId) {
+      const el = document.getElementById(id);
+      const ch = document.getElementById(chevronId);
+      const hidden = el.classList.contains('hidden');
+      el.classList.toggle('hidden', !hidden);
+      el.classList.toggle('flex', hidden);
+      ch.style.transform = hidden ? 'rotate(180deg)' : '';
+    }
 
-  function toggleDropdown(id, chevronId) {
-    const el = document.getElementById(id);
-    const ch = document.getElementById(chevronId);
-    const hidden = el.classList.contains('hidden');
-    el.classList.toggle('hidden', !hidden);
-    el.classList.toggle('flex', hidden);
-    ch.style.transform = hidden ? 'rotate(180deg)' : '';
-  }
+    // ====================== TOUR DATA ======================
+    const tourData = {
+      "amenities": [
+        { title: "Lobby", image: "../vrTourImages/lobby.png" },
+        { title: "Pool", image: "../vrTourImages/pool.png" },
+        { title: "Parking Lot", image: "../vrTourImages/parkingLot.png" }
+      ],
+      "studio-a": [
+        { title: "Whole Room", image: "../vrTourImages/studioTypeA.png" },
+      ],
+      /*
+      "studio-b": [
+        { title: "whole room",  image: "../vrTourImages/studioTypeB_1.png" },
+      ],
+      */
+      "one-bedroom": [
+        { title: "Bedroom", image: "../vrTourImages/oneBedroomBedroom_1.png" },
+        { title: "Living Room", image: "../vrTourImages/oneBedroomLivingRoom_3.png" }
+      ],
+      "two-bedroom": [
+        { title: "Bedroom 1", image: "../vrTourImages/twoBedroomBedroom1.png" },
+        { title: "Bedroom 2", image: "../vrTourImages/twoBedroomBedroom2.png" },
+        { title: "Living Room", image: "../vrTourImages/twoBedroomLivingRoom.png" }
+      ]
+    };
 
-  // ====================== TOUR DATA ======================
-  const tourData = {
-    /*
-    "studio-a": [
-      { title: "whole room",  image: "../vrTourImages/studioTypeA_1.png" },
-    ],
-    "studio-b": [
-      { title: "whole room",  image: "../vrTourImages/studioTypeB_1.png" },
-    ],
-    */
-    "one-bedroom": [
-      { title: "Bedroom",      image: "../vrTourImages/oneBedroomBedroom_1.png" },
-      { title: "Living Room",  image: "../vrTourImages/oneBedroomLivingRoom_3.png" },
-    ],
-    "two-bedroom": [
-      { title: "Bedroom 1",   image: "../vrTourImages/twoBedroomBedroom1.png" },
-      { title: "Bedroom 2",   image: "../vrTourImages/twoBedroomBedroom2.png" },
-      { title: "Living Room", image: "../vrTourImages/twoBedroomLivingRoom.png" }
-    ]
-  };
+    let viewer = null;
+    let currentImagePath = "";
+    let currentUnit = "";
 
-  let viewer = null;
-  let currentImagePath = "";
-  let currentUnit = "";
-
-  // ====================== GALLERY FUNCTIONS ======================
-  function createThumbnail(item, index) {
-    const div = document.createElement('div');
-    div.className = `thumbnail flex-shrink-0 w-52 rounded-2xl overflow-hidden border-2 border-transparent cursor-pointer snap-start relative group`;
-    div.innerHTML = `
+    // ====================== GALLERY FUNCTIONS ======================
+    function createThumbnail(item, index) {
+      const div = document.createElement('div');
+      div.className = `thumbnail flex-shrink-0 w-52 rounded-2xl overflow-hidden border-2 border-transparent cursor-pointer snap-start relative group`;
+      div.innerHTML = `
       <div class="aspect-video bg-zinc-200 relative">
         <img src="${item.image}" 
              alt="${item.title}" 
@@ -327,144 +397,145 @@
         <div class="absolute bottom-3 left-3 text-white text-xs font-medium tracking-wide">${item.title}</div>
       </div>
     `;
-    div.onclick = () => switchToImage(item.image, div);
-    return div;
-  }
-
-  function renderGallery(unit) {
-    const container = document.getElementById('galleryContainer');
-    container.innerHTML = '';
-
-    if (!tourData[unit]) return;
-
-    tourData[unit].forEach((item, index) => {
-      const thumb = createThumbnail(item, index);
-      container.appendChild(thumb);
-    });
-
-    // Show gallery section
-    document.getElementById('gallerySection').classList.remove('hidden');
-  }
-
-  function switchToImage(imagePath, thumbnailElement) {
-    // 1. Update the global path tracker
-    currentImagePath = imagePath;
-
-    // 2. If the viewer is already running, destroy it to force a fresh load
-    if (viewer) {
-      viewer.destroy();
-      viewer = null;
+      div.onclick = () => switchToImage(item.image, div);
+      return div;
     }
 
-    // 3. Launch the VR viewer with the new image path
-    launchVR();
+    function renderGallery(unit) {
+      const container = document.getElementById('galleryContainer');
+      container.innerHTML = '';
 
-    // 4. Update UI: Highlight the active thumbnail
-    document.querySelectorAll('.thumbnail').forEach(el => {
-      el.classList.remove('active');
-    });
-    thumbnailElement.classList.add('active');
-  }
+      if (!tourData[unit]) return;
 
-  // ====================== MAIN TOUR FUNCTIONS ======================
-  function changeTour(unitValue) {
-    if (!unitValue) {
-      location.reload();
-      return;
+      tourData[unit].forEach((item, index) => {
+        const thumb = createThumbnail(item, index);
+        container.appendChild(thumb);
+      });
+
+      // Show gallery section
+      document.getElementById('gallerySection').classList.remove('hidden');
     }
 
-    // If a viewer exists from a previous unit, destroy it
-    if (viewer) {
-      viewer.destroy();
-      viewer = null; 
+    function switchToImage(imagePath, thumbnailElement) {
+      // 1. Update the global path tracker
+      currentImagePath = imagePath;
+
+      // 2. If the viewer is already running, destroy it to force a fresh load
+      if (viewer) {
+        viewer.destroy();
+        viewer = null;
+      }
+
+      // 3. Launch the VR viewer with the new image path
+      launchVR();
+
+      // 4. Update UI: Highlight the active thumbnail
+      document.querySelectorAll('.thumbnail').forEach(el => {
+        el.classList.remove('active');
+      });
+      thumbnailElement.classList.add('active');
     }
 
-    currentUnit = unitValue;
-    const unitName = unitValue.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
-    const tourContainer = document.getElementById('tourContainer');
-    const startBtn = document.getElementById('startTourBtn');
-    const statusIcon = document.getElementById('statusIcon');
-    const tourText = document.getElementById('tourText');
-    const gallerySection = document.getElementById('gallerySection');
+    // ====================== MAIN TOUR FUNCTIONS ======================
+    function changeTour(unitValue) {
+      if (!unitValue) {
+        location.reload();
+        return;
+      }
 
-    // Reset UI to default visible state
-    tourContainer.style.display = 'flex';
-    tourContainer.style.opacity = '1';
-    document.getElementById('panorama').style.display = 'none';
+      // If a viewer exists from a previous unit, destroy it
+      if (viewer) {
+        viewer.destroy();
+        viewer = null;
+      }
 
-    // CHECK IF DATA EXISTS
-    if (tourData[unitValue] && tourData[unitValue].length > 0) {
-      // UNIT IS READY
-      startBtn.classList.remove('hidden');
-      statusIcon.innerHTML = `
+      currentUnit = unitValue;
+      const unitName = unitValue.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+      const tourContainer = document.getElementById('tourContainer');
+      const startBtn = document.getElementById('startTourBtn');
+      const statusIcon = document.getElementById('statusIcon');
+      const tourText = document.getElementById('tourText');
+      const gallerySection = document.getElementById('gallerySection');
+
+      // Reset UI to default visible state
+      tourContainer.style.display = 'flex';
+      tourContainer.style.opacity = '1';
+      document.getElementById('panorama').style.display = 'none';
+
+      // CHECK IF DATA EXISTS
+      if (tourData[unitValue] && tourData[unitValue].length > 0) {
+        // UNIT IS READY
+        startBtn.classList.remove('hidden');
+        statusIcon.innerHTML = `
         <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2"/>
         </svg>`;
-      statusIcon.className = "w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 transition-all";
-      tourText.innerHTML = `<p class="text-zinc-900 font-bold mb-1">${unitName} Ready</p>`;
-      
-      renderGallery(unitValue);
-      currentImagePath = tourData[unitValue][0].image;
-    } else {
-      // UNIT IS COMING SOON
-      startBtn.classList.add('hidden');
-      gallerySection.classList.add('hidden'); // Hide gallery for coming soon units
-      
-      statusIcon.innerHTML = `
+        statusIcon.className = "w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 transition-all";
+        tourText.innerHTML = `<p class="text-zinc-900 font-bold mb-1">${unitName} Ready</p>`;
+
+        renderGallery(unitValue);
+        currentImagePath = tourData[unitValue][0].image;
+      } else {
+        // UNIT IS COMING SOON
+        startBtn.classList.add('hidden');
+        gallerySection.classList.add('hidden'); // Hide gallery for coming soon units
+
+        statusIcon.innerHTML = `
         <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>`;
-      statusIcon.className = "w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mb-4 transition-all";
-      tourText.innerHTML = `
+        statusIcon.className = "w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mb-4 transition-all";
+        tourText.innerHTML = `
         <p class="text-zinc-900 font-bold mb-1">${unitName}</p>
         <p class="text-amber-700 text-sm font-medium">Virtual Tour Coming Soon</p>
       `;
-      currentImagePath = "";
+        currentImagePath = "";
+      }
     }
-  }
 
-  function launchVR() {
-    const tourContainer = document.getElementById('tourContainer');
-    const panoramaDiv = document.getElementById('panorama');
+    function launchVR() {
+      const tourContainer = document.getElementById('tourContainer');
+      const panoramaDiv = document.getElementById('panorama');
 
-    tourContainer.style.opacity = '0';
+      tourContainer.style.opacity = '0';
 
-    setTimeout(() => {
-      tourContainer.style.display = 'none';
-      panoramaDiv.style.display = 'block';
-
-      if (viewer) viewer.destroy();
-
-      viewer = pannellum.viewer('panorama', {
-        "type": "equirectangular",
-        "panorama": currentImagePath,
-        "autoLoad": true,
-        "compass": true,
-        "showZoomCtrl": true,
-        "showFullscreenCtrl": true,
-        "autoRotate": -3,
-        "autoRotateInactivityDelay": 3000
-      });
-
-      // Render gallery if not already shown
-      if (currentUnit) renderGallery(currentUnit);
-
-      /* Activate first thumbnail
       setTimeout(() => {
-        const firstThumb = document.querySelector('.thumbnail');
-        if (firstThumb) firstThumb.classList.add('active');
-      }, 800);
-      */
+        tourContainer.style.display = 'none';
+        panoramaDiv.style.display = 'block';
 
-    }, 300);
-  }
+        if (viewer) viewer.destroy();
 
-  // Auto-load Studio Type A on page load
-  window.onload = () => {
-    const select = document.getElementById('tourSelect');
-    select.value = "studio-a";
-    changeTour("studio-a");
-  };
-</script>
+        viewer = pannellum.viewer('panorama', {
+          "type": "equirectangular",
+          "panorama": currentImagePath,
+          "autoLoad": true,
+          "compass": true,
+          "showZoomCtrl": true,
+          "showFullscreenCtrl": true,
+          "autoRotate": -3,
+          "autoRotateInactivityDelay": 3000
+        });
+
+        // Render gallery if not already shown
+        if (currentUnit) renderGallery(currentUnit);
+
+        /* Activate first thumbnail
+        setTimeout(() => {
+          const firstThumb = document.querySelector('.thumbnail');
+          if (firstThumb) firstThumb.classList.add('active');
+        }, 800);
+        */
+
+      }, 300);
+    }
+
+    // Auto-load amenities on page load
+    window.onload = () => {
+      const select = document.getElementById('tourSelect');
+      select.value = "amenities";
+      changeTour("amenities");
+    };
+  </script>
 </body>
+
 </html>

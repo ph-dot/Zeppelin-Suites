@@ -198,50 +198,7 @@ while ($row = $result->fetch_assoc()) {
 
     echo "
     <tr class='res-row cursor-pointer hover:bg-slate-50 transition-colors'
-        data-reservation-id='" . e($row['reservation_id']) . "'
-        data-inquiry-id='" . e($row['inq_id']) . "'
-        data-unit-id='" . e($row['unit_id']) . "'
-        data-client-name='" . e($row['client_name']) . "'
-        data-client-email='" . e($row['client_email']) . "'
-        data-client-contact='" . e($row['client_contact']) . "'
-        data-inquiry-type='" . e($row['inquiry_type']) . "'
-        data-resident-type='" . e($row['resident_type'] ?? '-') . "'
-        data-transaction-type='" . e($row['transaction_type'] ?? '-') . "'
-        data-reservation-type='" . e($row['reservation_type'] ?? '-') . "'
-        data-unit='" . e($unitDisplay) . "'
-        data-unit-current-status='" . e($row['unit_current_status'] ?? '-') . "'
-        data-owner-name='" . e($row['owner_name'] ?? 'No owner assigned') . "'
-        data-owner-email='" . e($row['owner_email'] ?? '-') . "'
-        data-move-in='" . e(format_date_only($row['move_in_date'] ?? null)) . "'
-        data-move-out='" . e(format_date_only($row['move_out_date'] ?? null)) . "'
-        data-price-basis='" . e(peso($row['price_basis'])) . "'
-        data-payment-percentage='" . e(percent_text($row['payment_percentage'])) . "'
-        data-required-amount='" . e(peso($row['required_amount'])) . "'
-        data-declared-amount='" . e(peso($row['declared_amount'])) . "'
-        data-amount-match-status='" . e($row['amount_match_status'] ?? '') . "'
-        data-payment-method='" . e($row['payment_method']) . "'
-        data-payment-reference='" . e($row['payment_reference']) . "'
-        data-payment-proof='" . e($proofUrl) . "'
-        data-payment-status='" . e($row['payment_status']) . "'
-        data-reservation-status='" . e($row['reservation_status']) . "'
-        data-admin-remarks='" . e($row['admin_remarks'] ?? '') . "'
-        data-admin-payment-remarks='" . e($row['admin_payment_remarks'] ?? '') . "'
-        data-payment-verified-at='" . e(format_datetime_text($row['payment_verified_at'] ?? null)) . "'
-        data-payment-rejected-at='" . e(format_datetime_text($row['payment_rejected_at'] ?? null)) . "'
-        data-requirements-updated-by-name='" . e($row['requirements_updated_by_name'] ?? 'Not updated yet') . "'
-        data-requirements-updated-by-role='" . e($row['requirements_updated_by_role'] ?? '-') . "'
-        data-requirements-updated-at='" . e(format_datetime_text($row['requirements_updated_at'] ?? null)) . "'
-        data-officially-booked-by-name='" . e($row['officially_booked_by_name'] ?? '-') . "'
-        data-officially-booked-by-role='" . e($row['officially_booked_by_role'] ?? '-') . "'
-        data-officially-booked-at='" . e(format_datetime_text($row['officially_booked_at'] ?? null)) . "'
-        data-cancelled-by-name='" . e($row['cancelled_by_name'] ?? '-') . "'
-        data-cancelled-by-role='" . e($row['cancelled_by_role'] ?? '-') . "'
-        data-cancelled-at='" . e(format_datetime_text($row['cancelled_at'] ?? null)) . "'
-        data-admin-cancel-remarks='" . e($row['admin_cancel_remarks'] ?? '') . "'
-        data-cancellation-status='" . e($row['cancellation_status'] ?? 'none') . "'
-        data-cancellation-reason='" . e($row['cancellation_reason'] ?? '') . "'
-        data-cancellation-requested-by='" . e($cancellationRequestedBy) . "'
-        data-cancellation-requested-at='" . e(format_datetime_text($row['cancellation_requested_at'] ?? null)) . "'>
+        onclick=\"window.location.href='viewReservation.php?reservation_id=" . e($row['reservation_id']) . "'\">
 
         <td class='px-4 py-3.5 font-semibold text-slate-700 whitespace-nowrap' style=\"font-family:'DM Mono',monospace\">
             " . e($reservationId) . "
@@ -284,13 +241,13 @@ while ($row = $result->fetch_assoc()) {
                 " . badge($row['reservation_status']) . "
                 " . (
                     strtolower($row['cancellation_status'] ?? 'none') === 'requested'
-                    ? "<button
-                        type='button'
+                    ? "<a
+                        href='viewReservation.php?reservation_id=" . e($row['reservation_id']) . "'
                         title='Cancellation requested'
                         class='w-6 h-6 inline-flex items-center justify-center rounded-full bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-all'
-                        onclick=\"openEditModal(this.closest('tr'))\">
+                        onclick='event.stopPropagation();'>
                         <span class='text-xs font-black'>!</span>
-                    </button>"
+                    </a>"
                     : ""
                 ) . "
             </div>
@@ -301,12 +258,12 @@ while ($row = $result->fetch_assoc()) {
         </td>
 
         <td class='px-4 py-3.5 text-right'>
-            <button
-                type='button'
-                class='view-btn btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all'
-                onclick=\"openEditModal(this.closest('tr'))\">
+            <a
+                href='viewReservation.php?reservation_id=" . e($row['reservation_id']) . "'
+                class='view-btn btn-press inline-flex items-center text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all'
+                onclick='event.stopPropagation();'>
                 View
-            </button>
+            </a>
         </td>
     </tr>";
 }

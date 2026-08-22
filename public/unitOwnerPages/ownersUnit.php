@@ -14,10 +14,10 @@ function ou_e($value) {
 
 $units = [];
 $stmt = $conn->prepare("
-    SELECT unit_id, unit_number, unit_type, unit_current_status, base_rate, lease_rate
+    SELECT unit_id, unit_number, unit_type, floor_number, unit_current_status, base_rate, lease_rate
     FROM units_table
     WHERE unit_owner_id = ?
-    ORDER BY unit_number
+    ORDER BY floor_number ASC, unit_number ASC
 ");
 if ($stmt) {
     $stmt->bind_param('i', $ownerId);
@@ -251,7 +251,7 @@ function ou_date($value) {
                         'type' => $unit['unit_type'],
                         'status' => $unit['unit_current_status'],
                         'tenant' => $tenantName,
-                        'floor' => '—',
+                        'floor' => !empty($unit['floor_number']) ? ("Floor " . $unit['floor_number']) : '—',
                         'area' => '—',
                         'contact' => $tenant['client_contact'] ?? '—',
                         'moveIn' => $tenant ? ou_date($tenant['move_in_date']) : '—',
