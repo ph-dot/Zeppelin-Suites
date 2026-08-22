@@ -82,8 +82,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
 // Actual Add Unit form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $unit_type = $_POST['unit_type'] ?? '';
-    $base_rate = $_POST['base_rate'] ?? 0;
-    $lease_rate = $_POST['lease_rate'] ?? null;
     $unit_current_status = $_POST['unit_current_status'] ?? 'Ready for Occupancy';
     $owner_assignment = $_POST['owner_assignment'] ?? 'none';
     $unit_owner_id = null;
@@ -93,9 +91,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $unit_number = getNextUnitNumber($conn, $unit_type, $unitMap);
     if ($unit_number === false) die("Invalid unit type.");
 
-    if ($lease_rate === '') $lease_rate = null;
-    $base_rate = (float)$base_rate;
-    $lease_rate = $lease_rate === null ? null : (float)$lease_rate;
+    // Lease rate is set by the unit owner afterward, not at creation time.
+    $lease_rate = null;
 
     $conn->begin_transaction();
 
@@ -151,16 +148,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Insert unit
        $insertUnitSql = "INSERT INTO units_table 
-                    (unit_type, unit_number, floor_number, base_rate, lease_rate, unit_owner_id, unit_current_status, created_at)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+                    (unit_type, unit_number, floor_number, lease_rate, unit_owner_id, unit_current_status, created_at)
+                  VALUES (?, ?, ?, ?, ?, ?, NOW())";
 
         $insertUnitStmt = $conn->prepare($insertUnitSql);
         $insertUnitStmt->bind_param(
-            "ssiddss",
+            "ssidss",
             $unit_type,
             $unit_number,
             $floor_number,
-            $base_rate,
             $lease_rate,
             $unit_owner_id,
             $unit_current_status

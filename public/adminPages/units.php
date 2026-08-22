@@ -372,19 +372,6 @@ tailwind.config = {
               class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm bg-slate-50 text-slate-600 font-mono font-bold cursor-not-allowed focus:outline-none">
         </div>
 
-        <!-- Base Rate -->
-        <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1">Base Rate (₱) <span class="text-red-500">*</span></label>
-            <input 
-                type="number" 
-                name="base_rate" 
-                id="baseRate"
-                step="0.01"
-                required
-                placeholder="0.00"
-                class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 font-mono">
-        </div>
-
         <!-- Owner Assignment -->
         <div>
           <label class="block text-sm font-semibold text-slate-700 mb-1">Owner Assignment</label>
@@ -447,17 +434,6 @@ tailwind.config = {
                     id="newOwnerContact"
                     class="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-900">
             </div>
-        </div>
-
-        <!-- Lease Rate -->
-        <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1">Lease Rate / Resale Price (₱)</label>
-            <input 
-                type="number" 
-                name="lease_rate" 
-                step="0.01"
-                placeholder="Optional"
-                class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 font-mono">
         </div>
 
         <!-- Unit Status -->
@@ -544,13 +520,7 @@ tailwind.config = {
       </div>
 
       <div>
-        <label class="block text-sm font-semibold text-slate-700 mb-1">Base Rate (₱)</label>
-        <input type="number" step="0.01" id="editBaseRate" name="base_rate"
-          class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 font-mono">
-      </div>
-
-      <div>
-        <label class="block text-sm font-semibold text-slate-700 mb-1">Lease Rate / Resale Price (₱)</label>
+        <label class="block text-sm font-semibold text-slate-700 mb-1">Lease Rate (₱)</label>
         <input type="number" step="0.01" id="editLeaseRate" name="lease_rate" placeholder="Optional"
           class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 font-mono">
       </div>
@@ -772,7 +742,6 @@ const closeAddUnitModal = document.getElementById('closeAddUnitModal');
 const cancelAddUnit = document.getElementById('cancelAddUnit');
 
 const unitType = document.getElementById('unitType');
-const baseRate = document.getElementById('baseRate');
 const generatedUnitNumber = document.getElementById('generatedUnitNumber');
 
 openAddUnitModal?.addEventListener('click', () => {
@@ -789,15 +758,6 @@ closeAddUnitModal?.addEventListener('click', closeAddModal);
 cancelAddUnit?.addEventListener('click', closeAddModal);
 
 unitType?.addEventListener('change', async () => {
-    const rates = {
-        'Studio Type A': 35000,
-        'Studio Type B': 35000,
-        'One Bedroom': 45000,
-        'Two Bedroom': 80000
-    };
-
-    if (baseRate) baseRate.value = rates[unitType.value] || '';
-
     if (!unitType.value) {
         if (generatedUnitNumber) {
           generatedUnitNumber.value = '';
@@ -865,7 +825,6 @@ function openEditModalFromRow(row) {
     const editUnitType = document.getElementById('editUnitType');
     const editUnitNumber = document.getElementById('editUnitNumber');
     const editFloorNumber = document.getElementById('editFloorNumber');
-    const editBaseRate = document.getElementById('editBaseRate');
     const editLeaseRate = document.getElementById('editLeaseRate');
     const editStatus = document.getElementById('editStatus');
     const editUnitOwnerId = document.getElementById('editUnitOwnerId');
@@ -874,7 +833,6 @@ function openEditModalFromRow(row) {
     if (editUnitType) editUnitType.value = row.dataset.unitType || '';
     if (editUnitNumber) editUnitNumber.value = row.dataset.unitNumber || '';
     if (editFloorNumber) editFloorNumber.value = row.dataset.floorNumber || '1';
-    if (editBaseRate) editBaseRate.value = (row.dataset.baseRate || '').replace(/[₱,]/g,'');
     if (editLeaseRate) editLeaseRate.value = (row.dataset.leaseRate || '').replace(/[₱,]/g,'');
     if (editStatus) editStatus.value = row.dataset.unitCurrentStatus || 'Ready for Occupancy';
     if (editUnitOwnerId) editUnitOwnerId.value = row.dataset.unitOwnerId || '';

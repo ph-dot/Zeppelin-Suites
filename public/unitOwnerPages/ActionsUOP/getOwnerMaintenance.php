@@ -1,6 +1,16 @@
 <?php
-require_once __DIR__ . '/../../php_files/admin_auth.php';
 require_once __DIR__ . '/../../php_files/db.php';
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['user_id']) || strtolower($_SESSION['role'] ?? '') !== 'unit owner') {
+    echo "Unauthorized access.";
+    exit;
+}
+
+$owner_id = (int)$_SESSION['user_id'];
 
 if (!function_exists('clean')) {
     function clean($val) {
@@ -27,20 +37,50 @@ if (!function_exists('getFloorTitle')) {
     }
 }
 
-// Fetch all distinct unit types for filter dropdown
-$unitTypesSql = "SELECT DISTINCT unit_type FROM units_table WHERE unit_type IS NOT NULL AND TRIM(unit_type) != '' ORDER BY unit_type ASC";
-$unitTypesRes = $conn->query($unitTypesSql);
+// Fetch all distinct unit types for this owner's assigned units
+$unitTypesSql = "
+    SELECT DISTINCT unit_type 
+    FROM units_table 
+    WHERE unit_owner_id = ? 
+      AND unit_type IS NOT NULL 
+      AND TRIM(unit_type) != '' 
+    ORDER BY unit_type ASC
+";
+$utStmt = $conn->prepare($unitTypesSql);
 $unitTypeOptions = [];
-if ($unitTypesRes && $unitTypesRes->num_rows > 0) {
-    while ($ut = $unitTypesRes->fetch_assoc()) {
+if ($utStmt) {
+    $utStmt->bind_param("i", $owner_id);
+    $utStmt->execute();
+    $utRes = $utStmt->get_result();
+    while ($ut = $utRes->fetch_assoc()) {
         $cleanType = trim($ut['unit_type']);
         if ($cleanType !== '') {
             $unitTypeOptions[] = $cleanType;
         }
     }
+    $utStmt->close();
 }
 
-// Fetch all maintenance tickets
+// Fetch all units owned by this owner for create ticket modal
+$ownerUnitsSql = "
+    SELECT unit_id, unit_number, unit_type, floor_number 
+    FROM units_table 
+    WHERE unit_owner_id = ? 
+    ORDER BY unit_number ASC
+";
+$ouStmt = $conn->prepare($ownerUnitsSql);
+$ownerUnitsList = [];
+if ($ouStmt) {
+    $ouStmt->bind_param("i", $owner_id);
+    $ouStmt->execute();
+    $ouRes = $ouStmt->get_result();
+    while ($u = $ouRes->fetch_assoc()) {
+        $ownerUnitsList[] = $u;
+    }
+    $ouStmt->close();
+}
+
+// Fetch maintenance tickets scoped strictly to this owner's assigned units or submitted by owner
 $ticketsSql = "
     SELECT 
         m.maintenance_id,
@@ -69,30 +109,36 @@ $ticketsSql = "
            AND (r.reservation_status = 'reserved' OR r.officially_booked_at IS NOT NULL) 
          ORDER BY r.reservation_id DESC LIMIT 1) AS tenant_name
     FROM maintenance_requests m
-    LEFT JOIN units_table u ON m.unit_id = u.unit_id
+    INNER JOIN units_table u ON m.unit_id = u.unit_id
     LEFT JOIN users_table owner ON m.unit_owner_id = owner.user_id
+    WHERE m.unit_owner_id = ? OR m.submitted_by_user_id = ?
     ORDER BY m.submitted_at DESC
 ";
-$ticketsRes = $conn->query($ticketsSql);
-
+$tStmt = $conn->prepare($ticketsSql);
 $activeTickets = [];
 $unassignedTickets = [];
 $closedTickets = [];
 $totalTicketsCount = 0;
 
-if ($ticketsRes && $ticketsRes->num_rows > 0) {
-    while ($row = $ticketsRes->fetch_assoc()) {
-        $totalTicketsCount++;
-        $st = strtolower(trim($row['status'] ?? 'pending'));
-        if ($st === 'in progress') {
-            $activeTickets[] = $row;
-        } elseif ($st === 'pending') {
-            $unassignedTickets[] = $row;
-        } else {
-            // resolved or cancelled
-            $closedTickets[] = $row;
+if ($tStmt) {
+    $tStmt->bind_param("ii", $owner_id, $owner_id);
+    $tStmt->execute();
+    $ticketsRes = $tStmt->get_result();
+
+    if ($ticketsRes && $ticketsRes->num_rows > 0) {
+        while ($row = $ticketsRes->fetch_assoc()) {
+            $totalTicketsCount++;
+            $st = strtolower(trim($row['status'] ?? 'pending'));
+            if ($st === 'in progress') {
+                $activeTickets[] = $row;
+            } elseif ($st === 'pending') {
+                $unassignedTickets[] = $row;
+            } else {
+                $closedTickets[] = $row;
+            }
         }
     }
+    $tStmt->close();
 }
 
 $activeCount = count($activeTickets);
@@ -125,7 +171,6 @@ if (!function_exists('renderTicketCard')) {
             $requestedByRole = 'Tenant';
             $personName = $tenantName ?: 'Tenant';
         } else {
-            // fallback
             if (!empty($row['unit_owner_id']) && !empty($row['submitted_by_user_id']) && $row['submitted_by_user_id'] == $row['unit_owner_id']) {
                 $requestedByRole = 'Unit Owner';
                 $personName = $ownerName;
@@ -150,7 +195,7 @@ if (!function_exists('renderTicketCard')) {
         $submittedFullFormatted = !empty($submittedRaw) ? date('M d, Y h:i A', strtotime($submittedRaw)) : '—';
         $resolvedDateFormatted = !empty($row['resolved_at']) ? date('M d, Y h:i A', strtotime($row['resolved_at'])) : 'Not yet resolved';
 
-        // Priority Styling (Matching Image with flag icon)
+        // Priority Styling
         if ($priority === 'urgent' || $priority === 'high') {
             $priorityBadgeClass = 'bg-rose-50 text-rose-700 border border-rose-200/80';
             $priorityFlagColor = 'text-rose-600';
