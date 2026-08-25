@@ -22,7 +22,7 @@ if (ini_get("session.use_cookies")) {
 // Destroy the session
 session_destroy();
 
-// Redirect to homepage
-header("Location: /Zeppelin-Suites/public/generalViewPages/index.html");
+// Redirect to login page
+header("Location: ../generalViewPages/login.php");
 exit();
 ?>

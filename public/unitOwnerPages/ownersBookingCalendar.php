@@ -305,6 +305,10 @@ $user = requireRole($conn, ['unit owner']);
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span class="nav-label">Maintenance</span>
     </a>
+    <a href="account.php" data-tooltip="Account" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      <span class="nav-label">Account</span>
+    </a>
   </nav>
 </aside>
 
@@ -341,6 +345,7 @@ $user = requireRole($conn, ['unit owner']);
         </button>
         <!-- Simple Dropdown -->
           <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50 hidden" id="profileDropdown">
+            <a href="account.php" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-lg mx-1">Account Settings</a>
             <div class="border-t border-slate-100 my-1"></div>
             <button onclick="confirmLogout()" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg mx-1">Sign out</button>
           </div>
@@ -349,7 +354,7 @@ $user = requireRole($conn, ['unit owner']);
   </header>
 
   <!-- Simple Modal -->
-  <div id="logoutModal" class="fixed inset-0 bg-black/50 z-[999] hidden flex items-center justify-center p-4">
+  <div id="logoutModal" onclick="if(event.target===this) hideModal()" class="fixed inset-0 bg-black/50 z-[999] hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-xl p-6 w-full max-w-sm border shadow-xl">
       <h3 class="text-lg font-bold text-slate-900 mb-2">Sign out?</h3>
       <p class="text-sm text-slate-600 mb-6">Are you sure you want to logout?</p>
@@ -855,35 +860,51 @@ function closeMobileSidebar() {
   document.getElementById("sidebar").classList.remove("open");
   document.getElementById("overlay").classList.remove("show");
 }
-function toggleProfile() {
+function toggleProfile(e) {
+  if (e) e.stopPropagation();
   const dropdown = document.getElementById('profileDropdown');
   const chevron = document.getElementById('profileChevron');
-  
-  dropdown.classList.toggle('hidden');  // Toggle hidden class
-  chevron.style.transform = dropdown.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+  if (!dropdown) return;
+  const isHidden = dropdown.classList.contains('hidden');
+  dropdown.classList.toggle('hidden', !isHidden);
+  if (chevron) {
+    chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  }
 }
 
 // Close dropdown on outside click
 document.addEventListener('click', function(e) {
-  const profileBtn = e.target.closest('button[onclick="toggleProfile()"]');
-  const profileWrapper = document.querySelector('.relative'); // Your profile container
-  
-  if (!profileWrapper.contains(e.target) && !profileBtn) {
-    document.getElementById('profileDropdown').classList.add('hidden');
-    document.getElementById('profileChevron').style.transform = 'rotate(0deg)';
+  const profileWrapper = document.getElementById('profileWrapper');
+  const dropdown = document.getElementById('profileDropdown');
+  const chevron = document.getElementById('profileChevron');
+  if (dropdown && !dropdown.classList.contains('hidden')) {
+    if (!profileWrapper || !profileWrapper.contains(e.target)) {
+      dropdown.classList.add('hidden');
+      if (chevron) chevron.style.transform = 'rotate(0deg)';
+    }
   }
 });
 
 function confirmLogout() {
-  document.getElementById('logoutModal').classList.remove('hidden');
+  const modal = document.getElementById('logoutModal');
+  if (modal) modal.classList.remove('hidden');
+  const dropdown = document.getElementById('profileDropdown');
+  if (dropdown) dropdown.classList.add('hidden');
+  const chevron = document.getElementById('profileChevron');
+  if (chevron) chevron.style.transform = 'rotate(0deg)';
 }
 
 function hideModal() {
-  document.getElementById('logoutModal').classList.add('hidden');
+  const modal = document.getElementById('logoutModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function hideLogoutModal() {
+  hideModal();
 }
 
 function doLogout() {
-  window.location.href = '/Zeppelin-Suites/public/php_files/logout_session.php';  // Your logout file
+  window.location.href = '../php_files/logout_session.php';
 }
 
 // ════════════════════════════════════════════

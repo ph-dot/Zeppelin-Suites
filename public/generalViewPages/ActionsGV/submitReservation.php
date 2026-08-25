@@ -45,7 +45,6 @@ $sql = "
         i.reservation_token_expires_at,
         u.unit_id,
         u.unit_number,
-        u.base_rate,
         u.lease_rate,
         u.unit_current_status,
         owner.full_name AS owner_name,

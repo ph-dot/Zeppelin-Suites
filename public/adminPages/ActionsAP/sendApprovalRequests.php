@@ -51,13 +51,33 @@ try {
 
     require_once '../../php_files/owner_notifications.php';
 
-    $selectUnitSql = "SELECT u.unit_id, u.unit_number, u.unit_owner_id,
-                              owner.full_name AS owner_name, owner.email AS owner_email
-                      FROM units_table u
-                      LEFT JOIN users_table owner ON u.unit_owner_id = owner.user_id
-                      WHERE u.unit_id = ?
-                      AND u.unit_current_status NOT IN ('Resale', 'On Hold', 'Under maintenance')
-                      AND u.unit_owner_id IS NOT NULL";
+    // Determine if inquiry is a resale inquiry
+    $inqStmt = $conn->prepare("SELECT inquiry_type FROM inquiry_table WHERE inq_id = ?");
+    $inqStmt->bind_param("i", $inq_id);
+    $inqStmt->execute();
+    $inqRow = $inqStmt->get_result()->fetch_assoc();
+    $inqStmt->close();
+
+    $inquiryTypeNormalized = strtolower(trim($inqRow['inquiry_type'] ?? ''));
+    $isResale = ($inquiryTypeNormalized === 'resale inquiry');
+
+    if ($isResale) {
+        $selectUnitSql = "SELECT u.unit_id, u.unit_number, u.unit_owner_id,
+                                  owner.full_name AS owner_name, owner.email AS owner_email
+                          FROM units_table u
+                          LEFT JOIN users_table owner ON u.unit_owner_id = owner.user_id
+                          WHERE u.unit_id = ?
+                          AND u.unit_current_status = 'Resale'
+                          AND u.unit_owner_id IS NOT NULL";
+    } else {
+        $selectUnitSql = "SELECT u.unit_id, u.unit_number, u.unit_owner_id,
+                                  owner.full_name AS owner_name, owner.email AS owner_email
+                          FROM units_table u
+                          LEFT JOIN users_table owner ON u.unit_owner_id = owner.user_id
+                          WHERE u.unit_id = ?
+                          AND u.unit_current_status NOT IN ('Resale', 'On Hold', 'Under maintenance')
+                          AND u.unit_owner_id IS NOT NULL";
+    }
 
     $insertSql = "INSERT INTO owner_approval_requests
                   (inq_id, unit_id, unit_owner_id, request_status)

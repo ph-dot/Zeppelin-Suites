@@ -110,6 +110,8 @@ $status_badge_class = 'text-slate-700 bg-slate-50 border-slate-200';
 
 $reply_subject = 'Inquiry Update - Zeppelin Suites';
 
+$is_resale = strtolower(trim($inquiry_type)) === 'resale inquiry';
+
 if ($approval_status === 'approved') {
     $unit_display = trim($approved_unit_number . ' - ' . $approved_unit_type);
 
@@ -118,7 +120,7 @@ if ($approval_status === 'approved') {
     }
 
     $owner_display = $approved_owner_name ?: 'Unit Owner';
-    $rate_display = replyPeso($approved_rate) . ' / month';
+    $rate_display = $is_resale ? replyPeso($approved_rate) : (replyPeso($approved_rate) . ' / month');
     $reservation_form_link = "";
 
     if (!empty($inquiry['reservation_token'])) {
@@ -127,6 +129,9 @@ if ($approval_status === 'approved') {
     $status_badge_text = 'Ready to Send';
     $status_badge_class = 'text-emerald-700 bg-emerald-50 border-emerald-100';
     $reply_subject = 'Reservation Request Approved - Zeppelin Suites';
+
+    $lease_info_line = $is_resale ? "" : "\n    Requested Lease Duration: {$lease_display}";
+    $rate_label = $is_resale ? "Selling Price" : "Rate";
 
     $email_body = "Hello {$sender_name},
 
@@ -138,15 +143,14 @@ if ($approval_status === 'approved') {
 
     Unit: {$unit_display}
     Unit Owner: {$owner_display}
-    Rate: {$rate_display}
-    Requested Lease Duration: {$lease_display}
+    {$rate_label}: {$rate_display}{$lease_info_line}
     Approved On: " . ($approved_at ?: '—') . "
 
     To proceed with reserving this unit, please complete the reservation form through the link below:
 
     {$reservation_form_link}
 
-    Kindly complete the form only if you wish to proceed with the reservation. This form will allow us to collect your required reservation details, preferred lease information, identification files, and proof of payment for admin review.
+    Kindly complete the form only if you wish to proceed with the reservation. This form will allow us to collect your required reservation details, identification files, and proof of payment for admin review.
 
     Please note that completing the form starts the reservation process, but the reservation will only be finalized after verification and confirmation by the admin.
 

@@ -63,7 +63,11 @@ if (!function_exists('badge')) {
         $text = trim((string)($value ?? ''));
         $status = strtolower($text);
 
-        if ($status === 'verified' || $status === 'reserved' || $status === 'requirements completed') {
+        if ($status === 'handover' || $status === 'moved in') {
+            return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200'>Handover</span>";
+        }
+
+        if ($status === 'verified' || $status === 'reserved' || $status === 'requirements completed' || $status === 'active' || $status === 'officially booked') {
             return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200'>" . e(ucwords($text)) . "</span>";
         }
 
@@ -82,6 +86,10 @@ if (!function_exists('badge')) {
         return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-50 text-slate-600 border border-slate-200'>" . e($text !== '' ? ucwords($text) : '-') . "</span>";
     }
 }
+
+// Ensure reservation_status column allows 'handover' and repair empty values
+@$conn->query("ALTER TABLE reservation_table MODIFY COLUMN reservation_status VARCHAR(50) NOT NULL DEFAULT 'submitted'");
+@$conn->query("UPDATE reservation_table r INNER JOIN units_table u ON r.unit_id = u.unit_id SET r.reservation_status = 'handover' WHERE (r.reservation_status = '' OR r.reservation_status IS NULL) AND u.unit_current_status = 'Occupied'");
 
 $sql = "
     SELECT
@@ -188,6 +196,8 @@ while ($row = $result->fetch_assoc()) {
     }
 
     $submittedDate = format_date_only($row['created_at'] ?? null);
+    $resStatus = strtolower(trim($row['reservation_status'] ?? ''));
+    $isMovedIn = in_array($resStatus, ['handover', 'moved in', 'active', 'completed'], true);
 
     $cancellationRequestedBy = 'Unit Owner';
     if (($row['cancellation_requested_by_role'] ?? '') === 'client') {
@@ -257,13 +267,26 @@ while ($row = $result->fetch_assoc()) {
             " . e($submittedDate) . "
         </td>
 
-        <td class='px-4 py-3.5 text-right'>
-            <a
-                href='viewReservation.php?reservation_id=" . e($row['reservation_id']) . "'
-                class='view-btn btn-press inline-flex items-center text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all'
-                onclick='event.stopPropagation();'>
-                View
-            </a>
+        <td class='px-4 py-3.5 text-right whitespace-nowrap'>
+            <div class='flex items-center justify-end gap-1.5' onclick='event.stopPropagation()'>
+                " . (
+                    !$isMovedIn && strtolower($row['payment_status'] ?? '') !== 'rejected' && strtolower($row['cancellation_status'] ?? '') !== 'approved'
+                    ? "<button
+                        type='button'
+                        onclick=\"openHandoverModal(" . (int)$row['reservation_id'] . ", '" . e(addslashes($row['client_name'])) . "', '" . e(addslashes($row['client_email'])) . "', '" . e(addslashes($unitDisplay)) . "', '" . e(addslashes($row['client_contact'] ?? '')) . "')\"
+                        class='handover-btn btn-press inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-full active:scale-95 transition-all shadow-sm'
+                        title='Handover unit and move in tenant'>
+                        <svg class='w-3.5 h-3.5 text-emerald-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'/></svg>
+                        Handover
+                    </button>"
+                    : ""
+                ) . "
+                <a
+                    href='viewReservation.php?reservation_id=" . e($row['reservation_id']) . "'
+                    class='view-btn btn-press inline-flex items-center text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all'>
+                    View
+                </a>
+            </div>
         </td>
     </tr>";
 }

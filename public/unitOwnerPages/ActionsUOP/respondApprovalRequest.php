@@ -171,16 +171,21 @@ try {
         $pendingCount = (int)$pendingRow['pending_count'];
 
         if ($pendingCount === 0) {
-            $updateInquirySql = "UPDATE Inquiry_table
-                                 SET status = 'declined',
-                                     approval_status = 'declined'
-                                 WHERE inq_id = ?
-                                 AND approval_status != 'approved'";
+            require_once __DIR__ . '/../../php_files/eligible_units.php';
+            $remainingEligible = getRemainingEligibleUnitCount($conn, $inq_id);
 
-            $updateInquiryStmt = $conn->prepare($updateInquirySql);
-            $updateInquiryStmt->bind_param("i", $inq_id);
-            $updateInquiryStmt->execute();
-            $updateInquiryStmt->close();
+            if ($remainingEligible === 0) {
+                $updateInquirySql = "UPDATE Inquiry_table
+                                     SET status = 'declined',
+                                         approval_status = 'declined'
+                                     WHERE inq_id = ?
+                                     AND approval_status != 'approved'";
+
+                $updateInquiryStmt = $conn->prepare($updateInquirySql);
+                $updateInquiryStmt->bind_param("i", $inq_id);
+                $updateInquiryStmt->execute();
+                $updateInquiryStmt->close();
+            }
         }
 
         $conn->commit();

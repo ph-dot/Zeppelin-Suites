@@ -57,9 +57,10 @@ function format_date_short($date) {
 
 function render_resident_row($resident) {
     ob_start();
+    $userId = (int)$resident['user_id'];
     ?>
-    <tr class="emp-row cursor-pointer" data-status="<?= e(strtolower($resident['resident_status'])) ?>">
-        <td class="px-4 py-3.5"><input type="checkbox" class="row-check rounded border-slate-300 w-4 h-4 cursor-pointer"></td>
+    <tr class="emp-row cursor-pointer" data-status="<?= e(strtolower($resident['resident_status'])) ?>" onclick="window.location.href='viewResident.php?id=<?= $userId ?>'">
+        <td class="px-4 py-3.5" onclick="event.stopPropagation()"><input type="checkbox" class="row-check rounded border-slate-300 w-4 h-4 cursor-pointer"></td>
         <td class="px-4 py-3.5 font-semibold emp-name text-slate-800 whitespace-nowrap"><?= e($resident['full_name']) ?></td>
         <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap"><?= e($resident['email']) ?></td>
         <td class="px-4 py-3.5 text-slate-600 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= e($resident['contact'] ?: '—') ?></td>
@@ -67,17 +68,10 @@ function render_resident_row($resident) {
         <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= e(format_date_short($resident['created_at'])) ?></td>
         <td class="px-4 py-3.5"><?= status_badge($resident['resident_status']) ?></td>
         <td class="px-4 py-3.5 text-right whitespace-nowrap">
-            <button
-                type="button"
-                class="view-btn btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all"
-                data-id="<?= (int)$resident['user_id'] ?>"
-                data-name="<?= e($resident['full_name']) ?>"
-                data-email="<?= e($resident['email']) ?>"
-                data-contact="<?= e($resident['contact']) ?>"
-                data-role="<?= e($resident['user_role']) ?>"
-                data-status="<?= e($resident['resident_status']) ?>"
-                data-date="<?= e(format_date_short($resident['created_at'])) ?>"
-                onclick="openResidentModal(this)">View</button>
+            <a
+                href="viewResident.php?id=<?= $userId ?>"
+                class="view-btn btn-press inline-block text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all"
+                onclick="event.stopPropagation()">View</a>
         </td>
     </tr>
     <?php
@@ -618,66 +612,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
   </div>
 </div>
 
-<div id="residentModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/40 px-4">
-  <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-2xl overflow-hidden">
-    <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-      <div>
-        <h2 class="text-lg font-bold text-slate-900" id="modalTitle">Resident Details</h2>
-        <p class="text-xs text-slate-500 mt-1">Created <span id="modalDate">—</span></p>
-      </div>
-      <button type="button" onclick="closeResidentModal()" class="btn-press w-9 h-9 rounded-full hover:bg-slate-100 text-slate-500">✕</button>
-    </div>
-    <form method="POST" class="p-6 space-y-4">
-      <input type="hidden" name="action" value="update_resident">
-      <input type="hidden" name="user_id" id="modalUserId">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Full Name</label>
-          <input type="text" name="full_name" id="modalName" required class="zep-input w-full px-4 py-3 border border-slate-200 rounded-xl text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Email</label>
-          <input type="email" name="email" id="modalEmail" required class="zep-input w-full px-4 py-3 border border-slate-200 rounded-xl text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Contact</label>
-          <input type="text" name="contact" id="modalContact" class="zep-input w-full px-4 py-3 border border-slate-200 rounded-xl text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">New Password <span class="normal-case font-medium text-slate-400">optional</span></label>
-          <input type="text" name="new_password" id="modalPassword" placeholder="Leave blank to keep current" class="zep-input w-full px-4 py-3 border border-slate-200 rounded-xl text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Role</label>
-          <select name="user_role" id="modalRole" class="zep-select w-full px-4 py-3 border border-slate-200 rounded-xl text-sm">
-            <option value="tenant">Tenant</option>
-            <option value="unit owner">Unit Owner</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Status</label>
-          <select name="resident_status" id="modalStatus" class="zep-select w-full px-4 py-3 border border-slate-200 rounded-xl text-sm">
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
-        </div>
-      </div>
-      <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 flex-wrap">
-        <button type="button" onclick="quickToggleStatus()" id="toggleStatusBtn" class="btn-press px-4 py-2 text-sm font-semibold border border-slate-200 rounded-full text-slate-600 hover:bg-slate-50">Deactivate</button>
-        <div class="flex items-center gap-2">
-          <button type="button" onclick="closeResidentModal()" class="btn-press px-4 py-2 text-sm font-semibold border border-slate-200 rounded-full text-slate-600 hover:bg-slate-50">Cancel</button>
-          <button type="submit" class="btn-press px-4 py-2 text-sm font-semibold bg-slate-900 text-white rounded-full hover:bg-slate-700">Save Changes</button>
-        </div>
-      </div>
-    </form>
-    <form method="POST" id="toggleStatusForm" class="hidden">
-      <input type="hidden" name="action" value="toggle_status">
-      <input type="hidden" name="user_id" id="toggleUserId">
-      <input type="hidden" name="resident_status" id="toggleNewStatus">
-    </form>
-  </div>
-</div>
-
 <script>
   let sidebarCollapsed = false;
   function toggleCollapse() {
@@ -717,7 +651,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
     document.getElementById('logoutModal').classList.add('hidden');
   }
   function doLogout() {
-    window.location.href = '/Zeppelin-Suites/public/php_files/logout_session.php';
+    window.location.href = '../php_files/logout_session.php';
   }
   function toggleAll(cb) { document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked); }
   function setView(v) {
@@ -747,30 +681,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
   function closeAddResidentModal() {
     document.getElementById('addResidentModal').classList.add('hidden');
     document.getElementById('addResidentModal').classList.remove('flex');
-  }
-  function openResidentModal(btn) {
-    document.getElementById('modalUserId').value = btn.dataset.id || '';
-    document.getElementById('toggleUserId').value = btn.dataset.id || '';
-    document.getElementById('modalName').value = btn.dataset.name || '';
-    document.getElementById('modalEmail').value = btn.dataset.email || '';
-    document.getElementById('modalContact').value = btn.dataset.contact || '';
-    document.getElementById('modalRole').value = btn.dataset.role || 'tenant';
-    document.getElementById('modalStatus').value = btn.dataset.status || 'Active';
-    document.getElementById('modalDate').textContent = btn.dataset.date || '—';
-    document.getElementById('modalTitle').textContent = btn.dataset.name || 'Resident Details';
-    document.getElementById('modalPassword').value = '';
-    const nextStatus = (btn.dataset.status === 'Active') ? 'Inactive' : 'Active';
-    document.getElementById('toggleNewStatus').value = nextStatus;
-    document.getElementById('toggleStatusBtn').textContent = nextStatus === 'Inactive' ? 'Deactivate' : 'Activate';
-    document.getElementById('residentModal').classList.remove('hidden');
-    document.getElementById('residentModal').classList.add('flex');
-  }
-  function closeResidentModal() {
-    document.getElementById('residentModal').classList.add('hidden');
-    document.getElementById('residentModal').classList.remove('flex');
-  }
-  function quickToggleStatus() {
-    document.getElementById('toggleStatusForm').submit();
   }
 
   // ---- Live search / filter (AJAX, no page reload) ----

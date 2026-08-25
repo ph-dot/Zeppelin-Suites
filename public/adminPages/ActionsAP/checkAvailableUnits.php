@@ -21,6 +21,7 @@ if (trim($unit_type) === '' || trim($inq_id) === '') {
 // GET INQUIRY DETAILS
 $inqStmt = $conn->prepare("
     SELECT 
+        inquiry_type,
         preferred_move_in_time,
         lease_duration
     FROM inquiry_table
@@ -35,11 +36,82 @@ $inquiry = $inqResult->fetch_assoc();
 
 $inqStmt->close();
 
-
 if (!$inquiry) {
     echo json_encode([
         'success' => false,
         'message' => 'Inquiry not found.'
+    ]);
+    exit;
+}
+
+$inquiryTypeNormalized = strtolower(trim($inquiry['inquiry_type'] ?? ''));
+$isResale = ($inquiryTypeNormalized === 'resale inquiry');
+
+if ($isResale) {
+    // =========================================================================
+    // RESALE INQUIRY: Find units of this type that are under Resale
+    // =========================================================================
+    $sql = "
+    SELECT 
+        u.unit_id,
+        u.unit_number,
+        u.unit_type,
+        u.lease_rate,
+        u.unit_owner_id,
+        u.unit_current_status,
+        owner.full_name AS owner_name
+    FROM units_table u
+    LEFT JOIN users_table owner
+        ON u.unit_owner_id = owner.user_id
+    WHERE u.unit_type = ?
+    AND u.unit_current_status = 'Resale'
+    AND u.unit_owner_id IS NOT NULL
+    AND u.unit_id NOT IN (
+        SELECT unit_id FROM owner_approval_requests
+        WHERE inq_id = ? AND request_status IN ('pending', 'approved')
+    )
+    ORDER BY u.unit_number ASC
+    ";
+
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'SQL Error: ' . $conn->error
+        ]);
+        exit;
+    }
+
+    $stmt->bind_param("si", $unit_type, $inq_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $units = [];
+    while ($row = $result->fetch_assoc()) {
+        $units[] = [
+            'unit_id' => (int)$row['unit_id'],
+            'unit_number' => $row['unit_number'],
+            'unit_type' => $row['unit_type'],
+            'lease_rate' => $row['lease_rate'],
+            'unit_owner_id' => $row['unit_owner_id'],
+            'owner_name' => $row['owner_name'],
+            'unit_status' => $row['unit_current_status'],
+            'is_resale' => true,
+            'availability_start' => 'Available for Resale',
+            'availability_end' => 'For Resale',
+            'limited_availability' => false,
+            'next_booking_date' => null
+        ];
+    }
+
+    $stmt->close();
+    $conn->close();
+
+    echo json_encode([
+        'success' => true,
+        'is_resale' => true,
+        'count' => count($units),
+        'units' => $units
     ]);
     exit;
 }

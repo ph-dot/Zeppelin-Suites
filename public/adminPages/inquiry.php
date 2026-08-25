@@ -302,6 +302,21 @@ $userData = requireRole($conn, ['admin']); ?>
   </main>
 </div><!-- /main-wrapper -->
 
+<!-- ── CUSTOM POPUP / ALERT / CONFIRMATION MODAL ── -->
+<div id="zepAlertModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-[100] hidden items-center justify-center p-4 transition-all">
+  <div id="zepAlertCard" class="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-sm w-full p-6 text-center transform transition-all scale-95 opacity-0 duration-200">
+    <!-- Icon Box -->
+    <div id="zepAlertIconBox" class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 border shadow-xs"></div>
+    
+    <!-- Title & Text -->
+    <h3 id="zepAlertTitle" class="text-base font-bold text-slate-900 mb-1.5">Notification</h3>
+    <p id="zepAlertMessage" class="text-xs text-slate-500 leading-relaxed mb-6">Message content goes here.</p>
+    
+    <!-- Action Buttons -->
+    <div id="zepAlertActions" class="flex items-center gap-2.5 justify-center"></div>
+  </div>
+</div>
+
 <!-- ── VIEW / MESSAGE DETAIL MODAL ────────────────────── -->
 <div class="modal-backdrop fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4 hidden" 
      id="modalBackdrop" 
@@ -913,69 +928,241 @@ function renderSentRequests(requests) {
   box.classList.remove('hidden');
 }
 
+let zepAlertCallback = null;
+let zepCancelCallback = null;
+
+function showZepAlert({
+  type = 'success',
+  title = 'Notification',
+  message = '',
+  btnText = 'Got it',
+  onClose = null
+}) {
+  zepAlertCallback = onClose;
+  zepCancelCallback = null;
+
+  const modal = document.getElementById('zepAlertModal');
+  const card = document.getElementById('zepAlertCard');
+  const iconBox = document.getElementById('zepAlertIconBox');
+  const titleEl = document.getElementById('zepAlertTitle');
+  const messageEl = document.getElementById('zepAlertMessage');
+  const actionsEl = document.getElementById('zepAlertActions');
+
+  titleEl.textContent = title;
+  messageEl.textContent = message;
+
+  if (type === 'success') {
+    iconBox.className = 'w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 border bg-emerald-50 text-emerald-600 border-emerald-100 shadow-xs';
+    iconBox.innerHTML = `
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+      </svg>
+    `;
+  } else if (type === 'error') {
+    iconBox.className = 'w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 border bg-red-50 text-red-600 border-red-100 shadow-xs';
+    iconBox.innerHTML = `
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    `;
+  } else if (type === 'warning') {
+    iconBox.className = 'w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 border bg-amber-50 text-amber-600 border-amber-100 shadow-xs';
+    iconBox.innerHTML = `
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+    `;
+  } else {
+    iconBox.className = 'w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 border bg-blue-50 text-blue-600 border-blue-100 shadow-xs';
+    iconBox.innerHTML = `
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+    `;
+  }
+
+  actionsEl.innerHTML = `
+    <button type="button" onclick="closeZepAlert()" class="btn-press w-full py-2.5 px-4 rounded-xl bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition-all active:scale-95 shadow-sm">
+      ${escapeHtml(btnText)}
+    </button>
+  `;
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+
+  requestAnimationFrame(() => {
+    card.classList.remove('scale-95', 'opacity-0');
+    card.classList.add('scale-100', 'opacity-100');
+  });
+}
+
+function showZepConfirm({
+  title = 'Are you sure?',
+  message = '',
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
+  isDestructive = false,
+  onConfirm = null,
+  onCancel = null
+}) {
+  zepAlertCallback = onConfirm;
+  zepCancelCallback = onCancel;
+
+  const modal = document.getElementById('zepAlertModal');
+  const card = document.getElementById('zepAlertCard');
+  const iconBox = document.getElementById('zepAlertIconBox');
+  const titleEl = document.getElementById('zepAlertTitle');
+  const messageEl = document.getElementById('zepAlertMessage');
+  const actionsEl = document.getElementById('zepAlertActions');
+
+  titleEl.textContent = title;
+  messageEl.textContent = message;
+
+  iconBox.className = isDestructive
+    ? 'w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 border bg-red-50 text-red-600 border-red-100 shadow-xs'
+    : 'w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 border bg-amber-50 text-amber-600 border-amber-100 shadow-xs';
+
+  iconBox.innerHTML = `
+    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+    </svg>
+  `;
+
+  const confirmBtnClass = isDestructive
+    ? 'bg-red-600 hover:bg-red-700 text-white'
+    : 'bg-slate-900 hover:bg-slate-800 text-white';
+
+  actionsEl.innerHTML = `
+    <button type="button" onclick="cancelZepAlert()" class="btn-press flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-all active:scale-95">
+      ${escapeHtml(cancelText)}
+    </button>
+    <button type="button" onclick="confirmZepAlert()" class="btn-press flex-1 py-2.5 px-4 rounded-xl ${confirmBtnClass} font-semibold text-xs transition-all active:scale-95 shadow-sm">
+      ${escapeHtml(confirmText)}
+    </button>
+  `;
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+
+  requestAnimationFrame(() => {
+    card.classList.remove('scale-95', 'opacity-0');
+    card.classList.add('scale-100', 'opacity-100');
+  });
+}
+
+function closeZepAlert() {
+  const modal = document.getElementById('zepAlertModal');
+  const card = document.getElementById('zepAlertCard');
+  if (!modal || !card) return;
+
+  card.classList.remove('scale-100', 'opacity-100');
+  card.classList.add('scale-95', 'opacity-0');
+
+  setTimeout(() => {
+    modal.classList.remove('flex');
+    modal.classList.add('hidden');
+    if (typeof zepAlertCallback === 'function') {
+      const cb = zepAlertCallback;
+      zepAlertCallback = null;
+      cb();
+    }
+  }, 150);
+}
+
+function confirmZepAlert() {
+  closeZepAlert();
+}
+
+function cancelZepAlert() {
+  const modal = document.getElementById('zepAlertModal');
+  const card = document.getElementById('zepAlertCard');
+  if (!modal || !card) return;
+
+  card.classList.remove('scale-100', 'opacity-100');
+  card.classList.add('scale-95', 'opacity-0');
+
+  setTimeout(() => {
+    modal.classList.remove('flex');
+    modal.classList.add('hidden');
+    zepAlertCallback = null;
+    if (typeof zepCancelCallback === 'function') {
+      const cb = zepCancelCallback;
+      zepCancelCallback = null;
+      cb();
+    }
+  }, 150);
+}
+
 function cancelSentRequest(requestId) {
   if (!currentInquiryId) {
-    alert("No inquiry selected.");
+    showZepAlert({ type: 'warning', title: 'Notice', message: 'No inquiry selected.' });
     return;
   }
 
-  if (!confirm("Cancel this pending request? The owner will no longer be able to respond to it.")) {
-    return;
-  }
+  showZepConfirm({
+    title: 'Cancel Approval Request?',
+    message: 'Cancel this pending request? The unit owner will no longer be able to respond to it.',
+    confirmText: 'Yes, Cancel Request',
+    cancelText: 'Keep Request',
+    isDestructive: true,
+    onConfirm: () => {
+      const formData = new FormData();
+      formData.append("request_id", requestId);
+      formData.append("inq_id", currentInquiryId);
 
-  const formData = new FormData();
-  formData.append("request_id", requestId);
-  formData.append("inq_id", currentInquiryId);
+      fetch("ActionsAP/cancelApprovalRequest.php", {
+        method: "POST",
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (!data.success) {
+            showZepAlert({ type: 'error', title: 'Cancellation Failed', message: data.message || 'Unable to cancel this request.' });
+            return;
+          }
 
-  fetch("ActionsAP/cancelApprovalRequest.php", {
-    method: "POST",
-    body: formData
-  })
-    .then(response => response.json())
-    .then(data => {
-      if (!data.success) {
-        alert(data.message || "Unable to cancel this request.");
-        return;
-      }
+          // Reflect the cancellation locally without a full page reload.
+          currentSentRequests = currentSentRequests.filter(r => r.request_id !== requestId);
+          renderSentRequests(currentSentRequests);
 
-      // Reflect the cancellation locally without a full page reload.
-      currentSentRequests = currentSentRequests.filter(r => r.request_id !== requestId);
-      renderSentRequests(currentSentRequests);
+          if (currentRow) {
+            currentRow.dataset.requests = JSON.stringify(currentSentRequests);
+            currentRow.dataset.pendingCount = data.pending_count;
+          }
 
-      if (currentRow) {
-        currentRow.dataset.requests = JSON.stringify(currentSentRequests);
-        currentRow.dataset.pendingCount = data.pending_count;
-      }
+          const pendingCount = data.pending_count;
+          const declinedCount = currentSentRequests.filter(r => r.request_status === 'declined').length;
 
-      const pendingCount = data.pending_count;
-      const declinedCount = currentSentRequests.filter(r => r.request_status === 'declined').length;
+          if (pendingCount > 0) {
+            document.getElementById('approvalSubText').textContent = declinedCount > 0
+              ? `${declinedCount} owner(s) already declined - still waiting on ${pendingCount} more.`
+              : `Request was sent to ${currentSentRequests.length} unit owner(s).`;
+          } else {
+            // No more pending requests - let the admin check units again.
+            document.getElementById('waitingApprovalBox').classList.add('hidden');
+            document.getElementById('checkUnitsBtn').classList.remove('hidden');
+            document.getElementById('approvalStatusText').textContent = currentSentRequests.length > 0
+              ? 'Owner(s) declined - other units available'
+              : 'Not yet requested';
+            document.getElementById('approvalSubText').textContent = currentSentRequests.length > 0
+              ? `${declinedCount} owner(s) declined. Check units to send the request to other available owners.`
+              : 'Check available units first, then send approval requests to unit owners.';
 
-      if (pendingCount > 0) {
-        document.getElementById('approvalSubText').textContent = declinedCount > 0
-          ? `${declinedCount} owner(s) already declined - still waiting on ${pendingCount} more.`
-          : `Request was sent to ${currentSentRequests.length} unit owner(s).`;
-      } else {
-        // No more pending requests - let the admin check units again.
-        document.getElementById('waitingApprovalBox').classList.add('hidden');
-        document.getElementById('checkUnitsBtn').classList.remove('hidden');
-        document.getElementById('approvalStatusText').textContent = currentSentRequests.length > 0
-          ? 'Owner(s) declined - other units available'
-          : 'Not yet requested';
-        document.getElementById('approvalSubText').textContent = currentSentRequests.length > 0
-          ? `${declinedCount} owner(s) declined. Check units to send the request to other available owners.`
-          : 'Check available units first, then send approval requests to unit owners.';
+            const badge = document.getElementById('approvalStatusBadge');
+            badge.textContent = currentSentRequests.length > 0 ? 'Needs Follow-up' : 'Not Requested';
+            badge.className = currentSentRequests.length > 0
+              ? 'text-xs font-semibold px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 shrink-0'
+              : 'text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 shrink-0';
+          }
 
-        const badge = document.getElementById('approvalStatusBadge');
-        badge.textContent = currentSentRequests.length > 0 ? 'Needs Follow-up' : 'Not Requested';
-        badge.className = currentSentRequests.length > 0
-          ? 'text-xs font-semibold px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 shrink-0'
-          : 'text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 shrink-0';
-      }
-    })
-    .catch(error => {
-      console.error(error);
-      alert("Error cancelling request.");
-    });
+          showZepAlert({ type: 'success', title: 'Request Cancelled', message: 'The approval request has been cancelled.' });
+        })
+        .catch(error => {
+          console.error(error);
+          showZepAlert({ type: 'error', title: 'Error', message: 'Error cancelling request.' });
+        });
+    }
+  });
 }
 
 function escapeHtml(str) {
@@ -1005,14 +1192,14 @@ function handleBackdropClick(e) {
 
 function sendReply() {
   if (!currentRow) {
-    alert("No inquiry selected.");
+    showZepAlert({ type: 'warning', title: 'Notice', message: 'No inquiry selected.' });
     return;
   }
 
   const inqId = currentRow.dataset.inqId;
 
   if (!inqId) {
-    alert("Inquiry ID is missing.");
+    showZepAlert({ type: 'error', title: 'Error', message: 'Inquiry ID is missing.' });
     return;
   }
 
@@ -1033,9 +1220,15 @@ function resetApprovalUI() {
 
   document.getElementById("selectAllRow").classList.add("hidden");
 
-  document.getElementById("checkUnitsBtn").classList.remove("hidden");
+  const checkBtn = document.getElementById("checkUnitsBtn");
+  checkBtn.classList.remove("hidden");
+  checkBtn.disabled = false;
+  checkBtn.innerHTML = "Check Units";
 
-  document.getElementById("sendApprovalBtn").classList.add("hidden");
+  const sendBtn = document.getElementById("sendApprovalBtn");
+  sendBtn.classList.add("hidden");
+  sendBtn.disabled = true;
+
   document.getElementById("waitingApprovalBox").classList.add("hidden");
   document.getElementById("approvedApprovalBox").classList.add("hidden");
   document.getElementById("declinedApprovalBox").classList.add("hidden");
@@ -1050,23 +1243,36 @@ function resetApprovalUI() {
 
 function checkAvailableUnits() {
   if (!currentInquiryId) {
-    alert("No inquiry selected.");
+    showZepAlert({ type: 'warning', title: 'Notice', message: 'No inquiry selected.' });
     return;
   }
 
   if (!currentUnitPreference) {
-    alert("No unit preference found for this inquiry.");
+    showZepAlert({ type: 'warning', title: 'Notice', message: 'No unit preference found for this inquiry.' });
     return;
   }
 
   const countText = document.getElementById("availableUnitsCount");
   const list = document.getElementById("availableUnitsList");
   const sendBtn = document.getElementById("sendApprovalBtn");
+  const checkBtn = document.getElementById("checkUnitsBtn");
 
   countText.textContent = "Checking...";
   list.innerHTML = "";
   list.classList.add("hidden");
   sendBtn.classList.add("hidden");
+
+  // Show loading spinner on Check Units button
+  checkBtn.disabled = true;
+  checkBtn.innerHTML = `
+    <span class="inline-flex items-center gap-1.5">
+      <svg class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+      <span>Checking...</span>
+    </span>
+  `;
 
   fetch(
     "ActionsAP/checkAvailableUnits.php?unit_type="
@@ -1076,9 +1282,12 @@ function checkAvailableUnits() {
     )
     .then(response => response.json())
     .then(data => {
+      checkBtn.disabled = false;
+      checkBtn.innerHTML = "Check Units";
+
       if (!data.success) {
         countText.textContent = "Unable to check units";
-        alert(data.message || "Something went wrong.");
+        showZepAlert({ type: 'error', title: 'Check Failed', message: data.message || 'Something went wrong while checking units.' });
         return;
       }
 
@@ -1089,11 +1298,15 @@ function checkAvailableUnits() {
 
       if (checkedAvailableUnits.length === 0) {
         countText.textContent = "No available units found";
+        const isResaleInq = data.is_resale || (currentRow && (currentRow.dataset.inquiryType || '').toLowerCase() === 'resale inquiry');
+        const emptyMsg = isResaleInq
+          ? `No units currently listed for Resale with assigned owners were found for ${currentUnitPreference}.`
+          : `No ready units with assigned owners were found for ${currentUnitPreference}.`;
         list.innerHTML = `
           <div class="bg-white border border-slate-100 rounded-xl px-3 py-3">
             <p class="text-sm font-semibold text-slate-700">No units available</p>
             <p class="text-xs text-slate-500 mt-0.5">
-              No ready units with assigned owners were found for ${currentUnitPreference}.
+              ${emptyMsg}
             </p>
           </div>
         `;
@@ -1105,10 +1318,15 @@ function checkAvailableUnits() {
       countText.textContent = checkedAvailableUnits.length + " available unit(s) found";
 
       list.innerHTML = checkedAvailableUnits.map(unit => {
-        const rate = Number(unit.lease_rate || 0).toLocaleString("en-PH", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
+        const hasRate = unit.lease_rate && Number(unit.lease_rate) > 0;
+        const rate = hasRate
+          ? Number(unit.lease_rate).toLocaleString("en-PH", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            })
+          : null;
+
+        const isResale = unit.is_resale || (currentRow && (currentRow.dataset.inquiryType || '').toLowerCase() === 'resale inquiry');
 
         const limitedNote = unit.limited_availability
           ? `<p class="text-xs text-amber-600 mt-1">
@@ -1116,13 +1334,30 @@ function checkAvailableUnits() {
              </p>`
           : "";
 
-        const badge = unit.limited_availability
-          ? `<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100 shrink-0">
-               Limited
+        const badge = isResale
+          ? `<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 shrink-0">
+               Resale
              </span>`
-          : `<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 shrink-0">
-               Available
-             </span>`;
+          : (unit.limited_availability
+            ? `<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100 shrink-0">
+                 Limited
+               </span>`
+            : `<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 shrink-0">
+                 Available
+               </span>`);
+
+        const availabilityText = isResale
+          ? `<p class="text-xs text-slate-500 mt-1">
+               Status: <span class="font-medium text-slate-700">Listed for Resale</span>
+             </p>`
+          : `<p class="text-xs text-slate-500 mt-1">
+               Availability:
+               ${unit.availability_start}
+               -
+               ${unit.availability_end}
+             </p>`;
+
+        const rateText = rate ? ` · ₱${rate}` : '';
 
         return `
           <div class="flex items-center gap-3 bg-white border border-slate-100 rounded-xl px-3 py-2">
@@ -1138,15 +1373,10 @@ function checkAvailableUnits() {
                   ${unit.unit_number} — ${unit.unit_type}
                 </p>
                 <p class="text-xs text-slate-500">
-                  Owner: ${unit.owner_name || "No owner"} · ₱${rate}
+                  Owner: ${unit.owner_name || "No owner"}${rateText}
                 </p>
 
-                <p class="text-xs text-slate-500 mt-1">
-                  Availability:
-                  ${unit.availability_start}
-                  -
-                  ${unit.availability_end}
-                </p>
+                ${availabilityText}
                 ${limitedNote}
               </div>
 
@@ -1165,8 +1395,10 @@ function checkAvailableUnits() {
     })
     .catch(error => {
       console.error(error);
+      checkBtn.disabled = false;
+      checkBtn.innerHTML = "Check Units";
       countText.textContent = "Error checking units";
-      alert("Error checking available units.");
+      showZepAlert({ type: 'error', title: 'Error', message: 'Error checking available units.' });
     });
 }
 
@@ -1203,28 +1435,41 @@ function updateSelectedUnitsUI() {
 
   const sendBtn = document.getElementById("sendApprovalBtn");
   sendBtn.disabled = count === 0;
-  sendBtn.textContent = count === 0
+  sendBtn.innerHTML = count === 0
     ? "Select at least one unit"
     : `Send Request to ${count} Selected Unit Owner${count > 1 ? "s" : ""}`;
 }
 
 function sendApprovalToOwners() {
   if (!currentInquiryId) {
-    alert("No inquiry selected.");
+    showZepAlert({ type: 'warning', title: 'Notice', message: 'No inquiry selected.' });
     return;
   }
 
   if (checkedAvailableUnits.length === 0) {
-    alert("Please check available units first.");
+    showZepAlert({ type: 'warning', title: 'Notice', message: 'Please check available units first.' });
     return;
   }
 
   if (selectedUnitIds.size === 0) {
-    alert("Please select at least one unit to send a request for.");
+    showZepAlert({ type: 'warning', title: 'Notice', message: 'Please select at least one unit to send a request for.' });
     return;
   }
 
   const unitIds = Array.from(selectedUnitIds);
+  const count = unitIds.length;
+
+  const sendBtn = document.getElementById("sendApprovalBtn");
+  sendBtn.disabled = true;
+  sendBtn.innerHTML = `
+    <span class="inline-flex items-center justify-center gap-2">
+      <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+      <span>Sending Request to ${count} Unit Owner${count > 1 ? 's' : ''}...</span>
+    </span>
+  `;
 
   const formData = new FormData();
   formData.append("inq_id", currentInquiryId);
@@ -1237,11 +1482,10 @@ function sendApprovalToOwners() {
     .then(response => response.json())
     .then(data => {
       if (!data.success) {
-        alert(data.message || "Unable to send approval requests.");
+        updateSelectedUnitsUI();
+        showZepAlert({ type: 'error', title: 'Failed to Send', message: data.message || 'Unable to send approval requests.' });
         return;
       }
-
-      const count = unitIds.length;
 
       // Add the newly-sent units to the local "Sent To" list right away,
       // so the admin sees them without waiting for a full page reload.
@@ -1280,11 +1524,17 @@ function sendApprovalToOwners() {
       document.getElementById("sendApprovalBtn").classList.add("hidden");
       document.getElementById("waitingApprovalBox").classList.remove("hidden");
 
-      alert("Approval requests sent successfully.");
+      showZepAlert({
+        type: 'success',
+        title: 'Approval Requests Sent',
+        message: `Approval request${count > 1 ? 's have' : ' has'} been successfully sent to ${count} unit owner${count > 1 ? 's' : ''}. The inquiry status is updated to On Hold.`,
+        btnText: 'Great, got it'
+      });
     })
     .catch(error => {
       console.error(error);
-      alert("Error sending approval requests.");
+      updateSelectedUnitsUI();
+      showZepAlert({ type: 'error', title: 'Error', message: 'Error sending approval requests.' });
     });
 }
 

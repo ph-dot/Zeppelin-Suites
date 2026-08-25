@@ -9,7 +9,7 @@ if (isset($_SESSION['user_id'])) {
     if ($role === 'admin') {
         header("Location: ../adminPages/homeAdmin.php");
     } elseif ($role === 'unit owner') {
-        header("Location: ../unitOwnerPages/overview.html");
+        header("Location: ../unitOwnerPages/overview.php");
     } elseif ($role === 'tenant') {
         header("Location: ../tenantPages/homeTenant.html");
     }

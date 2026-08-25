@@ -23,7 +23,6 @@ $sql = "
         u.unit_id,
         u.unit_type,
         u.unit_number,
-        u.base_rate,
         u.lease_rate,
         u.unit_current_status,
 

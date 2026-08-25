@@ -738,6 +738,27 @@ $amountMatchStatus = $res['amount_match_status'] ?? '';
             Mark as Officially Booked
           </button>
 
+          <?php 
+            $isHandedOver = in_array($resStatusLower, ['handover', 'moved in', 'active'], true);
+            if (!$isHandedOver && $resStatusLower !== 'cancelled' && $resStatusLower !== 'rejected'): 
+          ?>
+            <button 
+              type="button"
+              id="btnHandoverDetail"
+              onclick="openHandoverModal()"
+              class="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Complete Unit Handover & Move In Tenant
+            </button>
+          <?php elseif ($isHandedOver): ?>
+            <div class="mt-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-center">
+              <p class="text-xs font-bold text-emerald-800 uppercase tracking-wide flex items-center justify-center gap-1.5">
+                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Unit Handover Completed — Tenant Moved In
+              </p>
+            </div>
+          <?php endif; ?>
+
           <div class="mt-5 bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Last Updated By</p>
@@ -921,6 +942,80 @@ $amountMatchStatus = $res['amount_match_status'] ?? '';
         Yes, Flag for Review
       </button>
     </div>
+  </div>
+</div>
+
+<!-- HANDOVER MODAL -->
+<div id="handoverModal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/50 p-4" onclick="if(event.target===this) closeHandoverModal()">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
+    <div class="bg-gradient-to-r from-emerald-600 to-teal-700 px-6 py-4 flex items-center justify-between text-white">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+          <h2 class="text-base font-bold">Unit Handover & Move In</h2>
+          <p class="text-xs text-emerald-100">Activate tenant account and occupy unit</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeHandoverModal()" class="p-1.5 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form id="handoverForm" onsubmit="submitHandover(event)" class="p-6 space-y-4">
+      <input type="hidden" name="reservation_id" value="<?= e($res['reservation_id']) ?>">
+
+      <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-2 text-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-500 font-medium">Client:</span>
+          <span class="font-bold text-slate-800"><?= e($res['client_name']) ?></span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-500 font-medium">Email:</span>
+          <span class="font-semibold text-slate-700"><?= e($res['client_email']) ?></span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-500 font-medium">Assigned Unit:</span>
+          <span class="font-bold text-emerald-700"><?= e($unitDisplay) ?></span>
+        </div>
+      </div>
+
+      <div class="rounded-xl bg-emerald-50/80 border border-emerald-200 p-4 space-y-1.5 text-xs text-emerald-900">
+        <p class="font-bold flex items-center gap-1.5 text-emerald-800">
+          <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          What happens upon handover confirmation:
+        </p>
+        <ul class="list-disc list-inside space-y-1 text-emerald-800/90 pl-1">
+          <li>Reservation status updates to <strong>Moved In</strong> (Active).</li>
+          <li>Unit status automatically changes to <strong>Occupied</strong>.</li>
+          <li>A <strong>Tenant</strong> account is provisioned in <code class="bg-emerald-100/80 px-1 py-0.5 rounded text-[11px]">users_table</code> with <strong>Active</strong> status.</li>
+          <li>The resident will be immediately visible in <a href="residents.php" target="_blank" class="underline font-semibold hover:text-emerald-950">Residents</a> and can log in to the Tenant Portal.</li>
+        </ul>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">
+          Tenant Initial Password <span class="font-normal text-slate-400 normal-case">(optional, defaults to "password123")</span>
+        </label>
+        <div class="relative">
+          <input type="password" id="handoverPassword" name="password" placeholder="password123" class="zep-input w-full pl-4 pr-11 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium">
+          <button type="button" onclick="togglePasswordVisibility('handoverPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors p-1" title="Toggle password visibility">
+            <svg class="w-4 h-4 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            <svg class="w-4 h-4 eye-slash-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+        <button type="button" onclick="closeHandoverModal()" class="btn-press px-4 py-2 text-sm font-semibold border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50">
+          Cancel
+        </button>
+        <button type="submit" id="btnConfirmHandover" class="btn-press px-5 py-2 text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md flex items-center gap-2">
+          <span>Complete Handover</span>
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -1342,6 +1437,72 @@ $amountMatchStatus = $res['amount_match_status'] ?? '';
   }
 
   document.getElementById('btnApproveCancellation')?.addEventListener('click', approveCancellationRequest);
+
+  // --- Handover Handling ---
+  function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const eyeIcon = btn.querySelector('.eye-icon');
+    const eyeSlashIcon = btn.querySelector('.eye-slash-icon');
+    if (input.type === 'password') {
+      input.type = 'text';
+      if (eyeIcon) eyeIcon.classList.add('hidden');
+      if (eyeSlashIcon) eyeSlashIcon.classList.remove('hidden');
+    } else {
+      input.type = 'password';
+      if (eyeIcon) eyeIcon.classList.remove('hidden');
+      if (eyeSlashIcon) eyeSlashIcon.classList.add('hidden');
+    }
+  }
+
+  function openHandoverModal() {
+    const modal = document.getElementById('handoverModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+  }
+
+  function closeHandoverModal() {
+    const modal = document.getElementById('handoverModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  function submitHandover(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnConfirmHandover');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing Handover...';
+
+    const formData = new FormData(document.getElementById('handoverForm'));
+
+    fetch('ActionsAP/handoverReservation.php', {
+      method: 'POST',
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+
+      if (data.success) {
+        closeHandoverModal();
+        alert('Success: ' + data.message + '\n\nTenant Login Credentials:\nEmail: ' + data.tenant.email + '\nPassword: ' + data.tenant.password);
+        window.location.reload();
+      } else {
+        alert('Error: ' + (data.message || 'Unable to process handover.'));
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      console.error(err);
+      alert('Network error while processing handover. Please try again.');
+    });
+  }
 
   // Initialize page states on DOMContentLoaded
   document.addEventListener('DOMContentLoaded', function() {

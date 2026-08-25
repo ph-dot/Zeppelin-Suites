@@ -27,7 +27,7 @@
 function getRemainingEligibleUnitCount(mysqli $conn, int $inq_id): int
 {
     $inqStmt = $conn->prepare("
-        SELECT Preferred_unit_id AS unit_type, preferred_move_in_time, lease_duration
+        SELECT inquiry_type, Preferred_unit_id AS unit_type, preferred_move_in_time, lease_duration
         FROM inquiry_table
         WHERE inq_id = ?
     ");
@@ -41,6 +41,30 @@ function getRemainingEligibleUnitCount(mysqli $conn, int $inq_id): int
     }
  
     $unit_type = $inquiry['unit_type'];
+    $inquiryTypeNormalized = strtolower(trim($inquiry['inquiry_type'] ?? ''));
+    $isResale = ($inquiryTypeNormalized === 'resale inquiry');
+
+    if ($isResale) {
+        $stmt = $conn->prepare("
+            SELECT COUNT(*) AS total
+            FROM units_table u
+            WHERE u.unit_type = ?
+            AND u.unit_current_status = 'Resale'
+            AND u.unit_owner_id IS NOT NULL
+            AND u.unit_id NOT IN (
+                SELECT unit_id FROM owner_approval_requests WHERE inq_id = ?
+            )
+        ");
+        if (!$stmt) {
+            error_log('getRemainingEligibleUnitCount failed: ' . $conn->error);
+            return 0;
+        }
+        $stmt->bind_param("si", $unit_type, $inq_id);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        return (int)($res['total'] ?? 0);
+    }
  
     // --- Same move-in window logic as checkAvailableUnits.php ---
     $today = new DateTime();
