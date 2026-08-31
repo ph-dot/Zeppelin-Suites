@@ -8,7 +8,7 @@
  * (unless it's flagged Under maintenance, which is left alone).
  */
 
-require_once __DIR__ . '/../../php_files/admin_auth.php';
+require_once __DIR__ . '/../../php_files/auth.php';
 require_once __DIR__ . '/../../php_files/db.php';
 
 header('Content-Type: application/json');

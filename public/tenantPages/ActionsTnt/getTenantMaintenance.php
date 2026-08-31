@@ -2,6 +2,13 @@
 require_once __DIR__ . '/../../php_files/auth.php';
 require_once __DIR__ . '/../../php_files/db.php';
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$user = requireRole($conn, ['tenant']);
+$tenantId = (int)$user['user_id'];
+
 if (!function_exists('clean')) {
     function clean($val) {
         return htmlspecialchars((string)($val ?? ''), ENT_QUOTES, 'UTF-8');
@@ -27,20 +34,54 @@ if (!function_exists('getFloorTitle')) {
     }
 }
 
-// Fetch all distinct unit types for filter dropdown
-$unitTypesSql = "SELECT DISTINCT unit_type FROM units_table WHERE unit_type IS NOT NULL AND TRIM(unit_type) != '' ORDER BY unit_type ASC";
-$unitTypesRes = $conn->query($unitTypesSql);
-$unitTypeOptions = [];
-if ($unitTypesRes && $unitTypesRes->num_rows > 0) {
-    while ($ut = $unitTypesRes->fetch_assoc()) {
-        $cleanType = trim($ut['unit_type']);
-        if ($cleanType !== '') {
-            $unitTypeOptions[] = $cleanType;
+// Fetch Tenant user info
+$stmt = $conn->prepare("SELECT * FROM users_table WHERE user_id = ? LIMIT 1");
+$stmt->bind_param("i", $tenantId);
+$stmt->execute();
+$tenantUser = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+$tenantName = $tenantUser['full_name'] ?? $user['full_name'];
+$tenantEmail = $tenantUser['email'] ?? '';
+$tenantInitials = strtoupper(substr(trim($tenantName ?: 'T'), 0, 1));
+
+// Fetch units assigned to this tenant for the Create Maintenance modal
+$tenantUnitsSql = "
+    SELECT DISTINCT u.unit_id, u.unit_number, u.unit_type, u.floor_number, u.unit_owner_id,
+           owner.full_name AS owner_name
+    FROM units_table u
+    INNER JOIN reservation_table r ON r.unit_id = u.unit_id
+    LEFT JOIN users_table owner ON u.unit_owner_id = owner.user_id
+    WHERE r.client_email = ? OR r.client_name = ?
+    ORDER BY u.unit_number ASC
+";
+$tuStmt = $conn->prepare($tenantUnitsSql);
+$tenantUnitsList = [];
+if ($tuStmt) {
+    $tuStmt->bind_param("ss", $tenantEmail, $tenantName);
+    $tuStmt->execute();
+    $tuRes = $tuStmt->get_result();
+    while ($u = $tuRes->fetch_assoc()) {
+        $tenantUnitsList[] = $u;
+    }
+    $tuStmt->close();
+}
+
+// If no direct reservation units found, allow fallback or check any available unit
+if (empty($tenantUnitsList)) {
+    // Check if user has unit from reservations regardless of status
+    $resCheck = $conn->prepare("SELECT u.unit_id, u.unit_number, u.unit_type, u.floor_number, u.unit_owner_id, owner.full_name AS owner_name FROM units_table u LEFT JOIN users_table owner ON u.unit_owner_id = owner.user_id LIMIT 1");
+    if ($resCheck) {
+        $resCheck->execute();
+        $rc = $resCheck->get_result()->fetch_assoc();
+        if ($rc) {
+            $tenantUnitsList[] = $rc;
         }
+        $resCheck->close();
     }
 }
 
-// Fetch all maintenance tickets
+// Fetch maintenance tickets strictly submitted by this tenant
 $ticketsSql = "
     SELECT 
         m.maintenance_id,
@@ -63,44 +104,46 @@ $ticketsSql = "
         u.floor_number,
         owner.full_name AS owner_name,
         owner.email AS owner_email,
-        (SELECT r.client_name 
-         FROM reservation_table r 
-         WHERE r.unit_id = u.unit_id 
-           AND (r.reservation_status = 'reserved' OR r.officially_booked_at IS NOT NULL) 
-         ORDER BY r.reservation_id DESC LIMIT 1) AS tenant_name
+        ? AS tenant_name
     FROM maintenance_requests m
-    LEFT JOIN units_table u ON m.unit_id = u.unit_id
+    INNER JOIN units_table u ON m.unit_id = u.unit_id
     LEFT JOIN users_table owner ON m.unit_owner_id = owner.user_id
+    WHERE m.submitted_by_user_id = ?
     ORDER BY m.submitted_at DESC
 ";
-$ticketsRes = $conn->query($ticketsSql);
-
+$tStmt = $conn->prepare($ticketsSql);
 $activeTickets = [];
 $unassignedTickets = [];
 $closedTickets = [];
 $totalTicketsCount = 0;
 
-if ($ticketsRes && $ticketsRes->num_rows > 0) {
-    while ($row = $ticketsRes->fetch_assoc()) {
-        $totalTicketsCount++;
-        $st = strtolower(trim($row['status'] ?? 'pending'));
-        if ($st === 'in progress') {
-            $activeTickets[] = $row;
-        } elseif ($st === 'pending') {
-            $unassignedTickets[] = $row;
-        } else {
-            // resolved or cancelled
-            $closedTickets[] = $row;
+if ($tStmt) {
+    $tStmt->bind_param("si", $tenantName, $tenantId);
+    $tStmt->execute();
+    $ticketsRes = $tStmt->get_result();
+
+    if ($ticketsRes && $ticketsRes->num_rows > 0) {
+        while ($row = $ticketsRes->fetch_assoc()) {
+            $totalTicketsCount++;
+            $st = strtolower(trim($row['status'] ?? 'pending'));
+            if ($st === 'in progress') {
+                $activeTickets[] = $row;
+            } elseif ($st === 'pending') {
+                $unassignedTickets[] = $row;
+            } else {
+                $closedTickets[] = $row;
+            }
         }
     }
+    $tStmt->close();
 }
 
 $activeCount = count($activeTickets);
 $unassignedCount = count($unassignedTickets);
 $closedCount = count($closedTickets);
 
-if (!function_exists('renderTicketCard')) {
-    function renderTicketCard($row) {
+if (!function_exists('renderTenantTicketCard')) {
+    function renderTenantTicketCard($row) {
         $maintenanceId = (int)$row['maintenance_id'];
         $mrNumber = 'MR-' . str_pad($maintenanceId, 4, '0', STR_PAD_LEFT);
         $unitNumber = $row['unit_number'] ?? '—';
@@ -108,35 +151,13 @@ if (!function_exists('renderTicketCard')) {
         $floorNumber = $row['floor_number'] ? (int)$row['floor_number'] : 1;
         $floorTitle = getFloorTitle($floorNumber);
 
-        // Display unit name and floor subtitle
         $unitHeading = $unitNumber !== '—' ? ("Unit {$unitNumber}" . ($unitType ? " — {$unitType}" : "")) : "Unit Not Assigned";
         $floorSubtitle = $floorTitle;
 
-        $ownerName = $row['owner_name'] ?: 'No Owner';
+        $ownerName = $row['owner_name'] ?: 'Zeppelin Suites Management';
         $ownerEmail = $row['owner_email'] ?: '—';
-        $tenantName = $row['tenant_name'] ?: '';
-
-        // Requested by: Tenant or Unit Owner
-        $submittedRole = strtolower(trim($row['submitted_by_role'] ?? ''));
-        if ($submittedRole === 'unit owner' || $submittedRole === 'owner') {
-            $requestedByRole = 'Unit Owner';
-            $personName = $ownerName;
-        } elseif ($submittedRole === 'tenant') {
-            $requestedByRole = 'Tenant';
-            $personName = $tenantName ?: 'Tenant';
-        } else {
-            // fallback
-            if (!empty($row['unit_owner_id']) && !empty($row['submitted_by_user_id']) && $row['submitted_by_user_id'] == $row['unit_owner_id']) {
-                $requestedByRole = 'Unit Owner';
-                $personName = $ownerName;
-            } elseif (!empty($tenantName)) {
-                $requestedByRole = 'Tenant';
-                $personName = $tenantName;
-            } else {
-                $requestedByRole = 'Unit Owner';
-                $personName = $ownerName;
-            }
-        }
+        $personName = $row['tenant_name'] ?: 'Tenant';
+        $requestedByRole = 'Tenant';
 
         $subject = $row['subject'] ?: 'Maintenance Issue';
         $category = $row['category'] ?: 'General';
@@ -150,7 +171,7 @@ if (!function_exists('renderTicketCard')) {
         $submittedFullFormatted = !empty($submittedRaw) ? date('M d, Y h:i A', strtotime($submittedRaw)) : '—';
         $resolvedDateFormatted = !empty($row['resolved_at']) ? date('M d, Y h:i A', strtotime($row['resolved_at'])) : 'Not yet resolved';
 
-        // Priority Styling (Matching Image with flag icon)
+        // Priority Styling
         if ($priority === 'urgent' || $priority === 'high') {
             $priorityBadgeClass = 'bg-rose-50 text-rose-700 border border-rose-200/80';
             $priorityFlagColor = 'text-rose-600';
@@ -182,6 +203,7 @@ if (!function_exists('renderTicketCard')) {
         $colGroup = 'closed';
         if ($status === 'in progress') $colGroup = 'active';
         elseif ($status === 'pending') $colGroup = 'unassigned';
+
         echo '
         <div class="ticket-card bg-white rounded-xl border border-slate-200/90 p-4 sm:p-5 shadow-xs transition-all duration-200 cursor-pointer space-y-3 hover:border-slate-400 hover:shadow-sm"
              onclick="openMaintenanceModalFromCard(this)"
@@ -195,7 +217,7 @@ if (!function_exists('renderTicketCard')) {
              data-floor-title="' . clean($floorTitle) . '"
              data-owner-name="' . clean($ownerName) . '"
              data-owner-email="' . clean($ownerEmail) . '"
-             data-tenant-name="' . clean($tenantName) . '"
+             data-tenant-name="' . clean($personName) . '"
              data-requested-by="' . clean($requestedByRole) . '"
              data-person-name="' . clean($personName) . '"
              data-subject="' . clean($subject) . '"
@@ -209,7 +231,7 @@ if (!function_exists('renderTicketCard')) {
              data-submitted-raw="' . clean($submittedRaw) . '"
              data-resolved-at="' . clean($resolvedDateFormatted) . '"
              data-photos="' . $photoData . '"
-             data-search-text="' . strtolower("{$mrNumber} {$unitNumber} {$unitType} {$floorTitle} {$subject} {$category} {$priority} {$requestedByRole} {$personName} {$ownerName} {$tenantName} {$status}") . '">
+             data-search-text="' . strtolower("{$mrNumber} {$unitNumber} {$unitType} {$floorTitle} {$subject} {$category} {$priority} {$requestedByRole} {$personName} {$ownerName} {$status}") . '">
             
             <!-- Unit Header -->
             <div>
@@ -242,12 +264,12 @@ if (!function_exists('renderTicketCard')) {
                         <span class="font-mono font-medium text-slate-700">' . clean($mrNumber) . '</span>
                     </div>
                     <div class="flex items-center justify-between text-slate-500">
-                        <span class="text-slate-400 font-normal">Requested by</span>
-                        <span class="font-medium text-slate-700 truncate max-w-[130px] text-right">' . clean($requestedByRole) . '</span>
+                        <span class="text-slate-400 font-normal">Category</span>
+                        <span class="font-medium text-slate-700">' . clean($category) . '</span>
                     </div>
                     <div class="flex items-center justify-between text-slate-500">
-                        <span class="text-slate-400 font-normal">Person</span>
-                        <span class="underline underline-offset-2 decoration-slate-300 font-medium text-slate-800 truncate max-w-[130px] text-right hover:text-blue-600 transition-colors">' . clean($personName) . '</span>
+                        <span class="text-slate-400 font-normal">Status</span>
+                        <span class="font-medium text-slate-800 capitalize">' . clean($status) . '</span>
                     </div>
                 </div>
             </div>
@@ -275,3 +297,4 @@ if (!function_exists('renderTicketCard')) {
         </div>';
     }
 }
+?>

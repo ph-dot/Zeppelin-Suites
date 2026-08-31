@@ -2,60 +2,13 @@
 require_once __DIR__ . '/../php_files/auth.php';
 
 $user = requireRole($conn, ['unit owner']);
-$ownerId = (int)$user['user_id'];
-
-/* ── Live data ──────────────────────────────────────────────
-   Front-end/layout unchanged — just listing whoever is
-   currently booked (Occupied/Reserved) into one of this
-   owner's units. */
-function tn_e($value) {
-    return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
-}
-
-function tn_date($value) {
-    if (empty($value) || $value === '0000-00-00') return '—';
-    $ts = strtotime((string)$value);
-    return $ts ? date('M j, Y', $ts) : '—';
-}
-
-$tenants = [];
-$stmt = $conn->prepare("
-    SELECT r.unit_id, r.client_name, r.client_email, r.client_contact, r.move_in_date, r.move_out_date,
-           u.unit_number, u.unit_type, u.unit_current_status
-    FROM reservation_table r
-    JOIN units_table u ON u.unit_id = r.unit_id
-    WHERE u.unit_owner_id = ?
-      AND r.officially_booked_at IS NOT NULL
-      AND u.unit_current_status IN ('Occupied', 'Reserved')
-    ORDER BY r.officially_booked_at DESC
-");
-if ($stmt) {
-    $stmt->bind_param('i', $ownerId);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    while ($row = $res->fetch_assoc()) {
-        // Ordered latest-first, so the first row seen per unit is the current tenant
-        if (!isset($tenants[$row['unit_id']])) {
-            $tenants[$row['unit_id']] = $row;
-        }
-    }
-    $stmt->close();
-}
-$tenants = array_values($tenants);
-
-$unitBadgeClasses = [
-    'studio type a' => 'bg-purple-50 text-purple-700 border-purple-100',
-    'studio type b' => 'bg-rose-50 text-rose-700 border-rose-100',
-    'one bedroom'   => 'bg-blue-50 text-blue-700 border-blue-100',
-    'two bedroom'   => 'bg-amber-50 text-amber-700 border-amber-100',
-];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zeppelin Suites — My Tenants</title>
+<title>Zeppelin Suites — Inquiries</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],mono:['DM Mono','monospace']}}}}</script>
@@ -83,7 +36,10 @@ $unitBadgeClasses = [
 .collapse-icon { transition:transform 0.3s ease; }
 .profile-dropdown { opacity:0; visibility:hidden; transform:translateY(-6px); transition:all 0.2s cubic-bezier(0.4,0,0.2,1); }
 .profile-dropdown:not(.hidden) { opacity:1; visibility:visible; transform:translateY(0); }
-/* row hover handled by Tailwind group/group-hover */
+.data-row { transition:background 0.15s ease; }
+.data-row:hover { background:#f1f5f9; }
+.reveal-btn { opacity:0; transform:translateX(6px); transition:opacity 0.18s ease,transform 0.18s ease; pointer-events:none; }
+.data-row:hover .reveal-btn { opacity:1; transform:translateX(0); pointer-events:auto; }
 .modal-backdrop { opacity:0; visibility:hidden; transition:opacity 0.22s ease,visibility 0.22s ease; }
 .modal-backdrop.open { opacity:1; visibility:visible; }
 .modal-card { transform:translateY(12px) scale(0.98); transition:transform 0.22s cubic-bezier(0.4,0,0.2,1); }
@@ -117,11 +73,11 @@ $unitBadgeClasses = [
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
       <span class="nav-label">Overview</span>
     </a>
-    <a href="ownersInquiries.php" data-tooltip="Inquiries" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="ownersInquiries.php" data-tooltip="Inquiries" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
       <span class="nav-label">Inquiries</span>
     </a>
-     <a href="ownersUnitReservations.php" data-tooltip="Reservations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+    <a href="ownersUnitReservations.php" data-tooltip="Reservations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
       <span class="nav-label">Reservations</span>
     </a>
@@ -129,12 +85,11 @@ $unitBadgeClasses = [
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
       <span class="nav-label">Booking Calendar</span>
     </a>
-
     <a href="ownersUnit.php" data-tooltip="Units" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V9a2 2 0 00-2-2h-3V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14m0 0H3m3 0h14m-7 0v-4h2v4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1m4 0h1M9 13h1m4 0h1"/></svg>
       <span class="nav-label">Units</span>
     </a>
-    <a href="tenants.php" data-tooltip="Tenants" class="sidebar-link flex active items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="tenants.php" data-tooltip="Tenants" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       <span class="nav-label">Tenants</span>
     </a>
@@ -151,25 +106,26 @@ $unitBadgeClasses = [
 
 <!-- MAIN WRAPPER -->
 <div class="main-wrapper h-screen flex flex-col" id="mainWrapper">
-  <header class="glass-header border-b border-slate-100/80 px-4 md:px-6 py-3.5 flex items-center gap-4 shrink-0 z-30">
+   <header class="glass-header border-b border-slate-100/80 px-4 md:px-6 py-3.5 flex items-center gap-4 shrink-0 z-30">
     <button class="md:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95" onclick="openMobileSidebar()">
       <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <div class="relative flex-1 max-w-sm">
       <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      <input type="text" id="searchInput" oninput="filterTable(this.value)" placeholder="Search tenants..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
+      <input type="text" placeholder="Search..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
     </div>
     <div class="flex items-center gap-2 ml-auto">
       <button class="relative p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95">
         <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
         <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
       </button>
-      <div class="relative" id="profileWrapper">
-        <button onclick="toggleProfile()" class="flex items-center gap-2.5 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl px-3 py-1.5 transition-all btn-press active:scale-95">
-          <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0">
+
+      <!-- Profile Menu -->
+      <div class="relative">
+        <button onclick="toggleProfileDropdown()" class="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95" id="profileBtn">
+          <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold ring-2 ring-slate-200">
             <?= htmlspecialchars($user['initial'] ?? 'U') ?>
           </div>
-
           <div class="hidden sm:block text-left">
             <p class="text-sm font-semibold text-slate-800 leading-none">
               <?= htmlspecialchars($user['full_name'] ?? 'Unit Owner') ?>
@@ -199,119 +155,177 @@ $unitBadgeClasses = [
       </div>
     </div>
   </div>
+ 
+ <div class="main-scroll p-4 md:p-6 space-y-6">
+  <div class="max-w-screen-xl mx-auto space-y-6">
+    <h1 class="text-xl font-bold text-slate-900">Inquiries</h1>
 
-  <div class="main-scroll p-4 md:p-6 space-y-6">
-    <div class="max-w-screen-xl mx-auto space-y-6">
-      <div class="flex items-center justify-between flex-wrap gap-3">
-        <h1 class="text-xl font-bold text-slate-900">My Tenants</h1>
+    <?php if (!empty($_SESSION['success_message'])): ?>
+      <div class="bg-emerald-50 border border-emerald-100 text-emerald-700 px-4 py-3 rounded-xl text-sm font-semibold">
+        <?php echo htmlspecialchars($_SESSION['success_message']); ?>
+      </div>
+      <?php unset($_SESSION['success_message']); ?>
+    <?php endif; ?>
+
+    <?php if (!empty($_SESSION['error_message'])): ?>
+      <div class="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-xl text-sm font-semibold">
+        <?php echo htmlspecialchars($_SESSION['error_message']); ?>
+      </div>
+      <?php unset($_SESSION['error_message']); ?>
+    <?php endif; ?>
+
+    <!-- WHITE CARD START -->
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm" id="resTable">
+          <thead>
+            <tr class="border-b border-slate-100 bg-slate-50/60">
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Res #</th>
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Full Name</th>
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Email</th>
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Contact</th>
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Res. Type</th>
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Res. Fee</th>
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Status</th>
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Owner Decision</th>
+              <th class="px-4 py-3.5 w-20"></th>
+            </tr>
+          </thead>
+
+          <tbody id="resBody">
+            <?php include 'ActionsUOP/getOwnerApprovalRequests.php'; ?>
+          </tbody>
+        </table>
       </div>
 
-      <!-- Table Card -->
-      <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm" id="tenantsTable">
-            <thead>
-              <tr class="border-b border-slate-100 bg-slate-50/60">
-                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Tenant Name</th>
-                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Unit No.</th>
-                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Move-in</th>
-                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Lease-End</th>
-                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Contact</th>
-                <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Status</th>
-                <th class="px-4 py-3.5 w-20"></th>
-              </tr>
-            </thead>
-            <tbody id="tenantsBody">
-              <?php if (empty($tenants)): ?>
-                <tr>
-                  <td colspan="7" class="px-4 py-12 text-center text-sm text-slate-400">No tenants under your units yet.</td>
-                </tr>
-              <?php else: ?>
-                <?php foreach ($tenants as $tenant): ?>
-                  <?php
-                    $isActive = strtolower($tenant['unit_current_status']) === 'occupied';
-                    $statusLabel = $isActive ? 'Active' : 'Reserved';
-                    $statusClass = $isActive
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                        : 'bg-yellow-50 text-yellow-700 border-yellow-100';
-                    $typeClass = $unitBadgeClasses[strtolower($tenant['unit_type'])] ?? 'bg-slate-100 text-slate-500 border-slate-200';
-                    $modalData = [
-                        'name' => $tenant['client_name'],
-                        'unit' => $tenant['unit_number'],
-                        'type' => $tenant['unit_type'],
-                        'moveIn' => tn_date($tenant['move_in_date']),
-                        'leaseEnd' => tn_date($tenant['move_out_date']),
-                        'contact' => $tenant['client_contact'] ?: '—',
-                        'email' => $tenant['client_email'] ?: '—',
-                        'status' => $statusLabel,
-                    ];
-                    $modalJson = htmlspecialchars(json_encode($modalData), ENT_QUOTES, 'UTF-8');
-                  ?>
-                  <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openTenantModal(<?= $modalJson ?>)">
-                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap"><?= tn_e($tenant['client_name']) ?></td>
-                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="<?= tn_e($typeClass) ?> text-xs font-semibold px-2.5 py-0.5 rounded-full border"><?= tn_e($tenant['unit_number']) ?></span></td>
-                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= tn_e(tn_date($tenant['move_in_date'])) ?></td>
-                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= tn_e(tn_date($tenant['move_out_date'])) ?></td>
-                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= tn_e($tenant['client_contact'] ?: '—') ?></td>
-                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="<?= tn_e($statusClass) ?> text-xs font-semibold px-2.5 py-0.5 rounded-full border"><?= tn_e($statusLabel) ?></span></td>
-                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openTenantModal(<?= $modalJson ?>)">View</button></td>
-                  </tr>
-                <?php endforeach; ?>
-              <?php endif; ?>
-            </tbody>
-          </table>
-        </div>
+      <div class="flex items-center justify-between px-5 py-3.5 border-t border-slate-100">
+        <p class="text-xs text-slate-400">Showing Inquiries</p>
 
-        <!-- Pagination -->
-        <div class="flex items-center justify-between px-5 py-3.5 border-t border-slate-100 flex-wrap gap-3">
-          <p class="text-xs text-slate-500">Showing <span class="font-semibold text-slate-700"><?= count($tenants) > 0 ? '1–' . count($tenants) : '0' ?></span> of <span class="font-semibold text-slate-700"><?= tn_e(count($tenants)) ?></span> tenant<?= count($tenants) === 1 ? '' : 's' ?></p>
-          <div class="flex items-center gap-1">
-            <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95"><svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
-            <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border bg-slate-900 border-slate-900 text-white text-xs font-bold active:scale-95">1</button>
-            <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95"><svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
-          </div>
+        <div class="flex items-center gap-1">
+          <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95">
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+
+          <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border bg-slate-900 border-slate-900 text-white text-xs font-bold active:scale-95">
+            1
+          </button>
+
+          <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95">
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
         </div>
       </div>
 
     </div>
+    <!-- WHITE CARD END -->
+
   </div>
+</div>
 
-<!-- TENANT DETAIL MODAL -->
-<div class="modal-backdrop fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4" id="tenantModal" onclick="handleBackdropClick(event,'tenantModal')">
-  <div class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100 overflow-hidden">
+<!-- INQUIRY DETAIL MODAL -->
+<div class="modal-backdrop fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4" id="resModal" onclick="handleBackdropClick(event,'resModal')">
+  <div class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-100 overflow-hidden">
     <div class="bg-slate-900 px-6 py-4 flex items-center justify-between">
-      <h2 class="text-base font-bold text-white">Tenant Details</h2>
-      <button onclick="closeModal('tenantModal')" class="btn-press p-1.5 rounded-lg hover:bg-white/10 transition-colors active:scale-95">
-        <svg class="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <div class="p-6 space-y-4">
-      <div class="flex items-center gap-4 pb-4 border-b border-slate-100">
-        <div class="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-lg shrink-0" id="mTenantAvatar">?</div>
-        <div>
-          <p class="font-bold text-slate-900 text-base" id="mTenantName">—</p>
-          <p class="text-xs text-slate-400" id="mTenantEmail">—</p>
-        </div>
-        <span class="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full border" id="mTenantStatusBadge">—</span>
+      <div>
+        <h2 class="text-base font-bold text-white">Inquiry Details</h2>
+        <p class="text-xs text-slate-400 mt-0.5" id="mResNum">—</p>
       </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Unit No.</p><p class="text-sm font-bold text-slate-900" id="mTenantUnit" style="font-family:'DM Mono',monospace">—</p></div>
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Unit Type</p><p class="text-sm text-slate-700" id="mTenantType">—</p></div>
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Contact</p><p class="text-sm text-slate-700" id="mTenantContact" style="font-family:'DM Mono',monospace">—</p></div>
-        <div></div>
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Move-in</p><p class="text-sm text-slate-600" id="mTenantMoveIn" style="font-family:'DM Mono',monospace">—</p></div>
-        <div><p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Lease End</p><p class="text-sm text-slate-600" id="mTenantLeaseEnd" style="font-family:'DM Mono',monospace">—</p></div>
+      <button 
+          type="button"
+          onclick="event.stopPropagation(); closeModal('resModal')" 
+          class="btn-press p-1.5 rounded-lg hover:bg-white/10 transition-colors active:scale-95">
+          <svg class="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+    </div>
+    <div class="p-6 space-y-5">
+      <!-- Applicant info -->
+      <div class="flex items-center gap-4 pb-4 border-b border-slate-100">
+        <div class="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-lg shrink-0" id="mResAvatar">?</div>
+        <div class="flex-1 min-w-0">
+          <p class="font-bold text-slate-900 text-base" id="mResName">—</p>
+          <p class="text-xs text-slate-500" id="mResEmail">—</p>
+          <p class="text-xs text-slate-400 mt-0.5" id="mResContact" style="font-family:'DM Mono',monospace">—</p>
+        </div>
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full border shrink-0" id="mResStatus">—</span>
+      </div>
+      <!-- Reservation details -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
+      <div>
+        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Unit Applied</p>
+        <p class="text-sm font-bold text-slate-900" id="mResUnit" style="font-family:'DM Mono',monospace">—</p>
+      </div>
+
+      <div>
+        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Unit Type</p>
+        <p class="text-sm text-slate-700" id="mResUnitType">—</p>
+      </div>
+
+      <div>
+        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Res. Type</p>
+        <p class="text-sm text-slate-700" id="mResType">—</p>
+      </div>
+
+      <div>
+        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Res. Fee</p>
+        <p class="text-sm font-bold text-slate-900" id="mResFee" style="font-family:'DM Mono',monospace">—</p>
+      </div>
+
+      <div>
+        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">
+          Preferred Move-In Time
+        </p>
+
+        <p class="text-sm text-slate-700" id="mResMoveIn">
+          —
+        </p>
+      </div>
+
+      <div class="sm:col-span-2">
+        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Lease Duration</p>
+        <p class="text-sm text-slate-700" id="mResLease">—</p>
+      </div>
+    </div>
+
+    <!-- Message -->
+    <div class="pt-5 border-t border-slate-100">
+      <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-2">
+        Message
+      </p>
+
+      <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 min-h-[80px]">
+        <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-line" id="mResMessage">—</p>
       </div>
     </div>
     <div class="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50/60">
-      <button onclick="closeModal('tenantModal')" class="btn-press px-4 py-2 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-100 transition-all active:scale-95">Close</button>
-      <button class="btn-press bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all active:scale-95">Contact Tenant</button>
+      <button 
+        type="button"
+        id="declineRequestBtn"
+        onclick="handleDecline()" 
+        class="btn-press px-4 py-2 text-sm font-semibold text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-xl transition-all active:scale-95">
+        Decline
+      </button>
+
+      <button 
+        type="button"
+        id="approveRequestBtn"
+        onclick="handleApprove()" 
+        class="btn-press bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all active:scale-95">
+        Approve
+      </button>
     </div>
   </div>
 </div>
 
 <script>
   let sidebarCollapsed = false;
+  let currentResId = null;
   function toggleCollapse() {
     sidebarCollapsed = !sidebarCollapsed;
     document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
@@ -365,33 +379,143 @@ function hideLogoutModal() {
 function doLogout() {
   window.location.href = '../php_files/logout_session.php';
 }
-  function openTenantModal(d) {
-    const initials = d.name.split(' ').map(n => n[0]).join('').toUpperCase();
-    document.getElementById('mTenantAvatar').textContent = initials;
-    document.getElementById('mTenantName').textContent = d.name;
-    document.getElementById('mTenantEmail').textContent = d.email;
-    document.getElementById('mTenantUnit').textContent = d.unit;
-    document.getElementById('mTenantType').textContent = d.type;
-    document.getElementById('mTenantContact').textContent = d.contact;
-    document.getElementById('mTenantMoveIn').textContent = d.moveIn;
-    document.getElementById('mTenantLeaseEnd').textContent = d.leaseEnd;
-    const badge = document.getElementById('mTenantStatusBadge');
-    badge.textContent = d.status;
-    badge.className = d.status === 'Active'
-      ? 'ml-auto text-xs font-semibold px-2.5 py-1 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200'
-      : 'ml-auto text-xs font-semibold px-2.5 py-1 rounded-full border bg-yellow-50 text-yellow-700 border-yellow-200';
-    document.getElementById('tenantModal').classList.add('open');
-    document.body.style.overflow = 'hidden';
+  function openResModal(row) {
+  currentResId = row.dataset.requestId;
+
+  const name = row.dataset.name || '—';
+  const initials = name
+    .split(' ')
+    .filter(Boolean)
+    .map(n => n[0])
+    .join('')
+    .toUpperCase();
+
+  document.getElementById('mResAvatar').textContent = initials || '?';
+  document.getElementById('mResNum').textContent = row.dataset.requestCode || '—';
+  document.getElementById('mResName').textContent = name;
+  document.getElementById('mResEmail').textContent = row.dataset.email || '—';
+  document.getElementById('mResContact').textContent = row.dataset.contact || '—';
+
+  document.getElementById('mResUnit').textContent = row.dataset.unit || '—';
+  document.getElementById('mResUnitType').textContent = row.dataset.unitType || '—';
+  document.getElementById('mResType').textContent = row.dataset.type || '—';
+  document.getElementById('mResFee').textContent = row.dataset.fee || '—';
+  document.getElementById('mResMoveIn').textContent =
+  row.dataset.moveIn || '—';
+  document.getElementById('mResLease').textContent = row.dataset.lease || '—';
+  document.getElementById('mResMessage').textContent = row.dataset.message || '—';
+
+  const badge = document.getElementById('mResStatus');
+  const status = row.dataset.status || 'Pending';
+
+  badge.textContent = status;
+
+  const approveBtn = document.getElementById('approveRequestBtn');
+  const declineBtn = document.getElementById('declineRequestBtn');
+
+  if (status === 'Pending') {
+    approveBtn.disabled = false;
+    declineBtn.disabled = false;
+
+    approveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    declineBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+    approveBtn.textContent = 'Approve';
+    declineBtn.textContent = 'Decline';
+  } else {
+    approveBtn.disabled = true;
+    declineBtn.disabled = true;
+
+    approveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    declineBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+    approveBtn.textContent = status === 'Approved' ? 'Approved' : 'Approve';
+    declineBtn.textContent = status === 'Declined' ? 'Declined' : 'Decline';
   }
-  function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
-  function handleBackdropClick(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
-  function filterTable(query) {
-    const q = (typeof query === 'string' ? query : (document.getElementById('searchInput')?.value || '')).toLowerCase().trim();
-    document.querySelectorAll('#tenantsBody tr').forEach(r => {
-      if (r.querySelector('td[colspan]')) return;
-      r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
-    });
+
+  const colors = {
+    'Pending': 'bg-amber-50 text-amber-700 border-amber-200',
+    'Approved': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    'Declined': 'bg-red-50 text-red-600 border-red-200',
+    'Expired': 'bg-slate-100 text-slate-500 border-slate-200'
+  };
+
+  badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full border shrink-0 ' +
+    (colors[status] || 'bg-slate-100 text-slate-500 border-slate-200');
+
+  document.getElementById('resModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  const modal = document.getElementById(id);
+
+  if (modal) {
+    modal.classList.remove('open');
   }
+
+  document.body.style.overflow = '';
+}
+
+function handleBackdropClick(e, id) {
+  const modal = document.getElementById(id);
+
+  if (e.target === modal) {
+    closeModal(id);
+  }
+}
+function respondToRequest(action) {
+  if (!currentResId) {
+    alert("No request selected.");
+    return;
+  }
+
+  const confirmText = action === "approve"
+    ? "Approve this inquiry request?"
+    : "Decline this inquiry request?";
+
+  if (!confirm(confirmText)) {
+    return;
+  }
+
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = "ActionsUOP/respondApprovalRequest.php";
+
+  const requestInput = document.createElement("input");
+  requestInput.type = "hidden";
+  requestInput.name = "request_id";
+  requestInput.value = currentResId;
+
+  const actionInput = document.createElement("input");
+  actionInput.type = "hidden";
+  actionInput.name = "action";
+  actionInput.value = action;
+
+  form.appendChild(requestInput);
+  form.appendChild(actionInput);
+
+  document.body.appendChild(form);
+  form.submit();
+}
+
+function handleApprove() {
+  respondToRequest("approve");
+}
+
+function handleDecline() {
+  respondToRequest("decline");
+}
+
+function toggleProfileDropdown() {
+  const dropdown = document.getElementById('profileDropdown');
+  const chevron = document.getElementById('profileChevron');
+  if (!dropdown) return;
+  const isHidden = dropdown.classList.contains('hidden');
+  dropdown.classList.toggle('hidden', !isHidden);
+  if (chevron) {
+    chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  }
+}
 </script>
 </body>
 </html>

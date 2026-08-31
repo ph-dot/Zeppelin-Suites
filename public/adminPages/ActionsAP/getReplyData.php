@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../../php_files/admin_auth.php';
+require_once __DIR__ . '/../../php_files/auth.php';
 require_once __DIR__ . '/../../php_files/db.php';
 
 function replyClean($value) {

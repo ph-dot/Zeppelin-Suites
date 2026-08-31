@@ -14,7 +14,7 @@
  * date range. The front-end renders that as a full-row indicator.
  */
 
-require_once __DIR__ . '/../../php_files/admin_auth.php';
+require_once __DIR__ . '/../../php_files/auth.php';
 require_once __DIR__ . '/../../php_files/db.php';
 
 header('Content-Type: application/json');

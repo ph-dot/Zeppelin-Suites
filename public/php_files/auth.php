@@ -2,47 +2,71 @@
 require_once __DIR__ . '/session.php';
 require_once __DIR__ . '/db.php';
 
-function normalizeRole($role) {
-    return strtolower(trim((string) $role));
+if (!function_exists('normalizeRole')) {
+    function normalizeRole($role) {
+        return strtolower(trim((string) $role));
+    }
 }
 
-function requireRole($conn, array $allowedRoles) {
-    $userId = $_SESSION['user_id'] ?? null;
-    $role = normalizeRole($_SESSION['role'] ?? '');
-
-    $allowedRoles = array_map('normalizeRole', $allowedRoles);
-
-    if (!$userId || !in_array($role, $allowedRoles, true)) {
-        session_unset();
-        session_destroy();
-        header("Location: ../generalViewPages/login.php");
-        exit;
+if (!function_exists('getAuthLoginRedirectUrl')) {
+    function getAuthLoginRedirectUrl() {
+        $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+        if (strpos($scriptName, '/ActionsAP/') !== false || 
+            strpos($scriptName, '/ActionsUOP/') !== false || 
+            strpos($scriptName, '/ActionsTnt/') !== false || 
+            strpos($scriptName, '/ActionsGV/') !== false) {
+            return '../../generalViewPages/login.php';
+        }
+        return '../generalViewPages/login.php';
     }
+}
 
-    $stmt = $conn->prepare("SELECT full_name FROM users_table WHERE user_id = ?");
-    $stmt->bind_param("i", $userId);
-    $stmt->execute();
+if (!function_exists('requireRole')) {
+    function requireRole($conn, array $allowedRoles, bool $redirectOnFail = true) {
+        $userId = $_SESSION['user_id'] ?? null;
+        $role = normalizeRole($_SESSION['role'] ?? '');
 
-    $result = $stmt->get_result();
-    $user = $result->fetch_assoc();
+        $allowedRoles = array_map('normalizeRole', $allowedRoles);
 
-    $defaultNames = [
-        'admin' => 'Admin User',
-        'tenant' => 'Tenant',
-        'unit owner' => 'Unit Owner'
-    ];
+        if (!$userId || !in_array($role, $allowedRoles, true)) {
+            if ($redirectOnFail) {
+                session_unset();
+                session_destroy();
+                $loginUrl = getAuthLoginRedirectUrl();
+                header("Location: " . $loginUrl);
+                exit;
+            }
+            return null;
+        }
 
-    $fullName = $user['full_name'] ?? ($defaultNames[$role] ?? 'User');
+        $stmt = $conn->prepare("SELECT full_name FROM users_table WHERE user_id = ?");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
 
-    $_SESSION['full_name'] = $fullName;
+        $result = $stmt->get_result();
+        $user = $result ? $result->fetch_assoc() : null;
 
-    $stmt->close();
+        $defaultNames = [
+            'admin' => 'Admin User',
+            'tenant' => 'Tenant',
+            'unit owner' => 'Unit Owner'
+        ];
 
-    return [
-        'user_id' => $userId,
-        'role' => $role,
-        'full_name' => $fullName,
-        'initial' => strtoupper(substr($fullName, 0, 1))
-    ];
+        $fullName = $user['full_name'] ?? ($defaultNames[$role] ?? 'User');
+        $initial = strtoupper(substr($fullName, 0, 1));
+
+        $_SESSION['full_name'] = $fullName;
+        $GLOBALS['full_name'] = $fullName;
+        $GLOBALS['initial'] = $initial;
+
+        $stmt->close();
+
+        return [
+            'user_id' => $userId,
+            'role' => $role,
+            'full_name' => $fullName,
+            'initial' => $initial
+        ];
+    }
 }
 ?>

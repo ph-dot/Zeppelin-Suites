@@ -1,6 +1,6 @@
 <?php 
-require_once __DIR__ . '/auth.php';
-require_once __DIR__ . '/db.php'; // Add this if needed
+require_once __DIR__ . '/../../php_files/auth.php';
+require_once __DIR__ . '/../../php_files/db.php';
 
 // Get user data (safe for login page)
 $userData = null;

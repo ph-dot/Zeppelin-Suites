@@ -1,6 +1,6 @@
 <?php
-require_once '../php_files/admin_auth.php';
-require_once '../php_files/db.php';
+require_once __DIR__ . '/../../php_files/auth.php';
+require_once __DIR__ . '/../../php_files/db.php';
 
 
 // Handle status update via POST
@@ -50,18 +50,7 @@ console.log('Stats loaded:', window.statsData);
 </script>";
 
 
-// Pagination settings
-$itemsPerPage = 10;
-$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-$offset = ($page - 1) * $itemsPerPage;
-
-// Get total count for pagination
-$countSql = "SELECT COUNT(*) as total FROM Inquiry_table";
-$countResult = $conn->query($countSql);
-$totalItems = $countResult->fetch_assoc()['total'];
-$totalPages = ceil($totalItems / $itemsPerPage);
-
-// SQL query - NEWEST FIRST with LIMIT and OFFSET
+// SQL query - NEWEST FIRST
 $sql = "SELECT 
             i.inq_id,
             i.sender_name,
@@ -82,14 +71,8 @@ $sql = "SELECT
         FROM Inquiry_table i
         LEFT JOIN units_table u 
             ON i.approved_unit_id = u.unit_id
-        ORDER BY i.timestamp DESC 
-        LIMIT ? OFFSET ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("ii", $itemsPerPage, $offset);
-$stmt->execute();
-$result = $stmt->get_result();
-
-$endItem = min($offset + $result->num_rows, $totalItems);
+        ORDER BY i.timestamp DESC, i.inq_id DESC";
+$result = $conn->query($sql);
 
 // Look up who each pending/answered request actually went to, so the
 // admin modal can show real owner/unit info instead of a generic
@@ -171,21 +154,6 @@ if ($result->num_rows > 0) {
             $status_class = 'bg-slate-50 text-slate-700 border border-slate-200';
         }
 
-        if (
-            $status_lower === 'pending' &&
-            in_array(
-                $approval_lower,
-                ['requested', 'approved', 'declined'],
-                true
-            )
-        ) {
-            $updateBadge = "
-                <span class='ml-1 bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full'>
-                    UPDATED
-                </span>
-            ";
-        }
-
         // Fetch the list of owners this inquiry's request(s) went to
         $requestsList = [];
         $pendingRequestCount = 0;
@@ -210,6 +178,58 @@ if ($result->num_rows > 0) {
         }
 
         $requestsJson = htmlspecialchars(json_encode($requestsList), ENT_QUOTES, 'UTF-8');
+        $displayUnitPref = !empty($preferred_unit_id) ? $preferred_unit_id : '—';
+        $displayMessage = !empty($message) ? $message : '—';
+
+        // Custom status indicators beside Pending status
+        $updateBadge = "";
+        if ($status_lower === 'pending' || $status_lower === 'onhold') {
+            if ($approval_lower === 'approved') {
+                $approvedUnitInfo = !empty($approved_unit_number) ? " - Unit " . $approved_unit_number : "";
+                $updateBadge = "
+                    <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Owner has approved{$approvedUnitInfo}'>
+                        <span class='inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300 shadow-2xs hover:bg-emerald-200 transition-all'>
+                            <svg class='w-2.5 h-2.5 text-emerald-700' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M5 13l4 4L19 7'/></svg>
+                            Approved
+                        </span>
+                        <span class='pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:flex flex-col items-center z-30'>
+                            <span class='bg-slate-900 text-white text-[11px] font-medium px-2.5 py-1 rounded-lg shadow-lg whitespace-nowrap'>
+                                Owner has approved{$approvedUnitInfo}
+                            </span>
+                            <span class='w-2 h-2 bg-slate-900 rotate-45 -mt-1'></span>
+                        </span>
+                    </span>
+                ";
+            } elseif ($approval_lower === 'requested' || $pendingRequestCount > 0) {
+                $updateBadge = "
+                    <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Request is still pending'>
+                        <span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300 shadow-2xs hover:bg-amber-200 transition-all'>
+                            !
+                        </span>
+                        <span class='pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:flex flex-col items-center z-30'>
+                            <span class='bg-slate-900 text-white text-[11px] font-medium px-2.5 py-1 rounded-lg shadow-lg whitespace-nowrap'>
+                                Request is still pending
+                            </span>
+                            <span class='w-2 h-2 bg-slate-900 rotate-45 -mt-1'></span>
+                        </span>
+                    </span>
+                ";
+            } elseif ($approval_lower === 'declined') {
+                $updateBadge = "
+                    <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Owner declined request'>
+                        <span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-100 text-red-700 text-[10px] font-bold border border-red-300 shadow-2xs hover:bg-red-200 transition-all'>
+                            ✕
+                        </span>
+                        <span class='pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:flex flex-col items-center z-30'>
+                            <span class='bg-slate-900 text-white text-[11px] font-medium px-2.5 py-1 rounded-lg shadow-lg whitespace-nowrap'>
+                                Owner declined request
+                            </span>
+                            <span class='w-2 h-2 bg-slate-900 rotate-45 -mt-1'></span>
+                        </span>
+                    </span>
+                ";
+            }
+        }
 
        echo "<tr class='inq-row' 
                 data-inq-id='" . (int)$row['inq_id'] . "'
@@ -228,7 +248,7 @@ if ($result->num_rows > 0) {
                 data-lease-duration='" . addslashes($lease_duration) . "'
                 data-message='" . addslashes($message) . "'
                 onclick='openModal(this)'>
-                <td class='px-5 py-4'>
+                <td class='px-5 py-4 text-left align-middle'>
                     <div class='min-w-[180px]'>
                         <p class='text-sm font-bold text-slate-900 leading-tight'>
                             {$sender_name}
@@ -238,26 +258,27 @@ if ($result->num_rows > 0) {
                         </p>
                     </div>
                 </td>
-                <td class='px-4 py-3.5'><span class='text-xs font-semibold px-2.5 py-0.5'>{$inquiry_type}</span></td>
-                <td class='px-4 py-3.5 text-slate-700 text-xs font-medium whitespace-nowrap'>{$preferred_unit_id}</td>
-                <td class='px-4 py-3.5 text-slate-400 text-xs max-w-xs truncate'>{$message}</td>
-                      <td class='px-4 py-3.5 text-slate-500 whitespace-nowrap text-xs' style='font-family:&quot;DM Mono&quot;,monospace'>{$dateOnly}</td>
-                <td class='px-4 py-3.5'>
-                    <span class='status-badge {$status_class} text-xs font-semibold px-2.5 py-0.5 rounded-full'>
+                <td class='px-4 py-3.5 text-left align-middle whitespace-nowrap'>
+                    <span class='text-xs font-semibold text-slate-800'>{$inquiry_type}</span>
+                </td>
+                <td class='px-4 py-3.5 text-left align-middle text-slate-700 text-xs font-medium whitespace-nowrap'>{$displayUnitPref}</td>
+                <td class='px-4 py-3.5 text-left align-middle text-slate-400 text-xs max-w-xs truncate'>{$displayMessage}</td>
+                <td class='px-4 py-3.5 text-left align-middle text-slate-500 whitespace-nowrap text-xs' style='font-family:&quot;DM Mono&quot;,monospace'>{$dateOnly}</td>
+                <td class='px-4 py-3.5 text-left align-middle whitespace-nowrap'>
+                    <span class='status-badge {$status_class} text-xs font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center'>
                         {$displayStatus}
                     </span>
                     {$updateBadge}
                 </td>
-                <td class='px-4 py-3.5 text-right'>
+                <td class='px-4 py-3.5 text-right align-middle whitespace-nowrap'>
                     <button class='btn-press text-xs font-semibold text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full active:scale-95 transition-all' onclick='event.stopPropagation(); openModal(this.closest(\"tr\"))'>View</button>
                 </td>
               </tr>";
     }
 } else {
-    echo "<tr><td colspan='8' class='text-center px-5 py-3.5 text-slate-500'>No inquiries found.</td></tr>";
+    echo "<tr><td colspan='7' class='text-center px-5 py-8 text-slate-400 text-sm'>No inquiries found.</td></tr>";
 }
 
-$stmt->close();
 $requestsStmt->close();
 $conn->close();
 ?>

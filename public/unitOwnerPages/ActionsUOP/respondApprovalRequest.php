@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 if (!isset($_SESSION['user_id']) || strtolower($_SESSION['role'] ?? '') !== 'unit owner') {
     $_SESSION['error_message'] = "Unauthorized access.";
-    header("Location: ../ownersReservations.php");
+    header("Location: ../ownersInquiries.php");
     exit();
 }
 
@@ -17,13 +17,13 @@ $action = $_POST['action'] ?? '';
 
 if ($request_id <= 0) {
     $_SESSION['error_message'] = "Invalid request ID.";
-    header("Location: ../ownersReservations.php");
+    header("Location: ../ownersInquiries.php");
     exit();
 }
 
 if ($action !== 'approve' && $action !== 'decline') {
     $_SESSION['error_message'] = "Invalid action.";
-    header("Location: ../ownersReservations.php");
+    header("Location: ../ownersInquiries.php");
     exit();
 }
 
@@ -140,7 +140,7 @@ try {
         $conn->commit();
 
         $_SESSION['success_message'] = "Reservation request approved successfully.";
-        header("Location: ../ownersReservations.php");
+        header("Location: ../ownersInquiries.php");
         exit();
     }
 
@@ -191,7 +191,7 @@ try {
         $conn->commit();
 
         $_SESSION['success_message'] = "Reservation request declined.";
-        header("Location: ../ownersReservations.php");
+        header("Location: ../ownersInquiries.php");
         exit();
     }
 
@@ -199,7 +199,7 @@ try {
     $conn->rollback();
 
     $_SESSION['error_message'] = $e->getMessage();
-    header("Location: ../ownersReservations.php");
+    header("Location: ../ownersInquiries.php");
     exit();
 }
 

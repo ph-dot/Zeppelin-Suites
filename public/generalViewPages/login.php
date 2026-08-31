@@ -11,7 +11,7 @@ if (isset($_SESSION['user_id'])) {
     } elseif ($role === 'unit owner') {
         header("Location: ../unitOwnerPages/overview.php");
     } elseif ($role === 'tenant') {
-        header("Location: ../tenantPages/homeTenant.html");
+        header("Location: ../tenantPages/homeTenant.php");
     }
     exit();
 }

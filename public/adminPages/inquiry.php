@@ -139,7 +139,7 @@ $userData = requireRole($conn, ['admin']); ?>
   
   <div class="relative flex-1 max-w-sm">
     <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-    <input type="text" placeholder="Search inquiries..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
+    <input type="text" id="inquirySearchInput" placeholder="Search inquiries..." oninput="handleInquirySearch(this.value)" class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
   </div>
   
   <div class="flex items-center gap-2 ml-auto">
@@ -185,17 +185,25 @@ $userData = requireRole($conn, ['admin']); ?>
     <h1 class="text-xl font-bold text-slate-900">Inquiries</h1>
     <div class="flex items-center gap-2">
         <div class="flex bg-slate-100 rounded-full p-1 gap-0.5 text-xs font-semibold">
-            <button class="filter-btn active px-3 py-1.5 rounded-full bg-white text-slate-700 shadow-sm active:scale-95 transition-all" 
-                    onclick="setFilter('all')">
-                All
-            </button>
-            <button class="filter-btn px-3 py-1.5 rounded-full text-slate-500 hover:bg-white/70 active:scale-95 transition-all" 
+            <button class="filter-btn active px-3.5 py-1.5 rounded-full bg-white text-slate-700 shadow-sm active:scale-95 transition-all" 
+                    data-filter="pending"
                     onclick="setFilter('pending')">
                 Pending
             </button>
-            <button class="filter-btn px-3 py-1.5 rounded-full text-slate-500 hover:bg-white/70 active:scale-95 transition-all" 
+            <button class="filter-btn px-3.5 py-1.5 rounded-full text-slate-500 hover:bg-white/70 active:scale-95 transition-all" 
+                    data-filter="responded"
                     onclick="setFilter('responded')">
                 Responded
+            </button>
+            <button class="filter-btn px-3.5 py-1.5 rounded-full text-slate-500 hover:bg-white/70 active:scale-95 transition-all" 
+                    data-filter="submitted"
+                    onclick="setFilter('submitted')">
+                Submitted
+            </button>
+            <button class="filter-btn px-3.5 py-1.5 rounded-full text-slate-500 hover:bg-white/70 active:scale-95 transition-all" 
+                    data-filter="all"
+                    onclick="setFilter('all')">
+                All
             </button>
         </div>
     </div>
@@ -248,13 +256,13 @@ $userData = requireRole($conn, ['admin']); ?>
           <table class="w-full text-sm" id="inqTable">
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50/60">
-                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Inquirer</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">inquiry Type</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Unit Preference</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Message Preview</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Date Submitted</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Status</th>
-                <th class="px-4 py-3 w-16"></th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquirer</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquiry Type</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Unit Preference</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide align-middle">Message Preview</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Date Submitted</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Status</th>
+                <th class="text-right px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-20 align-middle">Action</th>
               </tr>
             </thead>
              <tbody class="divide-y divide-slate-50" id="inqTableBody">
@@ -263,40 +271,16 @@ $userData = requireRole($conn, ['admin']); ?>
           </table>
         </div>
 
-        <!-- Pagination --> 
-        <div class="flex items-center justify-between flex-wrap gap-3 px-5 py-3.5 border-t border-slate-100">
-          <p class="text-xs text-slate-500">
-              Showing <span class="font-semibold text-slate-700">
-                  <?php echo ($offset + 1); ?>–<?php echo $endItem; ?>
-              </span> of 
-              <span class="font-semibold text-slate-700"><?php echo $totalItems; ?></span> inquiries
+        <!-- Dynamic Pagination --> 
+        <div class="flex items-center justify-between flex-wrap gap-3 px-5 py-3.5 border-t border-slate-100" id="inqPaginationContainer">
+          <p class="text-xs text-slate-500" id="inqPaginationInfo">
+              Showing <span class="font-semibold text-slate-700" id="inqShowingStart">0</span>–<span class="font-semibold text-slate-700" id="inqShowingEnd">0</span> of 
+              <span class="font-semibold text-slate-700" id="inqTotalCount">0</span> inquiries
           </p>
-          <div class="flex items-center gap-1">
-              <?php if($page > 1): ?>
-              <a href="?page=<?php echo $page - 1; ?>" 
-                class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95"
-                title="Previous">
-                  <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                  </svg>
-              </a>
-              <?php endif; ?>
-              
-              <span class="px-3 py-1 text-sm font-semibold text-slate-700">
-                  <?php echo $page; ?> / <?php echo $totalPages; ?>
-              </span>
-              
-              <?php if($page < $totalPages): ?>
-              <a href="?page=<?php echo $page + 1; ?>" 
-                class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95"
-                title="Next">
-                  <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                  </svg>
-              </a>
-              <?php endif; ?>
+          <div class="flex items-center gap-1" id="inqPaginationControls">
+              <!-- Dynamically populated by JS -->
           </div>
-      </div>
+        </div>
 
     </div>
   </main>
@@ -586,7 +570,8 @@ $userData = requireRole($conn, ['admin']); ?>
 <script>
 let sidebarCollapsed = false;
 let currentRow = null;
-let currentFilter = 'all';
+let currentFilter = 'pending';
+let currentSearchQuery = '';
 
 let currentInquiryId = null;
 let currentUnitPreference = null;
@@ -662,6 +647,9 @@ function hideModal() {
   document.getElementById('logoutModal').classList.add('hidden');
 }
 
+let currentPage = 1;
+const itemsPerPage = 10;
+
 function doLogout() {
   window.location.href = '/Zeppelin-Suites/public/php_files/logout_session.php'; // Your logout file
 }
@@ -670,53 +658,227 @@ function doLogout() {
 // Filter function
 function setFilter(status) {
   currentFilter = status;
+  currentPage = 1; // Reset to page 1 on filter change
   
   document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.classList.remove('active', 'bg-white', 'text-slate-700', 'shadow-sm');
-    btn.classList.add('text-slate-500', 'hover:bg-white/70');
+    const isTarget = (btn.dataset.filter === status) || (btn.textContent.trim().toLowerCase() === status);
+    if (isTarget) {
+      btn.classList.add('active', 'bg-white', 'text-slate-700', 'shadow-sm');
+      btn.classList.remove('text-slate-500', 'hover:bg-white/70');
+    } else {
+      btn.classList.remove('active', 'bg-white', 'text-slate-700', 'shadow-sm');
+      btn.classList.add('text-slate-500', 'hover:bg-white/70');
+    }
   });
   
-  const activeBtn = Array.from(document.querySelectorAll('.filter-btn')).find(btn => 
-    btn.textContent.trim().toLowerCase() === status
-  );
-  if (activeBtn) {
-    activeBtn.classList.add('active', 'bg-white', 'text-slate-700', 'shadow-sm');
-    activeBtn.classList.remove('text-slate-500', 'hover:bg-white/70');
-  }
-  
-  document.querySelectorAll('#inqTableBody tr.inq-row').forEach(row => {
-    const rowStatus = row.dataset.status || 'pending';
-    row.style.display = (status === 'all' || rowStatus === status) ? '' : 'none';
-  });
+  applyFiltersAndSearch();
 }
 
-// Stats updater - FIXED to work reliably
+function handleInquirySearch(query) {
+  currentSearchQuery = (query || '').toLowerCase().trim();
+  currentPage = 1; // Reset to page 1 on search change
+  applyFiltersAndSearch();
+}
+
+function goToPage(page) {
+  currentPage = page;
+  applyFiltersAndSearch();
+}
+
+function applyFiltersAndSearch() {
+  const rows = Array.from(document.querySelectorAll('#inqTableBody tr.inq-row'));
+  const matchingRows = [];
+
+  rows.forEach(row => {
+    const rawStatus = (row.dataset.status || 'pending').toLowerCase().trim();
+    const name = (row.dataset.name || '').toLowerCase();
+    const email = (row.dataset.email || '').toLowerCase();
+    const contact = (row.dataset.contact || '').toLowerCase();
+    const type = (row.dataset.inquiryType || '').toLowerCase();
+    const unit = (row.dataset.unitpref || '').toLowerCase();
+    const message = (row.dataset.message || '').toLowerCase();
+
+    // Status matching
+    let matchesStatus = false;
+    if (currentFilter === 'all') {
+      matchesStatus = true;
+    } else if (currentFilter === 'pending') {
+      matchesStatus = (rawStatus === 'pending' || rawStatus === 'onhold');
+    } else if (currentFilter === 'responded') {
+      matchesStatus = (rawStatus === 'responded');
+    } else if (currentFilter === 'submitted') {
+      matchesStatus = (rawStatus === 'reservation submitted' || rawStatus === 'officially booked');
+    } else {
+      matchesStatus = (rawStatus === currentFilter);
+    }
+
+    // Search query matching
+    let matchesSearch = true;
+    if (currentSearchQuery !== '') {
+      matchesSearch = name.includes(currentSearchQuery) ||
+                      email.includes(currentSearchQuery) ||
+                      contact.includes(currentSearchQuery) ||
+                      type.includes(currentSearchQuery) ||
+                      unit.includes(currentSearchQuery) ||
+                      message.includes(currentSearchQuery) ||
+                      rawStatus.includes(currentSearchQuery);
+    }
+
+    if (matchesStatus && matchesSearch) {
+      matchingRows.push(row);
+    } else {
+      row.style.display = 'none';
+    }
+  });
+
+  const totalMatching = matchingRows.length;
+  const totalPages = Math.max(1, Math.ceil(totalMatching / itemsPerPage));
+
+  // Bounds check
+  if (currentPage > totalPages) {
+    currentPage = totalPages;
+  }
+  if (currentPage < 1) {
+    currentPage = 1;
+  }
+
+  // Paginate matching rows
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalMatching);
+
+  matchingRows.forEach((row, index) => {
+    if (index >= startIndex && index < endIndex) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+
+  // Handle dynamic empty state row if everything is filtered out
+  let emptyRow = document.getElementById('inqNoResultsRow');
+  if (totalMatching === 0 && rows.length > 0) {
+    if (!emptyRow) {
+      emptyRow = document.createElement('tr');
+      emptyRow.id = 'inqNoResultsRow';
+      emptyRow.innerHTML = '<td colspan="7" class="text-center px-5 py-8 text-slate-400 text-sm">No inquiries match the selected filter.</td>';
+      document.getElementById('inqTableBody').appendChild(emptyRow);
+    } else {
+      emptyRow.style.display = '';
+    }
+  } else if (emptyRow) {
+    emptyRow.style.display = 'none';
+  }
+
+  // Update Pagination Info
+  const showingStartEl = document.getElementById('inqShowingStart');
+  const showingEndEl = document.getElementById('inqShowingEnd');
+  const totalCountEl = document.getElementById('inqTotalCount');
+
+  if (showingStartEl && showingEndEl && totalCountEl) {
+    showingStartEl.textContent = totalMatching === 0 ? 0 : startIndex + 1;
+    showingEndEl.textContent = endIndex;
+    totalCountEl.textContent = totalMatching;
+  }
+
+  // Render pagination controls
+  renderPaginationControls(totalPages, totalMatching);
+}
+
+function renderPaginationControls(totalPages, totalMatching) {
+  const container = document.getElementById('inqPaginationControls');
+  if (!container) return;
+
+  if (totalMatching === 0 || totalPages <= 1) {
+    container.innerHTML = `
+      <span class="px-2 py-1 text-xs font-semibold text-slate-400">1 / 1</span>
+    `;
+    return;
+  }
+
+  let html = '';
+
+  // Previous button
+  const prevDisabled = currentPage <= 1;
+  html += `
+    <button type="button" 
+            onclick="goToPage(${currentPage - 1})"
+            class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 transition-all active:scale-95 ${prevDisabled ? 'opacity-30 cursor-not-allowed text-slate-300' : 'text-slate-500 hover:bg-slate-50 cursor-pointer'}"
+            ${prevDisabled ? 'disabled' : ''}
+            title="Previous">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </button>
+  `;
+
+  // Page number buttons
+  if (totalPages <= 7) {
+    for (let p = 1; p <= totalPages; p++) {
+      const isActive = p === currentPage;
+      html += `
+        <button type="button"
+                onclick="goToPage(${p})"
+                class="min-w-[32px] h-8 px-2.5 flex items-center justify-center rounded-lg text-xs font-semibold transition-all active:scale-95 ${isActive ? 'bg-slate-900 text-white shadow-xs' : 'border border-slate-200 text-slate-600 hover:bg-slate-50'}">
+          ${p}
+        </button>
+      `;
+    }
+  } else {
+    // Current page / Total pages format with buttons
+    for (let p = 1; p <= totalPages; p++) {
+      if (p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1)) {
+        const isActive = p === currentPage;
+        html += `
+          <button type="button"
+                  onclick="goToPage(${p})"
+                  class="min-w-[32px] h-8 px-2.5 flex items-center justify-center rounded-lg text-xs font-semibold transition-all active:scale-95 ${isActive ? 'bg-slate-900 text-white shadow-xs' : 'border border-slate-200 text-slate-600 hover:bg-slate-50'}">
+            ${p}
+          </button>
+        `;
+      } else if (p === currentPage - 2 || p === currentPage + 2) {
+        html += `<span class="w-6 text-center text-xs text-slate-400">...</span>`;
+      }
+    }
+  }
+
+  // Next button
+  const nextDisabled = currentPage >= totalPages;
+  html += `
+    <button type="button" 
+            onclick="goToPage(${currentPage + 1})"
+            class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 transition-all active:scale-95 ${nextDisabled ? 'opacity-30 cursor-not-allowed text-slate-300' : 'text-slate-500 hover:bg-slate-50 cursor-pointer'}"
+            ${nextDisabled ? 'disabled' : ''}
+            title="Next">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </button>
+  `;
+
+  container.innerHTML = html;
+}
+
+// Stats updater
 function updateStats() {
-  console.log('🔄 Updating stats...');
   if (window.statsData) {
     document.getElementById('newTodayCount').textContent = window.statsData.newToday || 0;
     document.getElementById('pendingCount').textContent = window.statsData.pending || 0;
     document.getElementById('respondedCount').textContent = window.statsData.responded || 0;
-    console.log('✅ Stats updated:', window.statsData);
-  } else {
-    console.log('❌ No statsData found');
   }
 }
 
-// SINGLE DOMContentLoaded - FIXED (removed duplicate)
+// DOMContentLoaded setup
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🎉 DOM loaded');
-  
   // Update stats immediately
   updateStats();
   
-  // Set default filter
-  setFilter('all');
+  // Set default filter to 'pending'
+  setFilter('pending');
   
-  // Wait a bit more for table data, then check again
+  // Wait a bit more for table data, then refresh filter state
   setTimeout(() => {
     updateStats();
-    setFilter('all');
+    setFilter('pending');
   }, 100);
   
   // Add modal CSS
@@ -728,16 +890,15 @@ document.addEventListener('DOMContentLoaded', function() {
   document.head.appendChild(style);
 });
 
-// POLL FOR STATS - More reliable approach
+// POLL FOR STATS
 let statsCheckInterval = setInterval(() => {
   if (window.statsData) {
     clearInterval(statsCheckInterval);
     updateStats();
-    console.log('✅ Stats polling complete');
   }
 }, 100);
 
-// Stop polling after 5 seconds to prevent infinite loop
+// Stop polling after 5 seconds
 setTimeout(() => {
   clearInterval(statsCheckInterval);
   updateStats();

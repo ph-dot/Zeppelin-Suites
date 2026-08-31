@@ -150,7 +150,7 @@ if ($stmt) {
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
       <span class="nav-label">Overview</span>
     </a>
-    <a href="ownersReservations.php" data-tooltip="Reservations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+    <a href="ownersInquiries.php" data-tooltip="Inquiries" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
       <span class="nav-label">Inquiries</span>
     </a>
@@ -382,7 +382,7 @@ if ($stmt) {
                         <p class="text-xs text-slate-400">Unit <?= ov_e($reqItem['unit_number'] ?? 'N/A') ?></p>
                       </td>
                       <td class="px-4 py-3.5 text-right">
-                        <a href="ownersReservations.php" class="btn-press inline-flex items-center justify-center text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full active:scale-95 transition-all">Respond</a>
+                        <a href="ownersInquiries.php" class="btn-press inline-flex items-center justify-center text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full active:scale-95 transition-all">Respond</a>
                       </td>
                     </tr>
                   <?php endforeach; ?>
@@ -391,7 +391,7 @@ if ($stmt) {
             </div>
           <?php endif; ?>
           <div class="flex justify-end px-5 py-3 border-t border-slate-100 mt-auto">
-            <a href="ownersReservations.php" class="btn-press text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors active:scale-95">view reservation request →</a>
+            <a href="ownersInquiries.php" class="btn-press text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors active:scale-95">view inquiry requests →</a>
           </div>
         </div>
 

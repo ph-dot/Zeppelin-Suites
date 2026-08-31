@@ -1,6 +1,6 @@
 <?php
-require_once '../../php_files/admin_auth.php';
-require_once '../../php_files/db.php';
+require_once __DIR__ . '/../../php_files/auth.php';
+require_once __DIR__ . '/../../php_files/db.php';
 require_once '../../php_files/eligible_units.php';
 
 header('Content-Type: application/json');
