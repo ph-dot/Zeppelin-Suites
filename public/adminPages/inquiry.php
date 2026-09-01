@@ -904,6 +904,91 @@ setTimeout(() => {
   updateStats();
 }, 5000);
 
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str ?? '';
+  return div.innerHTML;
+}
+
+function updateRowStatusCell(row) {
+  if (!row) return;
+
+  const status = (row.dataset.status || 'pending').toLowerCase().trim();
+  const approvalStatus = (row.dataset.approvalStatus || 'not_requested').toLowerCase().trim();
+  const pendingCount = parseInt(row.dataset.pendingCount || '0', 10);
+  const approvedUnit = row.dataset.approvedUnit || '';
+
+  const statusMap = {
+    'pending': ['Pending', 'bg-amber-50 text-amber-700 border border-amber-200'],
+    'onhold': ['On Hold', 'bg-orange-50 text-orange-700 border border-orange-200'],
+    'responded': ['Responded', 'bg-emerald-50 text-emerald-700 border border-emerald-200'],
+    'declined': ['Declined', 'bg-red-50 text-red-700 border border-red-200'],
+    'reservation submitted': ['Reservation Submitted', 'bg-blue-50 text-blue-700 border border-blue-200'],
+    'officially booked': ['Officially Booked', 'bg-purple-50 text-purple-700 border border-purple-200']
+  };
+
+  const [displayStatus, statusClass] = statusMap[status] || ['Unknown', 'bg-slate-50 text-slate-700 border border-slate-200'];
+
+  let updateBadge = '';
+  if (status === 'pending' || status === 'onhold') {
+    if (approvalStatus === 'approved') {
+      const approvedUnitInfo = approvedUnit ? ` - Unit ${escapeHtml(approvedUnit)}` : '';
+      updateBadge = `
+        <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Owner has approved${approvedUnitInfo}'>
+          <span class='inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300 shadow-2xs hover:bg-emerald-200 transition-all'>
+            <svg class='w-2.5 h-2.5 text-emerald-700' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M5 13l4 4L19 7'/></svg>
+            Approved
+          </span>
+          <span class='pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:flex flex-col items-center z-30'>
+            <span class='bg-slate-900 text-white text-[11px] font-medium px-2.5 py-1 rounded-lg shadow-lg whitespace-nowrap'>
+              Owner has approved${approvedUnitInfo}
+            </span>
+            <span class='w-2 h-2 bg-slate-900 rotate-45 -mt-1'></span>
+          </span>
+        </span>
+      `;
+    } else if (approvalStatus === 'requested' || pendingCount > 0) {
+      updateBadge = `
+        <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Request is still pending'>
+          <span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300 shadow-2xs hover:bg-amber-200 transition-all'>
+            !
+          </span>
+          <span class='pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:flex flex-col items-center z-30'>
+            <span class='bg-slate-900 text-white text-[11px] font-medium px-2.5 py-1 rounded-lg shadow-lg whitespace-nowrap'>
+              Request is still pending
+            </span>
+            <span class='w-2 h-2 bg-slate-900 rotate-45 -mt-1'></span>
+          </span>
+        </span>
+      `;
+    } else if (approvalStatus === 'declined') {
+      updateBadge = `
+        <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Owner declined request'>
+          <span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-100 text-red-700 text-[10px] font-bold border border-red-300 shadow-2xs hover:bg-red-200 transition-all'>
+            ✕
+          </span>
+          <span class='pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:flex flex-col items-center z-30'>
+            <span class='bg-slate-900 text-white text-[11px] font-medium px-2.5 py-1 rounded-lg shadow-lg whitespace-nowrap'>
+              Owner declined request
+            </span>
+            <span class='w-2 h-2 bg-slate-900 rotate-45 -mt-1'></span>
+          </span>
+        </span>
+      `;
+    }
+  }
+
+  const statusCell = row.querySelector('.status-badge')?.closest('td') || (row.children && row.children[5]);
+  if (statusCell) {
+    statusCell.innerHTML = `
+      <span class='status-badge ${statusClass} text-xs font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center'>
+        ${displayStatus}
+      </span>
+      ${updateBadge}
+    `;
+  }
+}
+
 // Rest of your functions (modal, reply, etc.) - unchanged
 function openModal(row) {
   currentRow = row;
@@ -1267,9 +1352,11 @@ function cancelSentRequest(requestId) {
     cancelText: 'Keep Request',
     isDestructive: true,
     onConfirm: () => {
+      const inqIdToCancel = currentInquiryId;
+      const targetRow = currentRow || document.querySelector(`tr.inq-row[data-inq-id="${inqIdToCancel}"]`);
       const formData = new FormData();
       formData.append("request_id", requestId);
-      formData.append("inq_id", currentInquiryId);
+      formData.append("inq_id", inqIdToCancel);
 
       fetch("ActionsAP/cancelApprovalRequest.php", {
         method: "POST",
@@ -1286,9 +1373,12 @@ function cancelSentRequest(requestId) {
           currentSentRequests = currentSentRequests.filter(r => r.request_id !== requestId);
           renderSentRequests(currentSentRequests);
 
-          if (currentRow) {
-            currentRow.dataset.requests = JSON.stringify(currentSentRequests);
-            currentRow.dataset.pendingCount = data.pending_count;
+          if (targetRow) {
+            targetRow.dataset.requests = JSON.stringify(currentSentRequests);
+            targetRow.dataset.pendingCount = data.pending_count;
+            if (data.approval_status) targetRow.dataset.approvalStatus = data.approval_status;
+            if (data.status) targetRow.dataset.status = data.status;
+            updateRowStatusCell(targetRow);
           }
 
           const pendingCount = data.pending_count;
@@ -1324,12 +1414,6 @@ function cancelSentRequest(requestId) {
         });
     }
   });
-}
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str ?? '';
-  return div.innerHTML;
 }
 
 function closeModal() {
@@ -1632,8 +1716,10 @@ function sendApprovalToOwners() {
     </span>
   `;
 
+  const inqIdToSend = currentInquiryId;
+  const targetRow = currentRow || document.querySelector(`tr.inq-row[data-inq-id="${inqIdToSend}"]`);
   const formData = new FormData();
-  formData.append("inq_id", currentInquiryId);
+  formData.append("inq_id", inqIdToSend);
   formData.append("unit_ids", JSON.stringify(unitIds));
 
   fetch("ActionsAP/sendApprovalRequests.php", {
@@ -1650,28 +1736,36 @@ function sendApprovalToOwners() {
 
       // Add the newly-sent units to the local "Sent To" list right away,
       // so the admin sees them without waiting for a full page reload.
-      const newlySent = checkedAvailableUnits
-        .filter(u => selectedUnitIds.has(u.unit_id))
-        .map(u => ({
-          request_id: null,
-          unit_number: u.unit_number,
-          owner_name: u.owner_name || "No owner",
-          request_status: "pending",
-          requested_at: null,
-          responded_at: null
-        }));
+      if (data.requests && Array.isArray(data.requests)) {
+        currentSentRequests = data.requests;
+      } else {
+        const newlySent = checkedAvailableUnits
+          .filter(u => selectedUnitIds.has(u.unit_id))
+          .map(u => ({
+            request_id: null,
+            unit_number: u.unit_number,
+            owner_name: u.owner_name || "No owner",
+            request_status: "pending",
+            requested_at: null,
+            responded_at: null
+          }));
 
-      currentSentRequests = currentSentRequests
-        .filter(r => r.request_status !== "pending" || !newlySent.some(n => n.unit_number === r.unit_number))
-        .concat(newlySent);
+        currentSentRequests = currentSentRequests
+          .filter(r => r.request_status !== "pending" || !newlySent.some(n => n.unit_number === r.unit_number))
+          .concat(newlySent);
+      }
 
       renderSentRequests(currentSentRequests);
 
-      if (currentRow) {
-        currentRow.dataset.requests = JSON.stringify(currentSentRequests);
-        currentRow.dataset.approvalStatus = "requested";
-        currentRow.dataset.pendingCount =
-          currentSentRequests.filter(r => r.request_status === "pending").length;
+      const pendingCount = (typeof data.pending_count === 'number')
+        ? data.pending_count
+        : currentSentRequests.filter(r => r.request_status === "pending").length;
+
+      if (targetRow) {
+        targetRow.dataset.requests = JSON.stringify(currentSentRequests);
+        targetRow.dataset.approvalStatus = data.approval_status || "requested";
+        targetRow.dataset.pendingCount = pendingCount;
+        updateRowStatusCell(targetRow);
       }
 
       document.getElementById("approvalStatusText").textContent = "Waiting for owner approval";
@@ -1688,7 +1782,7 @@ function sendApprovalToOwners() {
       showZepAlert({
         type: 'success',
         title: 'Approval Requests Sent',
-        message: `Approval request${count > 1 ? 's have' : ' has'} been successfully sent to ${count} unit owner${count > 1 ? 's' : ''}. The inquiry status is updated to On Hold.`,
+        message: `Approval request${count > 1 ? 's have' : ' has'} been successfully sent to ${count} unit owner${count > 1 ? 's' : ''}.`,
         btnText: 'Great, got it'
       });
     })

@@ -99,12 +99,20 @@ try {
         // check units again and send to someone else.
     }
 
+    $inqCheckStmt = $conn->prepare("SELECT status, approval_status FROM inquiry_table WHERE inq_id = ?");
+    $inqCheckStmt->bind_param("i", $inq_id);
+    $inqCheckStmt->execute();
+    $inqRow = $inqCheckStmt->get_result()->fetch_assoc();
+    $inqCheckStmt->close();
+
     $conn->commit();
 
     echo json_encode([
-        'success' => true,
-        'message' => 'Request cancelled.',
-        'pending_count' => $pendingCount
+        'success'         => true,
+        'message'         => 'Request cancelled.',
+        'pending_count'   => $pendingCount,
+        'approval_status' => $inqRow['approval_status'] ?? 'not_requested',
+        'status'          => $inqRow['status'] ?? 'pending'
     ]);
 
 } catch (Exception $e) {

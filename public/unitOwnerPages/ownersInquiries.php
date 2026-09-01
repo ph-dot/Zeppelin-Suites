@@ -121,8 +121,8 @@ $user = requireRole($conn, ['unit owner']);
       </button>
 
       <!-- Profile Menu -->
-      <div class="relative">
-        <button onclick="toggleProfileDropdown()" class="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95" id="profileBtn">
+      <div class="relative" id="profileWrapper">
+        <button onclick="toggleProfileDropdown(event)" class="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95" id="profileBtn">
           <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold ring-2 ring-slate-200">
             <?= htmlspecialchars($user['initial'] ?? 'U') ?>
           </div>
@@ -229,86 +229,107 @@ $user = requireRole($conn, ['unit owner']);
 
 <!-- INQUIRY DETAIL MODAL -->
 <div class="modal-backdrop fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4" id="resModal" onclick="handleBackdropClick(event,'resModal')">
-  <div class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-100 overflow-hidden">
-    <div class="bg-slate-900 px-6 py-4 flex items-center justify-between">
+  <div class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-100 overflow-hidden flex flex-col max-h-[92vh]">
+    <!-- Modal Header -->
+    <div class="bg-slate-900 px-6 py-4 flex items-center justify-between shrink-0">
       <div>
         <h2 class="text-base font-bold text-white">Inquiry Details</h2>
-        <p class="text-xs text-slate-400 mt-0.5" id="mResNum">—</p>
+        <p class="text-xs text-slate-400 mt-0.5 font-mono" id="mResNum">—</p>
       </div>
       <button 
           type="button"
           onclick="event.stopPropagation(); closeModal('resModal')" 
-          class="btn-press p-1.5 rounded-lg hover:bg-white/10 transition-colors active:scale-95">
-          <svg class="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          class="btn-press p-1.5 rounded-lg hover:bg-white/10 transition-colors active:scale-95 text-white/70 hover:text-white">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
-        </button>
+      </button>
     </div>
-    <div class="p-6 space-y-5">
-      <!-- Applicant info -->
-      <div class="flex items-center gap-4 pb-4 border-b border-slate-100">
-        <div class="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-lg shrink-0" id="mResAvatar">?</div>
-        <div class="flex-1 min-w-0">
-          <p class="font-bold text-slate-900 text-base" id="mResName">—</p>
-          <p class="text-xs text-slate-500" id="mResEmail">—</p>
-          <p class="text-xs text-slate-400 mt-0.5" id="mResContact" style="font-family:'DM Mono',monospace">—</p>
+
+    <!-- Modal Content: Vertical Stack of Boxes -->
+    <div class="p-6 space-y-4 overflow-y-auto flex-1">
+      
+      <!-- BOX 1: Unit Inquiry Info -->
+      <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 shadow-2xs space-y-3">
+        <h3 class="text-sm font-bold text-slate-900 tracking-tight">Unit Inquiry Info:</h3>
+
+        <div class="space-y-2.5 text-xs">
+          <div class="flex items-center justify-between gap-4 py-0.5">
+            <span class="text-slate-400 font-medium shrink-0">Unit Applied:</span>
+            <span class="font-bold text-slate-900 font-mono text-right" id="mResUnit">—</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 py-0.5">
+            <span class="text-slate-400 font-medium shrink-0">Unit Type:</span>
+            <span class="font-semibold text-slate-800 text-right" id="mResUnitType">—</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 py-0.5">
+            <span class="text-slate-400 font-medium shrink-0">Inquiry Type:</span>
+            <span class="font-semibold text-slate-800 text-right" id="mResType">—</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 py-0.5">
+            <span class="text-slate-400 font-medium shrink-0">Reservation Fee:</span>
+            <span class="font-bold text-slate-900 font-mono text-right" id="mResFee">—</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 py-0.5" id="mResMoveInRow">
+            <span class="text-slate-400 font-medium shrink-0">Preferred Move-In Time:</span>
+            <span class="font-medium text-slate-800 text-right" id="mResMoveIn">—</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 py-0.5" id="mResLeaseRow">
+            <span class="text-slate-400 font-medium shrink-0">Lease Duration:</span>
+            <span class="font-medium text-slate-800 text-right" id="mResLease">—</span>
+          </div>
+
+          <div class="pt-2.5 border-t border-slate-200/60">
+            <div class="flex items-start justify-between gap-4">
+              <span class="text-slate-400 font-medium shrink-0">Message:</span>
+              <p class="font-medium text-slate-700 text-right leading-relaxed max-w-[280px] break-words whitespace-pre-line text-xs" id="mResMessage">—</p>
+            </div>
+          </div>
         </div>
-        <span class="text-xs font-semibold px-2.5 py-1 rounded-full border shrink-0" id="mResStatus">—</span>
-      </div>
-      <!-- Reservation details -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
-      <div>
-        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Unit Applied</p>
-        <p class="text-sm font-bold text-slate-900" id="mResUnit" style="font-family:'DM Mono',monospace">—</p>
       </div>
 
-      <div>
-        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Unit Type</p>
-        <p class="text-sm text-slate-700" id="mResUnitType">—</p>
+      <!-- BOX 2: Inquirer Info -->
+      <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 shadow-2xs space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-900 tracking-tight">Inquirer Info:</h3>
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-lg bg-slate-900 text-white font-bold text-[10px] flex items-center justify-center shrink-0" id="mResAvatar">?</div>
+            <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border shrink-0" id="mResStatus">—</span>
+          </div>
+        </div>
+
+        <div class="space-y-2.5 text-xs">
+          <div class="flex items-center justify-between gap-4 py-0.5">
+            <span class="text-slate-400 font-medium shrink-0">Name:</span>
+            <span class="font-bold text-slate-900 text-right" id="mResName">—</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 py-0.5">
+            <span class="text-slate-400 font-medium shrink-0">Email:</span>
+            <span class="font-medium text-slate-700 text-right truncate max-w-[260px]" id="mResEmail">—</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 py-0.5">
+            <span class="text-slate-400 font-medium shrink-0">Contact Number:</span>
+            <span class="font-medium text-slate-700 font-mono text-right" id="mResContact">—</span>
+          </div>
+        </div>
       </div>
 
-      <div>
-        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Res. Type</p>
-        <p class="text-sm text-slate-700" id="mResType">—</p>
-      </div>
-
-      <div>
-        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Res. Fee</p>
-        <p class="text-sm font-bold text-slate-900" id="mResFee" style="font-family:'DM Mono',monospace">—</p>
-      </div>
-
-      <div>
-        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">
-          Preferred Move-In Time
-        </p>
-
-        <p class="text-sm text-slate-700" id="mResMoveIn">
-          —
-        </p>
-      </div>
-
-      <div class="sm:col-span-2">
-        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Lease Duration</p>
-        <p class="text-sm text-slate-700" id="mResLease">—</p>
-      </div>
     </div>
 
-    <!-- Message -->
-    <div class="pt-5 border-t border-slate-100">
-      <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-2">
-        Message
-      </p>
-
-      <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 min-h-[80px]">
-        <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-line" id="mResMessage">—</p>
-      </div>
-    </div>
-    <div class="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50/60">
+    <!-- MODAL FOOTER: Decline & Approve -->
+    <div class="flex items-center justify-end gap-2.5 px-6 py-4 border-t border-slate-100 bg-slate-50/60 shrink-0">
       <button 
         type="button"
         id="declineRequestBtn"
         onclick="handleDecline()" 
-        class="btn-press px-4 py-2 text-sm font-semibold text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-xl transition-all active:scale-95">
+        class="btn-press px-5 py-2 text-sm font-semibold text-red-600 border border-red-200 bg-white hover:bg-red-50 rounded-xl transition-all active:scale-95">
         Decline
       </button>
 
@@ -316,7 +337,7 @@ $user = requireRole($conn, ['unit owner']);
         type="button"
         id="approveRequestBtn"
         onclick="handleApprove()" 
-        class="btn-press bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all active:scale-95">
+        class="btn-press bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-all active:scale-95 shadow-sm">
         Approve
       </button>
     </div>
@@ -333,7 +354,7 @@ $user = requireRole($conn, ['unit owner']);
   }
   function openMobileSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
   function closeMobileSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
-function toggleProfile(e) {
+function toggleProfileDropdown(e) {
   if (e) e.stopPropagation();
   const dropdown = document.getElementById('profileDropdown');
   const chevron = document.getElementById('profileChevron');
@@ -344,14 +365,16 @@ function toggleProfile(e) {
     chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
   }
 }
+function toggleProfile(e) {
+  toggleProfileDropdown(e);
+}
 
 // Close dropdown on outside click
 document.addEventListener('click', function(e) {
-  const profileWrapper = document.getElementById('profileWrapper');
-  const dropdown = document.getElementById('profileDropdown');
-  const chevron = document.getElementById('profileChevron');
-  if (dropdown && !dropdown.classList.contains('hidden')) {
-    if (!profileWrapper || !profileWrapper.contains(e.target)) {
+  if (!e.target.closest('#profileBtn') && !e.target.closest('#profileDropdown')) {
+    const dropdown = document.getElementById('profileDropdown');
+    const chevron = document.getElementById('profileChevron');
+    if (dropdown && !dropdown.classList.contains('hidden')) {
       dropdown.classList.add('hidden');
       if (chevron) chevron.style.transform = 'rotate(0deg)';
     }
@@ -400,10 +423,23 @@ function doLogout() {
   document.getElementById('mResUnitType').textContent = row.dataset.unitType || '—';
   document.getElementById('mResType').textContent = row.dataset.type || '—';
   document.getElementById('mResFee').textContent = row.dataset.fee || '—';
-  document.getElementById('mResMoveIn').textContent =
-  row.dataset.moveIn || '—';
+  document.getElementById('mResMoveIn').textContent = row.dataset.moveIn || '—';
   document.getElementById('mResLease').textContent = row.dataset.lease || '—';
   document.getElementById('mResMessage').textContent = row.dataset.message || '—';
+
+  const inqType = (row.dataset.type || '').toLowerCase().trim();
+  const isResale = inqType.includes('resale');
+  const isLeaseOrReservation = (inqType.includes('reservation') || inqType.includes('lease')) && !isResale;
+
+  const moveInRow = document.getElementById('mResMoveInRow');
+  const leaseRow = document.getElementById('mResLeaseRow');
+
+  if (moveInRow) {
+    moveInRow.style.display = isLeaseOrReservation ? 'flex' : 'none';
+  }
+  if (leaseRow) {
+    leaseRow.style.display = isLeaseOrReservation ? 'flex' : 'none';
+  }
 
   const badge = document.getElementById('mResStatus');
   const status = row.dataset.status || 'Pending';
@@ -504,17 +540,6 @@ function handleApprove() {
 
 function handleDecline() {
   respondToRequest("decline");
-}
-
-function toggleProfileDropdown() {
-  const dropdown = document.getElementById('profileDropdown');
-  const chevron = document.getElementById('profileChevron');
-  if (!dropdown) return;
-  const isHidden = dropdown.classList.contains('hidden');
-  dropdown.classList.toggle('hidden', !isHidden);
-  if (chevron) {
-    chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
-  }
 }
 </script>
 </body>

@@ -27,7 +27,8 @@ $sql = "
         u.unit_current_status,
 
         owner.full_name AS owner_name,
-        owner.email AS owner_email
+        owner.email AS owner_email,
+        owner.contact AS owner_contact
     FROM inquiry_table i
     INNER JOIN units_table u ON i.approved_unit_id = u.unit_id
     LEFT JOIN users_table owner ON u.unit_owner_id = owner.user_id
@@ -124,7 +125,7 @@ if (
     $is_lease = true;
 
 } elseif ($inquiry_type === 'resale inquiry') {
-    $price_basis = (float)$data['base_rate'];
+    $price_basis = (float)$data['lease_rate'];
     $price_label = "Selling Price";
     $transaction_type = "Unit Resale";
     $resident_type = "Buyer";
