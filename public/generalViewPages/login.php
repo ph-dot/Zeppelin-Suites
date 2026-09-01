@@ -1,0 +1,224 @@
+<?php 
+require_once '../php_files/auth.php'; // Use your new auth file
+
+
+// Redirect if already logged in
+if (isset($_SESSION['user_id'])) {
+    $role = normalizeRole($_SESSION['role'] ?? '');
+    
+    if ($role === 'admin') {
+        header("Location: ../adminPages/homeAdmin.php");
+    } elseif ($role === 'unit owner') {
+        header("Location: ../unitOwnerPages/overview.php");
+    } elseif ($role === 'tenant') {
+        header("Location: ../tenantPages/homeTenant.php");
+    }
+    exit();
+}
+
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../output.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Zeppelin Suites - Login Page</title>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+    *{
+        font-family: "Geist", sans-serif;
+    }
+    </style>
+</head>
+<body>
+<!-- ── NAV ──────────────────────────────────────────────── -->
+<nav class="sticky top-0 w-full bg-white/80 backdrop-blur-md px-6 md:px-16 lg:px-24 xl:px-32 py-4 flex items-center justify-between z-50 border-b border-zinc-200/50">
+    <a href="../generalViewPages/index.html">
+        <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites Logo" style="height:75px;">
+    </a>
+    <!-- Desktop Nav Items -->
+    <div class="hidden md:flex items-center gap-8">
+        <a href="../generalViewPages/index.html" class="text-sm text-zinc-500 hover:text-zinc-800">Home</a>
+        <a href="../generalViewPages/tour.html" class="text-sm text-zinc-500 hover:text-zinc-500 transition-colors">Take a Tour</a>
+        <div class="relative group">
+            <button class="flex items-center gap-1.5 text-sm text-zinc-500 cursor-pointer bg-transparent border-0 py-2">
+                Browse Units
+                <svg id="desktopChevron" class="transition-transform group-hover:rotate-180" width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="absolute top-full left-0 mt-1 w-44 bg-white border border-zinc-200 rounded-xl shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                <a href="../generalViewPages/studioTypeA.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
+                <a href="../generalViewPages/studioTypeB.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
+                <a href="../generalViewPages/oneBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
+                <a href="../generalViewPages/twoBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
+            </div>
+        </div>
+        <a href="../generalViewPages/faq.html" class="text-sm text-zinc-500 hover:text-zinc-800">FAQ</a>
+        <a href="../generalViewPages/aboutUs.html" class="text-sm text-zinc-500 hover:text-zinc-800">About Us</a>
+        <a href="../generalViewPages/contact.php" class="text-sm text-zinc-500 hover:text-zinc-800">Contact</a>
+        <a href="../generalViewPages/login.php" class="text-sm text-zinc-800 font-medium hover:text-zinc-800">Portal</a>
+   </div>
+  <button onclick="toggleMenu()" class="min-[851px]:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
+    <span id="bar1" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+    <span id="bar2" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+    <span id="bar3" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+  </button>
+  <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 min-[851px]:hidden z-50 hidden">
+    <a href="../generalViewPages/index.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Home</a>
+    <a href="../generalViewPages/tour.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Take a Tour</a>
+    <button onclick="toggleDropdown('mobileDropdown','mobileChevron')" class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50 bg-transparent border-0 cursor-pointer">
+      Browse Units
+      <svg id="mobileChevron" class="transition-transform" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 md:hidden z-50 hidden">
+        <a href="../generalViewPages/index.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Home</a>
+        <a href="../generalViewPages/tour.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Take a Tour</a>
+        <button onclick="toggleDropdown('mobileDropdown', 'mobileChevron')" class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50 bg-transparent border-0 cursor-pointer">
+            Browse Units
+            <svg id="mobileChevron" class="transition-transform" width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div id="mobileDropdown" class="hidden flex-col pl-4">
+            <a href="../generalViewPages/studioTypeA.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Studio Type A</a>
+            <a href="../generalViewPages/studioTypeB.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Studio Type B</a>
+            <a href="../generalViewPages/oneBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">One Bedroom</a>
+            <a href="../generalViewPages/twoBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Two Bedroom</a>
+        </div>
+        <a href="../generalViewPages/faq.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">FAQ</a>
+        <a href="../generalViewPages/aboutUs.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">About Us</a>
+        <a href="../generalViewPages/contact.php" class="px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Contact</a>
+        <a href="../generalViewPages/login.php" class="px-4 py-2.5 rounded-lg text-sm text-zinc-800 font-medium hover:bg-zinc-50">Portal</a>
+    <div id="mobileDropdown" class="hidden flex-col pl-4">
+      <a href="../generalViewPages/studioTypeA.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
+      <a href="../generalViewPages/studioTypeB.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
+      <a href="../generalViewPages/oneBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
+      <a href="../generalViewPages/twoBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
+    </div>
+    <a href="../generalViewPages/faq.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">About Us</a>
+    <a href="../generalViewPages/contact.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Contact</a>
+    <a href="../generalViewPages/login.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-900 font-medium hover:bg-zinc-50">Portal</a>
+  </div>
+</nav>
+
+<div class="flex h-175 w-full">
+    <div class="w-full hidden md:block h-full" style="background-image: url('../images/zeppelin-suites-slider-exterior-2.jpg'); background-size: cover; background-position: center;"></div>
+
+    <div class="w-full flex flex-col items-center justify-center">
+
+        <form action="ActionsGV/loginAction.php" method="POST" class="md:w-96 w-80 flex flex-col items-center justify-center">
+            <h2 class="text-4xl text-gray-900 font-medium">Sign in</h2>
+            <p class="text-sm text-gray-500/90 mt-3">Welcome back! Please sign in to continue</p>
+
+            <button type="button" class="w-full mt-8 bg-black hover:bg-zinc-800 flex items-center justify-center gap-2 h-12 rounded-full transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="w-5 h-5">
+                    <path fill="#EA4335" d="M24 9.5c3.1 0 5.9 1.1 8.1 3l6.2-6.2C34.6 3.5 29.6 1.5 24 1.5 14.8 1.5 6.9 6.9 3.5 14.7l7.3 5.7C12.5 13.9 17.7 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.5 24c0-1.6-.1-2.7-.4-3.9H24v7.4h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7c4.3-4 7.2-9.9 7.2-16.4z"/>
+                    <path fill="#FBBC05" d="M10.8 28.4c-.5-1.5-.8-3-.8-4.4s.3-3 .8-4.4l-7.3-5.7C1.9 17.1 1 20.4 1 24s.9 6.9 2.5 9.9l7.3-5.5z"/>
+                    <path fill="#34A853" d="M24 46.5c6.5 0 12-2.1 16-5.7l-7.3-5.7c-2 1.4-4.6 2.2-8.7 2.2-6.3 0-11.5-4.4-13.2-10.4l-7.3 5.7C6.9 41.1 14.8 46.5 24 46.5z"/>
+                </svg>
+                <span class="text-white">Continue with Google</span>
+            </button>
+
+            <div class="flex items-center gap-4 w-full my-5">
+                <div class="w-full h-px bg-gray-300/90"></div>
+                <p class="w-full text-nowrap text-sm text-gray-500/90">or sign in with email</p>
+                <div class="w-full h-px bg-gray-300/90"></div>
+            </div>
+
+            <div class="flex items-center w-full bg-transparent border border-black h-12 rounded-full overflow-hidden pl-6 gap-2">
+                <svg width="16" height="11" viewBox="0 0 16 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0 .55.571 0H15.43l.57.55v9.9l-.571.55H.57L0 10.45zm1.143 1.138V9.9h13.714V1.69l-6.503 4.8h-.697zM13.749 1.1H2.25L8 5.356z" fill="#6B7280"/>
+                </svg>
+                <input type="email" name="email" placeholder="Email id" class="bg-transparent text-gray-500/80 placeholder-gray-500/80 outline-none text-sm w-full h-full" required>
+            </div>
+
+            <div class="flex items-center mt-6 w-full bg-transparent border border-black h-12 rounded-full overflow-hidden pl-6 gap-2">
+                <svg width="13" height="17" viewBox="0 0 13 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13 8.5c0-.938-.729-1.7-1.625-1.7h-.812V4.25C10.563 1.907 8.74 0 6.5 0S2.438 1.907 2.438 4.25V6.8h-.813C.729 6.8 0 7.562 0 8.5v6.8c0 .938.729 1.7 1.625 1.7h9.75c.896 0 1.625-.762 1.625-1.7zM4.063 4.25c0-1.406 1.093-2.55 2.437-2.55s2.438 1.144 2.438 2.55V6.8H4.061z" fill="#6B7280"/>
+                </svg>
+                <input type="password" name="password" placeholder="Password" class="bg-transparent text-gray-500/80 placeholder-gray-500/80 outline-none text-sm w-full h-full" required>
+            </div>
+
+            <div class="w-full flex items-center justify-between mt-8 text-gray-500/80">
+                <div class="flex items-center gap-2">
+                    <input class="h-5" type="checkbox" id="checkbox">
+                    <label class="text-sm" for="checkbox">Remember me</label>
+                </div>
+                <a class="text-sm underline text-black" href="#">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="mt-8 w-full h-11 rounded-full text-white bg-black hover:bg-zinc-800 transition-colors">
+                Login
+            </button>
+            <p class="text-gray-500/90 text-sm mt-4">Don't have an account? <a class="text-black hover:underline" href="../generalViewPages/signUp.php">Sign up</a></p>
+        </form>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div id="errorModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-2xl w-80 text-center shadow-lg">
+        <h2 class="text-lg font-semibold text-red-600">Login Failed</h2>
+        <p id="errorMessage" class="text-sm text-gray-600 mt-2"></p>
+
+        <button onclick="closeModal()" class="mt-5 w-full bg-black text-white py-2 rounded-full">
+            OK
+        </button>
+    </div>
+</div>
+
+
+<script>
+    let menuOpen = false;
+
+    function toggleMenu() {
+        menuOpen = !menuOpen;
+        const menu = document.getElementById('mobileMenu');
+        const bar1 = document.getElementById('bar1');
+        const bar2 = document.getElementById('bar2');
+        const bar3 = document.getElementById('bar3');
+        menu.classList.toggle('hidden', !menuOpen);
+        menu.classList.toggle('flex', menuOpen);
+        bar1.style.transform = menuOpen ? 'translateY(8px) rotate(45deg)' : '';
+        bar2.style.opacity = menuOpen ? '0' : '1';
+        bar3.style.transform = menuOpen ? 'translateY(-8px) rotate(-45deg)' : '';
+    }
+    function toggleDropdown(id, chevronId) {
+        const el = document.getElementById(id);
+        const ch = document.getElementById(chevronId);
+        const hidden = el.classList.contains('hidden');
+        el.classList.toggle('hidden', !hidden);
+        el.classList.toggle('flex', hidden);
+        ch.style.transform = hidden ? 'rotate(180deg)' : '';
+    }
+    function showError(message) {
+        document.getElementById("errorMessage").innerText = message;
+        document.getElementById("errorModal").classList.remove("hidden");
+        document.body.style.overflow = 'hidden'; // Disable page scrolling when modal is open
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        document.getElementById("errorModal").classList.add("hidden");
+        document.body.style.overflow = 'auto'; // Enable page scrolling after modal is closed
+    }
+<?php
+if (isset($_SESSION['error_message'])) {
+    $message = $_SESSION['error_message'];
+    unset($_SESSION['error_message']);
+
+    echo "showError(" . json_encode($message) . ");";
+} elseif (isset($_GET['error'])) {
+    if ($_GET['error'] === "no_user") {
+        echo "showError('No account found with this email.');";
+    } elseif ($_GET['error'] === "wrong_password") {
+        echo "showError('Incorrect password. Try again.');";
+    }
+}
+?>
+</script>
+</body>
+</html>

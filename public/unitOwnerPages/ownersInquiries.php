@@ -1,0 +1,546 @@
+<?php
+require_once __DIR__ . '/../php_files/auth.php';
+
+$user = requireRole($conn, ['unit owner']);
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeppelin Suites — Inquiries</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],mono:['DM Mono','monospace']}}}}</script>
+<style>
+* { font-family: 'DM Sans', sans-serif; }
+.sidebar { width:256px; transition:width 0.3s cubic-bezier(0.4,0,0.2,1),transform 0.3s cubic-bezier(0.4,0,0.2,1); background:rgba(255,255,255,0.92); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+.sidebar.collapsed { width:68px; }
+@media (max-width:767px) { .sidebar { transform:translateX(-100%); position:fixed; z-index:50; height:100vh; width:256px !important; } .sidebar.open { transform:translateX(0); } }
+.main-wrapper { margin-left:256px; transition:margin-left 0.3s cubic-bezier(0.4,0,0.2,1); }
+.main-wrapper.sidebar-collapsed { margin-left:68px; }
+@media (max-width:767px) { .main-wrapper { margin-left:0 !important; } }
+.sidebar-logo { transition:opacity 0.2s ease,width 0.2s ease; }
+.sidebar.collapsed .sidebar-logo { opacity:0; width:0; overflow:hidden; pointer-events:none; }
+.overlay { display:none; pointer-events:none; }
+.overlay.show { display:block; pointer-events:auto; }
+.sidebar-link { position:relative; transition:all 0.18s ease; white-space:nowrap; overflow:hidden; }
+.sidebar-link.active { background:#0f172a; color:#fff; }
+.sidebar-link.active .nav-icon { color:#60a5fa; }
+.sidebar-link:not(.active):hover { background:#eff6ff; color:#1d4ed8; }
+.sidebar-link:not(.active):hover .nav-icon { color:#3b82f6; }
+.sidebar.collapsed .nav-label,.sidebar.collapsed .notice-section { display:none; }
+.sidebar.collapsed .sidebar-link { justify-content:center; padding-left:0; padding-right:0; }
+.sidebar.collapsed .collapse-icon { transform:rotate(180deg); }
+.sidebar.collapsed .sidebar-link:hover::after { content:attr(data-tooltip); position:absolute; left:calc(100% + 10px); top:50%; transform:translateY(-50%); background:#0f172a; color:#fff; font-size:12px; padding:5px 10px; border-radius:8px; white-space:nowrap; z-index:999; box-shadow:0 4px 16px rgba(0,0,0,0.18); pointer-events:none; }
+.collapse-icon { transition:transform 0.3s ease; }
+.profile-dropdown { opacity:0; visibility:hidden; transform:translateY(-6px); transition:all 0.2s cubic-bezier(0.4,0,0.2,1); }
+.profile-dropdown:not(.hidden) { opacity:1; visibility:visible; transform:translateY(0); }
+.data-row { transition:background 0.15s ease; }
+.data-row:hover { background:#f1f5f9; }
+.reveal-btn { opacity:0; transform:translateX(6px); transition:opacity 0.18s ease,transform 0.18s ease; pointer-events:none; }
+.data-row:hover .reveal-btn { opacity:1; transform:translateX(0); pointer-events:auto; }
+.modal-backdrop { opacity:0; visibility:hidden; transition:opacity 0.22s ease,visibility 0.22s ease; }
+.modal-backdrop.open { opacity:1; visibility:visible; }
+.modal-card { transform:translateY(12px) scale(0.98); transition:transform 0.22s cubic-bezier(0.4,0,0.2,1); }
+.modal-backdrop.open .modal-card { transform:translateY(0) scale(1); }
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:#f1f5f9; }
+::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+.btn-press { transition:all 0.15s ease; }
+.btn-press:active { transform:scale(0.95); }
+.zep-input:focus { outline:none; border-color:#0f172a; box-shadow:0 0 0 3px rgba(15,23,42,0.07); }
+.glass-header { background:rgba(255,255,255,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+.main-scroll { height:calc(100vh - 65px); overflow-y:auto; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 overflow-hidden">
+
+<div class="overlay fixed inset-0 bg-transparent z-40" id="overlay" onclick="closeMobileSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar fixed left-0 top-0 h-full border-r border-slate-100/80 flex flex-col z-50 md:z-40 shadow-2xl md:shadow-none" id="sidebar">
+  <div class="px-4 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
+    <a href="overview.php" class="sidebar-logo shrink-0 flex items-center">
+      <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" class="h-10 w-auto object-contain" onerror="this.outerHTML='<span class=\'font-bold text-slate-900 text-sm\'>ZEPPELIN SUITES</span>'">
+    </a>
+    <button onclick="toggleCollapse()" class="hidden md:flex btn-press p-1.5 rounded-lg hover:bg-slate-100 transition-colors active:scale-95 shrink-0 ml-1">
+      <svg class="collapse-icon w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+    </button>
+  </div>
+  <nav class="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden">
+    <a href="overview.php" data-tooltip="Overview" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      <span class="nav-label">Overview</span>
+    </a>
+    <a href="ownersInquiries.php" data-tooltip="Inquiries" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      <span class="nav-label">Inquiries</span>
+    </a>
+    <a href="ownersUnitReservations.php" data-tooltip="Reservations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      <span class="nav-label">Reservations</span>
+    </a>
+    <a href="ownersBookingCalendar.php" data-tooltip="Booking Calendar" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      <span class="nav-label">Booking Calendar</span>
+    </a>
+    <a href="ownersUnit.php" data-tooltip="Units" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V9a2 2 0 00-2-2h-3V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14m0 0H3m3 0h14m-7 0v-4h2v4"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1m4 0h1M9 13h1m4 0h1"/></svg>
+      <span class="nav-label">Units</span>
+    </a>
+    <a href="tenants.php" data-tooltip="Tenants" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span class="nav-label">Tenants</span>
+    </a>
+    <a href="ownersMaintenance.php" data-tooltip="Maintenance" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span class="nav-label">Maintenance</span>
+    </a>
+    <a href="account.php" data-tooltip="Account" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      <span class="nav-label">Account</span>
+    </a>
+  </nav>
+</aside>
+
+<!-- MAIN WRAPPER -->
+<div class="main-wrapper h-screen flex flex-col" id="mainWrapper">
+   <header class="glass-header border-b border-slate-100/80 px-4 md:px-6 py-3.5 flex items-center gap-4 shrink-0 z-30">
+    <button class="md:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95" onclick="openMobileSidebar()">
+      <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div class="relative flex-1 max-w-sm">
+      <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" placeholder="Search..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
+    </div>
+    <div class="flex items-center gap-2 ml-auto">
+      <button class="relative p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95">
+        <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+      </button>
+
+      <!-- Profile Menu -->
+      <div class="relative" id="profileWrapper">
+        <button onclick="toggleProfileDropdown(event)" class="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95" id="profileBtn">
+          <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold ring-2 ring-slate-200">
+            <?= htmlspecialchars($user['initial'] ?? 'U') ?>
+          </div>
+          <div class="hidden sm:block text-left">
+            <p class="text-sm font-semibold text-slate-800 leading-none">
+              <?= htmlspecialchars($user['full_name'] ?? 'Unit Owner') ?>
+            </p>
+            <p class="text-xs text-slate-400 mt-0.5">Unit Owner</p>
+          </div>
+          <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <!-- Simple Dropdown -->
+          <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50 hidden" id="profileDropdown">
+            <a href="account.php" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-lg mx-1">Account Settings</a>
+            <div class="border-t border-slate-100 my-1"></div>
+            <button onclick="confirmLogout()" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg mx-1">Sign out</button>
+          </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Simple Modal -->
+  <div id="logoutModal" onclick="if(event.target===this) hideModal()" class="fixed inset-0 bg-black/50 z-[999] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl p-6 w-full max-w-sm border shadow-xl">
+      <h3 class="text-lg font-bold text-slate-900 mb-2">Sign out?</h3>
+      <p class="text-sm text-slate-600 mb-6">Are you sure you want to logout?</p>
+      <div class="flex gap-3 justify-end">
+        <button onclick="hideModal()" class="px-4 py-2 text-sm hover:bg-slate-50 rounded-lg">Cancel</button>
+        <button onclick="doLogout()" class="px-4 py-2 text-sm text-white bg-red-500 hover:bg-red-600 rounded-lg">Logout</button>
+      </div>
+    </div>
+  </div>
+ 
+ <div class="main-scroll p-4 md:p-6 space-y-6">
+  <div class="max-w-screen-xl mx-auto space-y-6">
+    <h1 class="text-xl font-bold text-slate-900">Inquiries</h1>
+
+    <?php if (!empty($_SESSION['success_message'])): ?>
+      <div class="bg-emerald-50 border border-emerald-100 text-emerald-700 px-4 py-3 rounded-xl text-sm font-semibold">
+        <?php echo htmlspecialchars($_SESSION['success_message']); ?>
+      </div>
+      <?php unset($_SESSION['success_message']); ?>
+    <?php endif; ?>
+
+    <?php if (!empty($_SESSION['error_message'])): ?>
+      <div class="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-xl text-sm font-semibold">
+        <?php echo htmlspecialchars($_SESSION['error_message']); ?>
+      </div>
+      <?php unset($_SESSION['error_message']); ?>
+    <?php endif; ?>
+
+    <!-- WHITE CARD START -->
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm" id="resTable">
+          <thead>
+            <tr class="border-b border-slate-100 bg-slate-50/60">
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Res #</th>
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Full Name</th>
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Email</th>
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Contact</th>
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Res. Type</th>
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Res. Fee</th>
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Status</th>
+              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Owner Decision</th>
+              <th class="px-4 py-3.5 w-20"></th>
+            </tr>
+          </thead>
+
+          <tbody id="resBody">
+            <?php include 'ActionsUOP/getOwnerApprovalRequests.php'; ?>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex items-center justify-between px-5 py-3.5 border-t border-slate-100">
+        <p class="text-xs text-slate-400">Showing Inquiries</p>
+
+        <div class="flex items-center gap-1">
+          <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95">
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+
+          <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border bg-slate-900 border-slate-900 text-white text-xs font-bold active:scale-95">
+            1
+          </button>
+
+          <button class="btn-press w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 transition-all active:scale-95">
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <!-- WHITE CARD END -->
+
+  </div>
+</div>
+
+<!-- INQUIRY DETAIL MODAL -->
+<div class="modal-backdrop fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4" id="resModal" onclick="handleBackdropClick(event,'resModal')">
+  <div class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-100 overflow-hidden flex flex-col max-h-[92vh]">
+    <!-- Modal Header -->
+    <div class="bg-slate-900 px-6 py-4 flex items-center justify-between shrink-0">
+      <div>
+        <h2 class="text-base font-bold text-white">Inquiry Details</h2>
+        <p class="text-xs text-slate-400 mt-0.5 font-mono" id="mResNum">—</p>
+      </div>
+      <button 
+          type="button"
+          onclick="event.stopPropagation(); closeModal('resModal')" 
+          class="btn-press p-1.5 rounded-lg hover:bg-white/10 transition-colors active:scale-95 text-white/70 hover:text-white">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+      </button>
+    </div>
+
+    <!-- Modal Content: Vertical Stack of Boxes -->
+    <div class="p-6 space-y-4 overflow-y-auto flex-1">
+      
+      <!-- BOX 1: Unit Inquiry Info -->
+      <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 shadow-2xs space-y-3">
+        <h3 class="text-sm font-bold text-slate-900 tracking-tight">Unit Inquiry Info:</h3>
+
+        <div class="space-y-2.5 text-xs">
+          <div class="flex items-center justify-between gap-4 py-0.5">
+            <span class="text-slate-400 font-medium shrink-0">Unit Applied:</span>
+            <span class="font-bold text-slate-900 font-mono text-right" id="mResUnit">—</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 py-0.5">
+            <span class="text-slate-400 font-medium shrink-0">Unit Type:</span>
+            <span class="font-semibold text-slate-800 text-right" id="mResUnitType">—</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 py-0.5">
+            <span class="text-slate-400 font-medium shrink-0">Inquiry Type:</span>
+            <span class="font-semibold text-slate-800 text-right" id="mResType">—</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 py-0.5">
+            <span class="text-slate-400 font-medium shrink-0">Reservation Fee:</span>
+            <span class="font-bold text-slate-900 font-mono text-right" id="mResFee">—</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 py-0.5" id="mResMoveInRow">
+            <span class="text-slate-400 font-medium shrink-0">Preferred Move-In Time:</span>
+            <span class="font-medium text-slate-800 text-right" id="mResMoveIn">—</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 py-0.5" id="mResLeaseRow">
+            <span class="text-slate-400 font-medium shrink-0">Lease Duration:</span>
+            <span class="font-medium text-slate-800 text-right" id="mResLease">—</span>
+          </div>
+
+          <div class="pt-2.5 border-t border-slate-200/60">
+            <div class="flex items-start justify-between gap-4">
+              <span class="text-slate-400 font-medium shrink-0">Message:</span>
+              <p class="font-medium text-slate-700 text-right leading-relaxed max-w-[280px] break-words whitespace-pre-line text-xs" id="mResMessage">—</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOX 2: Inquirer Info -->
+      <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 shadow-2xs space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-900 tracking-tight">Inquirer Info:</h3>
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-lg bg-slate-900 text-white font-bold text-[10px] flex items-center justify-center shrink-0" id="mResAvatar">?</div>
+            <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border shrink-0" id="mResStatus">—</span>
+          </div>
+        </div>
+
+        <div class="space-y-2.5 text-xs">
+          <div class="flex items-center justify-between gap-4 py-0.5">
+            <span class="text-slate-400 font-medium shrink-0">Name:</span>
+            <span class="font-bold text-slate-900 text-right" id="mResName">—</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 py-0.5">
+            <span class="text-slate-400 font-medium shrink-0">Email:</span>
+            <span class="font-medium text-slate-700 text-right truncate max-w-[260px]" id="mResEmail">—</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 py-0.5">
+            <span class="text-slate-400 font-medium shrink-0">Contact Number:</span>
+            <span class="font-medium text-slate-700 font-mono text-right" id="mResContact">—</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MODAL FOOTER: Decline & Approve -->
+    <div class="flex items-center justify-end gap-2.5 px-6 py-4 border-t border-slate-100 bg-slate-50/60 shrink-0">
+      <button 
+        type="button"
+        id="declineRequestBtn"
+        onclick="handleDecline()" 
+        class="btn-press px-5 py-2 text-sm font-semibold text-red-600 border border-red-200 bg-white hover:bg-red-50 rounded-xl transition-all active:scale-95">
+        Decline
+      </button>
+
+      <button 
+        type="button"
+        id="approveRequestBtn"
+        onclick="handleApprove()" 
+        class="btn-press bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-all active:scale-95 shadow-sm">
+        Approve
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let sidebarCollapsed = false;
+  let currentResId = null;
+  function toggleCollapse() {
+    sidebarCollapsed = !sidebarCollapsed;
+    document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
+    document.getElementById('mainWrapper').classList.toggle('sidebar-collapsed', sidebarCollapsed);
+  }
+  function openMobileSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
+  function closeMobileSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
+function toggleProfileDropdown(e) {
+  if (e) e.stopPropagation();
+  const dropdown = document.getElementById('profileDropdown');
+  const chevron = document.getElementById('profileChevron');
+  if (!dropdown) return;
+  const isHidden = dropdown.classList.contains('hidden');
+  dropdown.classList.toggle('hidden', !isHidden);
+  if (chevron) {
+    chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  }
+}
+function toggleProfile(e) {
+  toggleProfileDropdown(e);
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#profileBtn') && !e.target.closest('#profileDropdown')) {
+    const dropdown = document.getElementById('profileDropdown');
+    const chevron = document.getElementById('profileChevron');
+    if (dropdown && !dropdown.classList.contains('hidden')) {
+      dropdown.classList.add('hidden');
+      if (chevron) chevron.style.transform = 'rotate(0deg)';
+    }
+  }
+});
+
+function confirmLogout() {
+  const modal = document.getElementById('logoutModal');
+  if (modal) modal.classList.remove('hidden');
+  const dropdown = document.getElementById('profileDropdown');
+  if (dropdown) dropdown.classList.add('hidden');
+  const chevron = document.getElementById('profileChevron');
+  if (chevron) chevron.style.transform = 'rotate(0deg)';
+}
+
+function hideModal() {
+  const modal = document.getElementById('logoutModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function hideLogoutModal() {
+  hideModal();
+}
+
+function doLogout() {
+  window.location.href = '../php_files/logout_session.php';
+}
+  function openResModal(row) {
+  currentResId = row.dataset.requestId;
+
+  const name = row.dataset.name || '—';
+  const initials = name
+    .split(' ')
+    .filter(Boolean)
+    .map(n => n[0])
+    .join('')
+    .toUpperCase();
+
+  document.getElementById('mResAvatar').textContent = initials || '?';
+  document.getElementById('mResNum').textContent = row.dataset.requestCode || '—';
+  document.getElementById('mResName').textContent = name;
+  document.getElementById('mResEmail').textContent = row.dataset.email || '—';
+  document.getElementById('mResContact').textContent = row.dataset.contact || '—';
+
+  document.getElementById('mResUnit').textContent = row.dataset.unit || '—';
+  document.getElementById('mResUnitType').textContent = row.dataset.unitType || '—';
+  document.getElementById('mResType').textContent = row.dataset.type || '—';
+  document.getElementById('mResFee').textContent = row.dataset.fee || '—';
+  document.getElementById('mResMoveIn').textContent = row.dataset.moveIn || '—';
+  document.getElementById('mResLease').textContent = row.dataset.lease || '—';
+  document.getElementById('mResMessage').textContent = row.dataset.message || '—';
+
+  const inqType = (row.dataset.type || '').toLowerCase().trim();
+  const isResale = inqType.includes('resale');
+  const isLeaseOrReservation = (inqType.includes('reservation') || inqType.includes('lease')) && !isResale;
+
+  const moveInRow = document.getElementById('mResMoveInRow');
+  const leaseRow = document.getElementById('mResLeaseRow');
+
+  if (moveInRow) {
+    moveInRow.style.display = isLeaseOrReservation ? 'flex' : 'none';
+  }
+  if (leaseRow) {
+    leaseRow.style.display = isLeaseOrReservation ? 'flex' : 'none';
+  }
+
+  const badge = document.getElementById('mResStatus');
+  const status = row.dataset.status || 'Pending';
+
+  badge.textContent = status;
+
+  const approveBtn = document.getElementById('approveRequestBtn');
+  const declineBtn = document.getElementById('declineRequestBtn');
+
+  if (status === 'Pending') {
+    approveBtn.disabled = false;
+    declineBtn.disabled = false;
+
+    approveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    declineBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+    approveBtn.textContent = 'Approve';
+    declineBtn.textContent = 'Decline';
+  } else {
+    approveBtn.disabled = true;
+    declineBtn.disabled = true;
+
+    approveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    declineBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+    approveBtn.textContent = status === 'Approved' ? 'Approved' : 'Approve';
+    declineBtn.textContent = status === 'Declined' ? 'Declined' : 'Decline';
+  }
+
+  const colors = {
+    'Pending': 'bg-amber-50 text-amber-700 border-amber-200',
+    'Approved': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    'Declined': 'bg-red-50 text-red-600 border-red-200',
+    'Expired': 'bg-slate-100 text-slate-500 border-slate-200'
+  };
+
+  badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full border shrink-0 ' +
+    (colors[status] || 'bg-slate-100 text-slate-500 border-slate-200');
+
+  document.getElementById('resModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  const modal = document.getElementById(id);
+
+  if (modal) {
+    modal.classList.remove('open');
+  }
+
+  document.body.style.overflow = '';
+}
+
+function handleBackdropClick(e, id) {
+  const modal = document.getElementById(id);
+
+  if (e.target === modal) {
+    closeModal(id);
+  }
+}
+function respondToRequest(action) {
+  if (!currentResId) {
+    alert("No request selected.");
+    return;
+  }
+
+  const confirmText = action === "approve"
+    ? "Approve this inquiry request?"
+    : "Decline this inquiry request?";
+
+  if (!confirm(confirmText)) {
+    return;
+  }
+
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = "ActionsUOP/respondApprovalRequest.php";
+
+  const requestInput = document.createElement("input");
+  requestInput.type = "hidden";
+  requestInput.name = "request_id";
+  requestInput.value = currentResId;
+
+  const actionInput = document.createElement("input");
+  actionInput.type = "hidden";
+  actionInput.name = "action";
+  actionInput.value = action;
+
+  form.appendChild(requestInput);
+  form.appendChild(actionInput);
+
+  document.body.appendChild(form);
+  form.submit();
+}
+
+function handleApprove() {
+  respondToRequest("approve");
+}
+
+function handleDecline() {
+  respondToRequest("decline");
+}
+</script>
+</body>
+</html>

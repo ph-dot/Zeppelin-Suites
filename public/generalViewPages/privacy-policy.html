@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Zeppelin Suites</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+    * { font-family: "Geist", sans-serif; }
+    .btn-primary { transition: all 0.15s ease; }
+    .btn-primary:active { transform: scale(0.95); }
+  </style>
+</head>
+<body class="bg-white text-zinc-900">
+
+<!-- ── NAV ──────────────────────────────────────────────── -->
+<nav class="sticky top-0 w-full bg-white/80 backdrop-blur-md px-6 md:px-16 lg:px-24 xl:px-32 py-4 flex items-center justify-between z-50 border-b border-zinc-200/50">
+  <a href="../generalViewPages/index.html">
+    <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
+  </a>
+  <div class="hidden min-[851px]:flex items-center gap-8">
+    <a href="../generalViewPages/index.html" class="text-sm text-zinc-500 hover:text-zinc-500 transition-colors">Home</a>
+    <a href="../generalViewPages/tour.html" class="text-sm text-zinc-500 hover:text-zinc-500 transition-colors">Take a Tour</a>
+    <div class="relative group">
+      <button class="flex items-center gap-1.5 text-sm text-zinc-500 cursor-pointer bg-transparent border-0 py-2 hover:text-zinc-800 transition-colors">
+        Browse Units
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="absolute top-full left-0 mt-1 w-44 bg-white border border-zinc-200 rounded-xl shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+        <a href="../generalViewPages/studioTypeA.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
+        <a href="../generalViewPages/studioTypeB.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
+        <a href="../generalViewPages/oneBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
+        <a href="../generalViewPages/twoBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
+      </div>
+    </div>
+    <a href="../generalViewPages/faq.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">About Us</a>
+    <a href="../generalViewPages/contact.php" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Contact</a>
+    <a href="../generalViewPages/login.php" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Portal</a>
+  </div>
+  <button onclick="toggleMenu()" class="min-[851px]:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1">
+    <span id="bar1" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+    <span id="bar2" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+    <span id="bar3" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
+  </button>
+  <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 min-[851px]:hidden z-50 hidden">
+    <a href="../generalViewPages/index.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Home</a>
+    <a href="../generalViewPages/tour.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Take a Tour</a>
+    <button onclick="toggleDropdown('mobileDropdown','mobileChevron')" class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50 bg-transparent border-0 cursor-pointer">
+      Browse Units
+      <svg id="mobileChevron" class="transition-transform" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div id="mobileDropdown" class="hidden flex-col pl-4">
+      <a href="../generalViewPages/studioTypeA.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
+      <a href="../generalViewPages/studioTypeB.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
+      <a href="../generalViewPages/oneBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
+      <a href="../generalViewPages/twoBedroom.html" class="px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
+    </div>
+    <a href="../generalViewPages/faq.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">FAQ</a>
+    <a href="../generalViewPages/aboutUs.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">About Us</a>
+    <a href="../generalViewPages/contact.php" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Contact</a>
+    <a href="../generalViewPages/login.php" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Portal</a>
+  </div>
+</nav>
+
+<section class="max-w-4xl mx-auto px-6 md:px-8 py-16 md:py-24">
+  <h1 class="text-4xl md:text-5xl font-bold text-zinc-900 mb-4">Privacy Policy</h1>
+  <p class="text-zinc-500 mb-12">Last updated: April 28, 2026</p>
+
+  <div class="prose prose-zinc max-w-none text-zinc-600 leading-relaxed">
+    <p class="text-lg">At Zeppelin Suites, we respect your privacy and are committed to protecting your personal information.</p>
+
+    <h2 class="text-2xl font-semibold text-zinc-900 mt-12 mb-4">1. Information We Collect</h2>
+    <p>We may collect personal information such as your name, email address, phone number, and inquiry details when you contact us or submit a booking request.</p>
+
+    <h2 class="text-2xl font-semibold text-zinc-900 mt-12 mb-4">2. How We Use Your Information</h2>
+    <ul class="list-disc pl-6 space-y-2">
+      <li>To respond to your inquiries and provide customer support</li>
+      <li>To send relevant updates about Zeppelin Suites</li>
+      <li>To improve our website and services</li>
+      <li>To comply with legal obligations</li>
+    </ul>
+
+    <h2 class="text-2xl font-semibold text-zinc-900 mt-12 mb-4">3. Information Sharing</h2>
+    <p>We do not sell your personal information. We may share your data with trusted service providers who assist us in operating our business, subject to strict confidentiality agreements.</p>
+
+    <h2 class="text-2xl font-semibold text-zinc-900 mt-12 mb-4">4. Cookies and Tracking</h2>
+    <p>Our website uses cookies to enhance user experience and analyze traffic. You can manage your cookie preferences through your browser settings.</p>
+
+    <h2 class="text-2xl font-semibold text-zinc-900 mt-12 mb-4">5. Your Rights</h2>
+    <p>You have the right to access, correct, or delete your personal information. Please contact us if you wish to exercise these rights.</p>
+
+    <h2 class="text-2xl font-semibold text-zinc-900 mt-12 mb-4">6. Contact Us</h2>
+    <p>If you have any questions about this Privacy Policy, please contact us at:</p>
+    <p class="font-medium">Email: info@zeppelinsuites.com</p>
+    <p class="font-medium">Phone: +63 917 123 4567</p>
+  </div>
+</section>
+
+<!-- ── PREMIUM FOOTER ────────────────────────────────────────────── -->
+<footer class="bg-zinc-950 text-zinc-300 py-16 md:py-20 px-6 md:px-8 lg:px-16 xl:px-24">
+  <div class="max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-x-12 gap-y-14">
+      
+      <!-- Brand -->
+      <div class="sm:col-span-5 flex flex-col items-center lg:items-start">
+        <a href="../generalViewPages/index.html" class="inline-block mb-8">
+          <div class="font-bold tracking-tighter text-white leading-none text-center lg:text-left">
+            <span class="text-5xl md:text-6xl">ZEPPELIN</span><br>
+            <span class="text-xl md:text-2xl tracking-[0.25em] font-light text-zinc-400">SUITES</span>
+          </div>
+        </a>
+        <p class="text-zinc-400 text-center lg:text-left max-w-sm leading-relaxed text-sm md:text-base px-4 md:px-0">
+          Experience unparalleled luxury in the heart of Angeles City. 
+          Zeppelin Suites redefines modern living with sophisticated design and exceptional amenities.
+        </p>
+      </div>
+
+      <!-- Explore -->
+      <div class="lg:col-span-2 items-center lg:items-start">
+        <h3 class="font-semibold text-white mb-5 tracking-wider text-sm text-center sm:text-left">EXPLORE</h3>
+        <div class="flex flex-col gap-3 text-sm text-center sm:text-left">
+          <a href="../generalViewPages/index.html" class="hover:text-white transition-colors">Home</a>
+          <a href="../generalViewPages/tour.html" class="hover:text-white transition-colors">Virtual Tour</a>
+          <a href="../generalViewPages/aboutUs.html" class="hover:text-white transition-colors">About Us</a>
+          <a href="../generalViewPages/faq.html" class="hover:text-white transition-colors">FAQ</a>
+          <a href="../generalViewPages/contact.php" class="hover:text-white transition-colors">Contact</a>
+        </div>
+      </div>
+
+      <!-- Units -->
+      <div class="lg:col-span-2">
+        <h3 class="font-semibold text-white mb-5 tracking-wider text-sm text-center sm:text-left">UNITS</h3>
+        <div class="flex flex-col gap-3 text-sm text-center sm:text-left">
+          <a href="../generalViewPages/studioTypeA.html" class="hover:text-white transition-colors">Studio Type A</a>
+          <a href="../generalViewPages/studioTypeB.html" class="hover:text-white transition-colors">Studio Type B</a>
+          <a href="../generalViewPages/oneBedroom.html" class="hover:text-white transition-colors">One Bedroom</a>
+          <a href="../generalViewPages/twoBedroom.html" class="hover:text-white transition-colors">Two Bedroom</a>
+        </div>
+      </div>
+
+      <!-- Connect -->
+      <div class="sm:col-span-2">
+        <h3 class="font-semibold text-white mb-5 tracking-wider text-sm text-center sm:text-left">CONNECT WITH US</h3>
+        
+        <div class="flex gap-6 mb-8 justify-center sm:justify-start">
+          <a href="https://www.facebook.com/zeppilinsuites2015" target="_blank" class="text-zinc-400 hover:text-white transition-all hover:scale-110">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+            </svg>
+          </a>
+          <a href="https://www.instagram.com/zeppelinsuites" target="_blank" class="text-zinc-400 hover:text-white transition-all hover:scale-110">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+            </svg>
+          </a>
+        </div>
+
+        <div class="space-y-5 text-sm text-center sm:text-left">
+          <div>
+            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Address</p>
+            <p class="text-zinc-300">Fields Avenue, Angeles City, Pampanga</p>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Phone</p>
+            <a href="tel:+645 304 3016" class="hover:text-white block">+645 304 3016</a>
+            <a href="tel:+639982243692" class="hover:text-white block">+63 998 224 3692</a>
+            <a href="tel:+639164491253" class="hover:text-white block">+63 916 449 1253</a>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Email</p>
+            <a href="mailto:info@zeppelinsuites.com" class="text-amber-600 hover:text-amber-500">info@zeppelinsuites.com</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="border-t border-zinc-800 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-zinc-500">
+      <p class="text-center md:text-left">© 2026 Zeppelin Suites. All rights reserved.</p>
+      <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center md:justify-start">
+        <a href="../generalViewPages/privacy-policy.htm" class="hover:text-zinc-300 transition-colors">Privacy Policy</a>
+        <a href="../generalViewPages/terms-of-service.htm" class="hover:text-zinc-300 transition-colors">Terms of Service</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Mobile menu functionality
+  let menuOpen = false;
+  function toggleMenu() {
+    menuOpen = !menuOpen;
+    const menu = document.getElementById('mobileMenu');
+    const bar1 = document.getElementById('bar1');
+    const bar2 = document.getElementById('bar2');
+    const bar3 = document.getElementById('bar3');
+    menu.classList.toggle('hidden', !menuOpen);
+    menu.classList.toggle('flex', menuOpen);
+    bar1.style.transform = menuOpen ? 'translateY(8px) rotate(45deg)' : '';
+    bar2.style.opacity = menuOpen ? '0' : '1';
+    bar3.style.transform = menuOpen ? 'translateY(-8px) rotate(-45deg)' : '';
+  }
+  function toggleDropdown(id, chevronId) {
+    const el = document.getElementById(id);
+    const ch = document.getElementById(chevronId);
+    const hidden = el.classList.contains('hidden');
+    el.classList.toggle('hidden', !hidden);
+    el.classList.toggle('flex', hidden);
+    ch.style.transform = hidden ? 'rotate(180deg)' : '';
+  }
+</script>
+</body>
+</html>
