@@ -137,10 +137,50 @@ try {
         );
     }
 
+    // Fetch updated requests and pending count for this inquiry so the UI can update dynamically
+    $requestsStmt = $conn->prepare("
+        SELECT
+            r.request_id,
+            r.unit_id,
+            r.request_status,
+            r.requested_at,
+            r.responded_at,
+            u.unit_number,
+            owner.full_name AS owner_name
+        FROM owner_approval_requests r
+        LEFT JOIN units_table u ON r.unit_id = u.unit_id
+        LEFT JOIN users_table owner ON r.unit_owner_id = owner.user_id
+        WHERE r.inq_id = ?
+        ORDER BY r.requested_at ASC
+    ");
+    $requestsStmt->bind_param("i", $inq_id);
+    $requestsStmt->execute();
+    $requestsResult = $requestsStmt->get_result();
+    $allRequests = [];
+    $pendingCount = 0;
+    while ($reqRow = $requestsResult->fetch_assoc()) {
+        if (strtolower($reqRow['request_status']) === 'pending') {
+            $pendingCount++;
+        }
+        $allRequests[] = [
+            'request_id'     => (int)$reqRow['request_id'],
+            'unit_id'        => (int)$reqRow['unit_id'],
+            'unit_number'    => $reqRow['unit_number'] ?? 'Unknown unit',
+            'owner_name'     => $reqRow['owner_name'] ?? 'Unknown owner',
+            'request_status' => $reqRow['request_status'],
+            'requested_at'   => $reqRow['requested_at'],
+            'responded_at'   => $reqRow['responded_at'],
+        ];
+    }
+    $requestsStmt->close();
+
     echo json_encode([
-        'success' => true,
-        'message' => 'Approval requests sent successfully.',
-        'inserted' => $inserted
+        'success'         => true,
+        'message'         => 'Approval requests sent successfully.',
+        'inserted'        => $inserted,
+        'approval_status' => 'requested',
+        'pending_count'   => $pendingCount,
+        'requests'        => $allRequests
     ]);
 
 } catch (Exception $e) {

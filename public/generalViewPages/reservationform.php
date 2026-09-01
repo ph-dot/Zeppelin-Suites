@@ -190,96 +190,148 @@ tailwind.config = {
           <form action="ActionsGV/submitReservation.php" method="POST" enctype="multipart/form-data" class="space-y-8">
            <input type="hidden" name="reservation_token" value="<?php echo htmlspecialchars($token); ?>">
 
-          <!-- RESIDENT INFO -->
+          <!-- UNIT OWNERSHIP DETAILS -->
           <section>
             <div class="flex items-center gap-3 mb-5">
-              <svg class="w-5 h-5 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c-4.418 0-8 2.015-8 4.5V20h16v-1.5c0-2.485-3.582-4.5-8-4.5z"/>
-              </svg>
-              <h3 class="font-bold text-slate-900 text-base uppercase tracking-wide">1. Resident Information</h3>
+              <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold tracking-tight text-slate-900 uppercase">Unit Ownership Details</h3>
+                <p class="text-xs sm:text-sm text-slate-500">Detailed information about the unit ownership.</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <!-- First Panel: Unit Info -->
+              <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-3">
+                <h4 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight">Unit Info:</h4>
+
+                <div class="space-y-2.5 text-xs sm:text-sm">
+                  <div class="flex items-center justify-between gap-4 py-0.5">
+                    <span class="text-slate-400 font-medium shrink-0">Unit Number:</span>
+                    <span class="font-bold text-slate-900 font-mono text-right">Unit <?php echo htmlspecialchars($data['unit_number']); ?></span>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-4 py-0.5">
+                    <span class="text-slate-400 font-medium shrink-0">Unit Type:</span>
+                    <span class="font-semibold text-slate-800 text-right"><?php echo htmlspecialchars($data['unit_type']); ?></span>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-4 py-0.5">
+                    <span class="text-slate-400 font-medium shrink-0"><?php echo htmlspecialchars($price_label); ?>:</span>
+                    <span class="font-bold text-slate-900 font-mono text-right">₱<?php echo number_format($price_basis, 2); ?></span>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-4 py-0.5">
+                    <span class="text-slate-400 font-medium shrink-0">Unit Status:</span>
+                    <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-right"><?php echo htmlspecialchars($data['unit_current_status'] ?? 'Ready for Occupancy'); ?></span>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-4 py-0.5">
+                    <span class="text-slate-400 font-medium shrink-0">Reservation Type:</span>
+                    <span class="font-semibold text-slate-800 text-right"><?php echo htmlspecialchars($reservation_type); ?></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Second Panel: Owner Info -->
+              <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-3">
+                <h4 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight">Owner Info:</h4>
+
+                <div class="space-y-2.5 text-xs sm:text-sm">
+                  <div class="flex items-center justify-between gap-4 py-0.5">
+                    <span class="text-slate-400 font-medium shrink-0">Owner Name:</span>
+                    <span class="font-bold text-slate-900 text-right"><?php echo htmlspecialchars($data['owner_name'] ?? 'No owner assigned'); ?></span>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-4 py-0.5">
+                    <span class="text-slate-400 font-medium shrink-0">Email:</span>
+                    <span class="font-medium text-slate-700 text-right truncate max-w-[190px] sm:max-w-[230px]"><?php echo htmlspecialchars($data['owner_email'] ?? 'No email available'); ?></span>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-4 py-0.5">
+                    <span class="text-slate-400 font-medium shrink-0">Contact Number:</span>
+                    <span class="font-medium text-slate-800 font-mono text-right"><?php echo htmlspecialchars(!empty($data['owner_contact']) ? $data['owner_contact'] : 'No contact available'); ?></span>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-4 py-0.5">
+                    <span class="text-slate-400 font-medium shrink-0">Assigned Unit:</span>
+                    <span class="font-bold text-slate-900 font-mono text-right">Unit <?php echo htmlspecialchars($data['unit_number']); ?></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div class="h-px bg-slate-200 my-8"></div>
+
+          <!-- INQUIRER INFORMATION -->
+          <section>
+            <div class="flex items-center gap-3 mb-5">
+              <div class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c-4.418 0-8 2.015-8 4.5V20h16v-1.5c0-2.485-3.582-4.5-8-4.5z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-900 text-base uppercase tracking-wide">Inquirer Information</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Personal and contact details of the applicant.</p>
+              </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-2">Full Name <span class="text-red-500">*</span></label>
-               <input 
+                <input 
                   type="text" 
                   id="resName"
                   name="client_name"
                   value="<?php echo htmlspecialchars($data['sender_name']); ?>"
                   readonly
-                  class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base"> 
-                </div>
+                  class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base text-slate-800"> 
+              </div>
 
               <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Resident Type <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Inquirer Type <span class="text-red-500">*</span></label>
                 <input 
                   type="text"
                   id="resType"
                   name="resident_type"
                   value="<?php echo htmlspecialchars($resident_type); ?>"
                   readonly
-                  class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
+                  class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base text-slate-800">
               </div>
 
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-2">Contact Number <span class="text-red-500">*</span></label>
                 <input 
-                type="tel" 
-                id="resContact"
-                name="client_contact"
-                value="<?php echo htmlspecialchars($data['sender_contact']); ?>"
-                readonly
-                class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
+                  type="tel" 
+                  id="resContact"
+                  name="client_contact"
+                  value="<?php echo htmlspecialchars($data['sender_contact']); ?>"
+                  readonly
+                  class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base text-slate-800 font-mono">
               </div>
 
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-2">Email Address <span class="text-red-500">*</span></label>
                 <input 
-                type="email" 
-                id="resEmail"
-                name="client_email"
-                value="<?php echo htmlspecialchars($data['sender_email']); ?>"
-                readonly
-                class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
+                  type="email" 
+                  id="resEmail"
+                  name="client_email"
+                  value="<?php echo htmlspecialchars($data['sender_email']); ?>"
+                  readonly
+                  class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base text-slate-800">
               </div>
-
-              <div class="md:col-span-2">
-              <label class="block text-sm font-semibold text-slate-700 mb-2">
-                Unit Type &amp; No. <span class="text-red-500">*</span>
-              </label>
-              <input 
-                type="text" 
-                id="resUnit"
-                value="<?php echo htmlspecialchars($data['unit_type'] . ' — Unit ' . $data['unit_number']); ?>"
-                readonly
-                class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
             </div>
 
-            <div>
-              <label class="block text-sm font-semibold text-slate-700 mb-2">
-                Unit Owner
-              </label>
-              <input 
-                type="text"
-                id="unitOwnerName"
-                value="<?php echo htmlspecialchars($data['owner_name'] ?? 'No owner assigned'); ?>"
-                readonly
-                class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-slate-700 mb-2">
-                Owner Email / Contact
-              </label>
-              <input 
-                type="email"
-                id="unitOwnerEmail"
-                value="<?php echo htmlspecialchars($data['owner_email'] ?? 'No email available'); ?>"
-                readonly
-                class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
-            </div>
-            </div>
+            <!-- Compatibility hidden elements -->
+            <input type="hidden" id="resUnit" value="<?php echo htmlspecialchars($data['unit_type'] . ' — Unit ' . $data['unit_number']); ?>">
+            <input type="hidden" id="unitOwnerName" value="<?php echo htmlspecialchars($data['owner_name'] ?? 'No owner assigned'); ?>">
+            <input type="hidden" id="unitOwnerEmail" value="<?php echo htmlspecialchars($data['owner_email'] ?? 'No email available'); ?>">
           </section>
 
           <div class="h-px bg-slate-200 my-8"></div>
