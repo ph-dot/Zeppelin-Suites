@@ -23,11 +23,108 @@ $hasAddPhoneCol = $colCheckPhone && $colCheckPhone->num_rows > 0;
 $colCheckEmail = $conn->query("SHOW COLUMNS FROM users_table LIKE 'additional_email'");
 $hasAddEmailCol = $colCheckEmail && $colCheckEmail->num_rows > 0;
 
-// Handle Form Submissions (Personal Info Update & Password Change)
+// Check and add gcash_QR column if missing
+$colCheckQr = $conn->query("SHOW COLUMNS FROM users_table LIKE 'gcash_QR'");
+$hasQrCol = $colCheckQr && $colCheckQr->num_rows > 0;
+if (!$hasQrCol) {
+    @$conn->query("ALTER TABLE users_table ADD COLUMN gcash_QR VARCHAR(255) NULL DEFAULT NULL AFTER resident_status");
+    $colCheckQr = $conn->query("SHOW COLUMNS FROM users_table LIKE 'gcash_QR'");
+    $hasQrCol = $colCheckQr && $colCheckQr->num_rows > 0;
+}
+
+// Active tab determination
+$activeTab = $_GET['tab'] ?? 'profile';
+
+// Handle Form Submissions (Personal Info Update, Password Change, GCash QR)
 $toast = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    if ($action === 'update_profile') {
+    if ($action === 'upload_gcash_qr') {
+        $activeTab = 'payment';
+        if (!isset($_FILES['gcash_qr_image']) || $_FILES['gcash_qr_image']['error'] === UPLOAD_ERR_NO_FILE) {
+            $toast = ['type' => 'error', 'msg' => 'Please select a GCash QR image file to upload.'];
+        } elseif ($_FILES['gcash_qr_image']['error'] !== UPLOAD_ERR_OK) {
+            $toast = ['type' => 'error', 'msg' => 'Image upload failed. Please try again.'];
+        } elseif ($_FILES['gcash_qr_image']['size'] > 5 * 1024 * 1024) {
+            $toast = ['type' => 'error', 'msg' => 'QR image must be 5MB or below.'];
+        } else {
+            $allowedExt = ['jpg', 'jpeg', 'png', 'webp'];
+            $origName = $_FILES['gcash_qr_image']['name'];
+            $tmpName = $_FILES['gcash_qr_image']['tmp_name'];
+            $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+
+            if (!in_array($ext, $allowedExt)) {
+                $toast = ['type' => 'error', 'msg' => 'Only JPG, JPEG, PNG, and WEBP image files are allowed.'];
+            } else {
+                $uploadDir = __DIR__ . '/../uploads/payment_qr/';
+                if (!is_dir($uploadDir)) {
+                    @mkdir($uploadDir, 0775, true);
+                }
+
+                $newName = 'gcash_qr_' . $ownerId . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+                $targetPath = $uploadDir . $newName;
+                $dbPath = 'uploads/payment_qr/' . $newName;
+
+                if (move_uploaded_file($tmpName, $targetPath)) {
+                    // Remove old QR image file if it exists
+                    $oldStmt = $conn->prepare("SELECT gcash_QR FROM users_table WHERE user_id = ? LIMIT 1");
+                    if ($oldStmt) {
+                        $oldStmt->bind_param('i', $ownerId);
+                        $oldStmt->execute();
+                        $oldRes = $oldStmt->get_result();
+                        $oldRow = $oldRes ? $oldRes->fetch_assoc() : null;
+                        if (!empty($oldRow['gcash_QR'])) {
+                            $oldFile = __DIR__ . '/../' . ltrim($oldRow['gcash_QR'], '/');
+                            if (file_exists($oldFile) && is_file($oldFile)) {
+                                @unlink($oldFile);
+                            }
+                        }
+                        $oldStmt->close();
+                    }
+
+                    $stmt = $conn->prepare("UPDATE users_table SET gcash_QR = ? WHERE user_id = ?");
+                    if ($stmt) {
+                        $stmt->bind_param('si', $dbPath, $ownerId);
+                        if ($stmt->execute()) {
+                            $toast = ['type' => 'success', 'msg' => 'Your GCash QR code has been saved successfully!'];
+                        } else {
+                            $toast = ['type' => 'error', 'msg' => 'Failed to save QR code in database: ' . $stmt->error];
+                        }
+                        $stmt->close();
+                    }
+                } else {
+                    $toast = ['type' => 'error', 'msg' => 'Failed to save the uploaded image file.'];
+                }
+            }
+        }
+    } elseif ($action === 'delete_gcash_qr') {
+        $activeTab = 'payment';
+        $oldStmt = $conn->prepare("SELECT gcash_QR FROM users_table WHERE user_id = ? LIMIT 1");
+        if ($oldStmt) {
+            $oldStmt->bind_param('i', $ownerId);
+            $oldStmt->execute();
+            $oldRes = $oldStmt->get_result();
+            $oldRow = $oldRes ? $oldRes->fetch_assoc() : null;
+            if (!empty($oldRow['gcash_QR'])) {
+                $oldFile = __DIR__ . '/../' . ltrim($oldRow['gcash_QR'], '/');
+                if (file_exists($oldFile) && is_file($oldFile)) {
+                    @unlink($oldFile);
+                }
+            }
+            $oldStmt->close();
+        }
+
+        $stmt = $conn->prepare("UPDATE users_table SET gcash_QR = NULL WHERE user_id = ?");
+        if ($stmt) {
+            $stmt->bind_param('i', $ownerId);
+            if ($stmt->execute()) {
+                $toast = ['type' => 'success', 'msg' => 'Your GCash QR code has been removed.'];
+            } else {
+                $toast = ['type' => 'error', 'msg' => 'Failed to remove QR code: ' . $stmt->error];
+            }
+            $stmt->close();
+        }
+    } elseif ($action === 'update_profile') {
         $fullName = trim($_POST['full_name'] ?? '');
         $contact = trim($_POST['contact'] ?? '');
         $dob = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
@@ -270,9 +367,9 @@ tailwind.config = {
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
       <span class="nav-label">Inquiries</span>
     </a>
-    <a href="ownersUnitReservations.php" data-tooltip="Reservations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="ownersUnitReservations.php" data-tooltip="Lease Management" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-      <span class="nav-label">Reservations</span>
+      <span class="nav-label">Lease Management</span>
     </a>
     <a href="ownersBookingCalendar.php" data-tooltip="Booking Calendar" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -423,19 +520,29 @@ tailwind.config = {
         <div class="space-y-6">
           <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8">
             <div class="flex items-center gap-6 border-b border-slate-100 pb-3 overflow-x-auto">
-              <button type="button" onclick="setProfileTab('profile', this)" class="profile-tab active text-sm font-semibold pb-3 whitespace-nowrap">Profile</button>
-              <button type="button" onclick="setProfileTab('units', this)" class="profile-tab text-sm font-semibold pb-3 flex items-center gap-2 whitespace-nowrap">
+              <button type="button" id="tabBtn-profile" onclick="setProfileTab('profile', this)" class="profile-tab <?= $activeTab === 'profile' ? 'active' : '' ?> text-sm font-semibold pb-3 whitespace-nowrap">Profile</button>
+              <button type="button" id="tabBtn-units" onclick="setProfileTab('units', this)" class="profile-tab <?= $activeTab === 'units' ? 'active' : '' ?> text-sm font-semibold pb-3 flex items-center gap-2 whitespace-nowrap">
                 Owned Units
                 <span class="text-[11px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full"><?= $unitsCount ?></span>
               </button>
-              <button type="button" onclick="setProfileTab('request', this)" class="profile-tab text-sm font-semibold pb-3 flex items-center gap-2 whitespace-nowrap">
+              <button type="button" id="tabBtn-request" onclick="setProfileTab('request', this)" class="profile-tab <?= $activeTab === 'request' ? 'active' : '' ?> text-sm font-semibold pb-3 flex items-center gap-2 whitespace-nowrap">
                 Maintenance
                 <span class="text-[11px] font-bold <?= $pendingRequests > 0 ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-700' ?> px-2 py-0.5 rounded-full"><?= $requestsCount ?></span>
+              </button>
+              <button type="button" id="tabBtn-payment" onclick="setProfileTab('payment', this)" class="profile-tab <?= $activeTab === 'payment' ? 'active' : '' ?> text-sm font-semibold pb-3 flex items-center gap-2 whitespace-nowrap">
+                Payment QR
+                <?php if (!empty($owner['gcash_QR'])): ?>
+                  <span class="text-[11px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
+                  </span>
+                <?php else: ?>
+                  <span class="text-[11px] font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">Not Set</span>
+                <?php endif; ?>
               </button>
             </div>
 
             <!-- TAB 1: Profile Details -->
-            <div id="tab-profile" class="pt-6 max-w-lg">
+            <div id="tab-profile" class="pt-6 max-w-lg <?= $activeTab === 'profile' ? '' : 'hidden' ?>">
               <h3 class="text-base font-bold text-slate-900 mb-6">Personal Information</h3>
               <dl class="space-y-4 text-sm">
                 <div class="flex items-center justify-between gap-6 py-1">
@@ -552,6 +659,121 @@ tailwind.config = {
               <?php endif; ?>
             </div>
 
+            <!-- TAB 4: GCash / Payment QR Code -->
+            <div id="tab-payment" class="pt-6 <?= $activeTab === 'payment' ? '' : 'hidden' ?> space-y-6">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <span>GCash Payment QR Code</span>
+                    <?php if (!empty($owner['gcash_QR'])): ?>
+                      <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Active Static QR
+                      </span>
+                    <?php endif; ?>
+                  </h3>
+                  <p class="text-xs text-slate-400 mt-0.5">Upload your static GCash QR code for downpayment and monthly rent collection only.</p>
+                </div>
+              </div>
+
+              <?php if (!empty($owner['gcash_QR'])): ?>
+                <!-- CURRENT QR CODE CARD -->
+                <div class="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/80">
+                  <div class="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6 items-center">
+                    <div class="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-slate-200 shadow-sm text-center">
+                      <div class="relative group cursor-pointer overflow-hidden rounded-xl bg-slate-100 border border-slate-100" onclick="openQrLightbox('../<?= e($owner['gcash_QR']) ?>')">
+                        <img src="../<?= e($owner['gcash_QR']) ?>" alt="GCash QR Code" class="w-48 h-48 object-contain rounded-xl transition-transform duration-200 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-semibold rounded-xl gap-1">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                          Click to Enlarge
+                        </div>
+                      </div>
+                      <span class="mt-3 text-xs font-semibold text-slate-700 font-mono">Current GCash QR</span>
+                    </div>
+
+                    <div class="space-y-4">
+                      <div class="p-4 bg-blue-50/80 border border-blue-100/90 rounded-2xl space-y-1 text-sm text-blue-950">
+                        <div class="flex items-center gap-2 font-bold text-blue-900">
+                          <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                          How This Static QR Works
+                        </div>
+                        <p class="text-xs text-blue-800 leading-relaxed">
+                          Your uploaded GCash QR code remains saved in your profile and is used for downpayment or rent collection only. When prospective tenants reserve your unit, this static QR code is presented to them on their reservation form.
+                        </p>
+                      </div>
+
+                      <div class="flex flex-wrap items-center gap-3 pt-1">
+                        <button type="button" onclick="toggleReplaceSection()" class="btn-press flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-sm">
+                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                          Replace QR Code
+                        </button>
+
+                        <a href="../<?= e($owner['gcash_QR']) ?>" download="GCash_QR_<?= e($owner['full_name']) ?>" class="btn-press flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-all shadow-sm">
+                          <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                          Download QR
+                        </a>
+
+                        <form method="POST" onsubmit="return confirm('Are you sure you want to remove your GCash QR code?')" class="inline">
+                          <input type="hidden" name="action" value="delete_gcash_qr">
+                          <button type="submit" class="btn-press flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl text-red-600 hover:bg-red-50 transition-all">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            Remove
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <?php endif; ?>
+
+              <!-- UPLOAD FORM (Visible if no QR exists or if Replace button clicked) -->
+              <div id="replaceQrSection" class="<?= !empty($owner['gcash_QR']) ? 'hidden' : '' ?> space-y-4">
+                <?php if (!empty($owner['gcash_QR'])): ?>
+                  <div class="flex items-center justify-between border-t border-slate-100 pt-4">
+                    <h4 class="text-sm font-bold text-slate-900">Upload Replacement QR Code</h4>
+                    <button type="button" onclick="toggleReplaceSection()" class="text-xs text-slate-400 hover:text-slate-600 font-semibold">Cancel</button>
+                  </div>
+                <?php endif; ?>
+
+                <form method="POST" enctype="multipart/form-data" class="space-y-4">
+                  <input type="hidden" name="action" value="upload_gcash_qr">
+                  
+                  <div class="border-2 border-dashed border-slate-200 hover:border-slate-400 bg-slate-50/50 hover:bg-slate-50 rounded-2xl p-6 transition-all text-center cursor-pointer relative" onclick="document.getElementById('gcashQrInput').click()">
+                    <input type="file" id="gcashQrInput" name="gcash_qr_image" accept=".jpg,.jpeg,.png,.webp" required class="hidden" onchange="handleQrSelect(event)">
+                    
+                    <div id="qrUploadPlaceholder" class="space-y-2.5 py-4">
+                      <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 mx-auto flex items-center justify-center shadow-sm">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                      </div>
+                      <div>
+                        <p class="text-sm font-bold text-slate-800">Click to upload your GCash QR code</p>
+                        <p class="text-xs text-slate-400 mt-1">Supports PNG, JPG, or WEBP (Max 5MB)</p>
+                      </div>
+                    </div>
+
+                    <!-- PREVIEW CONTAINER -->
+                    <div id="qrPreviewContainer" class="hidden flex-col items-center justify-center space-y-3 py-2">
+                      <div class="w-48 h-48 rounded-xl border border-slate-200 bg-white p-2 shadow-sm overflow-hidden flex items-center justify-center">
+                        <img id="qrPreviewImg" src="#" alt="QR Preview" class="max-w-full max-h-full object-contain rounded-lg">
+                      </div>
+                      <div class="text-center">
+                        <p id="qrPreviewName" class="text-xs font-semibold text-slate-700 truncate max-w-xs"></p>
+                        <p id="qrPreviewSize" class="text-[11px] text-slate-400 font-mono"></p>
+                        <p class="text-[11px] text-blue-600 font-semibold mt-1">Click to select a different image</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-end gap-3 pt-1">
+                    <button type="submit" id="saveQrBtn" class="btn-press flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl bg-slate-900 text-white hover:bg-slate-800 shadow-md">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                      Save GCash QR Code
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -617,6 +839,24 @@ tailwind.config = {
   </div>
 </div>
 
+<!-- QR CODE LIGHTBOX MODAL -->
+<div id="qrLightboxModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4" onclick="closeQrLightbox()">
+  <div class="relative bg-white rounded-3xl p-5 max-w-md w-full shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+      <h3 class="text-base font-bold text-slate-900">GCash QR Code</h3>
+      <button type="button" onclick="closeQrLightbox()" class="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="flex items-center justify-center p-3 bg-slate-50 rounded-2xl">
+      <img id="lightboxQrImg" src="#" alt="GCash QR Code" class="max-h-[60vh] max-w-full object-contain rounded-xl shadow-sm">
+    </div>
+    <div class="pt-4 flex justify-end">
+      <button type="button" onclick="closeQrLightbox()" class="px-4 py-2 text-xs font-bold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
   function toggleCollapse() {
     const s = document.getElementById('sidebar');
@@ -670,11 +910,46 @@ tailwind.config = {
 
   function setProfileTab(tab, btn) {
     document.querySelectorAll('.profile-tab').forEach(el => el.classList.remove('active'));
-    btn.classList.add('active');
-    ['profile','units','request'].forEach(t => {
+    if (btn) btn.classList.add('active');
+    ['profile','units','request','payment'].forEach(t => {
       const el = document.getElementById('tab-' + t);
       if (el) el.classList.toggle('hidden', t !== tab);
     });
+  }
+
+  function toggleReplaceSection() {
+    const s = document.getElementById('replaceQrSection');
+    if (s) s.classList.toggle('hidden');
+  }
+
+  function handleQrSelect(event) {
+    const input = event.target;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('qrPreviewImg').src = e.target.result;
+        document.getElementById('qrPreviewName').textContent = file.name;
+        document.getElementById('qrPreviewSize').textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+        document.getElementById('qrUploadPlaceholder').classList.add('hidden');
+        document.getElementById('qrPreviewContainer').classList.remove('hidden');
+        document.getElementById('qrPreviewContainer').classList.add('flex');
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function openQrLightbox(imgSrc) {
+    document.getElementById('lightboxQrImg').src = imgSrc;
+    const m = document.getElementById('qrLightboxModal');
+    m.classList.remove('hidden');
+    m.classList.add('flex');
+  }
+
+  function closeQrLightbox() {
+    const m = document.getElementById('qrLightboxModal');
+    m.classList.add('hidden');
+    m.classList.remove('flex');
   }
 
   function openEditModal() {

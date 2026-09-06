@@ -66,10 +66,6 @@ try {
         throw new Exception("Reservation not found for your unit.");
     }
 
-    if ($reservation['payment_status'] !== 'verified') {
-        throw new Exception("Payment must be verified by admin before updating documents.");
-    }
-
     if ($reservation['reservation_status'] === 'reserved') {
         throw new Exception("This reservation is already officially booked.");
     }

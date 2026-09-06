@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../php_files/db.php';
+require_once __DIR__ . '/../../php_files/document_requirements.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -60,6 +61,9 @@ if (!$owns) {
     ]);
     exit;
 }
+
+// Automatically seed default requirement rows if not already existing
+seedReservationDocuments($conn, $reservation_id);
 
 $sql = "
     SELECT

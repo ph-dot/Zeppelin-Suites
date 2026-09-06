@@ -46,10 +46,6 @@ try {
         throw new Exception("Reservation not found.");
     }
 
-    if ($reservation['payment_status'] !== 'verified') {
-        throw new Exception("Payment must be verified before updating documents.");
-    }
-
     if ($reservation['reservation_status'] === 'reserved') {
         throw new Exception("This reservation is already officially booked.");
     }

@@ -11,6 +11,12 @@
 <style>
 * { font-family: 'DM Sans', sans-serif; }
 
+@keyframes indeterminateProgress {
+  0% { transform: translateX(-100%); width: 30%; }
+  50% { transform: translateX(50%); width: 50%; }
+  100% { transform: translateX(200%); width: 30%; }
+}
+
 /* ── Sidebar ───────────────────────────────────────────── */
 .sidebar {
   width: 256px;
@@ -146,10 +152,10 @@
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
       <span class="nav-label">Inquiry</span>
     </a>
-    <a href="../adminPages/reservation.php" data-tooltip="Reservation" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="../adminPages/reservation.php" data-tooltip="Lease Management" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-      <span class="nav-label">Reservation</span>
-   </a>
+      <span class="nav-label">Lease Management</span>
+    </a>
     <a href="../adminPages/bookingcalendar.php" data-tooltip="Booking Calendar" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg  class="nav-icon w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-range-icon lucide-calendar-range"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M17 14h-6"/><path d="M13 18H7"/><path d="M7 14h.01"/><path d="M17 18h.01"/></svg>
       <span class="nav-label">Booking Calendar</span>
@@ -169,6 +175,10 @@
     <a href="../adminPages/analytics.php" data-tooltip="Analytics" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
       <span class="nav-label">Analytics</span>
+    </a>
+    <a href="../adminPages/account.php" data-tooltip="Account" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      <span class="nav-label">Account</span>
     </a>
   </nav>
 </aside>
@@ -193,6 +203,10 @@
           <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl py-2 z-50 hidden" id="profileDropdown">
+          <a href="account.php" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors rounded-xl mx-1">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            Account Settings
+          </a>
           <div class="border-t border-slate-100 my-1 mx-3"></div>
           <button onclick="confirmLogout()" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Sign out</button>
         </div>
@@ -274,8 +288,10 @@
 
     <!-- Email Reply Section -->
     <form 
+      id="replyForm"
       action="ActionsAP/sendInquiryReply.php" 
       method="POST"
+      onsubmit="handleReplySubmit(event)"
       class="w-full max-w-4xl mx-auto p-6 space-y-6 bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm"
     >
 
@@ -387,13 +403,52 @@
           </button>
          <button 
             type="submit"
-            class="bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-all">
-            Send Reply
+            id="sendReplyBtn"
+            class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+            </svg>
+            <span>Send Reply</span>
           </button>
         </div>
       </div>
     </form>
   </main>
+</div>
+
+<!-- Sending Loading Screen Overlay -->
+<div id="sendingLoadingOverlay" class="fixed inset-0 z-[1000] hidden items-center justify-center bg-slate-900/60 backdrop-blur-md px-4">
+  <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-slate-100 p-8 text-center animate-in fade-in zoom-in-95 duration-200">
+    
+    <!-- Animated Sending Icon -->
+    <div class="relative w-16 h-16 mx-auto mb-5 flex items-center justify-center">
+      <div class="absolute inset-0 rounded-2xl bg-blue-500/20 animate-ping"></div>
+      <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-slate-900 to-slate-800 flex items-center justify-center text-white shadow-lg shadow-slate-900/20">
+        <svg class="w-8 h-8 text-blue-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+        </svg>
+      </div>
+    </div>
+
+    <h3 class="text-lg font-bold text-slate-900 mb-1.5">Sending Response...</h3>
+    <p class="text-xs text-slate-500 leading-relaxed mb-5">
+      Please wait while your email is being delivered to <span class="font-semibold text-slate-800" id="loadingRecipientEmail"><?php echo replyClean($sender_email); ?></span>. Do not refresh or close this window.
+    </p>
+
+    <!-- Animated Progress bar -->
+    <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden relative mb-4">
+      <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full w-2/3" style="animation: indeterminateProgress 1.6s infinite ease-in-out;"></div>
+    </div>
+
+    <div class="flex items-center justify-center gap-2 text-[11px] font-medium text-slate-400">
+      <svg class="w-3.5 h-3.5 animate-spin text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+      <span>Connecting to mail server & delivering...</span>
+    </div>
+
+  </div>
 </div>
 
 <!-- Email Sent Confirmation Modal -->
@@ -533,6 +588,65 @@ function closeEmailErrorModal() {
     modal.remove();
   }
 }
+
+function handleReplySubmit(e) {
+  const form = document.getElementById('replyForm');
+  if (!form) return;
+
+  if (!form.checkValidity()) {
+    return;
+  }
+
+  const emailBody = document.getElementById('emailBody');
+  if (emailBody && !emailBody.value.trim()) {
+    e.preventDefault();
+    alert('Please enter an email message before sending.');
+    emailBody.focus();
+    return;
+  }
+
+  const toInput = document.getElementById('replyToEmail');
+  const loadingEmail = document.getElementById('loadingRecipientEmail');
+  if (toInput && loadingEmail && toInput.value.trim()) {
+    loadingEmail.textContent = toInput.value.trim();
+  }
+
+  const btn = document.getElementById('sendReplyBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `
+      <svg class="animate-spin h-4 w-4 text-white inline-block" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+      <span>Sending...</span>
+    `;
+  }
+
+  const overlay = document.getElementById('sendingLoadingOverlay');
+  if (overlay) {
+    overlay.classList.remove('hidden');
+    overlay.classList.add('flex');
+  }
+}
+
+window.addEventListener('pageshow', function(event) {
+  const overlay = document.getElementById('sendingLoadingOverlay');
+  if (overlay) {
+    overlay.classList.add('hidden');
+    overlay.classList.remove('flex');
+  }
+  const btn = document.getElementById('sendReplyBtn');
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = `
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+      </svg>
+      <span>Send Reply</span>
+    `;
+  }
+});
 </script>
 </body>
 </html>

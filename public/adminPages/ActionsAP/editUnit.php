@@ -47,6 +47,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // UPDATE UNIT
     // =========================
     if ($action === 'update') {
+        // Fetch current owner before updating
+        $oldOwnerId = null;
+        $stmtOld = $conn->prepare("SELECT unit_owner_id FROM units_table WHERE unit_id = ? LIMIT 1");
+        if ($stmtOld) {
+            $stmtOld->bind_param("i", $unit_id);
+            $stmtOld->execute();
+            $resOld = $stmtOld->get_result();
+            if ($resOld && $rowOld = $resOld->fetch_assoc()) {
+                $oldOwnerId = $rowOld['unit_owner_id'] !== null ? (int)$rowOld['unit_owner_id'] : null;
+            }
+            $stmtOld->close();
+        }
+
         $sql = "UPDATE units_table SET unit_type=?, floor_number=?, lease_rate=?, unit_current_status=?, unit_owner_id=? WHERE unit_id=?";
         $stmt = $conn->prepare($sql);
         if (!$stmt) die("Prepare failed (update unit): ".$conn->error);
@@ -64,6 +77,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$stmt->execute()) die("Execute failed (update unit): ".$stmt->error);
         $stmt->close();
+
+        // Track ownership change in history table
+        if ($oldOwnerId !== $unit_owner_id) {
+            $today = date('Y-m-d');
+            if ($oldOwnerId !== null && $oldOwnerId > 0) {
+                $stmtClose = $conn->prepare("UPDATE unit_ownership_history SET end_date = ?, ownership_status = 'transferred' WHERE unit_id = ? AND owner_id = ? AND ownership_status = 'active'");
+                if ($stmtClose) {
+                    $stmtClose->bind_param("sii", $today, $unit_id, $oldOwnerId);
+                    $stmtClose->execute();
+                    $stmtClose->close();
+                }
+            }
+            if ($unit_owner_id !== null && $unit_owner_id > 0) {
+                $stmtHist = $conn->prepare("INSERT INTO unit_ownership_history (unit_id, owner_id, start_date, end_date, ownership_status, transfer_type, remarks) VALUES (?, ?, ?, NULL, 'active', 'Admin Reassignment', 'Updated via edit unit form')");
+                if ($stmtHist) {
+                    $stmtHist->bind_param("iis", $unit_id, $unit_owner_id, $today);
+                    $stmtHist->execute();
+                    $stmtHist->close();
+                }
+            }
+        }
 
         header("Location: ../units.php");
         exit;

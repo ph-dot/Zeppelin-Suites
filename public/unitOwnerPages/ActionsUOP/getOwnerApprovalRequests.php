@@ -102,10 +102,114 @@ function getOwnerDecisionDisplay($request_status) {
     return [titleStatus($status), 'bg-slate-50 text-slate-700 border-slate-100'];
 }
 
+function formatDuration($startDateStr, $endDateStr) {
+    if (empty($startDateStr) || empty($endDateStr)) return '';
+    try {
+        $start = new DateTime($startDateStr);
+        $end = new DateTime($endDateStr);
+        $diff = $start->diff($end);
+        
+        $parts = [];
+        if ($diff->y > 0) {
+            $parts[] = $diff->y . ' ' . ($diff->y > 1 ? 'yrs' : 'yr');
+        }
+        if ($diff->m > 0) {
+            $parts[] = $diff->m . ' ' . ($diff->m > 1 ? 'mos' : 'mo');
+        }
+        if (empty($parts) && $diff->d > 0) {
+            $parts[] = $diff->d . ' ' . ($diff->d > 1 ? 'days' : 'day');
+        }
+        return implode(' ', $parts);
+    } catch (Exception $e) {
+        return '';
+    }
+}
+
+function computeUnitAvailability($unitStatus, $activeMoveIn, $activeMoveOut, $preferredMoveIn, $leaseDuration) {
+    $today = new DateTime();
+    $isOccupied = false;
+    $occupiedDisplay = '';
+    $occupiedDuration = '';
+    $occupiedUntil = '';
+
+    $statusLower = strtolower(trim((string)$unitStatus));
+    $hasActiveLease = !empty($activeMoveOut) && $activeMoveOut >= date('Y-m-d');
+
+    if ($statusLower === 'occupied' || ($hasActiveLease && in_array($statusLower, ['occupied', 'reserved', 'on hold']))) {
+        $isOccupied = true;
+    }
+
+    if ($hasActiveLease) {
+        $moveOutDate = new DateTime($activeMoveOut);
+        $occupiedUntil = $moveOutDate->format('M d, Y');
+        $duration = formatDuration($activeMoveIn, $activeMoveOut);
+        $occupiedDuration = $duration;
+
+        if (!empty($activeMoveIn)) {
+            $moveInDate = new DateTime($activeMoveIn);
+            $startFmt = $moveInDate->format('M d, Y');
+            $occupiedDisplay = "{$startFmt} – {$occupiedUntil}" . ($duration ? " ({$duration})" : '');
+        } else {
+            $occupiedDisplay = "Active until {$occupiedUntil}" . ($duration ? " ({$duration})" : '');
+        }
+    } elseif ($isOccupied) {
+        $occupiedDisplay = "Currently Occupied";
+        $occupiedDuration = "Active";
+        $occupiedUntil = "Active Lease";
+    }
+
+    // Next Availability Start Date
+    if ($hasActiveLease) {
+        $startDate = (new DateTime($activeMoveOut))->modify('+1 day');
+    } else {
+        $startDate = clone $today;
+        $prefTime = trim((string)$preferredMoveIn);
+        $prefDate = strtotime($prefTime);
+        if ($prefDate && $prefDate > time() && !in_array(strtolower($prefTime), ['immediately', 'not sure yet'])) {
+            $startDate = new DateTime(date('Y-m-d', $prefDate));
+        }
+    }
+
+    // Parse lease duration from inquiry
+    $durStr = strtolower(trim((string)$leaseDuration));
+    $months = 0;
+    if (preg_match('/(\d+)\s*(?:year|yr)/', $durStr, $m)) {
+        $months = (int)$m[1] * 12;
+    } elseif (preg_match('/(\d+)\s*(?:month|mo)/', $durStr, $m)) {
+        $months = (int)$m[1];
+    }
+
+    $startFormatted = $startDate->format('M d, Y');
+    $twoYearsDate = (clone $startDate)->modify('+2 years');
+    $twoYearsFormatted = $twoYearsDate->format('M d, Y');
+
+    if ($months > 0 && $months < 24) {
+        $reqEndDate = (clone $startDate)->modify("+{$months} months");
+        $reqEndFormatted = $reqEndDate->format('M d, Y');
+        $display = "{$startFormatted} – {$reqEndFormatted}";
+        $label = "Duration: {$months} mos (up to 2 yrs)";
+    } else {
+        $display = "{$startFormatted} – {$twoYearsFormatted}";
+        $label = "Duration: 2 Years";
+    }
+
+    return [
+        'is_occupied' => $isOccupied,
+        'occupied_display' => $occupiedDisplay,
+        'occupied_duration' => $occupiedDuration,
+        'occupied_until' => $occupiedUntil,
+        'display' => $display,
+        'label' => $label,
+        'start' => $startFormatted,
+        'end' => ($months > 0 && $months < 24) ? $reqEndFormatted : $twoYearsFormatted
+    ];
+}
+
 $sql = "SELECT 
             r.request_id,
             r.inq_id,
             r.request_status,
+            r.owner_remarks,
             r.requested_at,
 
             i.sender_name,
@@ -120,8 +224,22 @@ $sql = "SELECT
 
             u.unit_id,
             u.unit_number,
+            u.floor_number,
             u.unit_type,
-            u.lease_rate
+            u.lease_rate,
+            u.unit_current_status,
+            (SELECT res.move_in_date 
+             FROM reservation_table res 
+             WHERE res.unit_id = u.unit_id 
+               AND LOWER(res.reservation_status) NOT IN ('cancelled', 'rejected') 
+               AND res.move_out_date >= CURDATE()
+             ORDER BY res.move_out_date DESC LIMIT 1) AS active_move_in,
+            (SELECT res.move_out_date 
+             FROM reservation_table res 
+             WHERE res.unit_id = u.unit_id 
+               AND LOWER(res.reservation_status) NOT IN ('cancelled', 'rejected') 
+               AND res.move_out_date >= CURDATE()
+             ORDER BY res.move_out_date DESC LIMIT 1) AS active_move_out
         FROM owner_approval_requests r
         INNER JOIN Inquiry_table i 
             ON r.inq_id = i.inq_id
@@ -173,6 +291,13 @@ if ($result->num_rows === 0) {
 while ($row = $result->fetch_assoc()) {
     [$inquiryStatusText, $inquiryStatusClass] = getInquiryStatusDisplay($row['inquiry_status'] ?? '', $row['approval_status'] ?? '');
     [$ownerStatusText, $ownerStatusClass] = getOwnerDecisionDisplay($row['request_status'] ?? 'pending');
+    $availInfo = computeUnitAvailability(
+        $row['unit_current_status'] ?? '',
+        $row['active_move_in'] ?? null,
+        $row['active_move_out'] ?? null,
+        $row['preferred_move_in_time'] ?? '',
+        $row['lease_duration'] ?? ''
+    );
 
     $requestCode = 'REQ-' . str_pad($row['request_id'], 3, '0', STR_PAD_LEFT);
 
@@ -185,12 +310,23 @@ while ($row = $result->fetch_assoc()) {
         data-contact='" . clean($row['sender_contact']) . "'
         data-type='" . clean($row['inquiry_type']) . "'
         data-unit='" . clean($row['unit_number']) . "'
+        data-floor='" . clean($row['floor_number'] ?? '') . "'
         data-unit-type='" . clean($row['unit_type']) . "'
+        data-unit-status='" . clean($row['unit_current_status'] ?? 'Ready for Occupancy') . "'
         data-fee='" . clean(peso($row['lease_rate'])) . "'
         data-lease='" . clean($row['lease_duration'] ?: '—') . "'
-        data-move-in='" .clean($row['preferred_move_in_time'] ?: '—') ."'
+        data-move-in='" . clean($row['preferred_move_in_time'] ?: '—') . "'
         data-message='" . clean($row['message']) . "'
         data-status='" . clean($ownerStatusText) . "'
+        data-remarks='" . clean($row['owner_remarks'] ?? '') . "'
+        data-is-occupied='" . ($availInfo['is_occupied'] ? '1' : '0') . "'
+        data-occupied-display='" . clean($availInfo['occupied_display']) . "'
+        data-occupied-duration='" . clean($availInfo['occupied_duration']) . "'
+        data-occupied-until='" . clean($availInfo['occupied_until']) . "'
+        data-avail-display='" . clean($availInfo['display']) . "'
+        data-avail-label='" . clean($availInfo['label']) . "'
+        data-avail-start='" . clean($availInfo['start']) . "'
+        data-avail-end='" . clean($availInfo['end']) . "'
         data-inquiry-status='" . clean($inquiryStatusText) . "'
         onclick='openResModal(this)'>
 

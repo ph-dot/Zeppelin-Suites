@@ -1,11 +1,31 @@
-<?php require_once __DIR__ . '/ActionsGV/loadReservationForm.php'; ?>
+<?php 
+require_once __DIR__ . '/ActionsGV/loadReservationForm.php'; 
+
+// Format unit numbers and values
+$unitNum = !empty($data['unit_number']) ? htmlspecialchars($data['unit_number']) : '—';
+$unitTypeUpper = !empty($data['unit_type']) ? strtoupper(htmlspecialchars($data['unit_type'])) : 'STUDIO TYPE';
+$floorNum = !empty($data['floor_number']) ? htmlspecialchars($data['floor_number']) : '1';
+$sqmVal = !empty($data['sqm']) ? htmlspecialchars($data['sqm']) : '37';
+$furnishingVal = !empty($data['furnishing']) ? htmlspecialchars($data['furnishing']) : 'Fully Furnished.';
+$listingVal = !empty($data['listing_type']) ? htmlspecialchars($data['listing_type']) : 'For Lease';
+$ownerName = !empty($data['owner_name']) ? htmlspecialchars($data['owner_name']) : 'No owner assigned';
+$ownerEmail = !empty($data['owner_email']) ? htmlspecialchars($data['owner_email']) : '';
+$ownerContact = !empty($data['owner_contact']) ? htmlspecialchars($data['owner_contact']) : '—';
+
+// Format lease duration display
+$inqLeaseDuration = !empty($data['lease_duration']) ? htmlspecialchars($data['lease_duration']) : '1 year';
+$inqPreferredMoveIn = !empty($data['preferred_move_in_time']) ? htmlspecialchars($data['preferred_move_in_time']) : 'Immediately';
+
+// Expiry date for date limits
+$maxSigningDate = !empty($token_expires_date) ? $token_expires_date : date('Y-m-d', strtotime('+30 days'));
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zeppelin Suites — Condominium Reservation</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = {
@@ -17,6 +37,12 @@ tailwind.config = {
       },
       boxShadow: {
         soft: '0 22px 70px rgba(15, 23, 42, 0.08)'
+      },
+      colors: {
+        navy: {
+          900: '#0f172a',
+          950: '#090d16'
+        }
       }
     }
   }
@@ -25,33 +51,7 @@ tailwind.config = {
 <style>
 * { font-family: 'DM Sans', sans-serif; }
 .btn-press { transition: all 0.15s ease; }
-.btn-press:active { transform: scale(0.96); }
-
-.zep-input,
-.zep-select {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-}
-
-.zep-input:focus,
-.zep-select:focus {
-  outline: none;
-  border-color: #0f172a;
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.07);
-}
-
-.upload-zone {
-  border: 2px dashed #bfd0e6;
-  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
-}
-.upload-zone:hover {
-  border-color: #0f172a;
-  background: #f8fafc;
-  transform: translateY(-1px);
-}
-
-.status-banner { transition: all 0.3s ease; }
-.countdown-ring { transition: stroke-dashoffset 1s linear; }
+.btn-press:active { transform: scale(0.97); }
 
 .zep-hero {
   background:
@@ -72,27 +72,18 @@ tailwind.config = {
   clip-path: polygon(18% 100%, 18% 24%, 42% 24%, 42% 4%, 67% 4%, 67% 42%, 91% 42%, 91% 100%);
 }
 
-.logo-bars span {
-  display: block;
-  width: 4px;
-  border-radius: 999px 999px 2px 2px;
-  background: linear-gradient(180deg, #d6a246, #f7d27a);
-}
-
 .form-card-header {
   background:
     radial-gradient(circle at 100% 0%, rgba(29,78,216,.22), transparent 28%),
-    linear-gradient(135deg, #091329 0%, #0f172a 100%);
+    linear-gradient(135deg, #091329 0%, #1e293b 100%);
 }
 
-.qr-grid {
-  width: 132px;
-  height: 132px;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 10px;
-  box-shadow: 0 12px 25px rgba(15, 23, 42, 0.10);
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 ::-webkit-scrollbar { width: 4px; }
@@ -103,14 +94,14 @@ tailwind.config = {
 
 <body class="bg-slate-50 text-slate-900 min-h-screen">
 
-<!-- HERO HEADER -->
+<!-- 1. HERO HEADER (KEPT AS REQUESTED) -->
 <header class="zep-hero relative overflow-hidden border-b border-slate-200">
   <div class="building-mark hidden md:block"></div>
 
   <div class="max-w-[1180px] mx-auto px-5 py-8 md:py-9 flex items-center justify-between gap-6 relative">
     <div class="flex items-center gap-7">
       <div class="w-[112px] flex flex-col items-center justify-center">
-        <div class="logo-bars flex items-end justify-center gap-1.5 h-14 mb-2">
+        <div class="flex items-end justify-center gap-1.5 h-14 mb-2">
           <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
         </div>
         <div class="text-[11px] tracking-[0.35em] leading-tight text-slate-700 text-center font-semibold">
@@ -145,14 +136,15 @@ tailwind.config = {
   </div>
 </header>
 
+<!-- MAIN CONTENT CONTAINER -->
 <main class="max-w-[1180px] mx-auto px-5 py-8 md:py-10">
 
   <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,720px)_360px] gap-9 items-start">
 
-    <!-- LEFT CONTENT -->
+    <!-- LEFT CONTENT: STATUS BANNER & FORM CARD -->
     <div class="space-y-8">
 
-      <!-- STATUS BANNER -->
+      <!-- STATUS BANNER (KEPT AS REQUESTED) -->
       <div class="status-banner rounded-xl border border-amber-200 bg-amber-50/80 shadow-sm px-7 py-5 flex items-center justify-between gap-5" id="statusBanner">
         <div class="flex items-center gap-4">
           <div class="w-14 h-14 rounded-full bg-white border border-amber-200 flex items-center justify-center shadow-sm" id="statusIconWrap">
@@ -178,489 +170,306 @@ tailwind.config = {
         </div>
       </div>
 
-      <!-- FORM CARD -->
+      <!-- FORM CARD: REDESIGNED FILLOUT FORM -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-soft overflow-hidden" id="formCard">
 
-        <div class="form-card-header px-7 py-6">
-          <h2 class="text-2xl font-bold text-white tracking-tight">Condominium Reservation Form</h2>
-          <p class="text-slate-300 text-sm mt-1">Zeppelin Suites — Please fill in all required fields</p>
+        <!-- Form Card Header -->
+        <div class="form-card-header px-7 py-6 text-white">
+          <h2 class="text-xl sm:text-2xl font-bold tracking-tight">Unit Reservation form</h2>
+          <p class="text-slate-300 text-xs sm:text-sm mt-1">Zeppelin Suites — Please fill in all required fields</p>
         </div>
 
-        <div class="p-7 md:p-8 space-y-8" id="formBody">
-          <form action="ActionsGV/submitReservation.php" method="POST" enctype="multipart/form-data" class="space-y-8">
-           <input type="hidden" name="reservation_token" value="<?php echo htmlspecialchars($token); ?>">
+        <!-- Form Body with exact requested layout -->
+        <div class="p-6 sm:p-7 space-y-7" id="formBody">
+          <form id="reservationForm" action="ActionsGV/submitReservation.php" method="POST" enctype="multipart/form-data" onsubmit="return handleFormSubmit(event)">
+            <input type="hidden" name="reservation_token" value="<?php echo htmlspecialchars($token); ?>">
+            <input type="hidden" id="paymentMethodInput" name="payment_method" value="GCash QR">
+            <input type="hidden" id="moveOutDate" name="move_out_date">
+            <input type="hidden" id="declaredAmountInput" name="declared_amount" value="<?= (float)$price_basis * 0.35 ?>">
+            <input type="hidden" name="payment_reference" value="N/A">
 
-          <!-- UNIT OWNERSHIP DETAILS -->
-          <section>
-            <div class="flex items-center gap-3 mb-5">
-              <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-lg font-bold tracking-tight text-slate-900 uppercase">Unit Ownership Details</h3>
-                <p class="text-xs sm:text-sm text-slate-500">Detailed information about the unit ownership.</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <!-- First Panel: Unit Info -->
-              <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-3">
-                <h4 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight">Unit Info:</h4>
-
-                <div class="space-y-2.5 text-xs sm:text-sm">
-                  <div class="flex items-center justify-between gap-4 py-0.5">
-                    <span class="text-slate-400 font-medium shrink-0">Unit Number:</span>
-                    <span class="font-bold text-slate-900 font-mono text-right">Unit <?php echo htmlspecialchars($data['unit_number']); ?></span>
-                  </div>
-
-                  <div class="flex items-center justify-between gap-4 py-0.5">
-                    <span class="text-slate-400 font-medium shrink-0">Unit Type:</span>
-                    <span class="font-semibold text-slate-800 text-right"><?php echo htmlspecialchars($data['unit_type']); ?></span>
-                  </div>
-
-                  <div class="flex items-center justify-between gap-4 py-0.5">
-                    <span class="text-slate-400 font-medium shrink-0"><?php echo htmlspecialchars($price_label); ?>:</span>
-                    <span class="font-bold text-slate-900 font-mono text-right">₱<?php echo number_format($price_basis, 2); ?></span>
-                  </div>
-
-                  <div class="flex items-center justify-between gap-4 py-0.5">
-                    <span class="text-slate-400 font-medium shrink-0">Unit Status:</span>
-                    <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-right"><?php echo htmlspecialchars($data['unit_current_status'] ?? 'Ready for Occupancy'); ?></span>
-                  </div>
-
-                  <div class="flex items-center justify-between gap-4 py-0.5">
-                    <span class="text-slate-400 font-medium shrink-0">Reservation Type:</span>
-                    <span class="font-semibold text-slate-800 text-right"><?php echo htmlspecialchars($reservation_type); ?></span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Second Panel: Owner Info -->
-              <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-3">
-                <h4 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight">Owner Info:</h4>
-
-                <div class="space-y-2.5 text-xs sm:text-sm">
-                  <div class="flex items-center justify-between gap-4 py-0.5">
-                    <span class="text-slate-400 font-medium shrink-0">Owner Name:</span>
-                    <span class="font-bold text-slate-900 text-right"><?php echo htmlspecialchars($data['owner_name'] ?? 'No owner assigned'); ?></span>
-                  </div>
-
-                  <div class="flex items-center justify-between gap-4 py-0.5">
-                    <span class="text-slate-400 font-medium shrink-0">Email:</span>
-                    <span class="font-medium text-slate-700 text-right truncate max-w-[190px] sm:max-w-[230px]"><?php echo htmlspecialchars($data['owner_email'] ?? 'No email available'); ?></span>
-                  </div>
-
-                  <div class="flex items-center justify-between gap-4 py-0.5">
-                    <span class="text-slate-400 font-medium shrink-0">Contact Number:</span>
-                    <span class="font-medium text-slate-800 font-mono text-right"><?php echo htmlspecialchars(!empty($data['owner_contact']) ? $data['owner_contact'] : 'No contact available'); ?></span>
-                  </div>
-
-                  <div class="flex items-center justify-between gap-4 py-0.5">
-                    <span class="text-slate-400 font-medium shrink-0">Assigned Unit:</span>
-                    <span class="font-bold text-slate-900 font-mono text-right">Unit <?php echo htmlspecialchars($data['unit_number']); ?></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <div class="h-px bg-slate-200 my-8"></div>
-
-          <!-- INQUIRER INFORMATION -->
-          <section>
-            <div class="flex items-center gap-3 mb-5">
-              <div class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c-4.418 0-8 2.015-8 4.5V20h16v-1.5c0-2.485-3.582-4.5-8-4.5z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-bold text-slate-900 text-base uppercase tracking-wide">Inquirer Information</h3>
-                <p class="text-xs text-slate-500 mt-0.5">Personal and contact details of the applicant.</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-              <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Full Name <span class="text-red-500">*</span></label>
-                <input 
-                  type="text" 
-                  id="resName"
-                  name="client_name"
-                  value="<?php echo htmlspecialchars($data['sender_name']); ?>"
-                  readonly
-                  class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base text-slate-800"> 
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Inquirer Type <span class="text-red-500">*</span></label>
-                <input 
-                  type="text"
-                  id="resType"
-                  name="resident_type"
-                  value="<?php echo htmlspecialchars($resident_type); ?>"
-                  readonly
-                  class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base text-slate-800">
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Contact Number <span class="text-red-500">*</span></label>
-                <input 
-                  type="tel" 
-                  id="resContact"
-                  name="client_contact"
-                  value="<?php echo htmlspecialchars($data['sender_contact']); ?>"
-                  readonly
-                  class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base text-slate-800 font-mono">
-              </div>
-
-              <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Email Address <span class="text-red-500">*</span></label>
-                <input 
-                  type="email" 
-                  id="resEmail"
-                  name="client_email"
-                  value="<?php echo htmlspecialchars($data['sender_email']); ?>"
-                  readonly
-                  class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base text-slate-800">
-              </div>
-            </div>
-
-            <!-- Compatibility hidden elements -->
-            <input type="hidden" id="resUnit" value="<?php echo htmlspecialchars($data['unit_type'] . ' — Unit ' . $data['unit_number']); ?>">
-            <input type="hidden" id="unitOwnerName" value="<?php echo htmlspecialchars($data['owner_name'] ?? 'No owner assigned'); ?>">
-            <input type="hidden" id="unitOwnerEmail" value="<?php echo htmlspecialchars($data['owner_email'] ?? 'No email available'); ?>">
-          </section>
-
-          <div class="h-px bg-slate-200 my-8"></div>
-
-          <!-- LEASE TERM DETAILS -->
-          <section>
-            <div class="flex items-center gap-3 mb-5">
-              <svg class="w-5 h-5 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-              <h3 class="font-bold text-slate-900 text-base uppercase tracking-wide">2. Lease Term Details</h3>
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-slate-700 mb-2">
-                Transaction Type <span class="text-red-500">*</span>
-              </label>
-             <input 
-              type="text"
-              id="resTransactionType"
-              value="<?php echo htmlspecialchars($transaction_type); ?>"
-              readonly
-              class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
-            </div>
-
-            <div class="space-y-5">
-              <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Reservation Type <span class="text-red-500">*</span></label>
-                <input 
-                  type="text"
-                  id="resReservationType"
-                  name="reservation_type"
-                  value="<?php echo htmlspecialchars($reservation_type); ?>"
-                  readonly
-                  class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
-              </div>
-
-              <?php if ($is_lease): ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 1. UNIT DETAILS BOX -->
+            <div class="border border-slate-200 rounded-xl p-4 sm:p-5 bg-white mb-6">
+              <h3 class="text-sm sm:text-base font-bold text-slate-900 pb-2.5 border-b border-slate-100 mb-4">Unit Details</h3>
+              
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-y-4 gap-x-6 text-xs sm:text-sm">
+                <!-- Col 1 -->
+                <div class="space-y-4">
                   <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">
-                      Chosen Move-in Time <span class="text-red-500">*</span>
-                    </label>
-                    <input 
-                      type="text"
-                      id="resMoveInTime"
-                      name="preferred_move_in_time_display"
-                      value="<?php echo htmlspecialchars($data['preferred_move_in_time'] ?? 'Not specified'); ?>"
-                      readonly
-                      class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
+                    <p class="text-slate-400 text-xs mb-0.5">Unit</p>
+                    <p class="font-bold text-slate-900"><?= $unitNum ?> - <?= $unitTypeUpper ?></p>
                   </div>
-
                   <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">
-                      Lease Duration <span class="text-red-500">*</span>
-                    </label>
-                    <input 
-                      type="text"
-                      id="resLeaseDuration"
-                      name="lease_duration"
-                      value="<?php echo htmlspecialchars($data['lease_duration'] ?? 'Not specified'); ?>"
-                      readonly
-                      class="zep-input w-full h-12 px-5 bg-slate-100 border border-slate-300 rounded-xl text-base">
+                    <p class="text-slate-400 text-xs mb-0.5">Furnishing</p>
+                    <p class="font-bold text-slate-900"><?= $furnishingVal ?></p>
+                  </div>
+                  <div>
+                    <p class="text-slate-400 text-xs mb-0.5">Unit owner</p>
+                    <p class="font-bold text-slate-900"><?= $ownerName ?></p>
                   </div>
                 </div>
-              <?php endif; ?>
 
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="relative">
-                  <label class="block text-sm font-semibold text-slate-700 mb-2">
-                    <?php echo $is_lease ? 'Move-in Date' : 'Preferred Appointment / Turnover Date'; ?>
-                    <span class="text-red-500">*</span>
-                  </label>
-                  <button
-                    type="button"
-                    id="resMoveInTrigger"
-                    class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base flex items-center justify-between text-left">
-                    <span id="resMoveInDisplay" class="text-slate-400">Select a date</span>
-                    <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                  </button>
-                  <input type="hidden" id="resMoveIn" name="move_in_date">
-                  <div id="resMoveInCalendar" class="zep-calendar-panel hidden absolute left-0 z-30 mt-2 w-72 max-w-[90vw] bg-white border border-slate-200 rounded-xl shadow-xl p-4"></div>
-                  <p class="text-xs text-slate-400 mt-1.5" id="resMoveInHint">Dates already reserved for this unit are shown in red and can't be selected.</p>
+                <!-- Col 2 -->
+                <div class="space-y-4">
+                  <div>
+                    <p class="text-slate-400 text-xs mb-0.5">Floor</p>
+                    <p class="font-bold text-slate-900"><?= $floorNum ?></p>
+                  </div>
+                  <div>
+                    <p class="text-slate-400 text-xs mb-0.5"><?= htmlspecialchars($price_label) ?></p>
+                    <p class="font-bold text-slate-900 font-mono">₱<?= number_format($price_basis, 0) ?> php</p>
+                  </div>
+                  <div>
+                    <p class="text-slate-400 text-xs mb-0.5">Email</p>
+                    <?php if (!empty($ownerEmail)): ?>
+                      <a href="mailto:<?= htmlspecialchars($ownerEmail) ?>" class="font-bold text-slate-900 underline hover:text-blue-600 truncate block"><?= htmlspecialchars($ownerEmail) ?></a>
+                    <?php else: ?>
+                      <p class="font-bold text-slate-900">—</p>
+                    <?php endif; ?>
+                  </div>
                 </div>
 
-                <?php if ($is_lease): ?>
-                  <div class="relative">
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">
-                      Move-out Date <span class="text-red-500">*</span>
-                    </label>
-                    <button
-                      type="button"
-                      id="resLeaseTrigger"
-                      class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base flex items-center justify-between text-left">
-                      <span id="resLeaseDisplay" class="text-slate-400">Select a date</span>
-                      <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                <!-- Col 3 -->
+                <div class="space-y-4">
+                  <div>
+                    <p class="text-slate-400 text-xs mb-0.5">SQM</p>
+                    <p class="font-bold text-slate-900"><?= $sqmVal ?></p>
+                  </div>
+                  <div>
+                    <p class="text-slate-400 text-xs mb-0.5">Listing</p>
+                    <p class="font-bold text-slate-900"><?= $listingVal ?></p>
+                  </div>
+                  <div>
+                    <p class="text-slate-400 text-xs mb-0.5">Contact</p>
+                    <p class="font-bold text-slate-900 font-mono"><?= $ownerContact ?></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. FILL OUT YOUR INFORMATION (With Person/Applicant Icon) -->
+            <div class="mb-6">
+              <div class="flex items-center gap-2 mb-3">
+                <svg class="w-4 h-4 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide">FILL OUT YOUR INFORMATION</h3>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Left: Auto-input Contact Details -->
+                <div class="space-y-3.5">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Full Name</label>
+                    <input type="text" name="client_name" value="<?= htmlspecialchars($data['sender_name']) ?>" placeholder="John Doe" readonly class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Email</label>
+                    <input type="email" name="client_email" value="<?= htmlspecialchars($data['sender_email']) ?>" placeholder="johndoe@gmail.com" readonly class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Phone Number</label>
+                    <input type="tel" name="client_contact" value="<?= htmlspecialchars($data['sender_contact']) ?>" placeholder="1234 123 1234" readonly class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 font-mono focus:outline-none">
+                  </div>
+                </div>
+
+                <!-- Right: Sex, Age, Nationality -->
+                <div class="space-y-3.5">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Sex <span class="text-red-500">*</span></label>
+                    <select name="client_sex" required class="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-slate-900">
+                      <option value="" disabled selected>Dropdown</option>
+                      <option value="Female">Female</option>
+                      <option value="Male">Male</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Age <span class="text-red-500">*</span></label>
+                    <input type="number" name="client_age" min="18" max="120" placeholder="Input" required class="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-slate-900">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nationality <span class="text-red-500">*</span></label>
+                    <select name="client_nationality" required class="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-slate-900">
+                      <option value="" disabled>Dropdown</option>
+                      <option value="Filipino" selected>Filipino</option>
+                      <option value="Foreign">Foreign</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. LEASE TERM DETAILS (With Calendar Icon) -->
+            <div class="mb-6">
+              <div class="flex items-center gap-2 mb-3">
+                <svg class="w-4 h-4 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide">LEASE TERM DETAILS</h3>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Preferred move-in time</label>
+                  <input type="text" name="preferred_move_in_time" value="<?= $inqPreferredMoveIn ?>" readonly class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Lease Duration</label>
+                  <input type="text" id="leaseDurationDisplay" name="lease_duration" value="<?= $inqLeaseDuration ?>" readonly class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none">
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Move-in Date <span class="text-red-500">*</span></label>
+                  <input type="date" id="moveInDate" name="move_in_date" min="<?= $move_in_min ?>" max="<?= $move_in_max ?>" required class="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-slate-900" onchange="handleMoveInChange(this.value)">
+                  <p class="text-[10px] text-slate-400 mt-1">Available up to 30 days from reservation issuance.</p>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Move-out Date</label>
+                  <input type="text" id="moveOutDateDisplay" name="move_out_date_display" placeholder="auto calculated" readonly class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 font-mono focus:outline-none">
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. PAYMENT SECTION -->
+            <div class="mb-6">
+              <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide mb-3">PAYMENT</h3>
+
+              <!-- Payment Options Tabs -->
+              <div class="flex border border-slate-200 rounded-lg overflow-hidden mb-4 max-w-sm">
+                <button type="button" id="tabGcash" onclick="switchPaymentTab('GCash QR')" class="flex-1 py-2 px-3 text-xs font-bold transition-all bg-[#0f172a] text-white">
+                  Pay using GCASH QR
+                </button>
+                <button type="button" id="tabInHouse" onclick="switchPaymentTab('In-House')" class="flex-1 py-2 px-3 text-xs font-bold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200">
+                  Pay In-House
+                </button>
+              </div>
+
+              <!-- Payment Details: Left Option Content, Right Breakdown Card -->
+              <div class="grid grid-cols-1 sm:grid-cols-[1fr_240px] gap-4 items-start">
+                
+                <!-- Left Column: Option Panels -->
+                <div>
+                  <!-- Panel 1: GCash QR -->
+                  <div id="panelGcash" class="flex flex-col sm:flex-row items-start gap-4">
+                    <!-- QR Code Box -->
+                    <div class="w-32 h-32 border border-slate-200 rounded-xl p-2 bg-slate-50 flex items-center justify-center shrink-0 cursor-pointer hover:border-slate-400 transition-all text-center group relative overflow-hidden" onclick="openQRModal()">
+                      <?php if ($owner_has_qr): ?>
+                        <img src="<?= htmlspecialchars($owner_qr_path) ?>" alt="Owner GCash QR" class="w-full h-full object-contain rounded-lg">
+                        <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold rounded-lg">
+                          Click to Enlarge
+                        </div>
+                      <?php else: ?>
+                        <div class="space-y-1">
+                          <svg class="w-6 h-6 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                          <span class="text-[10px] font-bold text-slate-700 tracking-wide block leading-tight">GCASH QR<br>PLACEHOLDER</span>
+                        </div>
+                      <?php endif; ?>
+                    </div>
+
+                    <!-- Right text & file upload -->
+                    <div class="flex-1 space-y-2 text-xs text-slate-600">
+                      <p class="leading-relaxed">Use the GCash app to scan and pay directly to the unit owner's GCash account.</p>
+                      <p class="font-medium text-slate-500">Click QR code to view full size.</p>
+                      
+                      <div>
+                        <label class="block text-xs font-bold text-slate-800 mb-1">Upload Proof of Payment <span class="text-red-500">*</span></label>
+                        <input type="file" id="proofUpload" name="payment_proof" accept=".jpg,.jpeg,.png,.webp" required class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[11px] file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer">
+                        <p class="text-[10px] text-slate-400 mt-1">Note: Only JPG, PNG, and WEBP files are accepted.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Panel 2: Pay In-House (Hidden by default) -->
+                  <div id="panelInHouse" class="hidden p-4 border border-slate-200 rounded-xl bg-slate-50 space-y-2">
+                    <div class="flex items-center gap-2 text-slate-900">
+                      <svg class="w-4 h-4 text-slate-800 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                       </svg>
-                    </button>
-                    <input type="hidden" id="resLease" name="move_out_date">
-                    <div id="resLeaseCalendar" class="zep-calendar-panel hidden absolute left-0 z-30 mt-2 w-72 max-w-[90vw] bg-white border border-slate-200 rounded-xl shadow-xl p-4"></div>
-                    <p class="text-xs text-slate-400 mt-1.5" id="resLeaseHint">Pick your Move-in Date first — dates that would overlap another tenant's stay are blocked.</p>
+                      <h4 class="text-xs font-bold uppercase">Pay In-House During Lease Signing</h4>
+                    </div>
+                    <p class="text-xs text-slate-700 leading-relaxed">
+                      Please prepare the payment amount (cash or manager's check). Payment will be settled in person during your scheduled lease signing appointment.
+                    </p>
+                    <p class="text-[11px] text-slate-500 italic">No online proof of payment is required for in-house payment.</p>
                   </div>
-                <?php endif; ?>
-              </div>
+                </div>
 
-              <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">
-                  Remarks / Special Requests <span class="text-slate-400 font-normal normal-case">(optional)</span>
+                <!-- Right Column: PAYMENT BREAKDOWN CARD -->
+                <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/70 space-y-2.5">
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">PAYMENT BREAKDOWN</p>
+                  <div>
+                    <p class="text-[10px] text-slate-500 mb-0.5"><?= htmlspecialchars($price_label) ?></p>
+                    <p class="text-base font-bold text-slate-900 font-mono">₱<?= number_format($price_basis, 2) ?></p>
+                  </div>
+                  <div>
+                    <p class="text-[10px] font-semibold text-slate-600 mb-1">Down Payment Option</p>
+                    <select id="dpOption" name="payment_percentage" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:border-slate-900" onchange="calculateBreakdown()">
+                      <option value="0.35" selected>35% Down Payment</option>
+                      <option value="0.50">50% Down Payment</option>
+                      <option value="0.75">75% Down Payment</option>
+                      <option value="1.00">Full Payment (100%)</option>
+                    </select>
+                  </div>
+                  <div class="flex items-center justify-between text-xs pt-1.5 border-t border-slate-200/80">
+                    <span class="text-slate-500 font-medium">Required Amount</span>
+                    <span class="font-bold text-slate-900 font-mono" id="dpAmount">₱<?= number_format($price_basis * 0.35, 2) ?></span>
+                  </div>
+                  <div class="flex items-center justify-between text-xs pt-1.5 border-t border-slate-200/80">
+                    <span class="text-slate-500 font-medium">Payment Status</span>
+                    <span class="text-[11px] font-bold text-amber-600">Pending Unit Owner Review</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- 5. LEASE SIGNING DATE -->
+            <div class="mb-6">
+              <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide">LEASE SIGNING DATE</h3>
+              <p class="text-xs text-slate-500 mb-2.5">Choose a date when you are available for the lease signing.</p>
+              
+              <div class="flex flex-wrap items-center gap-4">
+                <div class="flex-1 min-w-[180px] max-w-xs">
+                  <input type="date" id="leaseSigningDate" name="lease_signing_date" min="<?= date('Y-m-d') ?>" max="<?= $maxSigningDate ?>" class="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-slate-900">
+                </div>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" id="imFlexible" name="is_flexible_signing" value="1" class="w-4 h-4 rounded text-slate-900 accent-slate-900" onchange="handleFlexibleSigning(this)">
+                  <span class="text-xs font-semibold text-slate-700">Im Flexible</span>
                 </label>
-                <textarea 
-                  id="resRemarks"
-                  name="remarks"
-                  rows="3"
-                  maxlength="500"
-                  placeholder="Anything else you'd like us to know about your reservation..."
-                  class="zep-input w-full px-5 py-3 bg-white border border-slate-300 rounded-xl text-base resize-none"></textarea>
               </div>
             </div>
-          </section>
 
-          <div class="h-px bg-slate-200 my-8"></div>
-            
-          <!-- PAYMENT DETAILS -->
-          <section class="pt-2">
-            <div class="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-8 items-start">
-
-            <!-- LEFT: YOUR ORIGINAL STEPS -->
-            <div class="space-y-6">
-
-              <!-- STEP 1 -->
-              <div>
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
-                  Step 1
-                </p>
-                <p class="font-bold text-slate-900">Reservation Fee</p>
-
-                <div class="mt-3 relative">
-                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-base font-bold text-slate-500">₱</span>
-                 <input 
-                  type="text" 
-                  id="requiredAmountInput"
-                  readonly
-                  class="w-full h-12 pl-9 pr-5 bg-white border border-slate-200 rounded-xl text-base text-slate-500">
-                </div>
-
-                <p class="text-xs text-slate-500 mt-2">
-                 This is the required amount based on your selected payment option.
-                </p>
+            <!-- 6. REMARKS / SPECIAL REQUESTS -->
+            <div class="mb-6 space-y-1.5">
+              <label class="block text-xs font-semibold text-slate-700">Remarks / Special Requests (optional)</label>
+              <textarea id="resRemarks" name="remarks" rows="3" maxlength="500" placeholder="Add any special requests or notes here..." class="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 resize-none focus:outline-none focus:border-slate-900" oninput="updateRemarksCount(this)"></textarea>
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 text-[10px] text-slate-400">
+                <p>Important Note: Special requests are subject to availability and property policies. Zeppelin Suites will make every reasonable effort to accommodate your request, but fulfillment is not guaranteed.</p>
+                <span class="shrink-0 font-mono text-slate-500" id="remarksCount">0 / 500</span>
               </div>
+            </div>
 
-
-              <!-- STEP 2 -->
-              <div>
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
-                  Step 2
-                </p>
-                <p class="font-bold text-slate-900 mb-1">Scan to Pay</p>
-                <p class="text-sm text-slate-600 mb-4">
-                  Use GCash or any QR-supported app to complete your reservation.
-                </p>
-
-              <div class="flex justify-center my-5">                  <div onclick="openQRModal()"
-                    class="w-40 h-40 cursor-pointer hover:scale-105 transition-all duration-200">
-                    <img src="../images/QR.jpg" class="w-full h-full object-contain rounded-xl shadow-sm">
-                  </div>
-                </div>
-              </div>
-
-
-              <!-- STEP 3 -->
-              <div class="border-t pt-4">
-              <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">
-                Step 3
-              </p>
-
-              <label class="block text-sm font-semibold text-slate-700 mb-2">
-                GCash Reference Number <span class="text-red-500">*</span>
+            <!-- 7. TERMS & CONDITIONS AND SUBMISSION -->
+            <div class="pt-4 border-t border-slate-100 flex flex-col gap-4">
+              <label class="flex items-start gap-2.5 cursor-pointer select-none text-xs text-slate-600 leading-relaxed">
+                <input type="checkbox" id="agreeTerms" required class="w-4 h-4 mt-0.5 rounded text-slate-900 accent-slate-900 shrink-0">
+                <span>I agree to the <a href="#" class="font-semibold text-slate-900 underline">Terms and Conditions</a> and <a href="#" class="font-semibold text-slate-900 underline">Privacy Policy</a> of Zeppelin Suites. I confirm that all information provided is accurate and complete.</span>
               </label>
 
-              <input 
-                type="text"
-                name="payment_reference"
-                id="paymentReference"
-                placeholder="Enter your GCash reference number"
-                required
-                class="zep-input w-full h-12 px-5 bg-white border border-slate-300 rounded-xl text-base">
-
-              <label class="block text-sm font-semibold text-slate-700 mb-2 mt-4">
-                Amount You Sent <span class="text-red-500">*</span>
-              </label>
-
-              <div class="relative">
-                <span class="absolute left-5 top-1/2 -translate-y-1/2 text-base font-bold text-slate-500">₱</span>
-                <input 
-                  type="number"
-                  name="declared_amount"
-                  id="declaredAmount"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  required
-                  class="zep-input w-full h-12 pl-9 pr-5 bg-white border border-slate-300 rounded-xl text-base">
-              </div>
-              <p class="text-xs text-slate-500 mt-2">
-                Enter the exact amount shown in your GCash payment confirmation. This is compared against your required amount during admin review.
-              </p>
-            </div>
-
-            </div>
-
-
-            <!-- RIGHT: BREAKDOWN PANEL -->
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 h-fit">
-
-              <p class="text-xs font-bold text-slate-500 uppercase mb-3">
-                Payment Breakdown
-              </p>
-
-              <!-- TOTAL -->
-              <div class="mb-4">
-                <p class="text-xs text-slate-500"><?php echo htmlspecialchars($price_label); ?></p>
-                <p class="text-lg font-bold text-slate-900">
-                  ₱<?php echo number_format($price_basis, 2); ?>
+              <div class="flex items-center justify-between pt-2">
+                <p class="text-xs text-slate-400">
+                  Inquiry ID:
+                  <span class="font-bold text-slate-700 font-mono">
+                    #<?php echo htmlspecialchars($data['inq_id']); ?>
+                  </span>
                 </p>
-              </div>
-
-              <!-- DP SELECTOR -->
-              <div class="mb-4">
-                <p class="text-xs font-bold text-slate-600 mb-2">Down Payment Option</p>
-
-                <select 
-                  id="dpOption"
-                  name="payment_percentage"
-                  required
-                  class="w-full h-10 border border-slate-200 rounded-lg text-sm px-2">
-                  <option value="0.35">35% Down Payment</option>
-                  <option value="0.50">50% Down Payment</option>
-                  <option value="0.75">75% Down Payment</option>
-                  <option value="1.00">Full Payment</option>
-                </select>
-              </div>
-
-              <!-- BREAKDOWN -->
-              <div class="space-y-2 text-sm">
-              <div class="flex justify-between">
-                <span class="text-slate-600">Required Amount</span>
-                <span class="font-semibold" id="dpAmount">₱0.00</span>
-              </div>
-
-              <div class="flex justify-between border-t pt-2">
-                <span class="text-slate-800 font-semibold">Payment Status</span>
-                <span class="font-bold text-amber-600">Pending Admin Review</span>
-              </div>
-            </div>
-
-            </div>
-          </div>
-          </section>
-
-          <!-- UPLOAD PROOF -->
-          <section class="pt-2">
-            <div class="flex items-center gap-3 mb-5">
-              <svg class="w-5 h-5 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12V4m0 0l-4 4m4-4l4 4"/>
-              </svg>
-              <h3 class="font-bold text-slate-900 text-base uppercase tracking-wide">4. Upload Proof of Payment <span class="text-red-500">*</span></h3>
-            </div>
-
-            <label for="proofUpload" class="upload-zone w-full min-h-[140px] rounded-xl flex flex-col items-center justify-center gap-3 cursor-pointer">
-              <svg class="w-9 h-9 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-              </svg>
-              <div class="text-center">
-                <p class="text-base font-bold text-slate-800">Click to upload or drag &amp; drop</p>
-                <p class="text-sm text-slate-500 mt-1">PNG, JPG, PDF up to 10MB</p>
-              </div>
-              <span id="uploadFileName" class="text-sm text-emerald-600 font-semibold hidden"></span>
-              <input 
-                type="file" 
-                name="payment_proof"
-                id="proofUpload" 
-                accept=".png,.jpg,.jpeg,.pdf" 
-                class="hidden" 
-                onchange="handleUpload(this)"
-                required>
-            </label>
-            <p class="text-xs text-slate-400 text-center mt-3">Scan the QR code using your preferred e-wallet or banking app to complete your payment.</p>
-          </section>
-
-          <div class="h-px bg-slate-200 my-8"></div>
-
-          <!-- AGREEMENT + SUBMIT -->
-          <section class="pt-2">
-            <div class="flex items-start gap-3 mb-8">
-              <input 
-              type="checkbox" 
-              id="agreeCheck"
-              name="agreement"
-              required
-              class="mt-1 w-4 h-4 rounded border-slate-300 accent-slate-900 cursor-pointer">
-              <label for="agreeCheck" class="text-sm text-slate-700 leading-relaxed cursor-pointer">
-                I agree to the <a href="#" class="text-slate-950 font-bold underline hover:no-underline">Terms and Conditions</a> and <a href="#" class="text-slate-950 font-bold underline hover:no-underline">Privacy Policy</a> of Zeppelin Suites.
-                I confirm that all information provided is accurate and complete.
-              </label>
-            </div>
-
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pt-4">
-             <p class="text-sm text-slate-400">
-                Inquiry ID:
-                <span class="font-bold text-slate-700" style="font-family:'DM Mono',monospace">
-                  #<?php echo htmlspecialchars($data['inq_id']); ?>
-                </span>
-              </p>
-                <button 
-                type="button"
-                onclick="openReservationModal()"
-                class="btn-press w-full sm:w-auto bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold px-10 py-3.5 rounded-xl tracking-widest transition-all">
-                <span class="inline-flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                  </svg>
+                <button type="submit" id="btnSubmitReservation" class="btn-press px-6 py-2.5 bg-[#0f172a] hover:bg-[#1e293b] text-white text-xs font-bold uppercase tracking-wider rounded-lg flex items-center gap-2 transition-all shadow-md">
+                  <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/></svg>
                   SUBMIT RESERVATION
-                </span>
-              </button>
+                </button>
+              </div>
             </div>
-          </section>
+
           </form>
         </div><!-- /formBody -->
 
@@ -673,13 +482,13 @@ tailwind.config = {
           </div>
           <p class="text-xl font-bold text-slate-900 mb-2">Reservation Link Expired</p>
           <p class="text-sm text-slate-500 mb-6">This reservation link is no longer valid. Please submit a new inquiry to get a fresh reservation link.</p>
-          <a href="../generalViewPages/contact.html" class="btn-press inline-block bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold px-8 py-3 rounded-xl tracking-wide transition-all">Submit New Inquiry</a>
+          <a href="../generalViewPages/contact.php" class="btn-press inline-block bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold px-8 py-3 rounded-xl tracking-wide transition-all">Submit New Inquiry</a>
         </div>
 
       </div><!-- /form card -->
     </div><!-- /left content -->
 
-    <!-- RIGHT SIDEBAR -->
+    <!-- 2. RIGHT SIDEBAR (KEPT AS REQUESTED) -->
     <aside class="space-y-6 lg:sticky lg:top-6">
 
       <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-7">
@@ -752,17 +561,17 @@ tailwind.config = {
         </div>
 
         <div class="rounded-xl border border-blue-200 bg-blue-50/80 p-5 mt-5">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">!</div>
-                <p class="text-blue-700 font-bold uppercase tracking-wide">Please Note</p>
-            </div>
-            <p class="text-sm leading-7 text-slate-800">
-               Completing this webform <span class="font-bold">enlists you for a reservation</span> and secures your intent to reserve the unit. You will be notified once the <span class="font-bold">reservation form is ready</span> for signing and notarization, if required. After submission, you must <span class="font-bold">meet with the owner, HOA, or authorized representative</span> to submit the signed Reservation Agreement and required IDs. </p>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">!</div>
+            <p class="text-blue-700 font-bold uppercase tracking-wide">Please Note</p>
+          </div>
+          <p class="text-sm leading-7 text-slate-800">
+            Completing this webform <span class="font-bold">enlists you for a reservation</span> and secures your intent to reserve the unit. You will be notified once the <span class="font-bold">reservation form is ready</span> for signing and notarization, if required. After submission, you must <span class="font-bold">meet with the owner, HOA, or authorized representative</span> to submit the signed Reservation Agreement and required IDs.
+          </p>
         </div>
       </div>
 
-      
-
+      <!-- Need Help Card -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-7">
         <div class="flex items-center gap-3 mb-4">
           <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center">
@@ -803,7 +612,8 @@ tailwind.config = {
   </div>
 </main>
 
-<footer class="bg-slate-950 text-slate-300">
+<!-- 3. FOOTER (KEPT AS REQUESTED) -->
+<footer class="bg-slate-950 text-slate-300 mt-12">
   <div class="max-w-[1180px] mx-auto px-5 py-5 flex flex-col md:flex-row justify-between gap-4 text-sm">
     <div class="flex items-start gap-3">
       <svg class="w-5 h-5 text-slate-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -814,65 +624,58 @@ tailwind.config = {
         <p class="text-slate-500">All information collected is used solely for reservation purposes.</p>
       </div>
     </div>
-    <p class="text-slate-500">© 2024 Zeppelin Suites. All rights reserved.</p>
+    <p class="text-slate-500">© <?= date('Y') ?> Zeppelin Suites. All rights reserved.</p>
   </div>
 </footer>
 
-<div id="reservationModal" 
-  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
-
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-7">
-
-      <h2 class="text-xl font-bold text-slate-900 mb-3">
-        Confirm Reservation Submission
-      </h2>
-
-      <p class="text-sm text-slate-600 leading-relaxed mb-6">
-        Please review your information and payment details before submitting your reservation.
-        Are you sure you want to continue?
-      </p>
-
-      <div class="flex justify-end gap-3">
-
-        <button 
-        type="button"
-        onclick="closeReservationModal()"
-        class="px-5 py-2 border rounded-xl text-sm font-semibold">
-          Go Back
-        </button>
-
-        <button
-        type="button"
-        onclick="submitReservationForm()"
-        class="px-5 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold">
-          Yes, Submit
-        </button>
-
-      </div>
-
+<!-- 4. MODALS -->
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
+    <h3 class="text-lg font-bold text-slate-900">Confirm Reservation Submission</h3>
+    <p class="text-xs text-slate-600 leading-relaxed">
+      Please review your submitted information before continuing. Once submitted, your reservation will be forwarded to the administration and unit owner for review.
+    </p>
+    <div class="flex justify-end gap-2.5 pt-2">
+      <button type="button" onclick="closeConfirmModal()" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700">Go Back</button>
+      <button type="button" onclick="proceedSubmit()" class="px-5 py-2 bg-[#0f172a] hover:bg-[#1e293b] text-white rounded-lg text-xs font-bold">Yes, Submit</button>
     </div>
-
   </div>
+</div>
 
+<!-- QR Enlarged Lightbox Modal -->
+<?php if ($owner_has_qr): ?>
+<div id="qrModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm px-4" onclick="closeQRModal()">
+  <div class="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl border border-slate-100 text-center" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+      <h3 class="text-sm font-bold text-slate-900"><?= $ownerName ?>'s GCash QR</h3>
+      <button type="button" onclick="closeQRModal()" class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="p-3 bg-slate-50 rounded-2xl flex items-center justify-center">
+      <img src="<?= htmlspecialchars($owner_qr_path) ?>" alt="GCash QR" class="max-h-[60vh] max-w-full object-contain rounded-xl shadow-sm">
+    </div>
+    <p class="text-xs text-slate-500 mt-3">Scan with GCash or any supported e-wallet</p>
+    <div class="pt-3 flex justify-end">
+      <button type="button" onclick="closeQRModal()" class="px-4 py-1.5 text-xs font-bold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200">Close</button>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
+
+<!-- 5. JAVASCRIPT -->
 <script>
-// ======= Reservation timer configuration =======
-// The link is valid for 30 days from the moment it was generated (server-side),
-// NOT from the moment this page happens to be opened — so it keeps counting
-// down even if the recipient never opens it right away.
+// ======= Timer configuration from original form =======
 const expirationSeconds = 30 * 24 * 60 * 60; // 30 days
 let reservationStatus = 'pending';
-const reservationId = 101;
 
 <?php
-  // Real expiry timestamp set when the reservation token was created (see
-  // respondApprovalRequest.php). Falls back to "now + 30 days" only if for
-  // some reason it isn't set, so the timer never silently breaks.
   $expiresAtMs = !empty($data['reservation_token_expires_at'])
       ? strtotime($data['reservation_token_expires_at']) * 1000
       : (time() + 30 * 24 * 60 * 60) * 1000;
 ?>
 const expiresAt = <?php echo (int)$expiresAtMs; ?>;
-const createdAt = expiresAt - expirationSeconds * 1000;
 const circumference = 2 * Math.PI * 17;
 
 function updateStatus() {
@@ -886,24 +689,7 @@ function updateStatus() {
   const ringLabel = document.getElementById('ringLabel');
   const formBody = document.getElementById('formBody');
   const expiredOverlay = document.getElementById('expiredOverlay');
-  const confirmedOverlay = document.getElementById('confirmedOverlay');
-  const submitBtn = document.getElementById('submitBtn');
-
-  if (reservationStatus === 'confirmed') {
-    banner.className = 'status-banner rounded-xl border px-7 py-5 flex items-center justify-between gap-5 bg-emerald-50 border-emerald-200 shadow-sm';
-    document.getElementById('countdownRing').innerHTML = '<svg class="w-11 h-11 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
-    title.textContent = 'Reservation #' + reservationId + ' Confirmed!';
-    title.className = 'font-bold text-emerald-800';
-    msg.textContent = 'Your reservation has been successfully submitted.';
-    msg.className = 'text-sm mt-1 text-emerald-700';
-    minutesBox.textContent = 'DONE';
-    minutesBox.className = 'font-mono text-xl font-bold text-emerald-600 leading-none';
-    countdown.textContent = '';
-    formBody.classList.add('hidden');
-    expiredOverlay.classList.add('hidden');
-    confirmedOverlay.classList.remove('hidden');
-    return;
-  }
+  const submitBtn = document.getElementById('btnSubmitReservation');
 
   if (now > expiresAt) {
     reservationStatus = 'expired';
@@ -918,7 +704,6 @@ function updateStatus() {
     countdown.textContent = '';
     formBody.classList.add('hidden');
     expiredOverlay.classList.remove('hidden');
-    confirmedOverlay.classList.add('hidden');
     if (submitBtn) submitBtn.disabled = true;
     return;
   }
@@ -950,301 +735,176 @@ function updateStatus() {
   }
 }
 
-
-function handleUpload(input) {
-  const label = document.getElementById('uploadFileName');
-  if (input.files && input.files[0]) {
-    label.textContent = '✓ ' + input.files[0].name;
-    label.classList.remove('hidden');
-  }
-}
-
-document.querySelectorAll('.zep-input').forEach(el => {
-  el.addEventListener('input', () => { el.style.borderColor = ''; });
-});
-
 setInterval(updateStatus, 1000);
 updateStatus();
 
-// ======= Unit availability (blocked dates) for the calendar picker =======
-// Existing reservations on this unit (not cancelled/rejected) — rendered as
-// red, unselectable dates so two tenants/buyers can't be booked over each other.
-const blockedRanges = <?php echo json_encode($blocked_ranges); ?>;
-console.log('Blocked ranges for unit #<?php echo (int)$data['unit_id']; ?>:', blockedRanges);
+// ======= Move-out date calculation =======
+const priceBasis = <?= (float)$price_basis ?>;
+const leaseDurationStr = <?= json_encode($inqLeaseDuration) ?>;
 
-function expandRangeToDates(start, end) {
-  const dates = [];
-  let d = new Date(start + 'T00:00:00');
-  const endD = new Date(end + 'T00:00:00');
-  while (d <= endD) {
-    dates.push(toISODate(d));
-    d.setDate(d.getDate() + 1);
+function parseDurationToMonths(str) {
+  if (!str) return 12;
+  const s = str.toLowerCase();
+  if (s.includes('year')) {
+    const match = s.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) * 12 : 12;
   }
-  return dates;
+  if (s.includes('month')) {
+    const match = s.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 1;
+  }
+  return 12;
 }
 
-function toISODate(d) {
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+function addMonthsToDate(dateStr, months) {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const target = new Date(y, m - 1 + months, d);
+  
+  const expectedMonth = (m - 1 + months) % 12;
+  if (target.getMonth() !== expectedMonth) {
+    target.setDate(0);
+  }
+
+  const yOut = target.getFullYear();
+  const mOut = String(target.getMonth() + 1).padStart(2, '0');
+  const dOut = String(target.getDate()).padStart(2, '0');
+  return `${yOut}-${mOut}-${dOut}`;
 }
 
 function formatDisplayDate(dateStr) {
+  if (!dateStr) return '';
   const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-const blockedDateSet = new Set();
-blockedRanges.forEach(r => expandRangeToDates(r.start, r.end).forEach(d => blockedDateSet.add(d)));
-const sortedBlockedDates = Array.from(blockedDateSet).sort();
+function handleMoveInChange(moveInVal) {
+  const months = parseDurationToMonths(leaseDurationStr);
+  const moveOutVal = addMonthsToDate(moveInVal, months);
+  document.getElementById('moveOutDate').value = moveOutVal;
+  document.getElementById('moveOutDateDisplay').value = moveOutVal ? formatDisplayDate(moveOutVal) : '';
+}
 
-function firstBlockedOnOrAfter(dateStr) {
-  for (const b of sortedBlockedDates) {
-    if (b >= dateStr) return b;
+// ======= Flexible signing checkbox handler =======
+function handleFlexibleSigning(cb) {
+  const signingInput = document.getElementById('leaseSigningDate');
+  if (cb.checked) {
+    signingInput.value = '';
+    signingInput.disabled = true;
+    signingInput.classList.add('bg-slate-100', 'cursor-not-allowed', 'text-slate-400');
+  } else {
+    signingInput.disabled = false;
+    signingInput.classList.remove('bg-slate-100', 'cursor-not-allowed', 'text-slate-400');
   }
-  return null;
 }
 
-const todayISO = toISODate(new Date());
+// ======= Payment tab switcher =======
+function switchPaymentTab(type) {
+  const tabGcash = document.getElementById('tabGcash');
+  const tabInHouse = document.getElementById('tabInHouse');
+  const panelGcash = document.getElementById('panelGcash');
+  const panelInHouse = document.getElementById('panelInHouse');
+  const paymentMethodInput = document.getElementById('paymentMethodInput');
+  const proofUpload = document.getElementById('proofUpload');
 
-// ======= Generic calendar picker =======
-function initDatePicker({ triggerId, panelId, hiddenId, displayId, hintId, minDateFn, isDisabledFn, guardFn, onSelect }) {
-  const trigger = document.getElementById(triggerId);
-  const panel = document.getElementById(panelId);
-  const hidden = document.getElementById(hiddenId);
-  const display = document.getElementById(displayId);
-  const hint = hintId ? document.getElementById(hintId) : null;
-  if (!trigger || !panel || !hidden || !display) return null;
+  paymentMethodInput.value = type;
 
-  let viewDate = new Date();
-  viewDate.setDate(1);
+  if (type === 'GCash QR') {
+    tabGcash.className = 'flex-1 py-2 px-3 text-xs font-bold transition-all bg-[#0f172a] text-white';
+    tabInHouse.className = 'flex-1 py-2 px-3 text-xs font-bold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200';
+    panelGcash.classList.remove('hidden');
+    panelInHouse.classList.add('hidden');
+    proofUpload.required = true;
+  } else {
+    tabGcash.className = 'flex-1 py-2 px-3 text-xs font-bold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200';
+    tabInHouse.className = 'flex-1 py-2 px-3 text-xs font-bold transition-all bg-[#0f172a] text-white';
+    panelGcash.classList.add('hidden');
+    panelInHouse.classList.remove('hidden');
+    proofUpload.required = false;
+    proofUpload.value = '';
+  }
+}
 
-  function isDisabled(dateStr) {
-    const min = minDateFn ? minDateFn() : null;
-    if (min && dateStr < min) return true;
-    if (blockedDateSet.has(dateStr)) return true;
-    if (isDisabledFn && isDisabledFn(dateStr)) return true;
+// ======= Payment breakdown calculation =======
+function calculateBreakdown() {
+  const dpSelect = document.getElementById('dpOption');
+  const pct = parseFloat(dpSelect.value);
+  const reqAmount = priceBasis * pct;
+
+  const formatted = '₱' + reqAmount.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+
+  document.getElementById('dpAmount').textContent = formatted;
+  document.getElementById('declaredAmountInput').value = reqAmount;
+}
+
+// ======= Remarks live counter =======
+function updateRemarksCount(textarea) {
+  document.getElementById('remarksCount').textContent = `${textarea.value.length} / 500`;
+}
+
+// ======= QR lightbox modal =======
+function openQRModal() {
+  const modal = document.getElementById('qrModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+}
+function closeQRModal() {
+  const modal = document.getElementById('qrModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
+// ======= Form submit and validation =======
+function handleFormSubmit(e) {
+  e.preventDefault();
+
+  const agreeTerms = document.getElementById('agreeTerms');
+  if (!agreeTerms.checked) {
+    alert("Please check and agree to the Terms and Conditions before submitting your reservation.");
+    agreeTerms.focus();
     return false;
   }
 
-  function render() {
-    const year = viewDate.getFullYear();
-    const month = viewDate.getMonth();
-    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    const startWeekday = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const selected = hidden.value;
-
-    let html = `
-      <div class="flex items-center justify-between mb-3">
-        <button type="button" data-nav="prev" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 font-bold">&#8249;</button>
-        <p class="text-sm font-bold text-slate-800">${monthNames[month]} ${year}</p>
-        <button type="button" data-nav="next" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 font-bold">&#8250;</button>
-      </div>
-      <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 mb-1">
-        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
-      </div>
-      <div class="grid grid-cols-7 gap-1 text-sm">`;
-
-    for (let i = 0; i < startWeekday; i++) html += `<span></span>`;
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const blocked = blockedDateSet.has(dateStr);
-      const disabled = isDisabled(dateStr);
-      const isSelected = dateStr === selected;
-
-      let cls = 'w-9 h-9 flex items-center justify-center rounded-lg text-xs font-semibold ';
-      if (isSelected) {
-        cls += 'bg-slate-900 text-white';
-      } else if (blocked) {
-        cls += 'bg-red-100 text-red-500 cursor-not-allowed';
-      } else if (disabled) {
-        cls += 'text-slate-300 cursor-not-allowed';
-      } else {
-        cls += 'text-slate-700 hover:bg-slate-100 cursor-pointer';
-      }
-
-      html += `<button type="button" data-date="${dateStr}" title="${blocked ? 'Already reserved' : ''}" ${disabled ? 'disabled' : ''} class="${cls}">${day}</button>`;
-    }
-
-    html += `</div>
-      <div class="flex items-center gap-3 mt-3 pt-3 border-t border-slate-100 text-[10px] font-semibold">
-        <span class="flex items-center gap-1 text-slate-500"><span class="w-2.5 h-2.5 rounded-full bg-red-200 inline-block"></span> Reserved</span>
-        <span class="flex items-center gap-1 text-slate-500"><span class="w-2.5 h-2.5 rounded-full bg-slate-900 inline-block"></span> Selected</span>
-      </div>`;
-
-    panel.innerHTML = html;
-
-    panel.querySelectorAll('[data-nav]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        viewDate.setMonth(viewDate.getMonth() + (btn.dataset.nav === 'next' ? 1 : -1));
-        render();
-      });
-    });
-
-    panel.querySelectorAll('[data-date]:not([disabled])').forEach(btn => {
-      btn.addEventListener('click', () => {
-        hidden.value = btn.dataset.date;
-        display.textContent = formatDisplayDate(btn.dataset.date);
-        display.classList.remove('text-slate-400');
-        display.classList.add('text-slate-900');
-        panel.classList.add('hidden');
-        if (onSelect) onSelect(btn.dataset.date);
-        render();
-      });
-    });
+  const moveIn = document.getElementById('moveInDate');
+  if (!moveIn.value) {
+    alert("Please select your Move-in Date.");
+    moveIn.focus();
+    return false;
   }
 
-  trigger.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (guardFn && !guardFn()) return;
-    document.querySelectorAll('.zep-calendar-panel').forEach(p => { if (p !== panel) p.classList.add('hidden'); });
-    const willOpen = panel.classList.contains('hidden');
-    panel.classList.toggle('hidden');
-    if (willOpen) {
-      if (hidden.value) viewDate = new Date(hidden.value + 'T00:00:00');
-      render();
-    }
-  });
-
-  document.addEventListener('click', (e) => {
-    if (panel.classList.contains('hidden')) return;
-    if (!panel.contains(e.target) && e.target !== trigger && !trigger.contains(e.target)) {
-      panel.classList.add('hidden');
-    }
-  });
-
-  return { render, refresh: render, flashHint: () => {
-    if (!hint) return;
-    const original = hint.textContent;
-    const originalClass = hint.className;
-    hint.textContent = 'Please select a Move-in Date first.';
-    hint.className = 'text-xs text-red-500 font-semibold mt-1.5';
-    setTimeout(() => { hint.textContent = original; hint.className = originalClass; }, 2500);
-  }};
-}
-
-const moveInPicker = initDatePicker({
-  triggerId: 'resMoveInTrigger',
-  panelId: 'resMoveInCalendar',
-  hiddenId: 'resMoveIn',
-  displayId: 'resMoveInDisplay',
-  hintId: 'resMoveInHint',
-  minDateFn: () => todayISO,
-  onSelect: (dateStr) => {
-    const moveOutHidden = document.getElementById('resLease');
-    if (moveOutHidden && moveOutHidden.value && moveOutHidden.value < dateStr) {
-      moveOutHidden.value = '';
-      const moveOutDisplay = document.getElementById('resLeaseDisplay');
-      if (moveOutDisplay) {
-        moveOutDisplay.textContent = 'Select a date';
-        moveOutDisplay.classList.add('text-slate-400');
-        moveOutDisplay.classList.remove('text-slate-900');
-      }
-    }
-    if (moveOutPicker) moveOutPicker.refresh();
-  }
-});
-
-let moveOutPicker = null;
-if (document.getElementById('resLeaseTrigger')) {
-  moveOutPicker = initDatePicker({
-    triggerId: 'resLeaseTrigger',
-    panelId: 'resLeaseCalendar',
-    hiddenId: 'resLease',
-    displayId: 'resLeaseDisplay',
-    hintId: 'resLeaseHint',
-    minDateFn: () => document.getElementById('resMoveIn').value || todayISO,
-    isDisabledFn: (dateStr) => {
-      const moveIn = document.getElementById('resMoveIn').value;
-      if (!moveIn) return true;
-      const limit = firstBlockedOnOrAfter(moveIn);
-      return limit ? dateStr >= limit : false;
-    },
-    guardFn: () => {
-      const moveIn = document.getElementById('resMoveIn').value;
-      if (!moveIn) {
-        if (moveOutPicker) moveOutPicker.flashHint();
-        return false;
-      }
-      return true;
-    }
-  });
-}
-
-const priceBasis = <?php echo json_encode((float)$price_basis); ?>;
-const dpOption = document.getElementById("dpOption");
-const dpAmount = document.getElementById("dpAmount");
-const requiredAmountInput = document.getElementById("requiredAmountInput");
-
-function updatePaymentAmount() {
-  const percentage = parseFloat(dpOption.value);
-  const requiredAmount = priceBasis * percentage;
-
-  const formattedAmount = "₱" + requiredAmount.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-
-  dpAmount.textContent = formattedAmount;
-  requiredAmountInput.value = requiredAmount.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-}
-
-dpOption.addEventListener("change", updatePaymentAmount);
-updatePaymentAmount();
-
-function closeModal(modalId) {
-  const modal = document.getElementById(modalId);
-
-  if (modal) {
-    modal.remove();
+  const paymentMethod = document.getElementById('paymentMethodInput').value;
+  const proof = document.getElementById('proofUpload');
+  if (paymentMethod === 'GCash QR' && (!proof.files || proof.files.length === 0)) {
+    alert("Please upload your proof of payment for the GCash QR payment option.");
+    proof.focus();
+    return false;
   }
 
-  const url = new URL(window.location.href);
-  url.searchParams.delete('submitted');
-  url.searchParams.delete('already_submitted');
-  window.history.replaceState({}, document.title, url.toString());
+  // Open confirmation modal
+  const modal = document.getElementById('confirmModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  return false;
 }
 
-function openReservationModal(){
-    const moveIn = document.getElementById('resMoveIn');
-    const moveOut = document.getElementById('resLease');
-
-    if (moveIn && !moveIn.value) {
-      document.getElementById('resMoveInHint').textContent = 'Please select a date before submitting.';
-      document.getElementById('resMoveInHint').className = 'text-xs text-red-500 font-semibold mt-1.5';
-      document.getElementById('resMoveInTrigger').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-
-    if (moveOut && !moveOut.value) {
-      document.getElementById('resLeaseHint').textContent = 'Please select a date before submitting.';
-      document.getElementById('resLeaseHint').className = 'text-xs text-red-500 font-semibold mt-1.5';
-      document.getElementById('resLeaseTrigger').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-
-    document.getElementById("reservationModal")
-    .classList.remove("hidden");
-
-    document.getElementById("reservationModal")
-    .classList.add("flex");
-
+function closeConfirmModal() {
+  const modal = document.getElementById('confirmModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
 }
-function closeReservationModal(){
-    document.getElementById("reservationModal")
-    .classList.add("hidden");
 
-    document.getElementById("reservationModal")
-    .classList.remove("flex");
-
-}
-function submitReservationForm(){
-    document.querySelector("form[action='ActionsGV/submitReservation.php']")
-    .submit();
+function proceedSubmit() {
+  const btn = document.getElementById('btnSubmitReservation');
+  btn.disabled = true;
+  btn.textContent = 'SUBMITTING...';
+  document.getElementById('reservationForm').submit();
 }
 </script>
 

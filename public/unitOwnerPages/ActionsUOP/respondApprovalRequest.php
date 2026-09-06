@@ -14,6 +14,7 @@ if (!isset($_SESSION['user_id']) || strtolower($_SESSION['role'] ?? '') !== 'uni
 $owner_id = (int)$_SESSION['user_id'];
 $request_id = isset($_POST['request_id']) ? (int)$_POST['request_id'] : 0;
 $action = $_POST['action'] ?? '';
+$remarks = trim($_POST['remarks'] ?? $_POST['owner_remarks'] ?? '');
 
 if ($request_id <= 0) {
     $_SESSION['error_message'] = "Invalid request ID.";
@@ -94,11 +95,12 @@ try {
 
         $approveSql = "UPDATE owner_approval_requests
                        SET request_status = 'approved',
+                           owner_remarks = ?,
                            responded_at = NOW()
                        WHERE request_id = ?";
 
         $approveStmt = $conn->prepare($approveSql);
-        $approveStmt->bind_param("i", $request_id);
+        $approveStmt->bind_param("si", $remarks, $request_id);
         $approveStmt->execute();
         $approveStmt->close();
 
@@ -121,6 +123,7 @@ try {
             UPDATE inquiry_table
             SET approval_status = 'approved',
                 approved_unit_id = ?,
+                owner_remarks = ?,
                 reservation_token = ?,
                 reservation_token_expires_at = ?,
                 approval_approved_at = NOW()
@@ -133,7 +136,7 @@ try {
             throw new Exception("Prepare failed: " . $conn->error);
         }
 
-        $updateInquiryStmt->bind_param("issi", $unit_id, $reservation_token, $expires_at, $inq_id);
+        $updateInquiryStmt->bind_param("isssi", $unit_id, $remarks, $reservation_token, $expires_at, $inq_id);
         $updateInquiryStmt->execute();
         $updateInquiryStmt->close();
 
@@ -148,11 +151,12 @@ try {
 
         $declineSql = "UPDATE owner_approval_requests
                        SET request_status = 'declined',
+                           owner_remarks = ?,
                            responded_at = NOW()
                        WHERE request_id = ?";
 
         $declineStmt = $conn->prepare($declineSql);
-        $declineStmt->bind_param("i", $request_id);
+        $declineStmt->bind_param("si", $remarks, $request_id);
         $declineStmt->execute();
         $declineStmt->close();
 
@@ -177,12 +181,13 @@ try {
             if ($remainingEligible === 0) {
                 $updateInquirySql = "UPDATE Inquiry_table
                                      SET status = 'declined',
-                                         approval_status = 'declined'
+                                         approval_status = 'declined',
+                                         owner_remarks = ?
                                      WHERE inq_id = ?
                                      AND approval_status != 'approved'";
 
                 $updateInquiryStmt = $conn->prepare($updateInquirySql);
-                $updateInquiryStmt->bind_param("i", $inq_id);
+                $updateInquiryStmt->bind_param("si", $remarks, $inq_id);
                 $updateInquiryStmt->execute();
                 $updateInquiryStmt->close();
             }

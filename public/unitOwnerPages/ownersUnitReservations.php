@@ -10,7 +10,7 @@ $owner_id = (int)$userData['user_id']; ?>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zeppelin Suites Admin — Reservations</title>
+<title>Zeppelin Suites — Lease Management</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],mono:['DM Mono','monospace']}}}}</script>
@@ -99,9 +99,9 @@ $owner_id = (int)$userData['user_id']; ?>
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
       <span class="nav-label">Inquiries</span>
     </a>
-     <a href="ownersUnitReservations.php" data-tooltip="Reservations" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+     <a href="ownersUnitReservations.php" data-tooltip="Lease Management" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-      <span class="nav-label">Reservations</span>
+      <span class="nav-label">Lease Management</span>
     </a>
     <a href="ownersBookingCalendar.php" data-tooltip="Booking Calendar" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -134,7 +134,7 @@ $owner_id = (int)$userData['user_id']; ?>
     </button>
     <div class="relative flex-1 max-w-sm">
       <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      <input type="text" id="searchInput" onkeyup="filterSearch()" placeholder="Search reservations..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
+      <input type="text" id="searchInput" onkeyup="filterSearch()" placeholder="Search leases..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
     </div>
     <div class="flex items-center gap-2 ml-auto">
       <div class="relative" id="profileWrapper">
@@ -172,13 +172,70 @@ $owner_id = (int)$userData['user_id']; ?>
     </div>
   </div>
 
+  <!-- ACTIVITY TIMELINE SUMMARY MODAL -->
+  <div id="activityTimelineModal" onclick="if(event.target===this) closeActivityTimelineModal()" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[99] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-xl sm:max-w-2xl w-full p-6 sm:p-7 relative max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Top Header -->
+      <div class="flex items-start justify-between gap-3 pb-3 border-b border-slate-100 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100 shadow-sm">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" stroke-width="2"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v5l3 3"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900 leading-tight">Activity Timeline</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Track the progress of your reservation.</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeActivityTimelineModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors" title="Close">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Client Info Card at Top (User requested: "include client name on the top") -->
+      <div class="mt-4 mb-3 bg-slate-50 border border-slate-100 rounded-xl p-4 flex items-center justify-between gap-4 shrink-0">
+        <div class="min-w-0">
+          <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Client Name</p>
+          <p id="timelineClientName" class="text-sm sm:text-base font-bold text-slate-900 leading-snug break-words">—</p>
+          <p id="timelineClientEmail" class="text-xs text-slate-500 break-all mt-0.5">—</p>
+        </div>
+        <div class="text-right shrink-0 pl-3">
+          <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Assigned Unit</span>
+          <span id="timelineUnitDisplay" class="text-xs sm:text-sm font-bold text-slate-800 font-mono block mt-0.5">—</span>
+        </div>
+      </div>
+
+      <!-- Timeline Scrollable Steps -->
+      <div class="overflow-y-auto pr-1 flex-1 py-1 space-y-0" id="timelineStepsContainer">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-end gap-2.5 shrink-0">
+        <button type="button" onclick="closeActivityTimelineModal()" class="btn-press px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+          Close
+        </button>
+        <a id="timelineViewDetailsBtn" href="#" class="btn-press inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-sm transition-all active:scale-95">
+          <span>View Details</span>
+          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
 
   <main class="main-scroll p-4 md:p-6 space-y-6">
     <div class="max-w-screen-2xl mx-auto space-y-6">
 
       <!-- Page header -->
       <div class="flex items-center justify-between flex-wrap gap-3">
-        <h1 class="text-xl font-bold text-slate-900">Reservations</h1>
+        <h1 class="text-xl font-bold text-slate-900">Lease Management</h1>
         <div class="flex items-center gap-2">
           <button class="btn-press px-4 py-2 text-sm font-semibold border border-slate-200 text-slate-600 rounded-full hover:bg-slate-50 transition-all active:scale-95">
             <svg class="w-4 h-4 inline-block mr-1.5 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
@@ -305,6 +362,275 @@ function filterSearch() {
     row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
   });
 }
+
+// --- ACTIVITY TIMELINE MODAL FUNCTIONS ---
+function openActivityTimelineModal(source) {
+  let data = null;
+  if (typeof source === 'string') {
+    try { data = JSON.parse(source); } catch (e) { console.error(e); }
+  } else if (source && source.dataset && source.dataset.timeline) {
+    try { data = JSON.parse(source.dataset.timeline); } catch (e) { console.error(e); }
+  } else if (typeof source === 'object' && source !== null && !source.dataset) {
+    data = source;
+  }
+
+  if (!data) return;
+
+  // Set Top Client & Unit details (User request: "include client name on the top")
+  const name = data.client_name || 'Client';
+  document.getElementById('timelineClientName').textContent = name;
+  document.getElementById('timelineClientEmail').textContent = data.client_email || 'No email provided';
+  document.getElementById('timelineUnitDisplay').textContent = data.unit_display || 'Unit';
+
+  // View Details Button link
+  document.getElementById('timelineViewDetailsBtn').href = data.view_url || ('ownersViewReservation.php?reservation_id=' + data.reservation_id);
+
+  // Build the 5 Timeline steps
+  renderActivityTimelineSteps(data);
+
+  const modal = document.getElementById('activityTimelineModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeActivityTimelineModal() {
+  const modal = document.getElementById('activityTimelineModal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+function renderActivityTimelineSteps(data) {
+  const container = document.getElementById('timelineStepsContainer');
+  if (!container) return;
+
+  const paymentStatus = (data.payment_status || 'pending review').toLowerCase();
+  const isPaymentVerified = paymentStatus === 'verified';
+  const isPaymentRejected = paymentStatus === 'rejected';
+
+  const resStatus = (data.reservation_status || '').toLowerCase();
+  const isOfficiallyBooked = ['officially booked', 'reserved', 'handover', 'moved in', 'active', 'completed'].includes(resStatus) || !!data.officially_booked_at;
+  const isHandedOver = ['handover', 'moved in', 'active', 'completed'].includes(resStatus) || !!data.is_moved_in;
+  const areDocsComplete = (data.total_docs > 0 && data.completed_docs >= data.total_docs) || isOfficiallyBooked;
+  const areDocsInProgress = (data.completed_docs > 0) || ['reserved', 'lease signing'].includes(resStatus);
+
+  // 1. Step 1: Reservation Form Submitted (Always completed for placed reservations)
+  const step1 = {
+    num: 1,
+    state: 'completed',
+    title: 'Reservation Form Submitted',
+    badge: null,
+    timestamp: data.created_at || 'Submitted',
+    desc: 'Reservation has been submitted by client'
+  };
+
+  // 2. Step 2: Payment Verified
+  let step2 = {};
+  if (isPaymentVerified) {
+    step2 = {
+      num: 2,
+      state: 'completed',
+      title: 'Payment Verified',
+      badge: null,
+      timestamp: data.payment_verified_at || 'Payment confirmed',
+      desc: 'Payment has been verified by unit owner'
+    };
+  } else if (isPaymentRejected) {
+    step2 = {
+      num: 2,
+      state: 'rejected',
+      title: 'Payment Rejected',
+      badge: '<span class="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">Rejected</span>',
+      timestamp: data.payment_rejected_at || 'Payment not accepted',
+      desc: 'Payment was rejected by unit owner.'
+    };
+  } else {
+    step2 = {
+      num: 2,
+      state: 'in_progress',
+      title: 'Payment Verification',
+      badge: '<span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200"><span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>In Progress</span>',
+      timestamp: 'Awaiting payment verification',
+      desc: 'Payment is pending verification by unit owner.'
+    };
+  }
+
+  // 3. Step 3: Lease Signing
+  let step3 = {};
+  if (!isPaymentVerified) {
+    step3 = {
+      num: 3,
+      state: 'pending',
+      title: 'Lease Signing',
+      badge: '<span class="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">Pending</span>',
+      timestamp: '',
+      desc: 'The lease agreement will be prepared once payment is verified.'
+    };
+  } else if (isOfficiallyBooked) {
+    step3 = {
+      num: 3,
+      state: 'completed',
+      title: 'Lease Signing',
+      badge: null,
+      timestamp: data.officially_booked_at || data.requirements_updated_at || 'Lease agreement signed',
+      desc: 'The lease agreement has been signed'
+    };
+  } else {
+    step3 = {
+      num: 3,
+      state: 'in_progress',
+      title: 'Lease Signing',
+      badge: '<span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200"><span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>In Progress</span>',
+      timestamp: data.payment_verified_at || '',
+      desc: 'The lease agreement is ready for signing.'
+    };
+  }
+
+  // 4. Step 4: Documents
+  let step4 = {};
+  if (!isPaymentVerified) {
+    step4 = {
+      num: 4,
+      state: 'pending',
+      title: 'Documents',
+      badge: '<span class="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">Pending</span>',
+      timestamp: '',
+      desc: 'Complete and submit the required documents.'
+    };
+  } else if (areDocsComplete) {
+    step4 = {
+      num: 4,
+      state: 'completed',
+      title: 'Documents',
+      badge: null,
+      timestamp: data.requirements_updated_at || '',
+      desc: 'All required documents has been submitted and verified.'
+    };
+  } else if (areDocsInProgress) {
+    step4 = {
+      num: 4,
+      state: 'in_progress',
+      title: 'Documents',
+      badge: '<span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200"><span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>In Progress</span>',
+      timestamp: data.total_docs ? `${data.completed_docs} of ${data.total_docs} complete` : '',
+      desc: 'Complete and submit the required documents.'
+    };
+  } else {
+    step4 = {
+      num: 4,
+      state: 'pending',
+      title: 'Documents',
+      badge: '<span class="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">Pending</span>',
+      timestamp: '',
+      desc: 'Complete and submit the required documents.'
+    };
+  }
+
+  // 5. Step 5: Handover
+  let step5 = {};
+  if (isHandedOver) {
+    step5 = {
+      num: 5,
+      state: 'completed',
+      title: 'Handover',
+      badge: null,
+      timestamp: data.move_in_date ? 'Move-in: ' + data.move_in_date : 'Turnover completed',
+      desc: 'Unit turnover and key release completed.'
+    };
+  } else if (isOfficiallyBooked) {
+    step5 = {
+      num: 5,
+      state: 'in_progress',
+      title: 'Handover',
+      badge: '<span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200"><span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>Ready</span>',
+      timestamp: data.move_in_date ? 'Scheduled for ' + data.move_in_date : 'Ready for scheduling',
+      desc: 'Unit turnover and key release is ready to be scheduled.'
+    };
+  } else {
+    step5 = {
+      num: 5,
+      state: 'pending',
+      title: 'Handover',
+      badge: '<span class="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">Pending</span>',
+      timestamp: '',
+      desc: 'Unit turnover and key release will be scheduled after lease signing.'
+    };
+  }
+
+  const steps = [step1, step2, step3, step4, step5];
+
+  let html = '';
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
+    const isLast = (i === steps.length - 1);
+    const nextStep = !isLast ? steps[i + 1] : null;
+
+    // Circle icon based on state
+    let circleHtml = '';
+    if (step.state === 'completed') {
+      circleHtml = `
+        <div class="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 z-10 shadow-sm">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+      `;
+    } else if (step.state === 'in_progress') {
+      circleHtml = `
+        <div class="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0 z-10 shadow-sm ring-4 ring-blue-50">
+          ${step.num}
+        </div>
+      `;
+    } else if (step.state === 'rejected') {
+      circleHtml = `
+        <div class="w-7 h-7 rounded-full bg-red-500 text-white font-bold text-xs flex items-center justify-center shrink-0 z-10 shadow-sm">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </div>
+      `;
+    } else {
+      circleHtml = `
+        <div class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 font-bold text-xs flex items-center justify-center shrink-0 z-10">
+          ${step.num}
+        </div>
+      `;
+    }
+
+    // Connecting line color
+    let lineClass = 'bg-slate-200';
+    if (step.state === 'completed' && nextStep && (nextStep.state === 'completed' || nextStep.state === 'in_progress')) {
+      lineClass = 'bg-emerald-500';
+    }
+
+    html += `
+      <div class="flex gap-3 relative ${isLast ? 'pb-1' : 'pb-5'}">
+        <div class="flex flex-col items-center">
+          ${circleHtml}
+          ${!isLast ? `<div class="w-0.5 grow min-h-[28px] mt-1 ${lineClass}"></div>` : ''}
+        </div>
+
+        <div class="flex-1 min-w-0 pt-0.5">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <h4 class="text-sm font-bold text-slate-800 leading-tight">${step.title}</h4>
+            ${step.badge || ''}
+          </div>
+          ${step.timestamp ? `<p class="text-xs text-slate-400 font-medium mt-0.5">${step.timestamp}</p>` : ''}
+          <p class="text-xs text-slate-500 mt-1 leading-relaxed">${step.desc}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeActivityTimelineModal();
+  }
+});
 </script>
 </body>
 </html>

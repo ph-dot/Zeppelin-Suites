@@ -56,6 +56,7 @@ if ($isResale) {
         u.unit_id,
         u.unit_number,
         u.unit_type,
+        u.sqm,
         u.lease_rate,
         u.unit_owner_id,
         u.unit_current_status,
@@ -92,6 +93,7 @@ if ($isResale) {
             'unit_id' => (int)$row['unit_id'],
             'unit_number' => $row['unit_number'],
             'unit_type' => $row['unit_type'],
+            'sqm' => (float)($row['sqm'] ?? 0),
             'lease_rate' => $row['lease_rate'],
             'unit_owner_id' => $row['unit_owner_id'],
             'owner_name' => $row['owner_name'],
@@ -187,6 +189,7 @@ SELECT
     u.unit_id,
     u.unit_number,
     u.unit_type,
+    u.sqm,
     u.lease_rate,
     u.unit_owner_id,
     owner.full_name AS owner_name,
@@ -342,9 +345,10 @@ foreach ($candidates as $unitId => $candidate) {
     }
 
     $units[] = [
-        'unit_id' => $row['unit_id'],
+        'unit_id' => (int)$row['unit_id'],
         'unit_number' => $row['unit_number'],
         'unit_type' => $row['unit_type'],
+        'sqm' => (float)($row['sqm'] ?? 0),
         'lease_rate' => $row['lease_rate'],
         'unit_owner_id' => $row['unit_owner_id'],
         'owner_name' => $row['owner_name'],

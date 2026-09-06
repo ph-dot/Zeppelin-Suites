@@ -108,9 +108,9 @@ tailwind.config = {
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
       <span class="nav-label">Inquiries</span>
     </a>
-    <a href="ownersUnitReservations.php" data-tooltip="Reservations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="ownersUnitReservations.php" data-tooltip="Lease Management" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-      <span class="nav-label">Reservations</span>
+      <span class="nav-label">Lease Management</span>
     </a>
     <a href="ownersBookingCalendar.php" data-tooltip="Booking Calendar" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M17 14h-6"/><path d="M13 18H7"/><path d="M7 14h.01"/><path d="M17 18h.01"/></svg>
@@ -281,92 +281,6 @@ tailwind.config = {
   </main>
 </div>
 
-<!-- ========================================== -->
-<!-- UNIT DETAIL MODAL (Matching Admin High-end Look) -->
-<!-- ========================================== -->
-<div class="modal-backdrop fixed inset-0 bg-black/40 backdrop-blur-xs z-[60] flex items-center justify-center p-4" id="unitDetailModal" onclick="handleBackdropClick(event,'unitDetailModal')">
-  <div class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
-    <div class="bg-slate-900 px-6 py-4 flex items-center justify-between text-white shrink-0">
-      <div>
-        <h2 class="text-base font-bold text-white flex items-center gap-2">
-          <span>Unit Details</span>
-          <span id="modalUnitBadge" class="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-white/20 text-white"></span>
-        </h2>
-        <p class="text-xs text-slate-300 mt-0.5">Specifications and current occupancy</p>
-      </div>
-      <button onclick="closeModal('unitDetailModal')" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all">
-        ✕
-      </button>
-    </div>
-
-    <div class="p-6 space-y-5 overflow-y-auto">
-      <!-- Top Badges Summary -->
-      <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-100">
-        <div>
-          <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Unit Type</p>
-          <p class="text-sm font-bold text-slate-900 mt-0.5" id="mUnitType">—</p>
-        </div>
-        <div class="text-right">
-          <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Status</p>
-          <span id="mUnitStatusBadge" class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border mt-0.5">
-            <span id="mUnitStatusDot" class="w-1.5 h-1.5 rounded-full"></span>
-            <span id="mUnitStatusText">—</span>
-          </span>
-        </div>
-      </div>
-
-      <!-- Unit Specs Grid -->
-      <div>
-        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Unit Information</h3>
-        <div class="grid grid-cols-2 gap-3.5 text-sm">
-          <div class="p-3 bg-white rounded-xl border border-slate-100">
-            <p class="text-[11px] font-semibold text-slate-400 uppercase">Building Floor</p>
-            <p class="text-sm font-semibold text-slate-800 mt-0.5" id="mUnitFloor">—</p>
-          </div>
-          <div class="p-3 bg-white rounded-xl border border-slate-100">
-            <p class="text-[11px] font-semibold text-slate-400 uppercase">Lease Rate</p>
-            <p class="text-sm font-bold text-slate-900 font-mono mt-0.5" id="mUnitLeaseRate">—</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Occupancy / Tenant Grid -->
-      <div>
-        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Current Tenant Information</h3>
-        <div class="space-y-3">
-          <div class="p-3 bg-white rounded-xl border border-slate-100 flex items-center justify-between">
-            <div>
-              <p class="text-[11px] font-semibold text-slate-400 uppercase">Tenant Name</p>
-              <p class="text-sm font-semibold text-slate-800 mt-0.5" id="mTenantName">—</p>
-            </div>
-            <div class="text-right">
-              <p class="text-[11px] font-semibold text-slate-400 uppercase">Contact Number</p>
-              <p class="text-sm text-slate-700 mt-0.5 font-mono" id="mTenantContact">—</p>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3.5 text-sm">
-            <div class="p-3 bg-white rounded-xl border border-slate-100">
-              <p class="text-[11px] font-semibold text-slate-400 uppercase">Move-In Date</p>
-              <p class="text-sm text-slate-700 font-mono mt-0.5" id="mMoveIn">—</p>
-            </div>
-            <div class="p-3 bg-white rounded-xl border border-slate-100">
-              <p class="text-[11px] font-semibold text-slate-400 uppercase">Move-Out / Lease End</p>
-              <p class="text-sm text-slate-700 font-mono mt-0.5" id="mMoveOut">—</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="flex items-center justify-end px-6 py-4 border-t border-slate-100 bg-slate-50/60 shrink-0">
-      <button onclick="closeModal('unitDetailModal')" class="btn-press px-5 py-2 text-xs font-semibold bg-slate-900 text-white rounded-full hover:bg-slate-700 transition-all shadow-xs">
-        Close
-      </button>
-    </div>
-  </div>
-</div>
-
 <script>
 let sidebarCollapsed = false;
 
@@ -523,60 +437,6 @@ function clearFilters() {
   if (topSearch) topSearch.value = '';
 
   applyFilters();
-}
-
-// ----------------------------------------------------
-// UNIT DETAIL MODAL
-// ----------------------------------------------------
-function openUnitModalFromRow(row) {
-  if (!row) return;
-
-  const unitNo = row.dataset.unitNumber || '—';
-  const unitType = row.dataset.unitType || '—';
-  const floorTitle = row.dataset.floorTitle || `Floor ${row.dataset.floorNumber || '1'}`;
-  const leaseRate = row.dataset.leaseRate || '—';
-  const status = row.dataset.unitCurrentStatus || '—';
-  const statusClass = row.dataset.statusClass || 'bg-slate-50 text-slate-700 border-slate-200';
-  const dotClass = row.dataset.dotClass || 'bg-slate-400';
-  const tenantName = row.dataset.tenantName || 'No Tenant';
-  const tenantContact = row.dataset.tenantContact || '—';
-  const moveIn = row.dataset.moveIn || '—';
-  const moveOut = row.dataset.moveOut || '—';
-
-  document.getElementById('modalUnitBadge').textContent = unitNo;
-  document.getElementById('mUnitType').textContent = unitType;
-  document.getElementById('mUnitFloor').textContent = `${floorTitle} (Floor ${row.dataset.floorNumber || '1'})`;
-  document.getElementById('mUnitLeaseRate').textContent = leaseRate;
-  document.getElementById('mTenantName').textContent = tenantName;
-  document.getElementById('mTenantContact').textContent = tenantContact;
-  document.getElementById('mMoveIn').textContent = moveIn;
-  document.getElementById('mMoveOut').textContent = moveOut;
-
-  const badgeEl = document.getElementById('mUnitStatusBadge');
-  const dotEl = document.getElementById('mUnitStatusDot');
-  const textEl = document.getElementById('mUnitStatusText');
-
-  if (badgeEl && dotEl && textEl) {
-    badgeEl.className = `inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border mt-0.5 ${statusClass}`;
-    dotEl.className = `w-1.5 h-1.5 rounded-full ${dotClass}`;
-    textEl.textContent = status;
-  }
-
-  const modal = document.getElementById('unitDetailModal');
-  modal?.classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeModal(id) {
-  const modal = document.getElementById(id);
-  modal?.classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-function handleBackdropClick(e, id) {
-  if (e.target === document.getElementById(id)) {
-    closeModal(id);
-  }
 }
 </script>
 </body>

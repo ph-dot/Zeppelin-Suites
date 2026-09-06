@@ -40,10 +40,16 @@ $sql = "
         r.payment_status,
         r.reservation_status,
         r.created_at,
+        r.payment_verified_at,
+        r.payment_rejected_at,
+        r.officially_booked_at,
         r.requirements_updated_by,
         r.requirements_updated_by_role,
         r.requirements_updated_at,
         updater.full_name AS requirements_updated_by_name,
+
+        (SELECT COUNT(*) FROM reservation_documents d WHERE d.reservation_id = r.reservation_id) AS total_docs,
+        (SELECT COUNT(*) FROM reservation_documents d WHERE d.reservation_id = r.reservation_id AND d.status = 'complete') AS completed_docs,
 
         u.unit_number,
         u.unit_type,
@@ -85,47 +91,63 @@ if (!$result || $result->num_rows === 0) {
     return;
 }
 
-function e($value) {
-    return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+if (!function_exists('e')) {
+    function e($value) {
+        return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+    }
 }
 
-function peso($amount) {
-    if ($amount === null || $amount === '') {
-        return '-';
-    }
+if (!function_exists('peso')) {
+    function peso($amount) {
+        if ($amount === null || $amount === '') {
+            return '-';
+        }
 
-    return '₱' . number_format((float)$amount, 2);
+        return '₱' . number_format((float)$amount, 2);
+    }
 }
 
-function badge($value) {
-    $status = strtolower(trim($value));
+if (!function_exists('badge')) {
+    function badge($value) {
+        $status = strtolower(trim($value));
 
-    if (
-        $status === 'verified' || 
-        $status === 'reserved' || 
-        $status === 'requirements completed'
-    ) {
-        return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200'>" . e(ucwords($value)) . "</span>";
+        if (
+            $status === 'verified' || 
+            $status === 'reserved' || 
+            $status === 'requirements completed'
+        ) {
+            return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200'>" . e(ucwords($value)) . "</span>";
+        }
+
+        if (
+            $status === 'pending review' || 
+            $status === 'submitted' || 
+            $status === 'under review' || 
+            $status === 'requirements pending'
+        ) {
+            return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200'>" . e(ucwords($value)) . "</span>";
+        }
+
+        if ($status === 'rejected' || $status === 'cancelled') {
+            return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-200'>" . e(ucwords($value)) . "</span>";
+        }
+
+        return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-50 text-slate-600 border border-slate-200'>" . e(ucwords($value)) . "</span>";
     }
+}
 
-    if (
-        $status === 'pending review' || 
-        $status === 'submitted' || 
-        $status === 'under review' || 
-        $status === 'requirements pending'
-    ) {
-        return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200'>" . e(ucwords($value)) . "</span>";
+if (!function_exists('format_timeline_datetime')) {
+    function format_timeline_datetime($value) {
+        if (empty($value) || $value === '0000-00-00 00:00:00' || $value === '0000-00-00') {
+            return '';
+        }
+        $time = strtotime($value);
+        return $time ? date('M d, Y \• h:i A', $time) : '';
     }
-
-    if ($status === 'rejected' || $status === 'cancelled') {
-        return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-200'>" . e(ucwords($value)) . "</span>";
-    }
-
-    return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-50 text-slate-600 border border-slate-200'>" . e(ucwords($value)) . "</span>";
 }
 
 while ($row = $result->fetch_assoc()) {
-    $reservationId = str_pad($row['reservation_id'], 3, '0', STR_PAD_LEFT);
+    $reservationId = str_pad((string)$row['reservation_id'], 3, '0', STR_PAD_LEFT);
     $unitDisplay = trim(($row['unit_type'] ?? '') . ' Unit ' . ($row['unit_number'] ?? ''));
 
     $proofUrl = '';
@@ -134,10 +156,34 @@ while ($row = $result->fetch_assoc()) {
     }
 
     $submittedDate = !empty($row['created_at']) ? date('Y-m-d', strtotime($row['created_at'])) : '-';
+    $resStatus = strtolower(trim($row['reservation_status'] ?? ''));
+    $isMovedIn = in_array($resStatus, ['handover', 'moved in', 'active', 'completed'], true);
+
+    $timelineData = [
+        'reservation_id' => (int)$row['reservation_id'],
+        'formatted_id' => $reservationId,
+        'client_name' => $row['client_name'] ?? 'Client',
+        'client_email' => $row['client_email'] ?? '',
+        'unit_display' => $unitDisplay,
+        'created_at' => format_timeline_datetime($row['created_at'] ?? null),
+        'payment_status' => strtolower(trim($row['payment_status'] ?? 'pending review')),
+        'payment_verified_at' => format_timeline_datetime($row['payment_verified_at'] ?? null),
+        'payment_rejected_at' => format_timeline_datetime($row['payment_rejected_at'] ?? null),
+        'reservation_status' => $resStatus,
+        'officially_booked_at' => format_timeline_datetime($row['officially_booked_at'] ?? null),
+        'requirements_updated_at' => format_timeline_datetime($row['requirements_updated_at'] ?? null),
+        'move_in_date' => !empty($row['move_in_date']) && $row['move_in_date'] !== '0000-00-00' ? date('M d, Y', strtotime($row['move_in_date'])) : '',
+        'total_docs' => (int)($row['total_docs'] ?? 0),
+        'completed_docs' => (int)($row['completed_docs'] ?? 0),
+        'is_moved_in' => $isMovedIn,
+        'view_url' => 'ownersViewReservation.php?reservation_id=' . urlencode((string)$row['reservation_id'])
+    ];
+    $timelineJson = htmlspecialchars(json_encode($timelineData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8');
 
     echo "
     <tr class='res-row cursor-pointer hover:bg-slate-50 transition-colors'
-        onclick=\"window.location.href='ownersViewReservation.php?reservation_id=" . e($row['reservation_id']) . "'\">
+        data-timeline='{$timelineJson}'
+        onclick='openActivityTimelineModal(this)'>
 
         <td class='px-4 py-3.5 font-semibold text-slate-700 whitespace-nowrap' style=\"font-family:'DM Mono',monospace\">
             {$reservationId}
@@ -173,12 +219,13 @@ while ($row = $result->fetch_assoc()) {
         </td>
 
         <td class='px-4 py-3.5 text-right'>
-            <a
-                href='ownersViewReservation.php?reservation_id=" . e($row['reservation_id']) . "'
+            <button
+                type='button'
+                onclick='openActivityTimelineModal(this.closest(\"tr\")); event.stopPropagation();'
                 class='view-btn btn-press inline-flex items-center text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all'
-                onclick='event.stopPropagation();'>
+                title='View activity timeline summary'>
                 View
-            </a>
+            </button>
         </td>
     </tr>";
 }

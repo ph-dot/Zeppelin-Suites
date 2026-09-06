@@ -81,7 +81,7 @@
         <div>
           <label class="block text-sm font-semibold text-zinc-800 mb-2">Name:</label>
           <input type="text" name="sender_name" placeholder="Your full name" required
-            class="zep-input w-full border-b border-zinc-300 bg-transparent py-2.5 text-sm text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 transition-colors outline-none">
+            class="zep-input w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 transition-colors outline-none">
         </div>
 
         <!-- Email + Phone -->
@@ -89,12 +89,12 @@
           <div>
             <label class="block text-sm font-semibold text-zinc-800 mb-2">Email:</label>
             <input type="email" name="sender_email" placeholder="your@email.com" required
-              class="zep-input w-full border-b border-zinc-300 bg-transparent py-2.5 text-sm text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 transition-colors outline-none">
+              class="zep-input w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 transition-colors outline-none">
           </div>
           <div>
             <label class="block text-sm font-semibold text-zinc-800 mb-2">Phone:</label>
             <input type="tel" name="sender_contact" placeholder="09XX-XXX-XXXX"
-              class="zep-input w-full border-b border-zinc-300 bg-transparent py-2.5 text-sm text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 transition-colors outline-none">
+              class="zep-input w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 transition-colors outline-none">
           </div>
         </div>
 
@@ -215,7 +215,7 @@
         <div>
           <label class="block text-sm font-semibold text-zinc-800 mb-2">Message:</label>
           <textarea name="Message" rows="5" placeholder="Write your message here..." required
-            class="zep-input w-full border-b border-zinc-300 bg-transparent pt-2 pb-3 text-sm text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 transition-colors outline-none resize-none"></textarea>
+            class="zep-input w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 transition-colors outline-none resize-none"></textarea>
         </div>
 
         <!-- Submit -->

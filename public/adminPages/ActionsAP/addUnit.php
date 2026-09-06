@@ -5,19 +5,23 @@ require_once __DIR__ . '/../../php_files/db.php';
 $unitMap = [
     'Studio Type A' => [
         'prefix' => 'A',
-        'start' => 101
+        'start' => 101,
+        'sqm' => 37.00
     ],
     'Studio Type B' => [
         'prefix' => 'B',
-        'start' => 201
+        'start' => 201,
+        'sqm' => 40.65
     ],
     'One Bedroom' => [
         'prefix' => 'C',
-        'start' => 201
+        'start' => 201,
+        'sqm' => 75.64
     ],
     'Two Bedroom' => [
         'prefix' => 'D',
-        'start' => 301
+        'start' => 301,
+        'sqm' => 113.00
     ]
 ];
 
@@ -72,7 +76,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
 
     echo json_encode([
         'success' => true,
-        'unit_number' => $nextUnitNumber
+        'unit_number' => $nextUnitNumber,
+        'sqm' => $unitMap[$unit_type]['sqm'] ?? 0.00
     ]);
 
     $conn->close();
@@ -147,16 +152,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Insert unit
-       $insertUnitSql = "INSERT INTO units_table 
-                    (unit_type, unit_number, floor_number, lease_rate, unit_owner_id, unit_current_status, created_at)
-                  VALUES (?, ?, ?, ?, ?, ?, NOW())";
+        $sqm = $unitMap[$unit_type]['sqm'] ?? 0.00;
+        $insertUnitSql = "INSERT INTO units_table 
+                     (unit_type, unit_number, floor_number, sqm, lease_rate, unit_owner_id, unit_current_status, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
 
         $insertUnitStmt = $conn->prepare($insertUnitSql);
         $insertUnitStmt->bind_param(
-            "ssidss",
+            "ssiddss",
             $unit_type,
             $unit_number,
             $floor_number,
+            $sqm,
             $lease_rate,
             $unit_owner_id,
             $unit_current_status

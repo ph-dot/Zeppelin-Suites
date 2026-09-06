@@ -204,12 +204,14 @@ $userData = requireRole($conn, ['admin']);
 /* Status colours */
 .bar-occupied    { background: #16a34a; }  /* green  */
 .bar-reserved    { background: #ca8a04; }  /* yellow */
-.bar-maintenance { background: #dc2626; }  /* red    */
+.bar-maintenance { background: #f59e0b; }  /* amber  */
+.bar-unavailable { background: #64748b; }  /* grey   */
 
 /* Legend dot colours */
 .dot-occupied    { background: #16a34a; }
 .dot-reserved    { background: #ca8a04; }
-.dot-maintenance { background: #dc2626; }
+.dot-maintenance { background: #f59e0b; }
+.dot-unavailable { background: #64748b; }
 
 /* ─────────────────────────────────────────────
    QUICK-VIEW POPOVER (hover tooltip)
@@ -217,7 +219,7 @@ $userData = requireRole($conn, ['admin']);
 #quickView {
   position: fixed;
   z-index: 9000;
-  width: 300px;
+  width: 310px;
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 18px;
@@ -239,14 +241,41 @@ $userData = requireRole($conn, ['admin']);
 .qv-row    { display: flex; justify-content: space-between; }
 .qv-label  { color: #94a3b8; font-weight: 500; }
 .qv-value  { font-weight: 600; color: #1e293b; text-align: right; }
-.qv-footer { padding: 10px 16px 14px; border-top: 1px solid #f1f5f9; display: flex; gap: 8px; }
-.qv-btn    { flex: 1; padding: 7px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
-.qv-btn-edit   { background: #eff6ff; color: #1d4ed8; }
-.qv-btn-edit:hover   { background: #dbeafe; }
-.qv-btn-delete { background: #fef2f2; color: #dc2626; }
-.qv-btn-delete:hover { background: #fee2e2; }
-.qv-btn-done   { background: #0f172a; color: #fff; }
-.qv-btn-done:hover   { background: #1e293b; }
+.qv-footer { padding: 10px 16px 14px; border-top: 1px solid #f1f5f9; }
+.qv-btn-lease {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  background: #0f172a;
+  color: #fff;
+  transition: all 0.15s;
+}
+.qv-btn-lease:hover { background: #1e293b; color: #fff; }
+.qv-btn-unblock {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: #fee2e2;
+  color: #dc2626;
+  transition: all 0.15s;
+}
+.qv-btn-unblock:hover { background: #fecaca; }
 
 /* Status badge in quick view */
 .status-badge {
@@ -255,7 +284,8 @@ $userData = requireRole($conn, ['admin']);
 }
 .badge-occupied    { background: #dcfce7; color: #16a34a; }
 .badge-reserved    { background: #fef9c3; color: #ca8a04; }
-.badge-maintenance { background: #fee2e2; color: #dc2626; }
+.badge-maintenance { background: #fef3c7; color: #d97706; }
+.badge-unavailable { background: #f1f5f9; color: #475569; }
 
 /* ─────────────────────────────────────────────
    BOOKING MODAL
@@ -337,10 +367,10 @@ $userData = requireRole($conn, ['admin']);
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
       <span class="nav-label">Inquiry</span>
    </a>
-    <a href="../adminPages/reservation.php" data-tooltip="Reservation" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="../adminPages/reservation.php" data-tooltip="Lease Management" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-      <span class="nav-label">Reservation</span>
-   </a>
+      <span class="nav-label">Lease Management</span>
+    </a>
    <a href="../adminPages/bookingcalendar.php" data-tooltip="Booking Calendar" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg  class="nav-icon w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-range-icon lucide-calendar-range"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M17 14h-6"/><path d="M13 18H7"/><path d="M7 14h.01"/><path d="M17 18h.01"/></svg>
       <span class="nav-label">Booking Calendar</span>
@@ -360,6 +390,10 @@ $userData = requireRole($conn, ['admin']);
     <a href="../adminPages/analytics.php" data-tooltip="Analytics" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
       <span class="nav-label">Analytics</span>
+    </a>
+    <a href="../adminPages/account.php" data-tooltip="Account" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      <span class="nav-label">Account</span>
     </a>
   </nav>
 </aside>
@@ -391,6 +425,7 @@ $userData = requireRole($conn, ['admin']);
           
           <!-- Simple Dropdown -->
           <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50 hidden" id="profileDropdown">
+            <a href="account.php" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-lg mx-1">Account Settings</a>
             <div class="border-t border-slate-100 my-1"></div>
             <button onclick="confirmLogout()" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg mx-1">Sign out</button>
           </div>
@@ -416,7 +451,7 @@ $userData = requireRole($conn, ['admin']);
     <div class="glass-header border border-slate-100/80 px-5 py-4 mb-5 rounded-2xl flex items-center justify-between">
       <div>
         <h1 class="text-xl font-bold text-slate-900 mb-0.5">Booking Calendar</h1>
-        <p class="text-slate-500 text-xs">Click any date cell to start a new booking. Hover a bar for quick actions.</p>
+        <p class="text-slate-500 text-xs">Click any empty date cell to block dates for maintenance or unavailable. Hover a bar for details.</p>
       </div>
       <div class="flex items-center gap-2">
         <button class="btn-press px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium transition-all active:scale-95" onclick="changeMonth(-1)">
@@ -427,7 +462,10 @@ $userData = requireRole($conn, ['admin']);
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </button>
         <button class="btn-press px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition-all active:scale-95" onclick="goToday()">Today</button>
-        <button class="btn-press px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition-all active:scale-95" onclick="openBookingModalManual()">+ Add Booking</button>
+        <button class="btn-press px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-medium transition-all active:scale-95 flex items-center gap-1.5" onclick="openBlockDatesModalManual()">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+          <span>+ Block Dates</span>
+        </button>
       </div>
     </div>
 
@@ -453,7 +491,7 @@ $userData = requireRole($conn, ['admin']);
         </div>
 
         <!-- Legend -->
-        <div class="mb-5">
+        <div class="mb-2">
           <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3">Legend</h2>
           <div class="space-y-1.5">
             <div class="flex items-center gap-2.5 py-1.5 px-2.5 bg-slate-50 rounded-xl">
@@ -468,13 +506,12 @@ $userData = requireRole($conn, ['admin']);
               <span class="w-3 h-3 rounded-full dot-maintenance shrink-0"></span>
               <span class="text-xs font-semibold text-slate-700">Maintenance</span>
             </div>
+            <div class="flex items-center gap-2.5 py-1.5 px-2.5 bg-slate-50 rounded-xl">
+              <span class="w-3 h-3 rounded-full dot-unavailable shrink-0"></span>
+              <span class="text-xs font-semibold text-slate-700">Not Available</span>
+            </div>
           </div>
         </div>
-
-        <!-- Clear -->
-        <button class="w-full btn-press px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-semibold transition-all active:scale-95" onclick="clearBookings()">
-          Clear All Bookings
-        </button>
       </aside>
 
       <!-- ── TIMELINE CALENDAR ── -->
@@ -491,197 +528,100 @@ $userData = requireRole($conn, ['admin']);
   </div><!-- /main-scroll -->
 </div><!-- /main-wrapper -->
 
-<!-- ═══════════ BOOKING MODAL (Two-Step) ═══════════ -->
-<div class="modal-backdrop" id="bookingModal">
+<!-- ═══════════ BLOCK DATES MODAL ═══════════ -->
+<div class="modal-backdrop" id="blockDatesModal">
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="px-7 pt-6 pb-4 border-b border-slate-100 flex items-start justify-between">
       <div>
-        <div class="modal-step-pill mb-2">
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-          Step 2 — Confirm Booking
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold mb-2">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+          </svg>
+          Date Availability Control
         </div>
-        <h2 class="text-xl font-bold text-slate-900">New Booking</h2>
-        <p class="text-slate-400 text-xs mt-0.5">Fill in guest details and end date.</p>
+        <h2 class="text-xl font-bold text-slate-900">Block Unit Dates</h2>
+        <p class="text-slate-400 text-xs mt-0.5">Block dates for maintenance or unavailability (does not create a reservation).</p>
       </div>
-      <button onclick="closeBookingModal()" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors mt-1">
+      <button onclick="closeBlockDatesModal()" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors mt-1">
         <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
 
-    <form id="bookingForm" class="px-7 py-5 space-y-4">
-      <!-- Pre-filled: Room context (read-only display) -->
+    <form id="blockDatesForm" onsubmit="handleSaveBlockDates(event)" class="px-7 py-5 space-y-4">
+      <input type="hidden" id="block_unitId" name="unit_id">
+
+      <!-- Room context display -->
       <div class="flex gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
         <div class="flex-1">
           <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Unit Type</p>
-          <p class="text-sm font-bold text-slate-800" id="modal_unitTypeDisplay">—</p>
+          <p class="text-sm font-bold text-slate-800" id="block_unitTypeDisplay">—</p>
         </div>
         <div class="flex-1">
           <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Room</p>
-          <p class="text-sm font-bold text-slate-800" id="modal_roomDisplay">—</p>
-        </div>
-        <div class="flex-1">
-          <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Check-in</p>
-          <p class="text-sm font-bold text-slate-800" id="modal_startDisplay">—</p>
+          <p class="text-sm font-bold text-slate-800" id="block_roomDisplay">—</p>
         </div>
       </div>
 
-      <input type="hidden" id="modal_unitType">
-      <input type="hidden" id="modal_roomNumber">
-      <input type="hidden" id="modal_startDate">
-
-      <!-- Manual mode fields (shown when opened via "+ Add Booking") -->
-      <div id="manualFields" class="hidden space-y-4">
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-slate-700 block">Unit Type</label>
-          <select id="manual_unitType" class="zep-select w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-            <option value="">Select unit type…</option>
-          </select>
-        </div>
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-slate-700 block">Room Number</label>
-          <select id="manual_roomNumber" class="zep-select w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-            <option value="">Select room…</option>
-          </select>
-        </div>
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-slate-700 block">Check-in Date</label>
-          <input id="manual_startDate" type="date" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-        </div>
-      </div>
-
-      <!-- Guest details -->
-      <div class="space-y-1.5">
-        <label class="text-xs font-semibold text-slate-700 block">Guest / Resident Name <span class="text-red-400">*</span></label>
-        <input id="guestName" type="text" placeholder="e.g. Juan Dela Cruz" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" required>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-slate-700 block">Email</label>
-          <input id="guestEmail" type="email" placeholder="guest@email.com" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-        </div>
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-slate-700 block">Phone</label>
-          <input id="guestPhone" type="tel" placeholder="+63 9xx xxx xxxx" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-        </div>
-      </div>
-
-      <!-- End date + Status -->
-      <div class="grid grid-cols-2 gap-3">
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-slate-700 block">End / Check-out Date <span class="text-red-400">*</span></label>
-          <input id="endDate" type="date" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" required>
-        </div>
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-slate-700 block">Status <span class="text-red-400">*</span></label>
-          <select id="status" class="zep-select w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-            <option value="Occupied">Occupied</option>
-            <option value="Reserved">Reserved</option>
-          </select>
-          <p class="text-[11px] text-slate-400">Maintenance is set per-unit on the Units page, not per-booking.</p>
-        </div>
-      </div>
-
-      <!-- Reservation / payment details — required by the reservation record -->
-      <div class="border-t border-slate-100 pt-4 space-y-4">
-        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Reservation &amp; Payment</p>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="space-y-1.5">
-            <label class="text-xs font-semibold text-slate-700 block">Inquiry Type</label>
-            <select id="inquiryType" class="zep-select w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-              <option value="Unit Reservation">Unit Reservation</option>
-              <option value="Lease Inquiry">Lease Inquiry</option>
-              <option value="Resale Inquiry">Resale Inquiry</option>
-            </select>
-          </div>
-          <div class="space-y-1.5">
-            <label class="text-xs font-semibold text-slate-700 block">Price Basis (₱)</label>
-            <input id="priceBasis" type="number" min="0" step="0.01" placeholder="e.g. 45000" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="space-y-1.5">
-            <label class="text-xs font-semibold text-slate-700 block">Payment %</label>
-            <input id="paymentPercentage" type="number" min="0" max="100" step="1" value="50" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-          </div>
-          <div class="space-y-1.5">
-            <label class="text-xs font-semibold text-slate-700 block">Payment Method</label>
-            <input id="paymentMethod" type="text" value="GCash QR" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="space-y-1.5">
-            <label class="text-xs font-semibold text-slate-700 block">Payment Reference <span class="text-red-400">*</span></label>
-            <input id="paymentReference" type="text" placeholder="e.g. GCash ref #" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-          </div>
-          <div class="space-y-1.5">
-            <label class="text-xs font-semibold text-slate-700 block">Payment Status</label>
-            <select id="paymentStatus" class="zep-select w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-              <option value="verified">Verified</option>
-              <option value="pending review">Pending Review</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </form>
-
-    <div class="px-7 pb-6 flex items-center gap-3 justify-end border-t border-slate-100 pt-4">
-      <button class="btn-press px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition-all active:scale-95" onclick="closeBookingModal()">Cancel</button>
-      <button class="btn-press px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium shadow transition-all active:scale-95" onclick="saveBooking()">Save Booking</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════ EDIT MODAL ═══════════ -->
-<div class="modal-backdrop" id="editModal">
-  <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="px-7 pt-6 pb-4 border-b border-slate-100 flex items-start justify-between">
-      <div>
-        <h2 class="text-xl font-bold text-slate-900">Edit Booking</h2>
-        <p class="text-slate-400 text-xs mt-0.5">Update the booking details below.</p>
-      </div>
-      <button onclick="closeEditModal()" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors mt-1">
-        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <form id="editForm" class="px-7 py-5 space-y-4">
-      <input type="hidden" id="edit_bookingId">
-      <div class="space-y-1.5">
-        <label class="text-xs font-semibold text-slate-700 block">Guest Name <span class="text-red-400">*</span></label>
-        <input id="edit_guestName" type="text" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" required>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-slate-700 block">Email</label>
-          <input id="edit_email" type="email" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-        </div>
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-slate-700 block">Phone</label>
-          <input id="edit_phone" type="tel" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-slate-700 block">Check-in</label>
-          <input id="edit_startDate" type="date" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-        </div>
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-slate-700 block">End Date</label>
-          <input id="edit_endDate" type="date" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
-        </div>
-      </div>
-      <div class="space-y-1.5">
-        <label class="text-xs font-semibold text-slate-700 block">Status</label>
-        <select id="edit_status" class="zep-select w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" disabled>
-          <option value="Occupied">Occupied</option>
-          <option value="Reserved">Reserved</option>
+      <!-- Manual Unit Selector (shown only if opened manually) -->
+      <div id="block_manualUnitWrap" class="hidden space-y-1.5">
+        <label class="text-xs font-semibold text-slate-700 block">Select Unit / Room <span class="text-red-400">*</span></label>
+        <select id="block_manualUnitSelect" class="zep-select w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
+          <option value="">Choose a room…</option>
         </select>
-        <p class="text-[11px] text-slate-400 mt-1">Status is computed automatically from the dates.</p>
+      </div>
+
+      <!-- Date range -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-slate-700 block">Start Date <span class="text-red-400">*</span></label>
+          <input id="block_startDate" name="start_date" type="date" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" required>
+        </div>
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-slate-700 block">End Date <span class="text-red-400">*</span></label>
+          <input id="block_endDate" name="end_date" type="date" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" required>
+        </div>
+      </div>
+
+      <!-- Block Type / Reason -->
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold text-slate-700 block">Block Reason / Category <span class="text-red-400">*</span></label>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="cursor-pointer border border-slate-200 rounded-xl p-3 flex items-center gap-2.5 hover:border-slate-900 transition-all has-[:checked]:border-slate-900 has-[:checked]:bg-slate-50">
+            <input type="radio" name="block_type" value="Not Available" checked class="w-4 h-4 text-slate-900">
+            <div>
+              <p class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                Not Available
+              </p>
+              <p class="text-[11px] text-slate-500">Temporarily unlisted</p>
+            </div>
+          </label>
+          <label class="cursor-pointer border border-slate-200 rounded-xl p-3 flex items-center gap-2.5 hover:border-slate-900 transition-all has-[:checked]:border-slate-900 has-[:checked]:bg-slate-50">
+            <input type="radio" name="block_type" value="Maintenance" class="w-4 h-4 text-slate-900">
+            <div>
+              <p class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                Maintenance
+              </p>
+              <p class="text-[11px] text-slate-500">Repairs / servicing</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Remarks -->
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold text-slate-700 block">Remarks / Notes</label>
+        <textarea id="block_remarks" name="remarks" rows="3" placeholder="Add specific notes (e.g., Scheduled air conditioning servicing, owner personal stay, painting)..." class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50 resize-none"></textarea>
+      </div>
+
+      <div id="blockErrorNotice" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium"></div>
+
+      <div class="pb-2 flex items-center gap-3 justify-end border-t border-slate-100 pt-4">
+        <button type="button" class="btn-press px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition-all active:scale-95" onclick="closeBlockDatesModal()">Cancel</button>
+        <button type="submit" id="btnSaveBlock" class="btn-press px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium shadow transition-all active:scale-95">Block Dates</button>
       </div>
     </form>
-    <div class="px-7 pb-6 flex items-center gap-3 justify-end border-t border-slate-100 pt-4">
-      <button class="btn-press px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition-all active:scale-95" onclick="closeEditModal()">Cancel</button>
-      <button class="btn-press px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium shadow transition-all active:scale-95" onclick="saveEdit()">Save Changes</button>
-    </div>
   </div>
 </div>
 
@@ -694,16 +634,30 @@ $userData = requireRole($conn, ['admin']);
     </div>
     <p class="text-xs text-slate-400 mt-0.5" id="qv_roomInfo">Unit · Room</p>
   </div>
-  <div class="qv-body">
+  <div class="qv-body" id="qv_bookingBody">
     <div class="qv-row"><span class="qv-label">Email</span><span class="qv-value" id="qv_email">—</span></div>
     <div class="qv-row"><span class="qv-label">Phone</span><span class="qv-value" id="qv_phone">—</span></div>
     <div class="qv-row"><span class="qv-label">Check-in</span><span class="qv-value" id="qv_checkin">—</span></div>
     <div class="qv-row"><span class="qv-label">Check-out</span><span class="qv-value" id="qv_checkout">—</span></div>
   </div>
+  <div class="qv-body hidden" id="qv_blockedBody">
+    <div class="qv-row"><span class="qv-label">Start Date</span><span class="qv-value" id="qv_blockStart">—</span></div>
+    <div class="qv-row"><span class="qv-label">End Date</span><span class="qv-value" id="qv_blockEnd">—</span></div>
+    <div class="qv-row"><span class="qv-label">Blocked By</span><span class="qv-value" id="qv_blockBy">—</span></div>
+    <div class="mt-2 pt-2 border-t border-slate-100">
+      <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Remarks</p>
+      <p class="text-xs text-slate-700 italic bg-slate-50 p-2 rounded-lg" id="qv_blockRemarks">—</p>
+    </div>
+  </div>
   <div class="qv-footer">
-    <button class="qv-btn qv-btn-edit" onclick="editFromQuickView()">Edit</button>
-    <button class="qv-btn qv-btn-delete" onclick="deleteFromQuickView()">Delete</button>
-    <button class="qv-btn qv-btn-done" onclick="hideQuickView()">Done</button>
+    <a href="#" id="qv_viewLeaseBtn" class="qv-btn-lease">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      View Lease Details
+    </a>
+    <button type="button" id="qv_unblockBtn" class="qv-btn-unblock hidden" onclick="handleUnblockClick()">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+      Unblock Dates
+    </button>
   </div>
 </div>
 
@@ -717,19 +671,24 @@ $userData = requireRole($conn, ['admin']);
 // database (see ActionsAP/getBookingCalendarData.php). These start
 // empty and get populated by loadCalendarData() on page load.
 // ════════════════════════════════════════════
-let UNIT_TYPES = [];   // [{ key: "Studio Type A", rooms: [{room,unitId,maintenance}, ...] }, ...]
-let bookings   = [];   // [{ id, guestName, email, phone, unitType, roomNumber, unitId, startDate, endDate, status }, ...]
+let UNIT_TYPES   = [];   // [{ key: "Studio Type A", rooms: [{room,unitId,maintenance}, ...] }, ...]
+let bookings     = [];   // [{ id, guestName, email, phone, unitType, roomNumber, unitId, startDate, endDate, status }, ...]
+let blockedDates = [];   // [{ blockId, unitId, unitType, roomNumber, startDate, endDate, blockType, remarks, createdByRole }, ...]
 
 // Status → bar CSS class
 const STATUS_BAR = {
-  "Occupied":    "bar-occupied",
-  "Reserved":    "bar-reserved"
+  "Occupied":      "bar-occupied",
+  "Reserved":      "bar-reserved",
+  "Maintenance":   "bar-maintenance",
+  "Not Available": "bar-unavailable"
 };
 
 // Status → badge CSS class
 const STATUS_BADGE = {
-  "Occupied":    "badge-occupied",
-  "Reserved":    "badge-reserved"
+  "Occupied":      "badge-occupied",
+  "Reserved":      "badge-reserved",
+  "Maintenance":   "badge-maintenance",
+  "Not Available": "badge-unavailable"
 };
 
 // ════════════════════════════════════════════
@@ -743,8 +702,9 @@ async function loadCalendarData() {
       showToast("⚠️ Could not load calendar data.");
       return;
     }
-    UNIT_TYPES = data.unitTypes;
-    bookings   = data.bookings;
+    UNIT_TYPES   = data.unitTypes || [];
+    bookings     = data.bookings || [];
+    blockedDates = data.blockedDates || [];
   } catch (err) {
     console.error(err);
     showToast("⚠️ Could not reach the server.");
@@ -868,27 +828,27 @@ function updateSelectAll() {
   document.getElementById("selectAllTypes").checked = allChecked;
 }
 
-// Populate manual mode unit-type select
-function populateManualSelects() {
-  const sel = document.getElementById("manual_unitType");
+// Populate manual unit select in blockDatesModal
+function populateBlockManualUnits() {
+  const sel = document.getElementById("block_manualUnitSelect");
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Choose a room…</option>';
   UNIT_TYPES.forEach(ut => {
-    const opt = document.createElement("option");
-    opt.value = ut.key;
-    opt.textContent = ut.key;
-    sel.appendChild(opt);
+    ut.rooms.forEach(r => {
+      const opt = document.createElement("option");
+      opt.value = r.unitId;
+      opt.textContent = `${ut.key} — Room ${r.room}` + (r.maintenance ? " (Under maintenance)" : "");
+      opt.dataset.unitType = ut.key;
+      opt.dataset.room = r.room;
+      sel.appendChild(opt);
+    });
   });
   sel.addEventListener("change", () => {
-    const roomSel = document.getElementById("manual_roomNumber");
-    roomSel.innerHTML = '<option value="">Select room…</option>';
-    const ut = UNIT_TYPES.find(u => u.key === sel.value);
-    if (ut) {
-      ut.rooms.forEach(r => {
-        const o = document.createElement("option");
-        o.value = r.room;
-        o.textContent = "Room " + r.room + (r.maintenance ? " (Under maintenance)" : "");
-        if (r.maintenance) o.disabled = true;
-        roomSel.appendChild(o);
-      });
+    const opt = sel.selectedOptions[0];
+    if (opt && opt.value) {
+      document.getElementById("block_unitId").value = opt.value;
+      document.getElementById("block_unitTypeDisplay").textContent = opt.dataset.unitType || "—";
+      document.getElementById("block_roomDisplay").textContent = "Room " + opt.dataset.room;
     }
   });
 }
@@ -985,6 +945,12 @@ function renderTimeline() {
         b.unitType === ut.key && b.roomNumber === room
       );
 
+      // Get blocked dates for this room
+      const roomBlocked = blockedDates.filter(b =>
+        (b.unitId && roomMeta.unitId && b.unitId === roomMeta.unitId) ||
+        (b.unitType === ut.key && b.roomNumber === room)
+      );
+
       // Day cells
       days.forEach(d => {
         const dateStr = formatDate(year, month, d);
@@ -998,11 +964,9 @@ function renderTimeline() {
         td.dataset.unit = ut.key;
         td.dataset.room = room;
 
-        // Click handler: Step 1 — set start date → open modal
-        td.addEventListener("click", () => handleCellClick(ut.key, room, dateStr));
-
-        // Booking bar?
         const booking = roomBookings.find(b => dateStr >= b.startDate && dateStr <= b.endDate);
+        const block   = roomBlocked.find(b => dateStr >= b.startDate && dateStr <= b.endDate);
+
         if (booking) {
           const isStart  = dateStr === booking.startDate;
           const isEnd    = dateStr === booking.endDate;
@@ -1014,12 +978,10 @@ function renderTimeline() {
           bar.className = `cell-bar ${posClass} ${STATUS_BAR[booking.status] || "bar-reserved"}`;
           bar.dataset.bookingId = booking.id;
 
-          // Show label only on start/single
           if (isStart || isSingle) {
             bar.textContent = booking.guestName || "—";
           }
 
-          // Hover → Quick View
           bar.addEventListener("mouseenter", e => showQuickView(booking, e));
           bar.addEventListener("mouseleave", startHideTimer);
           bar.addEventListener("click", e => {
@@ -1028,6 +990,33 @@ function renderTimeline() {
           });
 
           td.appendChild(bar);
+        } else if (block) {
+          const isStart  = dateStr === block.startDate;
+          const isEnd    = dateStr === block.endDate;
+          const isSingle = isStart && isEnd;
+
+          let posClass = isSingle ? "bar-single" : isStart ? "bar-start" : isEnd ? "bar-end" : "bar-middle";
+
+          const bar = document.createElement("div");
+          const barClass = block.blockType === "Maintenance" ? "bar-maintenance" : "bar-unavailable";
+          bar.className = `cell-bar ${posClass} ${barClass}`;
+          bar.dataset.blockId = block.blockId;
+
+          if (isStart || isSingle) {
+            bar.textContent = block.remarks ? (block.blockType + " — " + block.remarks) : block.blockType;
+          }
+
+          bar.addEventListener("mouseenter", e => showBlockedQuickView(block, e));
+          bar.addEventListener("mouseleave", startHideTimer);
+          bar.addEventListener("click", e => {
+            e.stopPropagation();
+            showBlockedQuickView(block, e, true);
+          });
+
+          td.appendChild(bar);
+        } else {
+          // Empty cell: click to block dates
+          td.addEventListener("click", () => handleCellClick(ut.key, room, roomMeta.unitId, dateStr));
         }
 
         tr.appendChild(td);
@@ -1043,11 +1032,7 @@ function formatDate(year, month, day) {
   return toLocalISODate(d);
 }
 
-// Timezone-safe date helpers. `.toISOString()` converts through UTC, which
-// silently shifts the date by ±1 day whenever the browser's timezone isn't
-// UTC (e.g. UTC+8 pushes local midnight back into the previous UTC day).
-// These helpers stay in local time throughout, so calendar columns line up
-// with the actual local calendar date.
+// Timezone-safe date helpers.
 function toLocalISODate(d) {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
@@ -1068,154 +1053,106 @@ function goToday() {
 }
 
 // ════════════════════════════════════════════
-// TWO-STEP BOOKING FLOW
+// BLOCK DATES FLOW
 // ════════════════════════════════════════════
-function handleCellClick(unitType, room, dateStr) {
-  // Step 1: clicked a cell → pre-fill and open modal
-  openBookingModal(unitType, room, dateStr);
+function handleCellClick(unitType, room, unitId, dateStr) {
+  openBlockDatesModal(unitType, room, unitId, dateStr);
 }
 
-function openBookingModal(unitType, room, startDate) {
-  const modal = document.getElementById("bookingModal");
-  const isManual = !unitType;
+function openBlockDatesModal(unitType, room, unitId, startDate) {
+  const modal = document.getElementById("blockDatesModal");
+  const errNotice = document.getElementById("blockErrorNotice");
+  if (errNotice) errNotice.classList.add("hidden");
 
-  document.getElementById("manualFields").classList.toggle("hidden", !isManual);
-  document.querySelector("#bookingModal .modal-step-pill").style.display = isManual ? "none" : "";
+  document.getElementById("block_unitId").value = unitId || "";
+  document.getElementById("block_unitTypeDisplay").textContent = unitType || "—";
+  document.getElementById("block_roomDisplay").textContent = room ? "Room " + room : "—";
+  document.getElementById("block_startDate").value = startDate || "";
+  document.getElementById("block_endDate").value   = startDate || "";
+  document.getElementById("block_remarks").value   = "";
 
-  document.getElementById("modal_unitType").value  = unitType || "";
-  document.getElementById("modal_roomNumber").value = room || "";
-  document.getElementById("modal_startDate").value  = startDate || "";
+  const defaultRadio = document.querySelector('input[name="block_type"][value="Not Available"]');
+  if (defaultRadio) defaultRadio.checked = true;
 
-  document.getElementById("modal_unitTypeDisplay").textContent = unitType || "—";
-  document.getElementById("modal_roomDisplay").textContent = room ? "Room " + room : "—";
-  document.getElementById("modal_startDisplay").textContent = startDate ? formatDisplayDate(startDate) : "—";
-
-  if (startDate) {
-    const next = parseLocalDate(startDate);
-    next.setDate(next.getDate() + 1);
-    document.getElementById("endDate").value = toLocalISODate(next);
+  const manualWrap = document.getElementById("block_manualUnitWrap");
+  if (!unitId) {
+    manualWrap?.classList.remove("hidden");
+    const manualSelect = document.getElementById("block_manualUnitSelect");
+    if (manualSelect) manualSelect.value = "";
   } else {
-    document.getElementById("endDate").value = "";
-  }
-
-  document.getElementById("bookingForm").reset();
-  // Re-apply hidden fields (reset clears them)
-  document.getElementById("modal_unitType").value   = unitType || "";
-  document.getElementById("modal_roomNumber").value = room || "";
-  document.getElementById("modal_startDate").value  = startDate || "";
-  document.getElementById("modal_unitTypeDisplay").textContent = unitType || "—";
-  document.getElementById("modal_roomDisplay").textContent = room ? "Room " + room : "—";
-  document.getElementById("modal_startDisplay").textContent = startDate ? formatDisplayDate(startDate) : "—";
-  if (startDate) {
-    const next = parseLocalDate(startDate);
-    next.setDate(next.getDate() + 1);
-    document.getElementById("endDate").value = toLocalISODate(next);
+    manualWrap?.classList.add("hidden");
   }
 
   modal.classList.add("open");
 }
 
-function openBookingModalManual() {
-  openBookingModal(null, null, null);
+function openBlockDatesModalManual() {
+  const today = toLocalISODate(new Date());
+  openBlockDatesModal(null, null, null, today);
 }
 
-function closeBookingModal() {
-  document.getElementById("bookingModal").classList.remove("open");
+function closeBlockDatesModal() {
+  document.getElementById("blockDatesModal").classList.remove("open");
 }
-document.getElementById("bookingModal").addEventListener("click", e => {
-  if (e.target === e.currentTarget) closeBookingModal();
+document.getElementById("blockDatesModal")?.addEventListener("click", e => {
+  if (e.target === e.currentTarget) closeBlockDatesModal();
 });
 
-async function saveBooking() {
-  const isManual = !document.getElementById("manualFields").classList.contains("hidden");
+async function handleSaveBlockDates(e) {
+  e.preventDefault();
+  const form = document.getElementById("blockDatesForm");
+  const btn = document.getElementById("btnSaveBlock");
+  const errNotice = document.getElementById("blockErrorNotice");
+  errNotice.classList.add("hidden");
 
-  const unitType  = isManual ? document.getElementById("manual_unitType").value  : document.getElementById("modal_unitType").value;
-  const room      = isManual ? document.getElementById("manual_roomNumber").value : document.getElementById("modal_roomNumber").value;
-  const startDate = isManual ? document.getElementById("manual_startDate").value  : document.getElementById("modal_startDate").value;
-  const endDate   = document.getElementById("endDate").value;
-  const guestName = document.getElementById("guestName").value.trim();
-  const email     = document.getElementById("guestEmail").value.trim();
-  const phone     = document.getElementById("guestPhone").value.trim();
-  const status    = document.getElementById("status").value;
-
-  const inquiryType        = document.getElementById("inquiryType").value;
-  const priceBasis         = document.getElementById("priceBasis").value;
-  const paymentPercentage  = document.getElementById("paymentPercentage").value;
-  const paymentMethod      = document.getElementById("paymentMethod").value.trim();
-  const paymentReference   = document.getElementById("paymentReference").value.trim();
-  const paymentStatus      = document.getElementById("paymentStatus").value;
-
-  if (!guestName || !startDate || !endDate || !unitType || !room) {
-    alert("Please fill in all required fields.");
-    return;
-  }
-  if (endDate < startDate) {
-    alert("End date must be on or after the check-in date.");
-    return;
-  }
-  if (!paymentReference) {
-    alert("Payment reference is required.");
-    return;
-  }
-
-  const unitId = findUnitId(unitType, room);
+  let unitId = document.getElementById("block_unitId").value;
   if (!unitId) {
-    alert("Couldn't match that room to a unit — please re-select it.");
+    unitId = document.getElementById("block_manualUnitSelect").value;
+    document.getElementById("block_unitId").value = unitId;
+  }
+
+  if (!unitId) {
+    errNotice.textContent = "Please select a room to block.";
+    errNotice.classList.remove("hidden");
     return;
   }
 
-  const conflict = bookings.some(b =>
-    b.unitType === unitType &&
-    b.roomNumber === room &&
-    startDate <= b.endDate &&
-    endDate >= b.startDate
-  );
-  if (conflict) {
-    alert("This room already has a booking for those dates. Please choose different dates.");
-    return;
-  }
-
-  const fd = new FormData();
-  fd.append("unit_id", unitId);
-  fd.append("guestName", guestName);
-  fd.append("guestEmail", email);
-  fd.append("guestPhone", phone);
-  fd.append("startDate", startDate);
-  fd.append("endDate", endDate);
-  fd.append("status", status);
-  fd.append("inquiryType", inquiryType);
-  fd.append("priceBasis", priceBasis || 0);
-  fd.append("paymentPercentage", (parseFloat(paymentPercentage || 0) / 100));
-  fd.append("paymentMethod", paymentMethod);
-  fd.append("paymentReference", paymentReference);
-  fd.append("paymentStatus", paymentStatus);
+  btn.disabled = true;
+  btn.textContent = "Blocking...";
 
   try {
-    const res  = await fetch("ActionsAP/saveBookingCalendar.php", { method: "POST", body: fd });
+    const fd = new FormData(form);
+    const res = await fetch("ActionsAP/saveBlockedDate.php", { method: "POST", body: fd });
     const data = await res.json();
-    if (!data.success) {
-      alert(data.message || "Could not save booking.");
-      return;
+
+    if (data.success) {
+      closeBlockDatesModal();
+      showToast(data.message || "Dates blocked successfully.");
+      await loadCalendarData();
+      renderTimeline();
+    } else {
+      errNotice.textContent = data.message || "Failed to block dates.";
+      errNotice.classList.remove("hidden");
     }
-    bookings.push(data.booking);
-    closeBookingModal();
-    renderTimeline();
-    showToast("✅ Booking saved for Room " + room + "!");
   } catch (err) {
     console.error(err);
-    alert("Could not reach the server.");
+    errNotice.textContent = "A network error occurred. Please try again.";
+    errNotice.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Block Dates";
   }
 }
 
 // ════════════════════════════════════════════
-// QUICK VIEW POPOVER
+// QUICK VIEW POPOVER (Hover / Click)
 // ════════════════════════════════════════════
-let qvBookingId  = null;
-let _hideTimer   = null;
+let currentQuickView = null; // { type: 'booking' | 'blocked', data: ... }
+let _hideTimer       = null;
 
 function showQuickView(booking, e, pin = false) {
   clearTimeout(_hideTimer);
-  qvBookingId = booking.id;
+  currentQuickView = { type: 'booking', data: booking };
 
   const qv = document.getElementById("quickView");
   document.getElementById("qv_guestName").textContent = booking.guestName || "—";
@@ -1229,9 +1166,53 @@ function showQuickView(booking, e, pin = false) {
   badge.textContent  = booking.status;
   badge.className    = "status-badge " + (STATUS_BADGE[booking.status] || "badge-reserved");
 
-  // Position: near cursor but keep in viewport
-  const x = Math.min(e.clientX + 14, window.innerWidth  - 320);
-  const y = Math.min(e.clientY + 10, window.innerHeight - 240);
+  document.getElementById("qv_bookingBody").classList.remove("hidden");
+  document.getElementById("qv_blockedBody").classList.add("hidden");
+
+  // View Lease Details button points to viewReservation.php
+  const leaseBtn = document.getElementById("qv_viewLeaseBtn");
+  leaseBtn.href = `viewReservation.php?reservation_id=${booking.id}`;
+  leaseBtn.classList.remove("hidden");
+  document.getElementById("qv_unblockBtn").classList.add("hidden");
+
+  // Position
+  const x = Math.min(e.clientX + 14, window.innerWidth  - 330);
+  const y = Math.min(e.clientY + 10, window.innerHeight - 260);
+  qv.style.left = x + "px";
+  qv.style.top  = y + "px";
+  qv.classList.add("visible");
+
+  if (pin) {
+    qv.addEventListener("mouseleave", startHideTimer, { once: true });
+  }
+}
+
+function showBlockedQuickView(block, e, pin = false) {
+  clearTimeout(_hideTimer);
+  currentQuickView = { type: 'blocked', data: block };
+
+  const qv = document.getElementById("quickView");
+  document.getElementById("qv_guestName").textContent = block.blockType;
+  document.getElementById("qv_roomInfo").textContent  = block.unitType + " · Room " + block.roomNumber;
+
+  const badge = document.getElementById("qv_statusBadge");
+  badge.textContent  = block.blockType;
+  badge.className    = "status-badge " + (block.blockType === "Maintenance" ? "badge-maintenance" : "badge-unavailable");
+
+  document.getElementById("qv_blockStart").textContent   = formatDisplayDate(block.startDate);
+  document.getElementById("qv_blockEnd").textContent     = formatDisplayDate(block.endDate);
+  document.getElementById("qv_blockBy").textContent      = block.createdByRole === "unit owner" ? "Unit Owner" : "Admin";
+  document.getElementById("qv_blockRemarks").textContent = block.remarks || "No remarks provided.";
+
+  document.getElementById("qv_bookingBody").classList.add("hidden");
+  document.getElementById("qv_blockedBody").classList.remove("hidden");
+
+  document.getElementById("qv_viewLeaseBtn").classList.add("hidden");
+  document.getElementById("qv_unblockBtn").classList.remove("hidden");
+
+  // Position
+  const x = Math.min(e.clientX + 14, window.innerWidth  - 330);
+  const y = Math.min(e.clientY + 10, window.innerHeight - 280);
   qv.style.left = x + "px";
   qv.style.top  = y + "px";
   qv.classList.add("visible");
@@ -1247,141 +1228,35 @@ function startHideTimer() {
 
 function hideQuickView() {
   document.getElementById("quickView").classList.remove("visible");
-  qvBookingId = null;
+  currentQuickView = null;
 }
 
 document.getElementById("quickView").addEventListener("mouseenter", () => clearTimeout(_hideTimer));
 document.getElementById("quickView").addEventListener("mouseleave", startHideTimer);
 
-function editFromQuickView() {
-  if (!qvBookingId) return;
-  const b = bookings.find(bk => bk.id === qvBookingId);
-  if (!b) return;
-  hideQuickView();
-  openEditModal(b);
-}
+async function handleUnblockClick() {
+  if (!currentQuickView || currentQuickView.type !== 'blocked' || !currentQuickView.data) return;
+  const block = currentQuickView.data;
+  if (!confirm(`Unblock Room ${block.roomNumber} (${formatDisplayDate(block.startDate)} to ${formatDisplayDate(block.endDate)})?`)) return;
 
-async function deleteFromQuickView() {
-  if (!qvBookingId) return;
-  if (!confirm("Delete this booking? This permanently removes the reservation record and cannot be undone.")) return;
-
-  const idToDelete = qvBookingId;
   const fd = new FormData();
-  fd.append("reservation_id", idToDelete);
+  fd.append("block_id", block.blockId);
 
   try {
-    const res  = await fetch("ActionsAP/deleteBookingCalendar.php", { method: "POST", body: fd });
+    const res = await fetch("ActionsAP/deleteBlockedDate.php", { method: "POST", body: fd });
     const data = await res.json();
     if (!data.success) {
-      alert(data.message || "Could not delete booking.");
+      alert(data.message || "Could not unblock dates.");
       return;
     }
-    bookings = bookings.filter(b => b.id !== idToDelete);
     hideQuickView();
+    showToast("Dates successfully unblocked.");
+    await loadCalendarData();
     renderTimeline();
-    showToast("🗑 Booking deleted.");
   } catch (err) {
     console.error(err);
     alert("Could not reach the server.");
   }
-}
-
-// ════════════════════════════════════════════
-// EDIT MODAL
-// ════════════════════════════════════════════
-function openEditModal(booking) {
-  document.getElementById("edit_bookingId").value  = booking.id;
-  document.getElementById("edit_guestName").value  = booking.guestName;
-  document.getElementById("edit_email").value      = booking.email || "";
-  document.getElementById("edit_phone").value      = booking.phone || "";
-  document.getElementById("edit_startDate").value  = booking.startDate;
-  document.getElementById("edit_endDate").value    = booking.endDate;
-  document.getElementById("edit_status").value     = booking.status;
-  document.getElementById("editModal").classList.add("open");
-}
-
-function closeEditModal() {
-  document.getElementById("editModal").classList.remove("open");
-}
-document.getElementById("editModal").addEventListener("click", e => {
-  if (e.target === e.currentTarget) closeEditModal();
-});
-
-async function saveEdit() {
-  const id        = parseInt(document.getElementById("edit_bookingId").value);
-  const guestName = document.getElementById("edit_guestName").value.trim();
-  const email     = document.getElementById("edit_email").value.trim();
-  const phone     = document.getElementById("edit_phone").value.trim();
-  const startDate = document.getElementById("edit_startDate").value;
-  const endDate   = document.getElementById("edit_endDate").value;
-
-  if (!guestName || !startDate || !endDate) {
-    alert("Please fill in all required fields.");
-    return;
-  }
-  if (endDate < startDate) {
-    alert("End date must be on or after check-in.");
-    return;
-  }
-
-  const idx = bookings.findIndex(b => b.id === id);
-  if (idx === -1) return;
-
-  const fd = new FormData();
-  fd.append("reservation_id", id);
-  fd.append("guestName", guestName);
-  fd.append("guestEmail", email);
-  fd.append("guestPhone", phone);
-  fd.append("startDate", startDate);
-  fd.append("endDate", endDate);
-
-  try {
-    const res  = await fetch("ActionsAP/updateBookingCalendar.php", { method: "POST", body: fd });
-    const data = await res.json();
-    if (!data.success) {
-      alert(data.message || "Could not update booking.");
-      return;
-    }
-    const today = toLocalISODate(new Date());
-    const status = (startDate <= today && today <= endDate) ? "Occupied" : "Reserved";
-    bookings[idx] = { ...bookings[idx], guestName, email, phone, startDate, endDate, status };
-    closeEditModal();
-    renderTimeline();
-    showToast("✏️ Booking updated.");
-  } catch (err) {
-    console.error(err);
-    alert("Could not reach the server.");
-  }
-}
-
-// ════════════════════════════════════════════
-// CLEAR ALL
-// ════════════════════════════════════════════
-async function clearBookings() {
-  if (bookings.length === 0) {
-    showToast("Nothing to clear.");
-    return;
-  }
-  if (!confirm(`Delete ALL ${bookings.length} bookings currently loaded? This permanently removes them and cannot be undone.`)) return;
-  const typed = prompt('Type DELETE to confirm clearing every booking on this calendar:');
-  if (typed !== "DELETE") return;
-
-  const ids = bookings.map(b => b.id);
-  let failed = 0;
-  for (const id of ids) {
-    try {
-      const fd = new FormData();
-      fd.append("reservation_id", id);
-      const res  = await fetch("ActionsAP/deleteBookingCalendar.php", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!data.success) failed++;
-    } catch (err) {
-      failed++;
-    }
-  }
-  await loadCalendarData();
-  renderTimeline();
-  showToast(failed ? `Cleared with ${failed} error(s).` : "🗑 All bookings cleared.");
 }
 
 // ════════════════════════════════════════════
@@ -1481,7 +1356,7 @@ function doLogout() {
 (async function init() {
   await loadCalendarData();
   buildFilterSidebar();
-  populateManualSelects();
+  populateBlockManualUnits();
   renderTimeline();
 
   // Scroll to today column on load

@@ -23,12 +23,17 @@ $sql = "
         u.unit_id,
         u.unit_type,
         u.unit_number,
+        u.sqm,
+        u.floor_number,
+        u.listing_type,
+        u.stay_category,
         u.lease_rate,
         u.unit_current_status,
 
         owner.full_name AS owner_name,
         owner.email AS owner_email,
-        owner.contact AS owner_contact
+        owner.contact AS owner_contact,
+        owner.gcash_QR AS owner_gcash_qr
     FROM inquiry_table i
     INNER JOIN units_table u ON i.approved_unit_id = u.unit_id
     LEFT JOIN users_table owner ON u.unit_owner_id = owner.user_id
@@ -52,6 +57,18 @@ if ($result->num_rows === 0) {
 
 $data = $result->fetch_assoc();
 $stmt->close();
+
+// Check if unit owner has a valid uploaded GCash QR code
+$owner_has_qr = false;
+$owner_qr_path = '';
+if (!empty($data['owner_gcash_qr'])) {
+    $qrClean = ltrim($data['owner_gcash_qr'], '/');
+    $qrFullPath = __DIR__ . '/../../' . $qrClean;
+    if (file_exists($qrFullPath)) {
+        $owner_has_qr = true;
+        $owner_qr_path = '../' . $qrClean;
+    }
+}
 
 // If this inquiry already has a reservation on file, the token has already
 // been used to submit — always send the visitor to the confirmation page
@@ -142,8 +159,14 @@ if ($lease_months <= 0) {
     $lease_months = 12;
 }
 
+// Furnishing default
+$data['furnishing'] = !empty($data['furnishing']) ? $data['furnishing'] : 'Fully Furnished.';
+
+// Expiration time frame
+$token_expires_at = !empty($data['reservation_token_expires_at']) ? $data['reservation_token_expires_at'] : date('Y-m-d H:i:s', strtotime('+30 days'));
+$token_expires_date = date('Y-m-d', strtotime($token_expires_at));
+
 // Move-in window: allow booking from today up to 30 days out
-// (adjust the window length to match actual business rules)
 $move_in_min = date('Y-m-d');
 $move_in_max = date('Y-m-d', strtotime('+30 days'));
 

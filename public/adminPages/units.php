@@ -1,8 +1,11 @@
 <?php
 require_once __DIR__ . '/../php_files/auth.php';
 require_once __DIR__ . '/../php_files/db.php';
+require_once __DIR__ . '/../php_files/sync_unit_status.php';
 
 $userData = requireRole($conn, ['admin']);
+
+syncExpiredUnitStatuses($conn);
 
 $ownerOptions = [];
 
@@ -106,9 +109,9 @@ tailwind.config = {
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
       <span class="nav-label">Inquiry</span>
     </a>
-    <a href="../adminPages/reservation.php" data-tooltip="Reservation" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="../adminPages/reservation.php" data-tooltip="Lease Management" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-      <span class="nav-label">Reservation</span>
+      <span class="nav-label">Lease Management</span>
     </a>
     <a href="../adminPages/bookingcalendar.php" data-tooltip="Booking Calendar" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M17 14h-6"/><path d="M13 18H7"/><path d="M7 14h.01"/><path d="M17 18h.01"/></svg>
@@ -129,6 +132,10 @@ tailwind.config = {
     <a href="../adminPages/analytics.php" data-tooltip="Analytics" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
       <span class="nav-label">Analytics</span>
+    </a>
+    <a href="../adminPages/account.php" data-tooltip="Account" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      <span class="nav-label">Account</span>
     </a>
   </nav>
 </aside>
@@ -161,6 +168,7 @@ tailwind.config = {
         </button>
         
         <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50 hidden" id="profileDropdown">
+          <a href="account.php" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-lg mx-1">Account Settings</a>
           <div class="border-t border-slate-100 my-1"></div>
           <button onclick="confirmLogout()" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg mx-1">Sign out</button>
         </div>
@@ -347,16 +355,27 @@ tailwind.config = {
             </p>
         </div>
 
-        <!-- Generated Unit Number -->
-        <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1">Generated Unit Number</label>
-          <input 
-              type="text" 
-              id="generatedUnitNumber"
-              name="generated_unit_number"
-              readonly
-              placeholder="Select unit type first"
-              class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm bg-slate-50 text-slate-600 font-mono font-bold cursor-not-allowed focus:outline-none">
+        <!-- Generated Unit Number & Floor Area -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1">Generated Unit Number</label>
+            <input 
+                type="text" 
+                id="generatedUnitNumber"
+                name="generated_unit_number"
+                readonly
+                placeholder="Select type first"
+                class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm bg-slate-50 text-slate-600 font-mono font-bold cursor-not-allowed focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1">Floor Area (SQM)</label>
+            <input 
+                type="text" 
+                id="assignedSqm"
+                readonly
+                placeholder="—"
+                class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm bg-slate-50 text-slate-700 font-mono font-bold cursor-not-allowed focus:outline-none">
+          </div>
         </div>
 
         <!-- Owner Assignment -->
@@ -451,132 +470,6 @@ tailwind.config = {
                 Save Unit
             </button>
         </div>
-    </form>
-  </div>
-</div>
-
-<!-- ========================================== -->
-<!-- EDIT UNIT MODAL -->
-<!-- ========================================== -->
-<div id="editUnitModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40 px-4 py-6 overflow-y-auto">
-  <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-100 overflow-hidden max-h-[90vh] flex flex-col">
-    
-    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-900 text-white">
-      <div>
-        <h2 class="text-lg font-bold">Edit Unit</h2>
-        <p class="text-xs text-slate-300">Modify unit details, floor, and rates</p>
-      </div>
-      <button type="button" id="closeEditUnitModal" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all">✕</button>
-    </div>
-
-    <form id="editUnitForm" action="ActionsAP/editUnit.php" method="POST" class="p-6 space-y-4 overflow-y-auto">
-
-      <input type="hidden" name="unit_id" id="editUnitId">
-
-      <!-- Floor Selection -->
-      <div>
-        <label class="block text-sm font-semibold text-slate-700 mb-1">Building Floor</label>
-        <select 
-          name="floor_number" 
-          id="editFloorNumber"
-          required
-          class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white">
-          <option value="1">1st Floor (First Floor)</option>
-          <option value="2">2nd Floor</option>
-          <option value="3">3rd Floor</option>
-          <option value="4">4th Floor</option>
-          <option value="5">5th Floor</option>
-          <option value="6">6th Floor</option>
-          <option value="7">7th Floor</option>
-          <option value="8">8th Floor</option>
-          <option value="9">9th Floor</option>
-          <option value="10">10th Floor (Penthouse)</option>
-        </select>
-      </div>
-
-      <div>
-        <label class="block text-sm font-semibold text-slate-700 mb-1">Unit Type</label>
-        <input type="text" id="editUnitType" name="unit_type" readonly
-          class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm bg-slate-100 text-slate-500 cursor-not-allowed focus:outline-none">
-      </div>
-
-      <div>
-        <label class="block text-sm font-semibold text-slate-700 mb-1">Unit Number</label>
-        <input type="text" id="editUnitNumber" name="unit_number" readonly
-          class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm bg-slate-100 text-slate-500 font-mono font-bold cursor-not-allowed focus:outline-none">
-      </div>
-
-      <div>
-        <label class="block text-sm font-semibold text-slate-700 mb-1">Lease Rate (₱)</label>
-        <input type="number" step="0.01" id="editLeaseRate" name="lease_rate" placeholder="Optional"
-          class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 font-mono">
-      </div>
-
-      <div>
-        <label class="block text-sm font-semibold text-slate-700 mb-1">Status</label>
-        <select id="editStatus" name="unit_current_status" required
-          class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white">
-            <option value="Ready for Occupancy">Ready for Occupancy</option>
-            <option value="Resale">Resale</option>
-            <option value="On Hold">On Hold</option>
-            <option value="Reserved">Reserved</option>
-            <option value="Occupied">Occupied</option>
-            <option value="Under maintenance">Under maintenance</option>
-        </select>
-      </div>
-
-      <!-- Unit Owner Assignment -->
-      <div>
-        <label class="block text-sm font-semibold text-slate-700 mb-1">Unit Owner</label>
-        <select name="unit_owner_id" id="editUnitOwnerId"
-          class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white">
-          <option value="">No owner</option>
-          <option value="new">+ Create new unit owner</option>
-          <?php foreach ($ownerOptions as $owner): ?>
-            <option value="<?php echo htmlspecialchars($owner['user_id']); ?>">
-              <?php echo htmlspecialchars($owner['full_name']) . ' (' . htmlspecialchars($owner['email']) . ')'; ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-
-      <div id="editNewOwnerBox" class="hidden space-y-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
-        <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">New Unit Owner Details</p>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Full Name</label>
-            <input type="text" id="editNewOwnerName" name="new_owner_name"
-                class="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-900">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Email</label>
-            <input type="email" id="editNewOwnerEmail" name="new_owner_email"
-                class="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-900">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Contact</label>
-            <input type="text" id="editNewOwnerContact" name="new_owner_contact"
-                class="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-900">
-        </div>
-      </div>
-
-      <div class="flex items-center justify-between gap-2 pt-4 border-t border-slate-100">
-        <button type="button" name="delete_unit" id="deleteUnitBtn"
-          class="px-4 py-2 rounded-full bg-red-50 text-red-600 border border-red-200 text-sm font-semibold hover:bg-red-100 transition-colors">
-          Delete Unit
-        </button>
-
-        <div class="flex items-center gap-2">
-          <button type="button" id="cancelEditUnit"
-            class="px-4 py-2 rounded-full border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50">
-            Cancel
-          </button>
-          <button type="submit" name="update_unit"
-            class="px-5 py-2 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-700 active:scale-95 transition-all shadow-sm">
-            Save Changes
-          </button>
-        </div>
-      </div>
-
     </form>
   </div>
 </div>
@@ -761,14 +654,22 @@ unitType?.addEventListener('change', async () => {
 
         if (data.success && generatedUnitNumber) {
             generatedUnitNumber.value = data.unit_number;
+            const assignedSqm = document.getElementById('assignedSqm');
+            if (assignedSqm && data.sqm) {
+                assignedSqm.value = `${parseFloat(data.sqm).toFixed(2)} SQM`;
+            }
         } else if (generatedUnitNumber) {
             generatedUnitNumber.value = '';
             generatedUnitNumber.placeholder = 'Unable to generate unit number';
+            const assignedSqm = document.getElementById('assignedSqm');
+            if (assignedSqm) assignedSqm.value = '';
         }
     } catch (error) {
         if (generatedUnitNumber) {
           generatedUnitNumber.value = '';
           generatedUnitNumber.placeholder = 'Error generating unit number';
+          const assignedSqm = document.getElementById('assignedSqm');
+          if (assignedSqm) assignedSqm.value = '';
         }
     }
 });
@@ -801,95 +702,6 @@ ownerAssignment?.addEventListener('change', () => {
         if (newOwnerName) newOwnerName.required = true;
         if (newOwnerEmail) newOwnerEmail.required = true;
         if (newOwnerContact) newOwnerContact.required = true;
-    }
-});
-
-// Open Edit modal from row
-function openEditModalFromRow(row) {
-    if (!row) return;
-
-    const editUnitId = document.getElementById('editUnitId');
-    const editUnitType = document.getElementById('editUnitType');
-    const editUnitNumber = document.getElementById('editUnitNumber');
-    const editFloorNumber = document.getElementById('editFloorNumber');
-    const editLeaseRate = document.getElementById('editLeaseRate');
-    const editStatus = document.getElementById('editStatus');
-    const editUnitOwnerId = document.getElementById('editUnitOwnerId');
-
-    if (editUnitId) editUnitId.value = row.dataset.unitId || '';
-    if (editUnitType) editUnitType.value = row.dataset.unitType || '';
-    if (editUnitNumber) editUnitNumber.value = row.dataset.unitNumber || '';
-    if (editFloorNumber) editFloorNumber.value = row.dataset.floorNumber || '1';
-    if (editLeaseRate) editLeaseRate.value = (row.dataset.leaseRate || '').replace(/[₱,]/g,'');
-    if (editStatus) editStatus.value = row.dataset.unitCurrentStatus || 'Ready for Occupancy';
-    if (editUnitOwnerId) editUnitOwnerId.value = row.dataset.unitOwnerId || '';
-
-    const editNewOwnerBox = document.getElementById('editNewOwnerBox');
-    const editNewOwnerName = document.getElementById('editNewOwnerName');
-    const editNewOwnerEmail = document.getElementById('editNewOwnerEmail');
-    const editNewOwnerContact = document.getElementById('editNewOwnerContact');
-
-    editNewOwnerBox?.classList.add('hidden');
-    if (editNewOwnerName) editNewOwnerName.required = false;
-    if (editNewOwnerEmail) editNewOwnerEmail.required = false;
-    if (editNewOwnerContact) editNewOwnerContact.required = false;
-
-    const editModal = document.getElementById('editUnitModal');
-    editModal?.classList.remove('hidden');
-    editModal?.classList.add('flex');
-}
-
-// Cancel / Close Edit Modal
-document.getElementById('cancelEditUnit')?.addEventListener('click', () => {
-    const m = document.getElementById('editUnitModal');
-    m?.classList.add('hidden');
-    m?.classList.remove('flex');
-});
-document.getElementById('closeEditUnitModal')?.addEventListener('click', () => {
-    const m = document.getElementById('editUnitModal');
-    m?.classList.add('hidden');
-    m?.classList.remove('flex');
-});
-
-// Delete button confirmation
-document.getElementById('deleteUnitBtn')?.addEventListener('click', () => {
-    if (confirm('Are you sure you want to delete this unit?')) {
-        const formData = new FormData(document.getElementById('editUnitForm'));
-        formData.append('action_type', 'delete');
-        
-        fetch('ActionsAP/editUnit.php', {
-            method: 'POST',
-            body: formData
-        }).then(response => {
-            if (response.redirected) {
-                window.location.href = response.url;
-            } else {
-                window.location.href = 'units.php?deleted=1';
-            }
-        }).catch(err => {
-            console.error(err);
-            window.location.href = 'units.php';
-        });
-    }
-});
-
-const editUnitOwnerSelect = document.getElementById('editUnitOwnerId');
-const editNewOwnerBox = document.getElementById('editNewOwnerBox');
-const editNewOwnerName = document.getElementById('editNewOwnerName');
-const editNewOwnerEmail = document.getElementById('editNewOwnerEmail');
-const editNewOwnerContact = document.getElementById('editNewOwnerContact');
-
-editUnitOwnerSelect?.addEventListener('change', () => {
-    if (editUnitOwnerSelect.value === 'new') {
-        editNewOwnerBox?.classList.remove('hidden');
-        if (editNewOwnerName) editNewOwnerName.required = true;
-        if (editNewOwnerEmail) editNewOwnerEmail.required = true;
-        if (editNewOwnerContact) editNewOwnerContact.required = true;
-    } else {
-        editNewOwnerBox?.classList.add('hidden');
-        if (editNewOwnerName) editNewOwnerName.required = false;
-        if (editNewOwnerEmail) editNewOwnerEmail.required = false;
-        if (editNewOwnerContact) editNewOwnerContact.required = false;
     }
 });
 </script>

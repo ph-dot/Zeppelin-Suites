@@ -12,6 +12,27 @@ $payment_reference = trim($_POST['payment_reference'] ?? '');
 $declared_amount = floatval($_POST['declared_amount'] ?? 0);
 $move_in_date = trim($_POST['move_in_date'] ?? '');
 $move_out_date = trim($_POST['move_out_date'] ?? '');
+$lease_duration = trim($_POST['lease_duration'] ?? '');
+
+$payment_method = trim($_POST['payment_method'] ?? 'GCash QR');
+if (!in_array($payment_method, ['GCash QR', 'In-House'], true)) {
+    $payment_method = 'GCash QR';
+}
+
+$client_sex = trim($_POST['client_sex'] ?? '');
+$client_age = !empty($_POST['client_age']) ? (int)$_POST['client_age'] : null;
+$client_nationality = trim($_POST['client_nationality'] ?? '');
+
+$lease_signing_date = !empty($_POST['lease_signing_date']) ? trim($_POST['lease_signing_date']) : null;
+$is_flexible_signing = isset($_POST['is_flexible_signing']) && $_POST['is_flexible_signing'] == '1' ? 1 : 0;
+if ($is_flexible_signing) {
+    $lease_signing_date = null;
+}
+
+$client_remarks = trim($_POST['remarks'] ?? '');
+if (mb_strlen($client_remarks) > 500) {
+    $client_remarks = mb_substr($client_remarks, 0, 500);
+}
 
 if ($reservation_token === '') {
     die("Missing reservation token.");
@@ -22,11 +43,7 @@ if (!in_array($payment_percentage, [0.35, 0.50, 0.75, 1.00])) {
 }
 
 if ($payment_reference === '') {
-    die("GCash reference number is required.");
-}
-
-if ($declared_amount <= 0) {
-    die("Please enter the amount you sent.");
+    $payment_reference = 'N/A';
 }
 
 if ($move_in_date === '') {
@@ -227,130 +244,98 @@ try {
 //check for a GCash reference number already used on another ACTIVE reservation.
 //Rejected/cancelled reservations don't count, so a corrected resubmission
 //with the same reference (e.g. after a typo) is still allowed.
-    $dupRefSql = "
-        SELECT reservation_id
-        FROM reservation_table
-        WHERE payment_reference = ?
-        AND reservation_status NOT IN ('cancelled', 'rejected')
-        LIMIT 1
-    ";
+    if ($payment_reference !== '' && $payment_reference !== 'N/A') {
+        $dupRefSql = "
+            SELECT reservation_id
+            FROM reservation_table
+            WHERE payment_reference = ?
+            AND reservation_status NOT IN ('cancelled', 'rejected')
+            LIMIT 1
+        ";
 
-    $dupRefStmt = $conn->prepare($dupRefSql);
-    $dupRefStmt->bind_param("s", $payment_reference);
-    $dupRefStmt->execute();
+        $dupRefStmt = $conn->prepare($dupRefSql);
+        $dupRefStmt->bind_param("s", $payment_reference);
+        $dupRefStmt->execute();
 
-    $dupRefResult = $dupRefStmt->get_result();
-    if ($dupRefResult->num_rows > 0) {
-        throw new Exception(
-            "This GCash reference number has already been used for another reservation. If this is a mistake, please contact Zeppelin Suites administration."
-        );
+        $dupRefResult = $dupRefStmt->get_result();
+        if ($dupRefResult->num_rows > 0) {
+            throw new Exception(
+                "This GCash reference number has already been used for another reservation. If this is a mistake, please contact Zeppelin Suites administration."
+            );
+        }
+        $dupRefStmt->close();
     }
-    $dupRefStmt->close();
 
 //compute how the client-declared amount compares to what's actually required
+    if ($declared_amount <= 0) {
+        $declared_amount = $required_amount;
+    }
     $amount_match_status = 'match';
     if (abs($declared_amount - $required_amount) > 0.01) {
         $amount_match_status = $declared_amount < $required_amount ? 'short' : 'over';
     }
 
-    //upload payment proof
-    if (
-        !isset($_FILES['payment_proof']) ||
-        $_FILES['payment_proof']['error'] !== UPLOAD_ERR_OK
-    ) {
-        throw new Exception(
-            "Payment proof is required."
-        );
-    }
-    $allowed_extensions =
-        ['jpg','jpeg','png','pdf'];
-    $file_name =
-        $_FILES['payment_proof']['name'];
-    $file_tmp =
-        $_FILES['payment_proof']['tmp_name'];
-    $file_size =
-        $_FILES['payment_proof']['size'];
-    $file_ext =
-        strtolower(
-            pathinfo(
-                $file_name,
-                PATHINFO_EXTENSION
-            )
-        );
+    //upload payment proof if paying with GCash QR
+    $db_file_path = null;
+    if ($payment_method === 'GCash QR') {
+        if (
+            !isset($_FILES['payment_proof']) ||
+            $_FILES['payment_proof']['error'] !== UPLOAD_ERR_OK
+        ) {
+            throw new Exception("Proof of payment upload is required for GCash QR payments.");
+        }
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+        $file_name = $_FILES['payment_proof']['name'];
+        $file_tmp  = $_FILES['payment_proof']['tmp_name'];
+        $file_size = $_FILES['payment_proof']['size'];
+        $file_ext  = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
 
-    if (!in_array($file_ext, $allowed_extensions)) {
+        if (!in_array($file_ext, $allowed_extensions)) {
+            throw new Exception("Invalid file type. Only JPG, PNG, and WEBP files are accepted.");
+        }
 
-        throw new Exception(
-            "Invalid file type."
-        );
-    }
+        if ($file_size > 10 * 1024 * 1024) {
+            throw new Exception("File too large. Maximum size is 10MB.");
+        }
 
-    if ($file_size > 10 * 1024 * 1024) {
-        throw new Exception(
-            "File too large."
-        );
+        $upload_dir = __DIR__ . '/../../uploads/payment_proofs/';
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
 
-    }
+        $new_file_name = 'payment_' . $data['inq_id'] . '_' . time() . '_' . bin2hex(random_bytes(6)) . '.' . $file_ext;
+        $upload_path   = $upload_dir . $new_file_name;
 
-    $upload_dir =__DIR__ .'/../../uploads/payment_proofs/';
+        if (!move_uploaded_file($file_tmp, $upload_path)) {
+            throw new Exception("Failed to upload payment proof.");
+        }
 
-    if (!is_dir($upload_dir)) {
-        mkdir(
-            $upload_dir,
-            0777,
-            true
-        );
-
+        $db_file_path = 'uploads/payment_proofs/' . $new_file_name;
+    } else {
+        // Pay In-House
+        $db_file_path = 'Pay In-House (During Lease Signing)';
+        $payment_reference = 'In-House';
     }
 
-    $new_file_name =
-        'payment_' .
-        $data['inq_id'] .
-        '_' .
-        time() .
-        '_' .
-        bin2hex(random_bytes(6)) .
-        '.' .
-        $file_ext;
-
-
-    $upload_path =
-        $upload_dir .
-        $new_file_name;
-
-
-
-    if (!move_uploaded_file(
-        $file_tmp,
-        $upload_path
-    )) {
-
-        throw new Exception(
-            "Failed to upload payment proof."
-        );
-
-    }
-
-
-    $db_file_path =
-        'uploads/payment_proofs/' .
-        $new_file_name;
-
-//insert reservation
+    //insert reservation
     $insertSql = "
         INSERT INTO reservation_table (
-
             inq_id,
             unit_id,
             client_name,
             client_email,
             client_contact,
+            client_sex,
+            client_age,
+            client_nationality,
             inquiry_type,
             resident_type,
             transaction_type,
             reservation_type,
             move_in_date,
             move_out_date,
+            lease_signing_date,
+            is_flexible_signing,
             price_basis,
             payment_percentage,
             required_amount,
@@ -360,65 +345,45 @@ try {
             amount_match_status,
             payment_proof,
             payment_status,
-            reservation_status
-
-        )
-
-        VALUES (
-
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            'GCash QR',
-            ?,
-            ?,
-            ?,
-            ?,
-            'pending review',
-            'submitted'
-
+            reservation_status,
+            client_remarks
+        ) VALUES (
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending review', 'submitted', ?
         )
     ";
 
-
-    $insertStmt =
-        $conn->prepare($insertSql);
-
+    $insertStmt = $conn->prepare($insertSql);
+    if (!$insertStmt) {
+        throw new Exception("Prepare failed: " . $conn->error);
+    }
 
     $insertStmt->bind_param(
-
-        "iisssssssssdddsdss",
-
+        "iissssissssssssidddssdsss",
         $data['inq_id'],
         $data['unit_id'],
         $data['sender_name'],
         $data['sender_email'],
         $data['sender_contact'],
+        $client_sex,
+        $client_age,
+        $client_nationality,
         $data['inquiry_type'],
         $resident_type,
         $transaction_type,
         $reservation_type,
         $move_in_date,
         $move_out_date,
+        $lease_signing_date,
+        $is_flexible_signing,
         $price_basis,
         $payment_percentage,
         $required_amount,
+        $payment_method,
         $payment_reference,
         $declared_amount,
         $amount_match_status,
-        $db_file_path
-
+        $db_file_path,
+        $client_remarks
     );
 
 
@@ -432,6 +397,15 @@ try {
 
 
     $insertStmt->close();
+
+    if ($is_lease && $lease_duration !== '') {
+        $updateInqDurationStmt = $conn->prepare("UPDATE inquiry_table SET lease_duration = ? WHERE inq_id = ?");
+        if ($updateInqDurationStmt) {
+            $updateInqDurationStmt->bind_param("si", $lease_duration, $data['inq_id']);
+            $updateInqDurationStmt->execute();
+            $updateInqDurationStmt->close();
+        }
+    }
 
 //update unit status to "On Hold" — only for resale (single-buyer, whole-unit
 //sale). Lease units stay as-is: their availability is governed by the

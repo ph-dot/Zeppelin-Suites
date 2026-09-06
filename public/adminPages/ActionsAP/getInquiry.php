@@ -64,6 +64,7 @@ $sql = "SELECT
             i.status,
             i.approval_status,
             i.approved_unit_id,
+            i.owner_remarks,
             i.approval_approved_at,
             DATE_FORMAT(i.approval_approved_at, '%b %d, %Y %h:%i %p') AS approval_approved_at_display,
             i.lease_duration,
@@ -82,6 +83,7 @@ $requestsStmt = $conn->prepare("
         r.request_id,
         r.unit_id,
         r.request_status,
+        r.owner_remarks,
         r.requested_at,
         r.responded_at,
         u.unit_number,
@@ -172,6 +174,7 @@ if ($result->num_rows > 0) {
                 'unit_number'    => $reqRow['unit_number'] ?? 'Unknown unit',
                 'owner_name'     => $reqRow['owner_name'] ?? 'Unknown owner',
                 'request_status' => $reqRow['request_status'],
+                'owner_remarks'  => $reqRow['owner_remarks'] ?? '',
                 'requested_at'   => $reqRow['requested_at'],
                 'responded_at'   => $reqRow['responded_at'],
             ];
@@ -237,6 +240,7 @@ if ($result->num_rows > 0) {
                 data-approval-status='{$approval_status}'
                 data-approved-unit='{$approved_unit_number}'
                 data-approved-at='{$approval_approved_at}'
+                data-owner-remarks='" . addslashes(htmlspecialchars($row['owner_remarks'] ?? '', ENT_QUOTES, 'UTF-8')) . "'
                 data-requests='{$requestsJson}'
                 data-pending-count='{$pendingRequestCount}'
                 data-name='" . addslashes($sender_name) . "'

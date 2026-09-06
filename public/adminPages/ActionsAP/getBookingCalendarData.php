@@ -77,13 +77,42 @@ while ($row = $bookingsResult->fetch_assoc()) {
         'startDate'  => $row['move_in_date'],
         'endDate'    => $row['move_out_date'],
         'status'     => $isCurrent ? 'Occupied' : 'Reserved',
-        // kept for reference/debugging in the quick-view / edit modal
+        // kept for reference/debugging in the quick-view
         'reservationStatus' => $row['reservation_status'],
     ];
 }
 
+// ── Blocked dates (Maintenance / Not Available) ──────────────
+$blockedSql = "SELECT
+        b.block_id, b.unit_id, b.start_date, b.end_date, b.block_type, b.remarks,
+        b.created_by_role, b.created_at,
+        u.unit_type, u.unit_number
+    FROM unit_blocked_dates b
+    JOIN units_table u ON b.unit_id = u.unit_id
+    ORDER BY b.start_date";
+$blockedResult = $conn->query($blockedSql);
+
+$blockedDates = [];
+if ($blockedResult) {
+    while ($row = $blockedResult->fetch_assoc()) {
+        $blockedDates[] = [
+            'blockId'       => (int)$row['block_id'],
+            'unitId'        => (int)$row['unit_id'],
+            'unitType'      => $row['unit_type'],
+            'roomNumber'    => $row['unit_number'],
+            'startDate'     => $row['start_date'],
+            'endDate'       => $row['end_date'],
+            'blockType'     => $row['block_type'], // 'Not Available' | 'Maintenance'
+            'remarks'       => $row['remarks'] ?? '',
+            'createdByRole' => $row['created_by_role'],
+        ];
+    }
+}
+
 echo json_encode([
-    'success'   => true,
-    'unitTypes' => $unitTypes,
-    'bookings'  => $bookings,
+    'success'      => true,
+    'unitTypes'    => $unitTypes,
+    'bookings'     => $bookings,
+    'blockedDates' => $blockedDates,
 ]);
+

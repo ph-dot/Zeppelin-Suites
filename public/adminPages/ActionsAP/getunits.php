@@ -5,48 +5,161 @@ require_once __DIR__ . '/../../php_files/sync_unit_status.php';
 
 syncExpiredUnitStatuses($conn);
 
-function clean($value) {
-    return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
-}
-
-function peso($value, $isLease = false) {
-    if ($value === null || $value === '' || ($isLease && (float)$value === 0)) {
-        return $isLease ? '—' : '₱0.00';
+if (!function_exists('clean')) {
+    function clean($value) {
+        return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
     }
-    return '₱' . number_format((float)$value, 2);
 }
 
-function getFloorTitle($floorNum) {
-    $floorNum = (int)$floorNum;
-    $titles = [
-        1 => 'First Floor',
-        2 => '2nd Floor',
-        3 => '3rd Floor',
-        4 => '4th Floor',
-        5 => '5th Floor',
-        6 => '6th Floor',
-        7 => '7th Floor',
-        8 => '8th Floor',
-        9 => '9th Floor',
-        10 => '10th Floor (Penthouse)'
-    ];
-    return $titles[$floorNum] ?? "Floor {$floorNum}";
+if (!function_exists('peso')) {
+    function peso($value, $isLease = false) {
+        if ($value === null || $value === '' || ($isLease && (float)$value === 0)) {
+            return $isLease ? '—' : '₱0.00';
+        }
+        return '₱' . number_format((float)$value, 2);
+    }
 }
 
-function getFloorIconBg($floorNum) {
-    $bgs = [
-        1 => 'bg-emerald-500/10 text-emerald-600 border-emerald-200',
-        2 => 'bg-blue-500/10 text-blue-600 border-blue-200',
-        3 => 'bg-indigo-500/10 text-indigo-600 border-indigo-200',
-        4 => 'bg-violet-500/10 text-violet-600 border-violet-200',
-        5 => 'bg-purple-500/10 text-purple-600 border-purple-200',
-        6 => 'bg-amber-500/10 text-amber-600 border-amber-200',
-        7 => 'bg-orange-500/10 text-orange-600 border-orange-200',
-        8 => 'bg-cyan-500/10 text-cyan-600 border-cyan-200',
-        9 => 'bg-teal-500/10 text-teal-600 border-teal-200',
-        10 => 'bg-rose-500/10 text-rose-600 border-rose-200'
-    ];
-    return $bgs[$floorNum] ?? 'bg-slate-100 text-slate-700 border-slate-200';
+if (!function_exists('fmtDate')) {
+    function fmtDate($value) {
+        if (empty($value) || $value === '0000-00-00') return '—';
+        $ts = strtotime((string)$value);
+        return $ts ? date('M j, Y', $ts) : '—';
+    }
+}
+
+if (!function_exists('getFloorTitle')) {
+    function getFloorTitle($floorNum) {
+        $floorNum = (int)$floorNum;
+        $titles = [
+            1 => 'First Floor',
+            2 => '2nd Floor',
+            3 => '3rd Floor',
+            4 => '4th Floor',
+            5 => '5th Floor',
+            6 => '6th Floor',
+            7 => '7th Floor',
+            8 => '8th Floor',
+            9 => '9th Floor',
+            10 => '10th Floor (Penthouse)'
+        ];
+        return $titles[$floorNum] ?? "Floor {$floorNum}";
+    }
+}
+
+if (!function_exists('getFloorIconBg')) {
+    function getFloorIconBg($floorNum) {
+        $bgs = [
+            1 => 'bg-emerald-500/10 text-emerald-600 border-emerald-200',
+            2 => 'bg-blue-500/10 text-blue-600 border-blue-200',
+            3 => 'bg-indigo-500/10 text-indigo-600 border-indigo-200',
+            4 => 'bg-violet-500/10 text-violet-600 border-violet-200',
+            5 => 'bg-purple-500/10 text-purple-600 border-purple-200',
+            6 => 'bg-amber-500/10 text-amber-600 border-amber-200',
+            7 => 'bg-orange-500/10 text-orange-600 border-orange-200',
+            8 => 'bg-cyan-500/10 text-cyan-600 border-cyan-200',
+            9 => 'bg-teal-500/10 text-teal-600 border-teal-200',
+            10 => 'bg-rose-500/10 text-rose-600 border-rose-200'
+        ];
+        return $bgs[$floorNum] ?? 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+}
+
+if (!function_exists('getUnitAvailabilityInfo')) {
+    function getUnitAvailabilityInfo($conn, $unitId, $unitCurrentStatus, $currentMoveOutDate) {
+        $statusLower = strtolower(trim((string)$unitCurrentStatus));
+        if ($statusLower === 'resale') {
+            return [
+                'range' => 'Available for Resale',
+                'duration' => 'Ready for purchase'
+            ];
+        }
+        if ($statusLower === 'under maintenance') {
+            return [
+                'range' => 'Under Maintenance',
+                'duration' => 'Temporarily unavailable'
+            ];
+        }
+        if ($statusLower === 'on hold') {
+            return [
+                'range' => 'On Hold',
+                'duration' => 'Listing paused'
+            ];
+        }
+
+        $todayTs = strtotime('today');
+        $startDate = null;
+
+        if (!empty($currentMoveOutDate) && $currentMoveOutDate !== '0000-00-00' && strtotime($currentMoveOutDate) >= $todayTs) {
+            $startDate = new DateTime($currentMoveOutDate);
+            $startDate->modify('+1 day');
+            $startStr = $startDate->format('M j, Y');
+        } else {
+            $startDate = new DateTime('today');
+            $startStr = 'Now';
+        }
+
+        $startDateFormatted = $startDate->format('M j, Y');
+        $maxEndDate = (clone $startDate)->modify('+2 years');
+        $effectiveEndDate = $maxEndDate;
+        $durationLabel = 'Duration: 2 Years (Latest)';
+
+        $startDateSql = $startDate->format('Y-m-d');
+        $stmtNext = $conn->prepare("
+            SELECT move_in_date 
+            FROM reservation_table 
+            WHERE unit_id = ? 
+              AND move_in_date >= ? 
+              AND LOWER(reservation_status) NOT IN ('cancelled', 'rejected')
+            ORDER BY move_in_date ASC 
+            LIMIT 1
+        ");
+        if ($stmtNext) {
+            $stmtNext->bind_param('is', $unitId, $startDateSql);
+            $stmtNext->execute();
+            $resNext = $stmtNext->get_result();
+            if ($resNext && $nextRow = $resNext->fetch_assoc()) {
+                $nextMoveIn = new DateTime($nextRow['move_in_date']);
+                if ($nextMoveIn < $maxEndDate) {
+                    $effectiveEndDate = $nextMoveIn;
+                    $diff = $startDate->diff($nextMoveIn);
+                    $parts = [];
+                    if ($diff->y > 0) $parts[] = $diff->y . ' ' . ($diff->y === 1 ? 'yr' : 'yrs');
+                    if ($diff->m > 0) $parts[] = $diff->m . ' ' . ($diff->m === 1 ? 'mo' : 'mos');
+                    if ($diff->d > 0 && empty($parts)) $parts[] = $diff->d . ' ' . ($diff->d === 1 ? 'day' : 'days');
+                    $durationLabel = 'Duration: ' . (!empty($parts) ? implode(' ', $parts) : '1 mo');
+                }
+            }
+            $stmtNext->close();
+        }
+
+        $endStr = $effectiveEndDate->format('M j, Y');
+        $rangeText = "Avail: {$startStr} – {$endStr}";
+
+        return [
+            'range' => $rangeText,
+            'duration' => $durationLabel,
+            'start_date' => $startDateFormatted,
+            'end_date' => $endStr
+        ];
+    }
+}
+
+if (!function_exists('getStayDurationText')) {
+    function getStayDurationText($start, $end) {
+        if (empty($start) || empty($end) || $start === '0000-00-00' || $end === '0000-00-00') {
+            return '';
+        }
+        $d1 = new DateTime($start);
+        $d2 = new DateTime($end);
+        $diff = $d1->diff($d2);
+
+        $parts = [];
+        if ($diff->y > 0) $parts[] = $diff->y . ' ' . ($diff->y === 1 ? 'yr' : 'yrs');
+        if ($diff->m > 0) $parts[] = $diff->m . ' ' . ($diff->m === 1 ? 'mo' : 'mos');
+        if ($diff->d > 0 && empty($parts)) $parts[] = $diff->d . ' ' . ($diff->d === 1 ? 'day' : 'days');
+        return !empty($parts) ? implode(' ', $parts) : '1 mo';
+    }
 }
 
 // Fetch all units ordered by floor and unit number
@@ -54,8 +167,11 @@ $sql = "SELECT
             u.unit_id,
             u.unit_number,
             u.unit_type,
+            u.sqm,
             u.floor_number,
             u.lease_rate,
+            u.listing_type,
+            u.stay_category,
             u.unit_owner_id,
             u.unit_current_status,
             u.created_at,
@@ -64,9 +180,33 @@ $sql = "SELECT
             (SELECT r.client_name
              FROM reservation_table r
              WHERE r.unit_id = u.unit_id
-               AND r.reservation_status = 'reserved'
-             ORDER BY r.reservation_id DESC
-             LIMIT 1) AS tenant_name
+               AND LOWER(r.reservation_status) NOT IN ('cancelled', 'rejected')
+             ORDER BY CASE WHEN r.move_in_date <= CURDATE() AND r.move_out_date >= CURDATE() THEN 0 ELSE 1 END, r.reservation_id DESC
+             LIMIT 1) AS tenant_name,
+            (SELECT r.client_contact
+             FROM reservation_table r
+             WHERE r.unit_id = u.unit_id
+               AND LOWER(r.reservation_status) NOT IN ('cancelled', 'rejected')
+             ORDER BY CASE WHEN r.move_in_date <= CURDATE() AND r.move_out_date >= CURDATE() THEN 0 ELSE 1 END, r.reservation_id DESC
+             LIMIT 1) AS tenant_contact,
+            (SELECT r.client_email
+             FROM reservation_table r
+             WHERE r.unit_id = u.unit_id
+               AND LOWER(r.reservation_status) NOT IN ('cancelled', 'rejected')
+             ORDER BY CASE WHEN r.move_in_date <= CURDATE() AND r.move_out_date >= CURDATE() THEN 0 ELSE 1 END, r.reservation_id DESC
+             LIMIT 1) AS tenant_email,
+            (SELECT r.move_in_date
+             FROM reservation_table r
+             WHERE r.unit_id = u.unit_id
+               AND LOWER(r.reservation_status) NOT IN ('cancelled', 'rejected')
+             ORDER BY CASE WHEN r.move_in_date <= CURDATE() AND r.move_out_date >= CURDATE() THEN 0 ELSE 1 END, r.reservation_id DESC
+             LIMIT 1) AS move_in_date,
+            (SELECT r.move_out_date
+             FROM reservation_table r
+             WHERE r.unit_id = u.unit_id
+               AND LOWER(r.reservation_status) NOT IN ('cancelled', 'rejected')
+             ORDER BY CASE WHEN r.move_in_date <= CURDATE() AND r.move_out_date >= CURDATE() THEN 0 ELSE 1 END, r.reservation_id DESC
+             LIMIT 1) AS move_out_date
         FROM units_table u
         LEFT JOIN users_table uo ON u.unit_owner_id = uo.user_id
         ORDER BY u.floor_number ASC, u.unit_number ASC";
@@ -176,13 +316,13 @@ foreach ($unitsByFloor as $floorNum => $units) {
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b border-slate-100 bg-slate-50/40 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                        <th class="text-left px-5 py-3 whitespace-nowrap">Unit</th>
-                        <th class="text-left px-4 py-3 whitespace-nowrap">Status</th>
-                        <th class="text-left px-4 py-3 whitespace-nowrap">Tenant</th>
-                        <th class="text-left px-4 py-3 whitespace-nowrap">Lease Rate</th>
-                        <th class="text-left px-4 py-3 whitespace-nowrap">Unit Owner</th>
-                        <th class="text-right px-5 py-3 w-[100px] whitespace-nowrap">Actions</th>
+                    <tr class="border-b border-slate-100 bg-slate-50/50 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                        <th class="text-left px-5 py-3.5 whitespace-nowrap">UNIT</th>
+                        <th class="text-left px-4 py-3.5 whitespace-nowrap">LISTING</th>
+                        <th class="text-left px-4 py-3.5 whitespace-nowrap">STATUS</th>
+                        <th class="text-left px-4 py-3.5 whitespace-nowrap">TENANT & STAY</th>
+                        <th class="text-left px-4 py-3.5 whitespace-nowrap">RATE & TERM</th>
+                        <th class="text-right px-5 py-3.5 whitespace-nowrap">ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
@@ -190,11 +330,17 @@ foreach ($unitsByFloor as $floorNum => $units) {
                         $unit_id = clean($row['unit_id']);
                         $unit_number = clean($row['unit_number']);
                         $unit_type = clean($row['unit_type']);
+                        $sqm = (float)($row['sqm'] ?? 0);
+                        $sqm_formatted = number_format($sqm, 2);
                         $unit_owner_id = clean($row['unit_owner_id']);
                         $unit_current_status = clean($row['unit_current_status']);
                         $unit_owner_name = clean($row['unit_owner_name'] ?: 'No owner');
                         $unit_owner_email = clean($row['unit_owner_email'] ?? '');
                         $tenant_name = clean($row['tenant_name'] ?: 'No Tenant');
+                        $tenant_contact = clean($row['tenant_contact'] ?: '—');
+                        $tenant_email = clean($row['tenant_email'] ?: '—');
+                        $move_in_date = fmtDate($row['move_in_date'] ?? '');
+                        $move_out_date = fmtDate($row['move_out_date'] ?? '');
 
                         // Status Badge Colors
                         $status_lower = strtolower(trim($unit_current_status));
@@ -221,72 +367,117 @@ foreach ($unitsByFloor as $floorNum => $units) {
                             $dot_class = 'bg-slate-400';
                         }
 
-                        $price_value = peso($row['lease_rate'], true);
+                        // Availability calculation with 2-year duration horizon
+                        $avail_info = getUnitAvailabilityInfo($conn, (int)$row['unit_id'], $unit_current_status, $row['move_out_date'] ?? null);
 
-                        $ownerInitial = !empty($row['unit_owner_name']) ? strtoupper(substr(trim($row['unit_owner_name']), 0, 1)) : '—';
+                        // Tenant & Stay
+                        $hasTenant = (!empty($row['tenant_name']) && $row['tenant_name'] !== 'No Tenant');
+                        $stay_dates_text = '';
+                        if ($hasTenant) {
+                            if (!empty($row['move_in_date']) && !empty($row['move_out_date']) && $row['move_in_date'] !== '0000-00-00' && $row['move_out_date'] !== '0000-00-00') {
+                                $inTs = strtotime($row['move_in_date']);
+                                $outTs = strtotime($row['move_out_date']);
+                                $durStr = getStayDurationText($row['move_in_date'], $row['move_out_date']);
+                                $stay_dates_text = date('M j', $inTs) . ' – ' . date('M j, Y', $outTs) . ($durStr ? " ({$durStr})" : "");
+                            } else {
+                                $stay_dates_text = '— Active stay';
+                            }
+                        }
+
+                        // Rate & Term
+                        $price_value = peso($row['lease_rate'], true);
+                        $stay_cat = strtolower(trim($row['stay_category'] ?? 'long term'));
+                        if ($stay_cat === 'short term') {
+                            $term_badge_label = 'Flexible term';
+                            $term_badge_class = 'bg-purple-100 text-purple-700 border-purple-200';
+                        } else {
+                            $term_badge_label = 'Long term';
+                            $term_badge_class = 'bg-sky-100 text-sky-700 border-sky-200';
+                        }
+
+                        // Listing badge
+                        $listing_type = strtolower(trim($row['listing_type'] ?? 'for lease'));
+                        if ($listing_type === 'resale' || $status_lower === 'resale') {
+                            $listing_badge_html = '<span class="inline-block text-xs font-semibold px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200">Resale</span>';
+                        } else {
+                            $listing_badge_html = '<span class="inline-block text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200">For Lease</span>';
+                        }
                     ?>
                     <tr class="unit-row hover:bg-slate-50/80 transition-colors"
                         data-unit-id="<?= $unit_id ?>"
                         data-unit-number="<?= $unit_number ?>"
                         data-unit-type="<?= $unit_type ?>"
+                        data-sqm="<?= $sqm_formatted ?>"
                         data-floor-number="<?= $floorNum ?>"
+                        data-floor-title="<?= clean($floorTitle) ?>"
                         data-lease-rate="<?= peso($row['lease_rate']) ?>"
                         data-unit-current-status="<?= $unit_current_status ?>"
+                        data-listing-type="<?= $listing_type ?>"
                         data-tenant-name="<?= $tenant_name ?>"
+                        data-tenant-contact="<?= $tenant_contact ?>"
+                        data-tenant-email="<?= $tenant_email ?>"
                         data-unit-owner-id="<?= $unit_owner_id ?>"
                         data-owner-name="<?= $unit_owner_name ?>"
-                        data-search-text="<?= strtolower("{$unit_number} {$unit_type} {$floorTitle} Floor {$floorNum} {$unit_current_status} {$unit_owner_name} {$unit_owner_email} {$tenant_name}") ?>">
+                        data-search-text="<?= strtolower("{$unit_number} {$unit_type} {$sqm_formatted} sqm {$floorTitle} Floor {$floorNum} {$listing_type} {$unit_current_status} {$unit_owner_name} {$unit_owner_email} {$tenant_name}") ?>">
                         
-                        <!-- Unit Number & Type -->
-                        <td class="px-5 py-3.5 whitespace-nowrap">
+                        <!-- 1. UNIT -->
+                        <td class="px-5 py-4 whitespace-nowrap">
                             <div>
-                                <p class="unit-num font-semibold text-slate-900 text-sm leading-tight"><?= $unit_number ?></p>
-                                <p class="text-xs text-slate-400 mt-0.5"><?= $unit_type ?></p>
+                                <p class="unit-num font-bold text-slate-900 text-base leading-tight"><?= $unit_number ?></p>
+                                <p class="text-xs text-slate-500 mt-0.5"><?= $unit_type ?> <span class="text-slate-300">•</span> <span class="font-semibold text-slate-700"><?= $sqm_formatted ?> SQM</span></p>
                             </div>
                         </td>
 
-                        <!-- Status Badge -->
-                        <td class="px-4 py-3.5 whitespace-nowrap">
-                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border <?= $status_class ?>">
-                                <span class="w-1.5 h-1.5 rounded-full <?= $dot_class ?>"></span>
-                                <?= $unit_current_status ?>
-                            </span>
+                        <!-- 2. LISTING -->
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <?= $listing_badge_html ?>
                         </td>
 
-                        <!-- Tenant -->
-                        <td class="px-4 py-3.5 whitespace-nowrap text-xs font-medium <?= $tenant_name === 'No Tenant' ? 'text-slate-400' : 'text-slate-700' ?>">
-                            <?= $tenant_name ?>
-                        </td>
-
-                        <!-- Lease Rate -->
-                        <td class="px-4 py-3.5 text-slate-700 whitespace-nowrap font-mono text-xs font-medium">
-                            <?= $price_value ?>
-                        </td>
-
-                        <!-- Owner -->
-                        <td class="px-4 py-3.5 whitespace-nowrap">
-                            <div class="flex items-center gap-2">
-                                <div class="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-bold shrink-0">
-                                    <?= $ownerInitial ?>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-slate-800 leading-none"><?= $unit_owner_name ?></p>
-                                    <?php if (!empty($unit_owner_email)): ?>
-                                        <p class="text-[11px] text-slate-400 mt-0.5"><?= $unit_owner_email ?></p>
-                                    <?php endif; ?>
-                                </div>
+                        <!-- 3. STATUS -->
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div>
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border <?= $status_class ?>">
+                                    <span class="w-1.5 h-1.5 rounded-full <?= $dot_class ?>"></span>
+                                    <?= $unit_current_status ?>
+                                </span>
+                                <p class="text-xs text-slate-700 mt-1.5 font-medium leading-tight"><?= clean($avail_info['range']) ?></p>
+                                <p class="text-[11px] text-slate-400 mt-0.5"><?= clean($avail_info['duration']) ?></p>
                             </div>
                         </td>
 
-                        <!-- Action -->
-                        <td class="px-5 py-3.5 text-right whitespace-nowrap">
-                            <button 
-                                type="button"
-                                class="edit-btn btn-press inline-flex items-center justify-center text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-900 hover:text-white hover:border-slate-900 px-3 py-1 rounded-lg active:scale-95 transition-all shadow-xs"
-                                onclick="openEditModalFromRow(this.closest('tr'))">
-                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                Edit
-                            </button>
+                        <!-- 4. TENANT & STAY -->
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div>
+                                <?php if ($hasTenant): ?>
+                                    <p class="font-bold text-slate-900 text-sm leading-snug"><?= $tenant_name ?></p>
+                                    <p class="text-xs text-slate-500 mt-1 font-normal"><?= clean($stay_dates_text) ?></p>
+                                <?php else: ?>
+                                    <p class="italic text-sm text-slate-500 font-medium leading-tight">No active tenant</p>
+                                    <p class="text-xs text-slate-400 mt-1">— Vacant</p>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+
+                        <!-- 5. RATE & TERM -->
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div>
+                                <p class="font-bold text-slate-900 font-mono text-sm leading-tight">
+                                    <?= $price_value ?> <span class="font-sans text-xs font-normal text-slate-500">/mo</span>
+                                </p>
+                                <span class="inline-block text-xs font-semibold px-2.5 py-0.5 rounded-md border <?= $term_badge_class ?> mt-1.5">
+                                    <?= $term_badge_label ?>
+                                </span>
+                            </div>
+                        </td>
+
+                        <!-- 6. ACTIONS -->
+                        <td class="px-5 py-4 text-right whitespace-nowrap">
+                            <a 
+                                href="unitDetails.php?unit_id=<?= $unit_id ?>"
+                                class="view-btn btn-press inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-800 bg-white border border-slate-300 hover:bg-slate-50 px-3.5 py-1.5 rounded-lg active:scale-95 transition-all shadow-xs">
+                                <svg class="w-4 h-4 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                <span>View</span>
+                            </a>
                         </td>
                     </tr>
                     <?php endforeach; ?>

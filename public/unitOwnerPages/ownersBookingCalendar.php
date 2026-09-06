@@ -195,20 +195,22 @@ $user = requireRole($conn, ['unit owner']);
 /* Status colours */
 .bar-occupied    { background: #16a34a; }  /* green  */
 .bar-reserved    { background: #ca8a04; }  /* yellow */
-.bar-maintenance { background: #dc2626; }  /* red    */
+.bar-maintenance { background: #f59e0b; }  /* amber  */
+.bar-unavailable { background: #64748b; }  /* grey   */
 
 /* Legend dot colours */
 .dot-occupied    { background: #16a34a; }
 .dot-reserved    { background: #ca8a04; }
-.dot-maintenance { background: #dc2626; }
+.dot-maintenance { background: #f59e0b; }
+.dot-unavailable { background: #64748b; }
 
 /* ─────────────────────────────────────────────
-   QUICK-VIEW POPOVER (hover tooltip) — view only
+   QUICK-VIEW POPOVER (hover tooltip)
 ───────────────────────────────────────────── */
 #quickView {
   position: fixed;
   z-index: 9000;
-  width: 300px;
+  width: 310px;
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 18px;
@@ -230,10 +232,41 @@ $user = requireRole($conn, ['unit owner']);
 .qv-row    { display: flex; justify-content: space-between; }
 .qv-label  { color: #94a3b8; font-weight: 500; }
 .qv-value  { font-weight: 600; color: #1e293b; text-align: right; }
-.qv-footer { padding: 10px 16px 14px; border-top: 1px solid #f1f5f9; display: flex; gap: 8px; }
-.qv-btn    { flex: 1; padding: 7px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
-.qv-btn-done   { background: #0f172a; color: #fff; }
-.qv-btn-done:hover   { background: #1e293b; }
+.qv-footer { padding: 10px 16px 14px; border-top: 1px solid #f1f5f9; }
+.qv-btn-lease {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  background: #0f172a;
+  color: #fff;
+  transition: all 0.15s;
+}
+.qv-btn-lease:hover { background: #1e293b; color: #fff; }
+.qv-btn-unblock {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: #fee2e2;
+  color: #dc2626;
+  transition: all 0.15s;
+}
+.qv-btn-unblock:hover { background: #fecaca; }
 
 /* Status badge in quick view */
 .status-badge {
@@ -242,7 +275,36 @@ $user = requireRole($conn, ['unit owner']);
 }
 .badge-occupied    { background: #dcfce7; color: #16a34a; }
 .badge-reserved    { background: #fef9c3; color: #ca8a04; }
-.badge-maintenance { background: #fee2e2; color: #dc2626; }
+.badge-maintenance { background: #fef3c7; color: #d97706; }
+.badge-unavailable { background: #f1f5f9; color: #475569; }
+
+/* ─────────────────────────────────────────────
+   MODAL BACKDROP & BOX
+───────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+  z-index: 8000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.modal-backdrop.open { opacity: 1; pointer-events: auto; }
+.modal-box {
+  background: #fff;
+  border-radius: 24px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.18);
+  width: 100%;
+  max-width: 460px;
+  max-height: 92vh;
+  overflow-y: auto;
+  transform: translateY(16px) scale(0.97);
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+}
+.modal-backdrop.open .modal-box { transform: translateY(0) scale(1); }
 
 /* ─────────────────────────────────────────────
    TOAST
@@ -284,9 +346,9 @@ $user = requireRole($conn, ['unit owner']);
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
       <span class="nav-label">Inquiries</span>
     </a>
-     <a href="ownersUnitReservations.php" data-tooltip="Reservations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+     <a href="ownersUnitReservations.php" data-tooltip="Lease Management" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-      <span class="nav-label">Reservations</span>
+      <span class="nav-label">Lease Management</span>
     </a>
     <a href="ownersBookingCalendar.php" data-tooltip="Booking Calendar" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -367,7 +429,7 @@ $user = requireRole($conn, ['unit owner']);
     <div class="glass-header border border-slate-100/80 px-5 py-4 mb-5 rounded-2xl flex items-center justify-between">
       <div>
         <h1 class="text-xl font-bold text-slate-900 mb-0.5">Booking Calendar</h1>
-        <p class="text-slate-500 text-xs">Availability for your units only. Hover a bar for details — this view is read-only.</p>
+        <p class="text-slate-500 text-xs">Click any empty date cell to block dates for maintenance or unavailable. Hover a bar for details.</p>
       </div>
       <div class="flex items-center gap-2">
         <button class="btn-press px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium transition-all active:scale-95" onclick="changeMonth(-1)">
@@ -378,6 +440,10 @@ $user = requireRole($conn, ['unit owner']);
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </button>
         <button class="btn-press px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition-all active:scale-95" onclick="goToday()">Today</button>
+        <button class="btn-press px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-medium transition-all active:scale-95 flex items-center gap-1.5" onclick="openBlockDatesModalManual()">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+          <span>+ Block Dates</span>
+        </button>
       </div>
     </div>
 
@@ -418,6 +484,10 @@ $user = requireRole($conn, ['unit owner']);
               <span class="w-3 h-3 rounded-full dot-maintenance shrink-0"></span>
               <span class="text-xs font-semibold text-slate-700">Maintenance</span>
             </div>
+            <div class="flex items-center gap-2.5 py-1.5 px-2.5 bg-slate-50 rounded-xl">
+              <span class="w-3 h-3 rounded-full dot-unavailable shrink-0"></span>
+              <span class="text-xs font-semibold text-slate-700">Not Available</span>
+            </div>
           </div>
         </div>
       </aside>
@@ -436,7 +506,104 @@ $user = requireRole($conn, ['unit owner']);
   </div><!-- /main-scroll -->
 </div><!-- /main-wrapper -->
 
-<!-- ═══════════ QUICK-VIEW POPOVER (view only) ═══════════ -->
+<!-- ═══════════ BLOCK DATES MODAL ═══════════ -->
+<div class="modal-backdrop" id="blockDatesModal">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="px-7 pt-6 pb-4 border-b border-slate-100 flex items-start justify-between">
+      <div>
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold mb-2">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+          </svg>
+          Date Availability Control
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">Block Unit Dates</h2>
+        <p class="text-slate-400 text-xs mt-0.5">Block dates for maintenance or unavailability (does not create a reservation).</p>
+      </div>
+      <button onclick="closeBlockDatesModal()" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors mt-1">
+        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form id="blockDatesForm" onsubmit="handleSaveBlockDates(event)" class="px-7 py-5 space-y-4">
+      <input type="hidden" id="block_unitId" name="unit_id">
+
+      <!-- Room context display -->
+      <div class="flex gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+        <div class="flex-1">
+          <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Unit Type</p>
+          <p class="text-sm font-bold text-slate-800" id="block_unitTypeDisplay">—</p>
+        </div>
+        <div class="flex-1">
+          <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Room</p>
+          <p class="text-sm font-bold text-slate-800" id="block_roomDisplay">—</p>
+        </div>
+      </div>
+
+      <!-- Manual Unit Selector (shown only if opened manually) -->
+      <div id="block_manualUnitWrap" class="hidden space-y-1.5">
+        <label class="text-xs font-semibold text-slate-700 block">Select Unit / Room <span class="text-red-400">*</span></label>
+        <select id="block_manualUnitSelect" class="zep-select w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50">
+          <option value="">Choose a room…</option>
+        </select>
+      </div>
+
+      <!-- Date range -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-slate-700 block">Start Date <span class="text-red-400">*</span></label>
+          <input id="block_startDate" name="start_date" type="date" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" required>
+        </div>
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-slate-700 block">End Date <span class="text-red-400">*</span></label>
+          <input id="block_endDate" name="end_date" type="date" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" required>
+        </div>
+      </div>
+
+      <!-- Block Type / Reason -->
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold text-slate-700 block">Block Reason / Category <span class="text-red-400">*</span></label>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="cursor-pointer border border-slate-200 rounded-xl p-3 flex items-center gap-2.5 hover:border-slate-900 transition-all has-[:checked]:border-slate-900 has-[:checked]:bg-slate-50">
+            <input type="radio" name="block_type" value="Not Available" checked class="w-4 h-4 text-slate-900">
+            <div>
+              <p class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                Not Available
+              </p>
+              <p class="text-[11px] text-slate-500">Temporarily unlisted</p>
+            </div>
+          </label>
+          <label class="cursor-pointer border border-slate-200 rounded-xl p-3 flex items-center gap-2.5 hover:border-slate-900 transition-all has-[:checked]:border-slate-900 has-[:checked]:bg-slate-50">
+            <input type="radio" name="block_type" value="Maintenance" class="w-4 h-4 text-slate-900">
+            <div>
+              <p class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                Maintenance
+              </p>
+              <p class="text-[11px] text-slate-500">Repairs / servicing</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Remarks -->
+      <div class="space-y-1.5">
+        <label class="text-xs font-semibold text-slate-700 block">Remarks / Notes</label>
+        <textarea id="block_remarks" name="remarks" rows="3" placeholder="Add specific notes (e.g., Scheduled air conditioning servicing, owner personal stay, painting)..." class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50 resize-none"></textarea>
+      </div>
+
+      <div id="blockErrorNotice" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium"></div>
+
+      <div class="pb-2 flex items-center gap-3 justify-end border-t border-slate-100 pt-4">
+        <button type="button" class="btn-press px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition-all active:scale-95" onclick="closeBlockDatesModal()">Cancel</button>
+        <button type="submit" id="btnSaveBlock" class="btn-press px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium shadow transition-all active:scale-95">Block Dates</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════ QUICK-VIEW POPOVER ═══════════ -->
 <div id="quickView">
   <div class="qv-header">
     <div class="flex items-center justify-between">
@@ -445,14 +612,30 @@ $user = requireRole($conn, ['unit owner']);
     </div>
     <p class="text-xs text-slate-400 mt-0.5" id="qv_roomInfo">Unit · Room</p>
   </div>
-  <div class="qv-body">
+  <div class="qv-body" id="qv_bookingBody">
     <div class="qv-row"><span class="qv-label">Email</span><span class="qv-value" id="qv_email">—</span></div>
     <div class="qv-row"><span class="qv-label">Phone</span><span class="qv-value" id="qv_phone">—</span></div>
     <div class="qv-row"><span class="qv-label">Check-in</span><span class="qv-value" id="qv_checkin">—</span></div>
     <div class="qv-row"><span class="qv-label">Check-out</span><span class="qv-value" id="qv_checkout">—</span></div>
   </div>
+  <div class="qv-body hidden" id="qv_blockedBody">
+    <div class="qv-row"><span class="qv-label">Start Date</span><span class="qv-value" id="qv_blockStart">—</span></div>
+    <div class="qv-row"><span class="qv-label">End Date</span><span class="qv-value" id="qv_blockEnd">—</span></div>
+    <div class="qv-row"><span class="qv-label">Blocked By</span><span class="qv-value" id="qv_blockBy">—</span></div>
+    <div class="mt-2 pt-2 border-t border-slate-100">
+      <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Remarks</p>
+      <p class="text-xs text-slate-700 italic bg-slate-50 p-2 rounded-lg" id="qv_blockRemarks">—</p>
+    </div>
+  </div>
   <div class="qv-footer">
-    <button class="qv-btn qv-btn-done" onclick="hideQuickView()">Close</button>
+    <a href="#" id="qv_viewLeaseBtn" class="qv-btn-lease">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      View Lease Details
+    </a>
+    <button type="button" id="qv_unblockBtn" class="qv-btn-unblock hidden" onclick="handleUnblockClick()">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+      Unblock Dates
+    </button>
   </div>
 </div>
 
@@ -464,22 +647,26 @@ $user = requireRole($conn, ['unit owner']);
 // ════════════════════════════════════════════
 // CONFIGURATION — Unit Types & Rooms are loaded from the database
 // (see ActionsUOP/getOwnerBookingCalendarData.php), pre-scoped on the
-// server to units_table.unit_owner_id = the logged-in owner. There is
-// no manual/admin mode here — everything is view-only.
+// server to units_table.unit_owner_id = the logged-in owner.
 // ════════════════════════════════════════════
-let UNIT_TYPES = [];   // [{ key: "Studio Type A", rooms: [{room,unitId,maintenance}, ...] }, ...]
-let bookings   = [];   // [{ id, guestName, email, phone, unitType, roomNumber, unitId, startDate, endDate, status }, ...]
+let UNIT_TYPES   = [];   // [{ key: "Studio Type A", rooms: [{room,unitId,maintenance}, ...] }, ...]
+let bookings     = [];   // [{ id, guestName, email, phone, unitType, roomNumber, unitId, startDate, endDate, status }, ...]
+let blockedDates = [];   // [{ blockId, unitId, unitType, roomNumber, startDate, endDate, blockType, remarks, createdByRole }, ...]
 
 // Status → bar CSS class
 const STATUS_BAR = {
-  "Occupied":    "bar-occupied",
-  "Reserved":    "bar-reserved"
+  "Occupied":      "bar-occupied",
+  "Reserved":      "bar-reserved",
+  "Maintenance":   "bar-maintenance",
+  "Not Available": "bar-unavailable"
 };
 
 // Status → badge CSS class
 const STATUS_BADGE = {
-  "Occupied":    "badge-occupied",
-  "Reserved":    "badge-reserved"
+  "Occupied":      "badge-occupied",
+  "Reserved":      "badge-reserved",
+  "Maintenance":   "badge-maintenance",
+  "Not Available": "badge-unavailable"
 };
 
 // ════════════════════════════════════════════
@@ -493,12 +680,27 @@ async function loadCalendarData() {
       showToast("⚠️ " + (data.message || "Could not load calendar data."));
       return;
     }
-    UNIT_TYPES = data.unitTypes;
-    bookings   = data.bookings;
+    UNIT_TYPES   = data.unitTypes || [];
+    bookings     = data.bookings || [];
+    blockedDates = data.blockedDates || [];
   } catch (err) {
     console.error(err);
     showToast("⚠️ Could not reach the server.");
   }
+}
+
+// Helpers to lookup room meta
+function findUnitId(unitType, room) {
+  const ut = UNIT_TYPES.find(u => u.key === unitType);
+  if (!ut) return null;
+  const r = ut.rooms.find(r => r.room === room);
+  return r ? r.unitId : null;
+}
+
+function findRoomMeta(unitType, room) {
+  const ut = UNIT_TYPES.find(u => u.key === unitType);
+  if (!ut) return null;
+  return ut.rooms.find(r => r.room === room) || null;
 }
 
 // ════════════════════════════════════════════
@@ -610,6 +812,31 @@ function updateSelectAll() {
   if (selectAll) selectAll.checked = allChecked;
 }
 
+// Populate manual unit select in blockDatesModal
+function populateBlockManualUnits() {
+  const sel = document.getElementById("block_manualUnitSelect");
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Choose a room…</option>';
+  UNIT_TYPES.forEach(ut => {
+    ut.rooms.forEach(r => {
+      const opt = document.createElement("option");
+      opt.value = r.unitId;
+      opt.textContent = `${ut.key} — Room ${r.room}` + (r.maintenance ? " (Under maintenance)" : "");
+      opt.dataset.unitType = ut.key;
+      opt.dataset.room = r.room;
+      sel.appendChild(opt);
+    });
+  });
+  sel.addEventListener("change", () => {
+    const opt = sel.selectedOptions[0];
+    if (opt && opt.value) {
+      document.getElementById("block_unitId").value = opt.value;
+      document.getElementById("block_unitTypeDisplay").textContent = opt.dataset.unitType || "—";
+      document.getElementById("block_roomDisplay").textContent = "Room " + opt.dataset.room;
+    }
+  });
+}
+
 // ════════════════════════════════════════════
 // TIMELINE RENDER
 // ════════════════════════════════════════════
@@ -618,7 +845,7 @@ let currentDate = new Date();
 function renderTimeline() {
   const year  = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  const today = new Date().toISOString().split("T")[0];
+  const today = toLocalISODate(new Date());
 
   const lastDay   = new Date(year, month + 1, 0);
   const totalDays = lastDay.getDate();
@@ -712,7 +939,13 @@ function renderTimeline() {
         b.unitType === ut.key && b.roomNumber === room
       );
 
-      // Day cells (view-only — no click-to-book handler)
+      // Get blocked dates for this room
+      const roomBlocked = blockedDates.filter(b =>
+        (b.unitId && roomMeta.unitId && b.unitId === roomMeta.unitId) ||
+        (b.unitType === ut.key && b.roomNumber === room)
+      );
+
+      // Day cells
       days.forEach(d => {
         const dateStr = formatDate(year, month, d);
         const dow     = new Date(year, month, d).getDay();
@@ -725,8 +958,9 @@ function renderTimeline() {
         td.dataset.unit = ut.key;
         td.dataset.room = room;
 
-        // Booking bar?
         const booking = roomBookings.find(b => dateStr >= b.startDate && dateStr <= b.endDate);
+        const block   = roomBlocked.find(b => dateStr >= b.startDate && dateStr <= b.endDate);
+
         if (booking) {
           const isStart  = dateStr === booking.startDate;
           const isEnd    = dateStr === booking.endDate;
@@ -738,12 +972,10 @@ function renderTimeline() {
           bar.className = `cell-bar ${posClass} ${STATUS_BAR[booking.status] || "bar-reserved"}`;
           bar.dataset.bookingId = booking.id;
 
-          // Show label only on start/single
           if (isStart || isSingle) {
             bar.textContent = booking.guestName || "—";
           }
 
-          // Hover / click → Quick View (read-only)
           bar.addEventListener("mouseenter", e => showQuickView(booking, e));
           bar.addEventListener("mouseleave", startHideTimer);
           bar.addEventListener("click", e => {
@@ -752,6 +984,35 @@ function renderTimeline() {
           });
 
           td.appendChild(bar);
+        } else if (block) {
+          const isStart  = dateStr === block.startDate;
+          const isEnd    = dateStr === block.endDate;
+          const isSingle = isStart && isEnd;
+
+          let posClass = isSingle ? "bar-single" : isStart ? "bar-start" : isEnd ? "bar-end" : "bar-middle";
+
+          const bar = document.createElement("div");
+          const barClass = block.blockType === "Maintenance" ? "bar-maintenance" : "bar-unavailable";
+          bar.className = `cell-bar ${posClass} ${barClass}`;
+          bar.dataset.blockId = block.blockId;
+
+          if (isStart || isSingle) {
+            bar.textContent = block.remarks ? (block.blockType + " — " + block.remarks) : block.blockType;
+          }
+
+          bar.addEventListener("mouseenter", e => showBlockedQuickView(block, e));
+          bar.addEventListener("mouseleave", startHideTimer);
+          bar.addEventListener("click", e => {
+            e.stopPropagation();
+            showBlockedQuickView(block, e, true);
+          });
+
+          td.appendChild(bar);
+        } else {
+          // Empty cell: click to block dates
+          td.style.cursor = "pointer";
+          td.title = "Click to block dates";
+          td.addEventListener("click", () => handleCellClick(ut.key, room, roomMeta.unitId, dateStr));
         }
 
         tr.appendChild(td);
@@ -764,7 +1025,11 @@ function renderTimeline() {
 
 function formatDate(year, month, day) {
   const d = new Date(year, month, day);
-  return d.toISOString().split("T")[0];
+  return toLocalISODate(d);
+}
+
+function toLocalISODate(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
 
 function changeMonth(dir) {
@@ -778,12 +1043,129 @@ function goToday() {
 }
 
 // ════════════════════════════════════════════
-// QUICK VIEW POPOVER (read-only — no edit/delete)
+// BLOCK DATES FLOW
+// ════════════════════════════════════════════
+function handleCellClick(unitType, room, unitId, dateStr) {
+  openBlockDatesModal(unitType, room, unitId, dateStr);
+}
+
+function openBlockDatesModal(unitType, room, unitId, startDate) {
+  const modal = document.getElementById("blockDatesModal");
+  const errNotice = document.getElementById("blockErrorNotice");
+  if (errNotice) errNotice.classList.add("hidden");
+
+  document.getElementById("block_unitId").value = unitId || "";
+  document.getElementById("block_unitTypeDisplay").textContent = unitType || "—";
+  document.getElementById("block_roomDisplay").textContent = room ? "Room " + room : "—";
+  document.getElementById("block_startDate").value = startDate || "";
+  document.getElementById("block_endDate").value   = startDate || "";
+  document.getElementById("block_remarks").value   = "";
+
+  const defaultRadio = document.querySelector('input[name="block_type"][value="Not Available"]');
+  if (defaultRadio) defaultRadio.checked = true;
+
+  const manualWrap = document.getElementById("block_manualUnitWrap");
+  if (!unitId) {
+    manualWrap?.classList.remove("hidden");
+    const manualSelect = document.getElementById("block_manualUnitSelect");
+    if (manualSelect) manualSelect.value = "";
+  } else {
+    manualWrap?.classList.add("hidden");
+  }
+
+  modal.classList.add("open");
+}
+
+function openBlockDatesModalManual() {
+  const today = toLocalISODate(new Date());
+  openBlockDatesModal("", "", null, today);
+}
+
+function closeBlockDatesModal() {
+  document.getElementById("blockDatesModal").classList.remove("open");
+}
+
+async function handleSaveBlockDates(e) {
+  e.preventDefault();
+  const btn = document.getElementById("btnSaveBlock");
+  const errNotice = document.getElementById("blockErrorNotice");
+  errNotice.classList.add("hidden");
+
+  let unitId = document.getElementById("block_unitId").value;
+  if (!unitId) {
+    unitId = document.getElementById("block_manualUnitSelect").value;
+  }
+
+  if (!unitId) {
+    errNotice.textContent = "Please select a unit/room to block.";
+    errNotice.classList.remove("hidden");
+    return;
+  }
+
+  const startDate = document.getElementById("block_startDate").value;
+  const endDate   = document.getElementById("block_endDate").value;
+  const blockType = document.querySelector('input[name="block_type"]:checked')?.value || 'Not Available';
+  const remarks   = document.getElementById("block_remarks").value;
+
+  if (!startDate || !endDate) {
+    errNotice.textContent = "Both start date and end date are required.";
+    errNotice.classList.remove("hidden");
+    return;
+  }
+
+  if (endDate < startDate) {
+    errNotice.textContent = "End date cannot be earlier than start date.";
+    errNotice.classList.remove("hidden");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+
+  const fd = new FormData();
+  fd.append("unit_id", unitId);
+  fd.append("start_date", startDate);
+  fd.append("end_date", endDate);
+  fd.append("block_type", blockType);
+  fd.append("remarks", remarks);
+
+  try {
+    const res = await fetch("ActionsUOP/saveOwnerBlockedDate.php", {
+      method: "POST",
+      body: fd
+    });
+    const data = await res.json();
+    if (!data.success) {
+      errNotice.textContent = data.message || "Failed to block dates.";
+      errNotice.classList.remove("hidden");
+      btn.disabled = false;
+      btn.textContent = "Block Dates";
+      return;
+    }
+
+    closeBlockDatesModal();
+    showToast("Dates blocked successfully.");
+    await loadCalendarData();
+    renderTimeline();
+  } catch (err) {
+    console.error(err);
+    errNotice.textContent = "Network error. Could not reach server.";
+    errNotice.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Block Dates";
+  }
+}
+
+// ════════════════════════════════════════════
+// QUICK VIEW POPOVER
 // ════════════════════════════════════════════
 let _hideTimer = null;
+let currentQuickView = null; // { type: 'booking'|'blocked', data: ... }
 
 function showQuickView(booking, e, pin = false) {
   clearTimeout(_hideTimer);
+  currentQuickView = { type: 'booking', data: booking };
 
   const qv = document.getElementById("quickView");
   document.getElementById("qv_guestName").textContent = booking.guestName || "—";
@@ -797,15 +1179,84 @@ function showQuickView(booking, e, pin = false) {
   badge.textContent  = booking.status;
   badge.className    = "status-badge " + (STATUS_BADGE[booking.status] || "badge-reserved");
 
+  document.getElementById("qv_bookingBody").classList.remove("hidden");
+  document.getElementById("qv_blockedBody").classList.add("hidden");
+
+  // "View Lease Details" link -> ownersViewReservation.php
+  const leaseBtn = document.getElementById("qv_viewLeaseBtn");
+  leaseBtn.classList.remove("hidden");
+  leaseBtn.href = `ownersViewReservation.php?reservation_id=${booking.id}`;
+
+  document.getElementById("qv_unblockBtn").classList.add("hidden");
+
   // Position: near cursor but keep in viewport
-  const x = Math.min(e.clientX + 14, window.innerWidth  - 320);
-  const y = Math.min(e.clientY + 10, window.innerHeight - 200);
+  const x = Math.min(e.clientX + 14, window.innerWidth  - 330);
+  const y = Math.min(e.clientY + 10, window.innerHeight - 240);
   qv.style.left = x + "px";
   qv.style.top  = y + "px";
   qv.classList.add("visible");
 
   if (pin) {
     qv.addEventListener("mouseleave", startHideTimer, { once: true });
+  }
+}
+
+function showBlockedQuickView(block, e, pin = false) {
+  clearTimeout(_hideTimer);
+  currentQuickView = { type: 'blocked', data: block };
+
+  const qv = document.getElementById("quickView");
+  document.getElementById("qv_guestName").textContent = block.blockType;
+  document.getElementById("qv_roomInfo").textContent  = (block.unitType || "Unit") + " · Room " + block.roomNumber;
+
+  const badge = document.getElementById("qv_statusBadge");
+  badge.textContent = block.blockType;
+  badge.className   = "status-badge " + (block.blockType === "Maintenance" ? "badge-maintenance" : "badge-unavailable");
+
+  document.getElementById("qv_bookingBody").classList.add("hidden");
+  document.getElementById("qv_blockedBody").classList.remove("hidden");
+
+  document.getElementById("qv_blockStart").textContent = formatDisplayDate(block.startDate);
+  document.getElementById("qv_blockEnd").textContent   = formatDisplayDate(block.endDate);
+  document.getElementById("qv_blockBy").textContent    = block.createdByRole ? (block.createdByRole.charAt(0).toUpperCase() + block.createdByRole.slice(1)) : "Owner";
+  document.getElementById("qv_blockRemarks").textContent = block.remarks || "No remarks provided.";
+
+  document.getElementById("qv_viewLeaseBtn").classList.add("hidden");
+  document.getElementById("qv_unblockBtn").classList.remove("hidden");
+
+  const x = Math.min(e.clientX + 14, window.innerWidth  - 330);
+  const y = Math.min(e.clientY + 10, window.innerHeight - 240);
+  qv.style.left = x + "px";
+  qv.style.top  = y + "px";
+  qv.classList.add("visible");
+
+  if (pin) {
+    qv.addEventListener("mouseleave", startHideTimer, { once: true });
+  }
+}
+
+async function handleUnblockClick() {
+  if (!currentQuickView || currentQuickView.type !== 'blocked' || !currentQuickView.data) return;
+  const block = currentQuickView.data;
+  if (!confirm(`Unblock Room ${block.roomNumber} (${formatDisplayDate(block.startDate)} to ${formatDisplayDate(block.endDate)})?`)) return;
+
+  const fd = new FormData();
+  fd.append("block_id", block.blockId);
+
+  try {
+    const res = await fetch("ActionsUOP/deleteOwnerBlockedDate.php", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!data.success) {
+      alert(data.message || "Could not unblock dates.");
+      return;
+    }
+    hideQuickView();
+    showToast("Dates successfully unblocked.");
+    await loadCalendarData();
+    renderTimeline();
+  } catch (err) {
+    console.error(err);
+    alert("Could not reach the server.");
   }
 }
 
@@ -909,11 +1360,12 @@ function doLogout() {
 (async function init() {
   await loadCalendarData();
   buildFilterSidebar();
+  populateBlockManualUnits();
   renderTimeline();
 
   // Scroll to today column on load
   setTimeout(() => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = toLocalISODate(new Date());
     const todayTh = document.querySelector(`th[data-date="${today}"]`);
     if (todayTh) todayTh.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }, 200);

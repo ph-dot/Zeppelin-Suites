@@ -58,6 +58,17 @@ if (!function_exists('format_datetime_text')) {
     }
 }
 
+if (!function_exists('format_timeline_datetime')) {
+    function format_timeline_datetime($value) {
+        if (empty($value) || $value === '0000-00-00 00:00:00' || $value === '0000-00-00') {
+            return '';
+        }
+
+        $time = strtotime($value);
+        return $time ? date('M d, Y \• h:i A', $time) : '';
+    }
+}
+
 if (!function_exists('badge')) {
     function badge($value) {
         $text = trim((string)($value ?? ''));
@@ -145,7 +156,10 @@ $sql = "
         updater.full_name AS requirements_updated_by_name,
         official_user.full_name AS officially_booked_by_name,
         cancelled_user.full_name AS cancelled_by_name,
-        cancel_requester.full_name AS cancellation_requested_by_name
+        cancel_requester.full_name AS cancellation_requested_by_name,
+
+        (SELECT COUNT(*) FROM reservation_documents d WHERE d.reservation_id = r.reservation_id) AS total_docs,
+        (SELECT COUNT(*) FROM reservation_documents d WHERE d.reservation_id = r.reservation_id AND d.status = 'complete') AS completed_docs
     FROM reservation_table r
     LEFT JOIN units_table u ON r.unit_id = u.unit_id
     LEFT JOIN users_table owner ON u.unit_owner_id = owner.user_id
@@ -206,9 +220,31 @@ while ($row = $result->fetch_assoc()) {
         $cancellationRequestedBy = $row['cancellation_requested_by_name'];
     }
 
+    $timelineData = [
+        'reservation_id' => (int)$row['reservation_id'],
+        'formatted_id' => $reservationId,
+        'client_name' => $row['client_name'] ?? 'Client',
+        'client_email' => $row['client_email'] ?? '',
+        'unit_display' => $unitDisplay,
+        'created_at' => format_timeline_datetime($row['created_at'] ?? null),
+        'payment_status' => strtolower(trim($row['payment_status'] ?? 'pending review')),
+        'payment_verified_at' => format_timeline_datetime($row['payment_verified_at'] ?? null),
+        'payment_rejected_at' => format_timeline_datetime($row['payment_rejected_at'] ?? null),
+        'reservation_status' => $resStatus,
+        'officially_booked_at' => format_timeline_datetime($row['officially_booked_at'] ?? null),
+        'requirements_updated_at' => format_timeline_datetime($row['requirements_updated_at'] ?? null),
+        'move_in_date' => !empty($row['move_in_date']) && $row['move_in_date'] !== '0000-00-00' ? date('M d, Y', strtotime($row['move_in_date'])) : '',
+        'total_docs' => (int)($row['total_docs'] ?? 0),
+        'completed_docs' => (int)($row['completed_docs'] ?? 0),
+        'is_moved_in' => $isMovedIn,
+        'view_url' => 'viewReservation.php?reservation_id=' . urlencode((string)$row['reservation_id'])
+    ];
+    $timelineJson = htmlspecialchars(json_encode($timelineData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8');
+
     echo "
     <tr class='res-row cursor-pointer hover:bg-slate-50 transition-colors'
-        onclick=\"window.location.href='viewReservation.php?reservation_id=" . e($row['reservation_id']) . "'\">
+        data-timeline='{$timelineJson}'
+        onclick='openActivityTimelineModal(this)'>
 
         <td class='px-4 py-3.5 font-semibold text-slate-700 whitespace-nowrap' style=\"font-family:'DM Mono',monospace\">
             " . e($reservationId) . "
@@ -281,11 +317,13 @@ while ($row = $result->fetch_assoc()) {
                     </button>"
                     : ""
                 ) . "
-                <a
-                    href='viewReservation.php?reservation_id=" . e($row['reservation_id']) . "'
-                    class='view-btn btn-press inline-flex items-center text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all'>
+                <button
+                    type='button'
+                    onclick='openActivityTimelineModal(this.closest(\"tr\")); event.stopPropagation();'
+                    class='view-btn btn-press inline-flex items-center text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all'
+                    title='View activity timeline summary'>
                     View
-                </a>
+                </button>
             </div>
         </td>
     </tr>";

@@ -93,10 +93,10 @@ $userData = requireRole($conn, ['admin']); ?>
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/></svg>
       <span class="nav-label">Inquiry</span>
     </a>
-    <a href="../adminPages/reservation.php" data-tooltip="Reservation" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="../adminPages/reservation.php" data-tooltip="Lease Management" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-      <span class="nav-label">Reservation</span>
-      </a>
+      <span class="nav-label">Lease Management</span>
+    </a>
     <a href="../adminPages/bookingcalendar.php" data-tooltip="Booking Calendar" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg  class="nav-icon w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-range-icon lucide-calendar-range"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M17 14h-6"/><path d="M13 18H7"/><path d="M7 14h.01"/><path d="M17 18h.01"/></svg>
       <span class="nav-label">Booking Calendar</span>
@@ -116,6 +116,10 @@ $userData = requireRole($conn, ['admin']); ?>
     <a href="../adminPages/analytics.php" data-tooltip="Analytics" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
       <span class="nav-label">Analytics</span>
+    </a>
+    <a href="../adminPages/account.php" data-tooltip="Account" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      <span class="nav-label">Account</span>
     </a>
   </nav>
 </aside>
@@ -144,6 +148,7 @@ $userData = requireRole($conn, ['admin']); ?>
         
         <!-- Simple Dropdown -->
         <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50 hidden" id="profileDropdown">
+          <a href="account.php" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-lg mx-1">Account Settings</a>
           <div class="border-t border-slate-100 my-1"></div>
           <button onclick="confirmLogout()" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg mx-1">Sign out</button>
         </div>
@@ -490,6 +495,9 @@ $userData = requireRole($conn, ['admin']); ?>
                 </p>
                 <p class="text-xs text-emerald-700 mt-0.5" id="approvedUnitText">
                   Assigned unit: —
+                </p>
+                <p class="text-xs text-emerald-900 mt-1 font-medium hidden" id="approvedOwnerRemarksRow">
+                  <span class="text-emerald-700 font-semibold">Remarks:</span> <span class="italic font-normal text-emerald-950" id="approvedOwnerRemarksText">—</span>
                 </p>
               </div>
             </div>
@@ -1027,6 +1035,19 @@ function openModal(row) {
     document.getElementById('approvedApprovalBox').classList.remove('hidden');
 
     document.getElementById('approvedUnitText').textContent = buildApprovedText(approvedUnit, approvedAt, sentRequests);
+
+    const approvedRequest = (sentRequests || []).find(r => r.request_status === 'approved');
+    const ownerRemarks = (approvedRequest && approvedRequest.owner_remarks) ? approvedRequest.owner_remarks : (row.dataset.ownerRemarks || '');
+    const remarksRow = document.getElementById('approvedOwnerRemarksRow');
+    const remarksText = document.getElementById('approvedOwnerRemarksText');
+    if (remarksRow && remarksText) {
+      if (ownerRemarks) {
+        remarksText.textContent = `"${ownerRemarks}"`;
+        remarksRow.classList.remove('hidden');
+      } else {
+        remarksRow.classList.add('hidden');
+      }
+    }
   }
 
   else if (approvalStatus === 'requested' && pendingCount > 0) {
@@ -1142,9 +1163,16 @@ function renderSentRequests(requests) {
       ? `<button type="button" onclick="cancelSentRequest(${r.request_id})" class="btn-press text-[10px] font-semibold text-slate-500 border border-slate-200 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 px-2 py-0.5 rounded-full active:scale-95 transition-all">Cancel</button>`
       : '';
 
+    const remarksHtml = r.owner_remarks 
+      ? `<p class="text-[11px] text-slate-600 italic mt-0.5"><span class="font-medium text-slate-500 not-italic">Remarks:</span> "${escapeHtml(r.owner_remarks)}"</p>` 
+      : '';
+
     return `
-      <div class="flex items-center justify-between gap-3 text-xs">
-        <span class="text-slate-700 font-medium">${escapeHtml(r.unit_number)} — ${escapeHtml(r.owner_name)}</span>
+      <div class="flex items-start justify-between gap-3 text-xs py-1.5 border-b border-slate-100/70 last:border-0">
+        <div>
+          <span class="text-slate-800 font-semibold">${escapeHtml(r.unit_number)} — ${escapeHtml(r.owner_name)}</span>
+          ${remarksHtml}
+        </div>
         <span class="flex items-center gap-1.5 shrink-0">
           <span class="font-semibold px-2 py-0.5 rounded-full border ${cls}">${label}</span>
           ${cancelBtn}
@@ -1597,7 +1625,7 @@ function checkAvailableUnits() {
             <div class="flex-1 flex items-center justify-between gap-3">
               <div>
                 <p class="text-sm font-semibold text-slate-800">
-                  ${unit.unit_number} — ${unit.unit_type}
+                  ${unit.unit_number} — ${unit.unit_type}${unit.sqm ? ` • ${parseFloat(unit.sqm).toFixed(2)} SQM` : ''}
                 </p>
                 <p class="text-xs text-slate-500">
                   Owner: ${unit.owner_name || "No owner"}${rateText}

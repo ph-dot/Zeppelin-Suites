@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../php_files/auth.php';
 require_once __DIR__ . '/../../php_files/db.php';
+require_once __DIR__ . '/../../php_files/document_requirements.php';
 
 header('Content-Type: application/json');
 
@@ -29,6 +30,9 @@ if ($reservation_id <= 0) {
     ]);
     exit;
 }
+
+// Automatically seed default requirement rows if not already existing
+seedReservationDocuments($conn, $reservation_id);
 
 $sql = "
     SELECT

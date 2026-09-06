@@ -77,9 +77,9 @@ $user = requireRole($conn, ['unit owner']);
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
       <span class="nav-label">Inquiries</span>
     </a>
-    <a href="ownersUnitReservations.php" data-tooltip="Reservations" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
+    <a href="ownersUnitReservations.php" data-tooltip="Lease Management" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-      <span class="nav-label">Reservations</span>
+      <span class="nav-label">Lease Management</span>
     </a>
     <a href="ownersBookingCalendar.php" data-tooltip="Booking Calendar" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
       <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -140,7 +140,7 @@ $user = requireRole($conn, ['unit owner']);
   </header>
 
   <!-- Simple Modal -->
-  <div id="logoutModal" onclick="if(event.target===this) hideModal()" class="fixed inset-0 bg-black/50 z-[999] hidden flex items-center justify-center p-4">
+  <div id="logoutModal" onclick="if(event.target===this) hideModal()" class="fixed inset-0 bg-black/50 z-[999] hidden items-center justify-center p-4">
     <div class="bg-white rounded-xl p-6 w-full max-w-sm border shadow-xl">
       <h3 class="text-lg font-bold text-slate-900 mb-2">Sign out?</h3>
       <p class="text-sm text-slate-600 mb-6">Are you sure you want to logout?</p>
@@ -224,318 +224,722 @@ $user = requireRole($conn, ['unit owner']);
 
 <!-- INQUIRY DETAIL MODAL -->
 <div class="modal-backdrop fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4" id="resModal" onclick="handleBackdropClick(event,'resModal')">
-  <div class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-100 overflow-hidden flex flex-col max-h-[92vh]">
+  <div class="modal-card bg-white rounded-3xl shadow-2xl w-full max-w-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
+    
     <!-- Modal Header -->
-    <div class="bg-slate-900 px-6 py-4 flex items-center justify-between shrink-0">
+    <div class="bg-white px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
       <div>
-        <h2 class="text-base font-bold text-white">Inquiry Details</h2>
+        <h2 class="text-base font-bold text-slate-900 tracking-tight uppercase">Inquiry Details</h2>
         <p class="text-xs text-slate-400 mt-0.5 font-mono" id="mResNum">—</p>
       </div>
       <button 
           type="button"
           onclick="event.stopPropagation(); closeModal('resModal')" 
-          class="btn-press p-1.5 rounded-lg hover:bg-white/10 transition-colors active:scale-95 text-white/70 hover:text-white">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          class="btn-press p-2 rounded-xl hover:bg-slate-100 transition-colors active:scale-95 text-slate-400 hover:text-slate-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
       </button>
     </div>
 
-    <!-- Modal Content: Vertical Stack of Boxes -->
-    <div class="p-6 space-y-4 overflow-y-auto flex-1">
+    <!-- Modal Content: Scrollable Area -->
+    <div class="p-6 space-y-5 overflow-y-auto flex-1">
       
-      <!-- BOX 1: Unit Inquiry Info -->
-      <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 shadow-2xs space-y-3">
-        <h3 class="text-sm font-bold text-slate-900 tracking-tight">Unit Inquiry Info:</h3>
+      <!-- TOP CARD: Inquirer & Inquiry Info (3-column layout matching mockup) -->
+      <div class="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-5 space-y-4 shadow-2xs">
+        <!-- Row 1: Inquirer Details -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">inquirer name</p>
+            <p class="text-sm font-bold text-slate-900 leading-snug break-words" id="mResName">—</p>
+          </div>
+          <div>
+            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">email</p>
+            <p class="text-sm font-medium text-slate-700 leading-snug break-all" id="mResEmail">—</p>
+          </div>
+          <div>
+            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">contact number</p>
+            <p class="text-sm font-medium text-slate-800 font-mono leading-snug" id="mResContact">—</p>
+          </div>
+        </div>
 
-        <div class="space-y-2.5 text-xs">
-          <div class="flex items-center justify-between gap-4 py-0.5">
-            <span class="text-slate-400 font-medium shrink-0">Unit Applied:</span>
-            <span class="font-bold text-slate-900 font-mono text-right" id="mResUnit">—</span>
+        <!-- Row 2: Inquiry Parameters -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+          <div>
+            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">inquiry type</p>
+            <p class="text-sm font-semibold text-slate-800 leading-snug" id="mResType">—</p>
+          </div>
+          <div id="mResMoveInRow">
+            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">preferred move-in time</p>
+            <p class="text-sm font-medium text-slate-800 leading-snug" id="mResMoveIn">—</p>
+          </div>
+          <div id="mResLeaseRow">
+            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">lease duration</p>
+            <p class="text-sm font-medium text-slate-800 leading-snug" id="mResLease">—</p>
+          </div>
+        </div>
+
+        <!-- Row 3: Message -->
+        <div class="pt-1">
+          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">message</p>
+          <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-2xs">
+            <p class="text-xs text-slate-700 leading-relaxed max-h-28 overflow-y-auto whitespace-pre-line" id="mResMessage">—</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- MIDDLE ROW: Unit Information Row & Availability -->
+      <div class="space-y-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <!-- Col 1: Unit & Floor -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+              <span>Unit Available:</span>
+              <span class="text-slate-400 font-medium text-[11px]" id="mResFloorDisplay">Floor —</span>
+            </label>
+            <div class="h-10 px-3.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 flex items-center shadow-2xs font-mono">
+              <span id="mResUnitDisplay">Unit —</span>
+            </div>
           </div>
 
-          <div class="flex items-center justify-between gap-4 py-0.5">
-            <span class="text-slate-400 font-medium shrink-0">Unit Type:</span>
-            <span class="font-semibold text-slate-800 text-right" id="mResUnitType">—</span>
+          <!-- Col 2: Lease Rate -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+              <span>Lease Rate</span>
+              <span class="text-slate-400 font-normal text-[11px]">Monthly</span>
+            </label>
+            <div class="h-10 px-3.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 flex items-center shadow-2xs font-mono" id="mResFee">
+              —
+            </div>
           </div>
 
-          <div class="flex items-center justify-between gap-4 py-0.5">
-            <span class="text-slate-400 font-medium shrink-0">Inquiry Type:</span>
-            <span class="font-semibold text-slate-800 text-right" id="mResType">—</span>
-          </div>
-
-          <div class="flex items-center justify-between gap-4 py-0.5">
-            <span class="text-slate-400 font-medium shrink-0">Reservation Fee:</span>
-            <span class="font-bold text-slate-900 font-mono text-right" id="mResFee">—</span>
-          </div>
-
-          <div class="flex items-center justify-between gap-4 py-0.5" id="mResMoveInRow">
-            <span class="text-slate-400 font-medium shrink-0">Preferred Move-In Time:</span>
-            <span class="font-medium text-slate-800 text-right" id="mResMoveIn">—</span>
-          </div>
-
-          <div class="flex items-center justify-between gap-4 py-0.5" id="mResLeaseRow">
-            <span class="text-slate-400 font-medium shrink-0">Lease Duration:</span>
-            <span class="font-medium text-slate-800 text-right" id="mResLease">—</span>
-          </div>
-
-          <div class="pt-2.5 border-t border-slate-200/60">
-            <div class="flex items-start justify-between gap-4">
-              <span class="text-slate-400 font-medium shrink-0">Message:</span>
-              <p class="font-medium text-slate-700 text-right leading-relaxed max-w-[280px] break-words whitespace-pre-line text-xs" id="mResMessage">—</p>
+          <!-- Col 3: Current Status & Type -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+              <span>Current Status</span>
+              <span class="text-slate-400 font-normal text-[11px] truncate max-w-[90px]" id="mResUnitType">—</span>
+            </label>
+            <div class="h-10 px-3.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 flex items-center justify-between shadow-2xs">
+              <span id="mResUnitStatusText">Ready for Occupancy</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0" id="mResUnitStatusDot"></span>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- BOX 2: Inquirer Info -->
-      <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 shadow-2xs space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="text-sm font-bold text-slate-900 tracking-tight">Inquirer Info:</h3>
+        <!-- Occupied / Active Lease Duration Banner (Visible when unit is occupied) -->
+        <div id="mResOccupiedBanner" class="p-3.5 bg-amber-50/90 border border-amber-200/80 rounded-xl flex flex-wrap items-center justify-between gap-2 shadow-2xs hidden">
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Occupied / Current Lease:</span>
+              <span class="text-xs font-bold text-amber-950 font-mono" id="mResOccupiedDuration">—</span>
+            </div>
+          </div>
           <div class="flex items-center gap-2">
-            <div class="w-6 h-6 rounded-lg bg-slate-900 text-white font-bold text-[10px] flex items-center justify-center shrink-0" id="mResAvatar">?</div>
-            <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border shrink-0" id="mResStatus">—</span>
+            <span class="text-[11px] font-semibold text-amber-800 bg-amber-100/90 border border-amber-200 px-2.5 py-0.5 rounded-full" id="mResOccupiedUntilBadge">
+              Occupied
+            </span>
           </div>
         </div>
 
-        <div class="space-y-2.5 text-xs">
-          <div class="flex items-center justify-between gap-4 py-0.5">
-            <span class="text-slate-400 font-medium shrink-0">Name:</span>
-            <span class="font-bold text-slate-900 text-right" id="mResName">—</span>
+        <!-- Availability Period Banner -->
+        <div class="p-3.5 bg-slate-50/90 border border-slate-200/80 rounded-xl flex flex-wrap items-center justify-between gap-2 shadow-2xs">
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider" id="mResAvailHeaderLabel">Unit Availability:</span>
+              <span class="text-xs font-bold text-slate-900 font-mono" id="mResAvailability">—</span>
+            </div>
           </div>
-
-          <div class="flex items-center justify-between gap-4 py-0.5">
-            <span class="text-slate-400 font-medium shrink-0">Email:</span>
-            <span class="font-medium text-slate-700 text-right truncate max-w-[260px]" id="mResEmail">—</span>
-          </div>
-
-          <div class="flex items-center justify-between gap-4 py-0.5">
-            <span class="text-slate-400 font-medium shrink-0">Contact Number:</span>
-            <span class="font-medium text-slate-700 font-mono text-right" id="mResContact">—</span>
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full" id="mResAvailDurationLabel">—</span>
           </div>
         </div>
       </div>
 
+      <!-- BOTTOM ROW: Unit Owner Remarks -->
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label for="mOwnerRemarks" class="block text-xs font-bold text-slate-700">
+            Unit Owner Remarks:
+          </label>
+          <span class="text-[11px] text-slate-400 italic" id="mOwnerRemarksHint">Optional note for this inquiry</span>
+        </div>
+        <textarea 
+          id="mOwnerRemarks" 
+          rows="3" 
+          placeholder="Add a note for this inquiry..." 
+          class="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 focus:outline-none transition-all resize-none shadow-2xs"></textarea>
+      </div>
+
     </div>
 
-    <!-- MODAL FOOTER: Decline & Approve -->
-    <div class="flex items-center justify-end gap-2.5 px-6 py-4 border-t border-slate-100 bg-slate-50/60 shrink-0">
-      <button 
-        type="button"
-        id="declineRequestBtn"
-        onclick="handleDecline()" 
-        class="btn-press px-5 py-2 text-sm font-semibold text-red-600 border border-red-200 bg-white hover:bg-red-50 rounded-xl transition-all active:scale-95">
-        Decline
-      </button>
+    <!-- MODAL FOOTER: Decline & Approve (matching mockup) -->
+    <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/70 shrink-0">
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-slate-400 font-medium">Status:</span>
+        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border shrink-0" id="mResStatus">—</span>
+      </div>
 
+      <div class="flex items-center gap-2.5">
+        <button 
+          type="button"
+          id="declineRequestBtn"
+          onclick="handleDecline()" 
+          class="btn-press px-6 py-2.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+          Decline
+        </button>
+
+        <button 
+          type="button"
+          id="approveRequestBtn"
+          onclick="handleApprove()" 
+          class="btn-press px-6 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+          Approve
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- APPROVE CONFIRMATION POP-UP MODAL -->
+<div class="modal-backdrop fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4" id="approveConfirmModal" onclick="handleBackdropClick(event,'approveConfirmModal')">
+  <div class="modal-card bg-white rounded-3xl shadow-2xl w-full max-w-md border border-slate-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+    
+    <!-- Header -->
+    <div class="p-6 pb-2">
+      <div class="flex items-start justify-between">
+        <h3 class="text-lg font-bold text-slate-900">Are you sure?</h3>
+        <button 
+          type="button" 
+          onclick="closeModal('approveConfirmModal')" 
+          class="btn-press p-1.5 -mr-1 -mt-1 rounded-xl hover:bg-slate-100 transition-colors active:scale-95 text-slate-400 hover:text-slate-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+        Are you sure you want to approve this inquiry request for <span class="font-bold text-slate-800" id="confirmClientName">the client</span>?
+      </p>
+    </div>
+
+    <!-- Note -->
+    <div class="px-6 py-3">
+      <p class="text-xs text-slate-500 leading-relaxed">
+        <span class="font-semibold text-slate-700">Note:</span> Your information will be disclosed to the client upon approval, including your <span class="font-medium text-slate-700">unit details (<span id="confirmUnitNumber" class="font-semibold text-slate-900">your unit</span>)</span> and your <span class="font-medium text-slate-700">contact information</span> (full name, phone number, and email).
+      </p>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="px-6 py-4 bg-slate-50/80 border-t border-slate-100 flex items-center justify-end gap-2.5 shrink-0">
       <button 
-        type="button"
-        id="approveRequestBtn"
-        onclick="handleApprove()" 
-        class="btn-press bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-all active:scale-95 shadow-sm">
-        Approve
+        type="button" 
+        onclick="closeModal('approveConfirmModal')" 
+        class="btn-press px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all active:scale-95 shadow-2xs">
+        Cancel
+      </button>
+      <button 
+        type="button" 
+        id="confirmApproveSubmitBtn"
+        onclick="submitApprovedRequest()" 
+        class="btn-press inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all shadow-sm active:scale-95">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        <span>Yes, Approve Request</span>
       </button>
     </div>
+
+  </div>
+</div>
+
+<!-- DECLINE CONFIRMATION POP-UP MODAL -->
+<div class="modal-backdrop fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4" id="declineConfirmModal" onclick="handleBackdropClick(event,'declineConfirmModal')">
+  <div class="modal-card bg-white rounded-3xl shadow-2xl w-full max-w-md border border-slate-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+    
+    <div class="p-6 pb-2">
+      <div class="flex items-start justify-between">
+        <h3 class="text-lg font-bold text-slate-900">Are you sure?</h3>
+        <button 
+          type="button" 
+          onclick="closeModal('declineConfirmModal')" 
+          class="btn-press p-1.5 -mr-1 -mt-1 rounded-xl hover:bg-slate-100 transition-colors active:scale-95 text-slate-400 hover:text-slate-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+        Are you sure you want to decline this inquiry request for <span class="font-bold text-slate-800" id="declineClientName">the client</span>?
+      </p>
+    </div>
+
+    <div class="px-6 py-3">
+      <p class="text-xs text-slate-500 leading-relaxed">
+        <span class="font-semibold text-slate-700">Note:</span> This inquiry request will be marked as declined and any remarks provided will be recorded.
+      </p>
+    </div>
+
+    <div class="px-6 py-4 bg-slate-50/80 border-t border-slate-100 flex items-center justify-end gap-2.5 shrink-0">
+      <button 
+        type="button" 
+        onclick="closeModal('declineConfirmModal')" 
+        class="btn-press px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all active:scale-95 shadow-2xs">
+        Cancel
+      </button>
+      <button 
+        type="button" 
+        id="confirmDeclineSubmitBtn"
+        onclick="submitDeclinedRequest()" 
+        class="btn-press inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-all shadow-sm active:scale-95">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        <span>Yes, Decline Request</span>
+      </button>
+    </div>
+
   </div>
 </div>
 
 <script>
   let sidebarCollapsed = false;
   let currentResId = null;
+  let currentClientName = '';
+  let currentUnitNumber = '';
+  let currentUnitType = '';
+  let currentRequestCode = '';
+
   function toggleCollapse() {
     sidebarCollapsed = !sidebarCollapsed;
-    document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
-    document.getElementById('mainWrapper').classList.toggle('sidebar-collapsed', sidebarCollapsed);
+    document.getElementById('sidebar')?.classList.toggle('collapsed', sidebarCollapsed);
+    document.getElementById('mainWrapper')?.classList.toggle('sidebar-collapsed', sidebarCollapsed);
   }
-  function openMobileSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
-  function closeMobileSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
-function toggleProfileDropdown(e) {
-  if (e) e.stopPropagation();
-  const dropdown = document.getElementById('profileDropdown');
-  const chevron = document.getElementById('profileChevron');
-  if (!dropdown) return;
-  const isHidden = dropdown.classList.contains('hidden');
-  dropdown.classList.toggle('hidden', !isHidden);
-  if (chevron) {
-    chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
-  }
-}
-function toggleProfile(e) {
-  toggleProfileDropdown(e);
-}
 
-// Close dropdown on outside click
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('#profileBtn') && !e.target.closest('#profileDropdown')) {
+  function openMobileSidebar() {
+    document.getElementById('sidebar')?.classList.add('open');
+    document.getElementById('overlay')?.classList.add('show');
+  }
+
+  function closeMobileSidebar() {
+    document.getElementById('sidebar')?.classList.remove('open');
+    document.getElementById('overlay')?.classList.remove('show');
+  }
+
+  function toggleProfileDropdown(e) {
+    if (e) e.stopPropagation();
+    const dropdown = document.getElementById('profileDropdown');
+    const chevron = document.getElementById('profileChevron');
+    if (!dropdown) return;
+    const isHidden = dropdown.classList.contains('hidden');
+    dropdown.classList.toggle('hidden', !isHidden);
+    if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  }
+
+  function toggleProfile(e) {
+    toggleProfileDropdown(e);
+  }
+
+  document.addEventListener('click', function(e) {
+    const profileWrapper = document.getElementById('profileWrapper');
     const dropdown = document.getElementById('profileDropdown');
     const chevron = document.getElementById('profileChevron');
     if (dropdown && !dropdown.classList.contains('hidden')) {
-      dropdown.classList.add('hidden');
-      if (chevron) chevron.style.transform = 'rotate(0deg)';
+      if (!profileWrapper || !profileWrapper.contains(e.target)) {
+        dropdown.classList.add('hidden');
+        if (chevron) chevron.style.transform = 'rotate(0deg)';
+      }
+    }
+  });
+
+  function confirmLogout() {
+    const modal = document.getElementById('logoutModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    const dropdown = document.getElementById('profileDropdown');
+    if (dropdown) dropdown.classList.add('hidden');
+    const chevron = document.getElementById('profileChevron');
+    if (chevron) chevron.style.transform = 'rotate(0deg)';
+  }
+
+  function hideModal() {
+    const modal = document.getElementById('logoutModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
     }
   }
-});
 
-function confirmLogout() {
-  const modal = document.getElementById('logoutModal');
-  if (modal) modal.classList.remove('hidden');
-  const dropdown = document.getElementById('profileDropdown');
-  if (dropdown) dropdown.classList.add('hidden');
-  const chevron = document.getElementById('profileChevron');
-  if (chevron) chevron.style.transform = 'rotate(0deg)';
-}
+  function hideLogoutModal() {
+    hideModal();
+  }
 
-function hideModal() {
-  const modal = document.getElementById('logoutModal');
-  if (modal) modal.classList.add('hidden');
-}
+  function doLogout() {
+    window.location.href = '../php_files/logout_session.php';
+  }
 
-function hideLogoutModal() {
-  hideModal();
-}
-
-function doLogout() {
-  window.location.href = '../php_files/logout_session.php';
-}
   function openResModal(row) {
-  currentResId = row.dataset.requestId;
+    currentResId = row.dataset.requestId;
 
-  const name = row.dataset.name || '—';
-  const initials = name
-    .split(' ')
-    .filter(Boolean)
-    .map(n => n[0])
-    .join('')
-    .toUpperCase();
+    const name = row.dataset.name || '—';
+    const unitNumber = row.dataset.unit || '—';
+    const floorNumber = row.dataset.floor ? `Floor ${row.dataset.floor}` : 'Floor —';
+    const unitType = row.dataset.unitType || '—';
+    const unitStatus = row.dataset.unitStatus || 'Ready for Occupancy';
+    const remarks = row.dataset.remarks || '';
+    const status = row.dataset.status || 'Pending';
 
-  document.getElementById('mResAvatar').textContent = initials || '?';
-  document.getElementById('mResNum').textContent = row.dataset.requestCode || '—';
-  document.getElementById('mResName').textContent = name;
-  document.getElementById('mResEmail').textContent = row.dataset.email || '—';
-  document.getElementById('mResContact').textContent = row.dataset.contact || '—';
+    currentClientName = name;
+    currentUnitNumber = unitNumber;
+    currentUnitType = unitType;
+    currentRequestCode = row.dataset.requestCode || '—';
 
-  document.getElementById('mResUnit').textContent = row.dataset.unit || '—';
-  document.getElementById('mResUnitType').textContent = row.dataset.unitType || '—';
-  document.getElementById('mResType').textContent = row.dataset.type || '—';
-  document.getElementById('mResFee').textContent = row.dataset.fee || '—';
-  document.getElementById('mResMoveIn').textContent = row.dataset.moveIn || '—';
-  document.getElementById('mResLease').textContent = row.dataset.lease || '—';
-  document.getElementById('mResMessage').textContent = row.dataset.message || '—';
+    document.getElementById('mResNum').textContent = row.dataset.requestCode || '—';
+    document.getElementById('mResName').textContent = name;
+    document.getElementById('mResEmail').textContent = row.dataset.email || '—';
+    document.getElementById('mResContact').textContent = row.dataset.contact || '—';
 
-  const inqType = (row.dataset.type || '').toLowerCase().trim();
-  const isResale = inqType.includes('resale');
-  const isLeaseOrReservation = (inqType.includes('reservation') || inqType.includes('lease')) && !isResale;
+    const unitDisp = document.getElementById('mResUnitDisplay');
+    if (unitDisp) unitDisp.textContent = unitNumber !== '—' ? `Unit ${unitNumber}` : 'Unit —';
+    
+    const floorDisp = document.getElementById('mResFloorDisplay');
+    if (floorDisp) floorDisp.textContent = floorNumber;
 
-  const moveInRow = document.getElementById('mResMoveInRow');
-  const leaseRow = document.getElementById('mResLeaseRow');
+    const unitTypeEl = document.getElementById('mResUnitType');
+    if (unitTypeEl) unitTypeEl.textContent = unitType;
+    
+    const isOccupied = row.dataset.isOccupied === '1';
+    const occupiedDisplay = row.dataset.occupiedDisplay || '';
+    const occupiedDuration = row.dataset.occupiedDuration || '';
+    const occupiedUntil = row.dataset.occupiedUntil || '';
 
-  if (moveInRow) {
-    moveInRow.style.display = isLeaseOrReservation ? 'flex' : 'none';
+    const statusText = document.getElementById('mResUnitStatusText');
+    if (statusText) {
+      if (isOccupied && occupiedUntil) {
+        statusText.textContent = `Occupied (until ${occupiedUntil})`;
+      } else {
+        statusText.textContent = unitStatus;
+      }
+    }
+
+    const statusDot = document.getElementById('mResUnitStatusDot');
+    if (statusDot) {
+      if (isOccupied || unitStatus.toLowerCase().includes('occupied') || unitStatus.toLowerCase().includes('maintenance')) {
+        statusDot.className = 'w-2 h-2 rounded-full bg-red-500 shrink-0';
+      } else if (unitStatus.toLowerCase().includes('reserved') || unitStatus.toLowerCase().includes('hold')) {
+        statusDot.className = 'w-2 h-2 rounded-full bg-amber-500 shrink-0';
+      } else {
+        statusDot.className = 'w-2 h-2 rounded-full bg-emerald-500 shrink-0';
+      }
+    }
+
+    // Occupied / Current Lease Banner toggle and content
+    const occupiedBanner = document.getElementById('mResOccupiedBanner');
+    const occupiedDurEl = document.getElementById('mResOccupiedDuration');
+    const occupiedUntilBadge = document.getElementById('mResOccupiedUntilBadge');
+    const availHeaderLabel = document.getElementById('mResAvailHeaderLabel');
+
+    if (occupiedBanner) {
+      if (isOccupied && occupiedDisplay) {
+        occupiedBanner.classList.remove('hidden');
+        if (occupiedDurEl) occupiedDurEl.textContent = occupiedDisplay;
+        if (occupiedUntilBadge) {
+          occupiedUntilBadge.textContent = occupiedUntil ? `Until ${occupiedUntil}` : (occupiedDuration ? `Lease: ${occupiedDuration}` : 'Occupied');
+        }
+        if (availHeaderLabel) {
+          availHeaderLabel.textContent = 'Next Availability:';
+        }
+      } else {
+        occupiedBanner.classList.add('hidden');
+        if (availHeaderLabel) {
+          availHeaderLabel.textContent = 'Unit Availability:';
+        }
+      }
+    }
+
+    document.getElementById('mResType').textContent = row.dataset.type || '—';
+    document.getElementById('mResFee').textContent = row.dataset.fee || '—';
+    document.getElementById('mResMoveIn').textContent = row.dataset.moveIn || '—';
+    document.getElementById('mResLease').textContent = row.dataset.lease || '—';
+    document.getElementById('mResMessage').textContent = row.dataset.message || '—';
+
+    // Unit Availability display
+    let availDisplay = row.dataset.availDisplay;
+    let availLabel = row.dataset.availLabel;
+
+    if (!availDisplay) {
+      const moveInVal = (row.dataset.moveIn || '').trim();
+      const leaseVal = (row.dataset.lease || '').trim().toLowerCase();
+      
+      const now = new Date();
+      let startDate = new Date();
+      
+      const parsedDate = Date.parse(moveInVal);
+      if (!isNaN(parsedDate) && parsedDate > now.getTime() && !['immediately', 'not sure yet'].includes(moveInVal.toLowerCase())) {
+        startDate = new Date(parsedDate);
+      }
+
+      let months = 0;
+      const yrMatch = leaseVal.match(/(\d+)\s*(?:year|yr)/);
+      const moMatch = leaseVal.match(/(\d+)\s*(?:month|mo)/);
+      if (yrMatch) {
+        months = parseInt(yrMatch[1], 10) * 12;
+      } else if (moMatch) {
+        months = parseInt(moMatch[1], 10);
+      }
+
+      const formatDate = (d) => d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+      const startStr = formatDate(startDate);
+
+      const twoYrDate = new Date(startDate);
+      twoYrDate.setFullYear(twoYrDate.getFullYear() + 2);
+      const twoYrStr = formatDate(twoYrDate);
+
+      if (months > 0 && months < 24) {
+        const endReqDate = new Date(startDate);
+        endReqDate.setMonth(endReqDate.getMonth() + months);
+        availDisplay = `${startStr} – ${formatDate(endReqDate)}`;
+        availLabel = `Duration: ${months} mos (up to 2 yrs)`;
+      } else {
+        availDisplay = `${startStr} – ${twoYrStr}`;
+        availLabel = `Duration: 2 Years`;
+      }
+    }
+
+    const availEl = document.getElementById('mResAvailability');
+    if (availEl) availEl.textContent = availDisplay || '—';
+
+    const availLabelEl = document.getElementById('mResAvailDurationLabel');
+    if (availLabelEl) availLabelEl.textContent = availLabel || '—';
+
+    const inqType = (row.dataset.type || '').toLowerCase().trim();
+    const isResale = inqType.includes('resale');
+    const isLeaseOrReservation = (inqType.includes('reservation') || inqType.includes('lease')) && !isResale;
+
+    const moveInRow = document.getElementById('mResMoveInRow');
+    const leaseRow = document.getElementById('mResLeaseRow');
+
+    if (moveInRow) {
+      moveInRow.style.display = isLeaseOrReservation ? 'block' : 'none';
+    }
+    if (leaseRow) {
+      leaseRow.style.display = isLeaseOrReservation ? 'block' : 'none';
+    }
+
+    // Handle remarks box
+    const remarksBox = document.getElementById('mOwnerRemarks');
+    const remarksHint = document.getElementById('mOwnerRemarksHint');
+    if (remarksBox) {
+      remarksBox.value = remarks;
+      if (status !== 'Pending') {
+        remarksBox.readOnly = true;
+        remarksBox.classList.add('bg-slate-50', 'text-slate-500');
+        if (remarksHint) remarksHint.textContent = remarks ? 'Remarks recorded' : 'No remarks provided';
+      } else {
+        remarksBox.readOnly = false;
+        remarksBox.classList.remove('bg-slate-50', 'text-slate-500');
+        if (remarksHint) remarksHint.textContent = 'Optional note for this inquiry';
+      }
+    }
+
+    const badge = document.getElementById('mResStatus');
+    badge.textContent = status;
+
+    const approveBtn = document.getElementById('approveRequestBtn');
+    const declineBtn = document.getElementById('declineRequestBtn');
+
+    if (status === 'Pending') {
+      approveBtn.disabled = false;
+      declineBtn.disabled = false;
+
+      approveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      declineBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+      approveBtn.textContent = 'Approve';
+      declineBtn.textContent = 'Decline';
+    } else {
+      approveBtn.disabled = true;
+      declineBtn.disabled = true;
+
+      approveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      declineBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+      approveBtn.textContent = status === 'Approved' ? 'Approved' : 'Approve';
+      declineBtn.textContent = status === 'Declined' ? 'Declined' : 'Decline';
+    }
+
+    const colors = {
+      'Pending': 'bg-amber-50 text-amber-700 border-amber-200',
+      'Approved': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      'Declined': 'bg-red-50 text-red-600 border-red-200',
+      'Expired': 'bg-slate-100 text-slate-500 border-slate-200'
+    };
+
+    badge.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full border shrink-0 ' +
+      (colors[status] || 'bg-slate-100 text-slate-500 border-slate-200');
+
+    document.getElementById('resModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
   }
-  if (leaseRow) {
-    leaseRow.style.display = isLeaseOrReservation ? 'flex' : 'none';
+
+  function openModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
   }
 
-  const badge = document.getElementById('mResStatus');
-  const status = row.dataset.status || 'Pending';
-
-  badge.textContent = status;
-
-  const approveBtn = document.getElementById('approveRequestBtn');
-  const declineBtn = document.getElementById('declineRequestBtn');
-
-  if (status === 'Pending') {
-    approveBtn.disabled = false;
-    declineBtn.disabled = false;
-
-    approveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-    declineBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-
-    approveBtn.textContent = 'Approve';
-    declineBtn.textContent = 'Decline';
-  } else {
-    approveBtn.disabled = true;
-    declineBtn.disabled = true;
-
-    approveBtn.classList.add('opacity-50', 'cursor-not-allowed');
-    declineBtn.classList.add('opacity-50', 'cursor-not-allowed');
-
-    approveBtn.textContent = status === 'Approved' ? 'Approved' : 'Approve';
-    declineBtn.textContent = status === 'Declined' ? 'Declined' : 'Decline';
+  function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+      modal.classList.remove('open');
+    }
+    const openModals = document.querySelectorAll('.modal-backdrop.open');
+    if (!openModals || openModals.length === 0) {
+      document.body.style.overflow = '';
+    } else {
+      document.body.style.overflow = 'hidden';
+    }
   }
 
-  const colors = {
-    'Pending': 'bg-amber-50 text-amber-700 border-amber-200',
-    'Approved': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    'Declined': 'bg-red-50 text-red-600 border-red-200',
-    'Expired': 'bg-slate-100 text-slate-500 border-slate-200'
-  };
-
-  badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full border shrink-0 ' +
-    (colors[status] || 'bg-slate-100 text-slate-500 border-slate-200');
-
-  document.getElementById('resModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeModal(id) {
-  const modal = document.getElementById(id);
-
-  if (modal) {
-    modal.classList.remove('open');
+  function handleBackdropClick(e, id) {
+    const modal = document.getElementById(id);
+    if (e.target === modal) {
+      closeModal(id);
+    }
   }
 
-  document.body.style.overflow = '';
-}
+  function handleApprove() {
+    if (!currentResId) {
+      alert("No request selected.");
+      return;
+    }
 
-function handleBackdropClick(e, id) {
-  const modal = document.getElementById(id);
+    const clientNameEl = document.getElementById('confirmClientName');
+    if (clientNameEl) clientNameEl.textContent = currentClientName;
 
-  if (e.target === modal) {
-    closeModal(id);
+    const unitEl = document.getElementById('confirmUnitNumber');
+    if (unitEl) unitEl.textContent = currentUnitNumber !== '—' && currentUnitNumber ? `Unit ${currentUnitNumber}` : 'your unit';
+
+    const btn = document.getElementById('confirmApproveSubmitBtn');
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('opacity-75', 'cursor-not-allowed');
+      btn.innerHTML = `
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        <span>Yes, Approve Request</span>
+      `;
+    }
+
+    openModal('approveConfirmModal');
   }
-}
-function respondToRequest(action) {
-  if (!currentResId) {
-    alert("No request selected.");
-    return;
+
+  function handleDecline() {
+    if (!currentResId) {
+      alert("No request selected.");
+      return;
+    }
+
+    const clientNameEl = document.getElementById('declineClientName');
+    if (clientNameEl) clientNameEl.textContent = currentClientName;
+
+    const btn = document.getElementById('confirmDeclineSubmitBtn');
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('opacity-75', 'cursor-not-allowed');
+      btn.innerHTML = `
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        <span>Yes, Decline Request</span>
+      `;
+    }
+
+    openModal('declineConfirmModal');
   }
 
-  const confirmText = action === "approve"
-    ? "Approve this inquiry request?"
-    : "Decline this inquiry request?";
+  function submitApprovedRequest() {
+    if (!currentResId) return;
 
-  if (!confirm(confirmText)) {
-    return;
+    const btn = document.getElementById('confirmApproveSubmitBtn');
+    if (btn) {
+      btn.disabled = true;
+      btn.classList.add('opacity-75', 'cursor-not-allowed');
+      btn.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        Approving...
+      `;
+    }
+
+    executeDecisionForm('approve');
   }
 
-  const form = document.createElement("form");
-  form.method = "POST";
-  form.action = "ActionsUOP/respondApprovalRequest.php";
+  function submitDeclinedRequest() {
+    if (!currentResId) return;
 
-  const requestInput = document.createElement("input");
-  requestInput.type = "hidden";
-  requestInput.name = "request_id";
-  requestInput.value = currentResId;
+    const btn = document.getElementById('confirmDeclineSubmitBtn');
+    if (btn) {
+      btn.disabled = true;
+      btn.classList.add('opacity-75', 'cursor-not-allowed');
+      btn.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        Declining...
+      `;
+    }
 
-  const actionInput = document.createElement("input");
-  actionInput.type = "hidden";
-  actionInput.name = "action";
-  actionInput.value = action;
+    executeDecisionForm('decline');
+  }
 
-  form.appendChild(requestInput);
-  form.appendChild(actionInput);
+  function executeDecisionForm(action) {
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "ActionsUOP/respondApprovalRequest.php";
 
-  document.body.appendChild(form);
-  form.submit();
-}
+    const requestInput = document.createElement("input");
+    requestInput.type = "hidden";
+    requestInput.name = "request_id";
+    requestInput.value = currentResId;
 
-function handleApprove() {
-  respondToRequest("approve");
-}
+    const actionInput = document.createElement("input");
+    actionInput.type = "hidden";
+    actionInput.name = "action";
+    actionInput.value = action;
 
-function handleDecline() {
-  respondToRequest("decline");
-}
+    const remarksInput = document.createElement("input");
+    remarksInput.type = "hidden";
+    remarksInput.name = "remarks";
+    remarksInput.value = document.getElementById("mOwnerRemarks")?.value.trim() || "";
+
+    form.appendChild(requestInput);
+    form.appendChild(actionInput);
+    form.appendChild(remarksInput);
+
+    document.body.appendChild(form);
+    form.submit();
+  }
 </script>
 </body>
 </html>
