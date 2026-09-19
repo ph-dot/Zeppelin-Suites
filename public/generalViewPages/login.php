@@ -23,6 +23,7 @@ if (isset($_SESSION['user_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="../output.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="navbar.js" defer></script>
     <title>Zeppelin Suites - Login Page</title>
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
@@ -38,63 +39,7 @@ if (isset($_SESSION['user_id'])) {
 </head>
 <body class="min-h-screen flex flex-col bg-white overflow-x-hidden">
 <!-- ── NAV ──────────────────────────────────────────────── -->
-<nav class="sticky top-0 w-full bg-white/80 backdrop-blur-md px-6 md:px-16 lg:px-24 xl:px-32 py-4 flex items-center justify-between z-50 border-b border-zinc-200/50">
-    <a href="../generalViewPages/index.html">
-        <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites Logo" style="height:75px;">
-    </a>
-    <!-- Desktop Nav Items -->
-    <div class="hidden md:flex items-center gap-8">
-        <a href="../generalViewPages/index.html" class="text-sm text-zinc-500 hover:text-zinc-800">Home</a>
-        <a href="../generalViewPages/tour.html" class="text-sm text-zinc-500 hover:text-zinc-800 transition-colors">Take a Tour</a>
-        <div class="relative group">
-            <button class="flex items-center gap-1.5 text-sm text-zinc-500 cursor-pointer bg-transparent border-0 py-2 hover:text-zinc-800">
-                Browse Units
-                <svg id="desktopChevron" class="transition-transform group-hover:rotate-180" width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-            <div class="absolute top-full left-0 mt-1 w-44 bg-white border border-zinc-200 rounded-xl shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                <a href="../generalViewPages/studioTypeA.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type A</a>
-                <a href="../generalViewPages/studioTypeB.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Studio Type B</a>
-                <a href="../generalViewPages/oneBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">One Bedroom</a>
-                <a href="../generalViewPages/twoBedroom.html" class="block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50">Two Bedroom</a>
-            </div>
-        </div>
-        <a href="../generalViewPages/faq.html" class="text-sm text-zinc-500 hover:text-zinc-800">FAQ</a>
-        <a href="../generalViewPages/aboutUs.html" class="text-sm text-zinc-500 hover:text-zinc-800">About Us</a>
-        <a href="../generalViewPages/contact.php" class="text-sm text-zinc-500 hover:text-zinc-800">Contact</a>
-        <a href="../generalViewPages/login.php" class="text-sm text-zinc-800 font-medium hover:text-zinc-800">Portal</a>
-    </div>
-
-    <!-- Mobile Menu Button -->
-    <button onclick="toggleMenu()" class="md:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1 focus:outline-none" aria-label="Toggle Navigation Menu">
-        <span id="bar1" class="block w-6 h-0.5 bg-zinc-800 transition-all origin-center"></span>
-        <span id="bar2" class="block w-6 h-0.5 bg-zinc-800 transition-all"></span>
-        <span id="bar3" class="block w-6 h-0.5 bg-zinc-800 transition-all origin-center"></span>
-    </button>
-
-    <!-- Mobile Dropdown Navigation -->
-    <div id="mobileMenu" class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex flex-col p-5 gap-1 md:hidden z-50 shadow-lg hidden">
-        <a href="../generalViewPages/index.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Home</a>
-        <a href="../generalViewPages/tour.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Take a Tour</a>
-        
-        <div>
-            <button onclick="toggleDropdown('mobileDropdown','mobileChevron')" class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50 bg-transparent border-0 cursor-pointer">
-                Browse Units
-                <svg id="mobileChevron" class="transition-transform duration-200" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-            <div id="mobileDropdown" class="hidden flex-col pl-4 mt-1 space-y-1">
-                <a href="../generalViewPages/studioTypeA.html" class="block px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Studio Type A</a>
-                <a href="../generalViewPages/studioTypeB.html" class="block px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Studio Type B</a>
-                <a href="../generalViewPages/oneBedroom.html" class="block px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">One Bedroom</a>
-                <a href="../generalViewPages/twoBedroom.html" class="block px-4 py-2 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50">Two Bedroom</a>
-            </div>
-        </div>
-
-        <a href="../generalViewPages/faq.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">FAQ</a>
-        <a href="../generalViewPages/aboutUs.html" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">About Us</a>
-        <a href="../generalViewPages/contact.php" class="px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50">Contact</a>
-        <a href="../generalViewPages/login.php" class="px-4 py-2.5 rounded-lg text-sm text-zinc-900 font-semibold hover:bg-zinc-50">Portal</a>
-    </div>
-</nav>
+<div id="navbar"></div>
 
 <!-- Main Section: fills the rest of screen and spans top to bottom edge -->
 <main class="flex flex-1 w-full min-h-[calc(100vh-107px)]">
@@ -159,32 +104,6 @@ if (isset($_SESSION['user_id'])) {
 </div>
 
 <script>
-    let menuOpen = false;
-
-    function toggleMenu() {
-        menuOpen = !menuOpen;
-        const menu = document.getElementById('mobileMenu');
-        const bar1 = document.getElementById('bar1');
-        const bar2 = document.getElementById('bar2');
-        const bar3 = document.getElementById('bar3');
-        
-        menu.classList.toggle('hidden', !menuOpen);
-        
-        bar1.style.transform = menuOpen ? 'translateY(8px) rotate(45deg)' : '';
-        bar2.style.opacity = menuOpen ? '0' : '1';
-        bar3.style.transform = menuOpen ? 'translateY(-8px) rotate(-45deg)' : '';
-    }
-
-    function toggleDropdown(id, chevronId) {
-        const el = document.getElementById(id);
-        const ch = document.getElementById(chevronId);
-        const isHidden = el.classList.contains('hidden');
-        
-        el.classList.toggle('hidden', !isHidden);
-        el.classList.toggle('flex', isHidden);
-        ch.style.transform = isHidden ? 'rotate(180deg)' : '';
-    }
-
     function togglePasswordVisibility() {
         const passwordInput = document.getElementById('passwordInput');
         const eyeOpenIcon = document.getElementById('eyeOpenIcon');
