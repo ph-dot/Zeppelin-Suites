@@ -65,17 +65,58 @@ $userData = requireRole($conn, ['admin']);
 .zep-select:focus { outline:none; border-color:#0f172a; box-shadow:0 0 0 3px rgba(15,23,42,0.07); }
 
 /* ─────────────────────────────────────────────
-   FILTER SIDEBAR — NESTED CHECKBOXES
+   FILTER SIDEBAR — UNIT TYPE BUTTONS
 ───────────────────────────────────────────── */
-.unit-type-block { border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
-.unit-type-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #f8fafc; cursor: pointer; user-select: none; transition: background 0.15s; }
-.unit-type-header:hover { background: #f1f5f9; }
-.unit-type-chevron { margin-left: auto; transition: transform 0.25s ease; color: #94a3b8; }
-.unit-type-chevron.open { transform: rotate(180deg); }
-.room-list { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; opacity: 0; }
-.room-list.open { max-height: 400px; opacity: 1; }
-.room-item { display: flex; align-items: center; gap: 10px; padding: 7px 14px 7px 28px; border-top: 1px solid #f1f5f9; transition: background 0.12s; cursor: pointer; }
-.room-item:hover { background: #f8fafc; }
+.unit-filter-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  user-select: none;
+}
+.unit-filter-btn:active {
+  transform: scale(0.98);
+}
+.unit-filter-btn.active {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.unit-filter-btn:not(.active) {
+  background: #f8fafc;
+  color: #475569;
+  border-color: #e2e8f0;
+}
+.unit-filter-btn:not(.active):hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+.unit-filter-count {
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+  transition: all 0.15s ease;
+}
+.unit-filter-btn.active .unit-filter-count {
+  background: #1e293b;
+  color: #94a3b8;
+}
+.unit-filter-btn:not(.active) .unit-filter-count {
+  background: #e2e8f0;
+  color: #64748b;
+}
 
 /* ─────────────────────────────────────────────
    HORIZONTAL TIMELINE TABLE
@@ -358,17 +399,66 @@ $userData = requireRole($conn, ['admin']);
   <!-- Page Content -->
   <div class="main-scroll p-4 md:p-6">
     <!-- Page Title Bar -->
-    <div class="glass-header border border-slate-100/80 px-5 py-4 mb-5 rounded-2xl flex items-center justify-between">
+    <div class="glass-header relative z-40 border border-slate-100/80 px-5 py-4 mb-5 rounded-2xl flex items-center justify-between">
       <div>
         <h1 class="text-xl font-bold text-slate-900 mb-0.5">Booking Calendar</h1>
         <p class="text-slate-500 text-xs">Click any empty date cell to block dates for maintenance or unavailable. Hover a bar for details.</p>
       </div>
-      <div class="flex items-center gap-2">
-        <button class="btn-press px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium transition-all active:scale-95" onclick="changeMonth(-1)">
+      <div class="flex items-center gap-2 relative">
+        <button class="btn-press px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium transition-all active:scale-95" onclick="changeMonth(-1)" title="Previous month">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         </button>
-        <span id="monthTitle" class="text-sm font-bold text-slate-900 min-w-[120px] text-center"></span>
-        <button class="btn-press px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium transition-all active:scale-95" onclick="changeMonth(1)">
+
+        <!-- Month & Year Selector Trigger Pill -->
+        <div class="relative flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80">
+          
+          <!-- Month Dropdown Trigger -->
+          <div class="relative">
+            <button type="button" id="monthPickerBtn" onclick="toggleMonthPicker(event)" class="btn-press flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold text-slate-900 hover:bg-white hover:shadow-xs transition-all" title="Click to change month">
+              <span id="monthNameText">Month</span>
+              <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="monthChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+
+            <!-- Month Popup -->
+            <div id="monthPickerPopup" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-3.5 z-50 transform origin-top-left transition-all">
+              <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-100">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Select Month</span>
+                <span id="popupCurrentYear" class="text-xs font-bold text-slate-700 font-mono"></span>
+              </div>
+              <div class="grid grid-cols-3 gap-1.5" id="monthGrid"></div>
+            </div>
+          </div>
+
+          <span class="text-slate-300 font-normal px-0.5">•</span>
+
+          <!-- Year Dropdown Trigger -->
+          <div class="relative">
+            <button type="button" id="yearPickerBtn" onclick="toggleYearPicker(event)" class="btn-press flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold text-slate-900 font-mono hover:bg-white hover:shadow-xs transition-all" title="Click to change year">
+              <span id="yearNameText">Year</span>
+              <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="yearChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+
+            <!-- Year Popup -->
+            <div id="yearPickerPopup" onclick="event.stopPropagation()" class="hidden absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-3.5 z-50 transform origin-top-right transition-all">
+              <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-100">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Select Year</span>
+                <div class="flex items-center gap-1">
+                  <button type="button" onclick="shiftYearPage(-12, event)" class="p-1 rounded-md hover:bg-slate-100 text-slate-600 transition-colors" title="Previous years">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                  </button>
+                  <span id="yearPageLabel" class="text-xs font-bold text-slate-700 font-mono px-1"></span>
+                  <button type="button" onclick="shiftYearPage(12, event)" class="p-1 rounded-md hover:bg-slate-100 text-slate-600 transition-colors" title="Next years">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-1.5" id="yearGrid"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <button class="btn-press px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium transition-all active:scale-95" onclick="changeMonth(1)" title="Next month">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </button>
         <button class="btn-press px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition-all active:scale-95" onclick="goToday()">Today</button>
@@ -380,23 +470,19 @@ $userData = requireRole($conn, ['admin']);
     </div>
 
     <!-- Layout: Filters + Timeline -->
-    <div class="flex gap-4 items-start">
+    <div class="flex gap-4 items-start relative z-10">
 
       <!-- ── FILTERS SIDEBAR ── -->
       <aside class="shrink-0 w-64 bg-white border border-slate-100/80 rounded-2xl p-4 shadow-lg sticky top-0">
 
-        <!-- Unit Types + Rooms (nested) -->
+        <!-- Unit Types Filter Buttons -->
         <div class="mb-5">
-          <div class="flex items-center justify-between mb-3">
+          <div class="mb-3">
             <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Show Rooms</h2>
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <input type="checkbox" id="selectAllTypes" class="w-3.5 h-3.5 rounded text-slate-900" checked onchange="toggleSelectAll(this)">
-              <span class="text-xs font-medium text-slate-500">All</span>
-            </label>
           </div>
 
-          <div class="space-y-2" id="unitTypeFilters">
-            <!-- Dynamically injected by JS from UNIT_TYPES config -->
+          <div class="space-y-1.5" id="unitTypeFilters">
+            <!-- Dynamically injected unit type buttons -->
           </div>
         </div>
 
@@ -636,106 +722,102 @@ function findRoomMeta(unitType, room) {
 }
 
 // ════════════════════════════════════════════
-// FILTER STATE — which rooms are visible
+// FILTER STATE — which unit types are visible
 // ════════════════════════════════════════════
-// visibleRooms: Set of "UnitType::Room" keys
+let selectedUnitTypes = new Set();
 let visibleRooms = new Set();
+
+function syncVisibleRooms() {
+  visibleRooms.clear();
+  UNIT_TYPES.forEach(ut => {
+    if (selectedUnitTypes.size === 0 || selectedUnitTypes.has(ut.key)) {
+      ut.rooms.forEach(r => {
+        visibleRooms.add(ut.key + "::" + r.room);
+      });
+    }
+  });
+}
 
 function buildFilterSidebar() {
   const container = document.getElementById("unitTypeFilters");
+  if (!container) return;
   container.innerHTML = "";
 
+  if (!UNIT_TYPES || UNIT_TYPES.length === 0) {
+    container.innerHTML = '<p class="text-xs text-slate-400 italic py-2">No unit types available.</p>';
+    return;
+  }
+
+  const allKeys = UNIT_TYPES.map(u => u.key);
+  // Keep existing selections if still valid, otherwise default to all
+  const validSelected = new Set([...selectedUnitTypes].filter(k => allKeys.includes(k)));
+  if (validSelected.size === 0) {
+    selectedUnitTypes = new Set(allKeys);
+  } else {
+    selectedUnitTypes = validSelected;
+  }
+
   UNIT_TYPES.forEach(ut => {
-    const block = document.createElement("div");
-    block.className = "unit-type-block";
-
-    // Header row
-    const header = document.createElement("div");
-    header.className = "unit-type-header";
-    header.innerHTML = `
-      <input type="checkbox" class="unit-type-master w-3.5 h-3.5 rounded" data-unit="${ut.key}" checked>
-      <span class="text-xs font-bold text-slate-700">${ut.key}</span>
-      <svg class="unit-type-chevron open w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-      </svg>
-    `;
-    block.appendChild(header);
-
-    // Room list
-    const roomList = document.createElement("div");
-    roomList.className = "room-list open";
-    ut.rooms.forEach(room => {
-      const key = ut.key + "::" + room.room;
-      visibleRooms.add(key);
-
-      const item = document.createElement("label");
-      item.className = "room-item";
-      item.innerHTML = `
-        <input type="checkbox" class="room-toggle w-3.5 h-3.5 rounded" data-unit="${ut.key}" data-room="${room.room}" checked>
-        <span class="text-xs font-medium text-slate-600">Room ${room.room}</span>
-        ${room.maintenance ? '<span class="w-1.5 h-1.5 rounded-full dot-maintenance shrink-0 ml-auto" title="Under maintenance"></span>' : ''}
-      `;
-      roomList.appendChild(item);
-    });
-    block.appendChild(roomList);
-
-    container.appendChild(block);
-
-    // Toggle collapse on header click (but not on checkbox click)
-    header.addEventListener("click", e => {
-      if (e.target.type === "checkbox") return;
-      const chevron = header.querySelector(".unit-type-chevron");
-      const isOpen = roomList.classList.toggle("open");
-      chevron.classList.toggle("open", isOpen);
-    });
-
-    // Master checkbox: check/uncheck all rooms in this type
-    const masterCb = header.querySelector(".unit-type-master");
-    masterCb.addEventListener("change", () => {
-      roomList.querySelectorAll(".room-toggle").forEach(cb => {
-        cb.checked = masterCb.checked;
-        const k = cb.dataset.unit + "::" + cb.dataset.room;
-        masterCb.checked ? visibleRooms.add(k) : visibleRooms.delete(k);
-      });
-      updateSelectAll();
-      renderTimeline();
-    });
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.dataset.unitType = ut.key;
+    btn.className = "unit-filter-btn btn-press";
+    btn.title = `Click to filter by ${ut.key}`;
+    btn.addEventListener("click", () => toggleUnitTypeFilter(ut.key));
+    container.appendChild(btn);
   });
 
-  // Individual room checkboxes
-  container.addEventListener("change", e => {
-    if (!e.target.classList.contains("room-toggle")) return;
-    const k = e.target.dataset.unit + "::" + e.target.dataset.room;
-    e.target.checked ? visibleRooms.add(k) : visibleRooms.delete(k);
-
-    // Sync master checkbox for this unit type
-    const unitKey = e.target.dataset.unit;
-    const allRoomCbs = container.querySelectorAll(`.room-toggle[data-unit="${unitKey}"]`);
-    const allChecked = Array.from(allRoomCbs).every(cb => cb.checked);
-    const masterCb = container.querySelector(`.unit-type-master[data-unit="${unitKey}"]`);
-    if (masterCb) masterCb.checked = allChecked;
-
-    updateSelectAll();
-    renderTimeline();
-  });
+  updateFilterButtons();
+  syncVisibleRooms();
 }
 
-function toggleSelectAll(cb) {
-  const allRoomCbs = document.querySelectorAll(".room-toggle");
-  const allMasterCbs = document.querySelectorAll(".unit-type-master");
-  allRoomCbs.forEach(r => {
-    r.checked = cb.checked;
-    const k = r.dataset.unit + "::" + r.dataset.room;
-    cb.checked ? visibleRooms.add(k) : visibleRooms.delete(k);
-  });
-  allMasterCbs.forEach(m => m.checked = cb.checked);
+function toggleUnitTypeFilter(key) {
+  const allKeys = UNIT_TYPES.map(u => u.key);
+
+  // If all unit types are currently selected, clicking one focuses on that one
+  if (selectedUnitTypes.size === allKeys.length) {
+    selectedUnitTypes.clear();
+    selectedUnitTypes.add(key);
+  } else if (selectedUnitTypes.has(key)) {
+    selectedUnitTypes.delete(key);
+    // If none left selected, reset to all
+    if (selectedUnitTypes.size === 0) {
+      allKeys.forEach(k => selectedUnitTypes.add(k));
+    }
+  } else {
+    selectedUnitTypes.add(key);
+  }
+
+  updateFilterButtons();
+  syncVisibleRooms();
   renderTimeline();
 }
 
-function updateSelectAll() {
-  const allRoomCbs = document.querySelectorAll(".room-toggle");
-  const allChecked = Array.from(allRoomCbs).every(cb => cb.checked);
-  document.getElementById("selectAllTypes").checked = allChecked;
+function updateFilterButtons() {
+  const container = document.getElementById("unitTypeFilters");
+  if (!container) return;
+
+  const buttons = container.querySelectorAll(".unit-filter-btn");
+  buttons.forEach(btn => {
+    const key = btn.dataset.unitType;
+    const ut = UNIT_TYPES.find(u => u.key === key);
+    const roomCount = ut ? ut.rooms.length : 0;
+    const isActive = selectedUnitTypes.has(key);
+
+    if (isActive) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+
+    btn.innerHTML = `
+      <div class="flex items-center gap-2 min-w-0 flex-1 pointer-events-none">
+        <span class="w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-400' : 'bg-slate-300'} shrink-0 transition-colors"></span>
+        <span class="truncate text-left">${key}</span>
+      </div>
+      <span class="unit-filter-count pointer-events-none">${roomCount}</span>
+    `;
+  });
 }
 
 // Populate manual unit select in blockDatesModal
@@ -777,8 +859,19 @@ function renderTimeline() {
   const totalDays = lastDay.getDate();
   const days      = Array.from({ length: totalDays }, (_, i) => i + 1);
 
-  document.getElementById("monthTitle").textContent =
-    currentDate.toLocaleString("default", { month: "long", year: "numeric" });
+  const monthTitleEl = document.getElementById("monthTitle");
+  if (monthTitleEl) {
+    monthTitleEl.textContent = currentDate.toLocaleString("default", { month: "long", year: "numeric" });
+  }
+
+  const monthNameText = document.getElementById("monthNameText");
+  const yearNameText = document.getElementById("yearNameText");
+  if (monthNameText) {
+    monthNameText.textContent = currentDate.toLocaleString("default", { month: "long" });
+  }
+  if (yearNameText) {
+    yearNameText.textContent = currentDate.getFullYear();
+  }
 
   // Build day labels
   const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -954,11 +1047,179 @@ function parseLocalDate(dateStr) {
 
 function changeMonth(dir) {
   currentDate.setMonth(currentDate.getMonth() + dir);
+  closePickers();
   renderTimeline();
 }
 
 function goToday() {
   currentDate = new Date();
+  closePickers();
+  renderTimeline();
+}
+
+// ════════════════════════════════════════════
+// MANUAL MONTH & YEAR PICKER LOGIC
+// ════════════════════════════════════════════
+let yearPickerBase = Math.floor(new Date().getFullYear() / 12) * 12;
+
+const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTH_NAMES_FULL = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+function toggleMonthPicker(e) {
+  if (e) e.stopPropagation();
+  const mPopup = document.getElementById("monthPickerPopup");
+  const yPopup = document.getElementById("yearPickerPopup");
+  const mChev = document.getElementById("monthChevron");
+  const yChev = document.getElementById("yearChevron");
+
+  if (yPopup) yPopup.classList.add("hidden");
+  if (yChev) yChev.classList.remove("rotate-180");
+
+  if (!mPopup) return;
+  const isOpening = mPopup.classList.contains("hidden");
+  if (isOpening) {
+    populateMonthGrid();
+    mPopup.classList.remove("hidden");
+    if (mChev) mChev.classList.add("rotate-180");
+  } else {
+    mPopup.classList.add("hidden");
+    if (mChev) mChev.classList.remove("rotate-180");
+  }
+}
+
+function toggleYearPicker(e) {
+  if (e) e.stopPropagation();
+  const mPopup = document.getElementById("monthPickerPopup");
+  const yPopup = document.getElementById("yearPickerPopup");
+  const mChev = document.getElementById("monthChevron");
+  const yChev = document.getElementById("yearChevron");
+
+  if (mPopup) mPopup.classList.add("hidden");
+  if (mChev) mChev.classList.remove("rotate-180");
+
+  if (!yPopup) return;
+  const isOpening = yPopup.classList.contains("hidden");
+  if (isOpening) {
+    yearPickerBase = Math.floor(currentDate.getFullYear() / 12) * 12;
+    populateYearGrid();
+    yPopup.classList.remove("hidden");
+    if (yChev) yChev.classList.add("rotate-180");
+  } else {
+    yPopup.classList.add("hidden");
+    if (yChev) yChev.classList.remove("rotate-180");
+  }
+}
+
+function closePickers() {
+  const mPopup = document.getElementById("monthPickerPopup");
+  const yPopup = document.getElementById("yearPickerPopup");
+  const mChev = document.getElementById("monthChevron");
+  const yChev = document.getElementById("yearChevron");
+
+  if (mPopup) mPopup.classList.add("hidden");
+  if (yPopup) yPopup.classList.add("hidden");
+  if (mChev) mChev.classList.remove("rotate-180");
+  if (yChev) yChev.classList.remove("rotate-180");
+}
+
+document.addEventListener("click", (e) => {
+  const mPopup = document.getElementById("monthPickerPopup");
+  const yPopup = document.getElementById("yearPickerPopup");
+  const mBtn = document.getElementById("monthPickerBtn");
+  const yBtn = document.getElementById("yearPickerBtn");
+
+  if (mPopup && !mPopup.contains(e.target) && !mBtn?.contains(e.target)) {
+    mPopup.classList.add("hidden");
+    document.getElementById("monthChevron")?.classList.remove("rotate-180");
+  }
+  if (yPopup && !yPopup.contains(e.target) && !yBtn?.contains(e.target)) {
+    yPopup.classList.add("hidden");
+    document.getElementById("yearChevron")?.classList.remove("rotate-180");
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closePickers();
+});
+
+function populateMonthGrid() {
+  const grid = document.getElementById("monthGrid");
+  const yrLabel = document.getElementById("popupCurrentYear");
+  if (!grid) return;
+
+  const currentYear = currentDate.getFullYear();
+  const currentMonthIdx = currentDate.getMonth();
+
+  if (yrLabel) yrLabel.textContent = currentYear;
+  grid.innerHTML = "";
+
+  MONTH_NAMES_SHORT.forEach((shortName, idx) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    const isSelected = idx === currentMonthIdx;
+    btn.className = `btn-press py-2 px-1 text-xs rounded-xl transition-all ${
+      isSelected
+        ? "bg-slate-900 text-white font-bold shadow-xs"
+        : "text-slate-700 hover:bg-slate-100 font-medium"
+    }`;
+    btn.textContent = shortName;
+    btn.title = MONTH_NAMES_FULL[idx];
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      selectMonth(idx);
+    });
+    grid.appendChild(btn);
+  });
+}
+
+function selectMonth(monthIndex) {
+  currentDate.setMonth(monthIndex);
+  closePickers();
+  renderTimeline();
+}
+
+function shiftYearPage(offset, e) {
+  if (e) e.stopPropagation();
+  yearPickerBase += offset;
+  populateYearGrid();
+}
+
+function populateYearGrid() {
+  const grid = document.getElementById("yearGrid");
+  const label = document.getElementById("yearPageLabel");
+  if (!grid) return;
+
+  const activeYear = currentDate.getFullYear();
+  const startYear = yearPickerBase;
+  const endYear = yearPickerBase + 11;
+
+  if (label) label.textContent = `${startYear}–${endYear}`;
+  grid.innerHTML = "";
+
+  for (let y = startYear; y <= endYear; y++) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    const isSelected = y === activeYear;
+    btn.className = `btn-press py-2 px-1 text-xs rounded-xl font-mono transition-all ${
+      isSelected
+        ? "bg-slate-900 text-white font-bold shadow-xs"
+        : "text-slate-700 hover:bg-slate-100 font-medium"
+    }`;
+    btn.textContent = y;
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      selectYear(y);
+    });
+    grid.appendChild(btn);
+  }
+}
+
+function selectYear(year) {
+  currentDate.setFullYear(year);
+  closePickers();
   renderTimeline();
 }
 
@@ -1039,6 +1300,7 @@ async function handleSaveBlockDates(e) {
       closeBlockDatesModal();
       showToast(data.message || "Dates blocked successfully.");
       await loadCalendarData();
+      buildFilterSidebar();
       renderTimeline();
     } else {
       errNotice.textContent = data.message || "Failed to block dates.";
@@ -1162,6 +1424,7 @@ async function handleUnblockClick() {
     hideQuickView();
     showToast("Dates successfully unblocked.");
     await loadCalendarData();
+    buildFilterSidebar();
     renderTimeline();
   } catch (err) {
     console.error(err);
