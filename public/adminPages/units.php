@@ -108,11 +108,7 @@ tailwind.config = {
           <div>
             <div class="flex items-center gap-3">
               <h1 class="text-2xl font-bold text-slate-900">Units</h1>
-              <span id="totalUnitsBadge" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-mono">
-                Total <?= $totalUnitsCount ?> Units
-              </span>
             </div>
-            <p class="text-xs text-slate-500 mt-1">Categorized by building floors with unit occupancy & lease rates.</p>
           </div>
 
           <!-- Add Unit Button -->

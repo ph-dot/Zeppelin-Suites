@@ -242,87 +242,30 @@ if (empty($unitsByFloor)) {
 // Render each floor section as a card/block
 foreach ($unitsByFloor as $floorNum => $units) {
     $floorTitle = getFloorTitle($floorNum);
-    $floorCount = count($units);
     $badgeStyle = getFloorIconBg($floorNum);
-
-    // Compute floor summary metadata
-    $typesMap = [];
-    $occupiedCount = 0;
-    $availableCount = 0;
-    $resaleCount = 0;
-    $reservedCount = 0;
-
-    foreach ($units as $u) {
-        $typeName = $u['unit_type'] ?: 'Unit';
-        $typesMap[$typeName] = ($typesMap[$typeName] ?? 0) + 1;
-
-        $st = strtolower(trim($u['unit_current_status']));
-        if ($st === 'occupied') $occupiedCount++;
-        elseif ($st === 'ready for occupancy') $availableCount++;
-        elseif ($st === 'resale') $resaleCount++;
-        elseif ($st === 'reserved') $reservedCount++;
-    }
-
-    $typeSummaryList = [];
-    foreach ($typesMap as $tName => $cnt) {
-        $typeSummaryList[] = "{$cnt} {$tName}";
-    }
-    $typeSummaryString = implode(' • ', $typeSummaryList);
     ?>
 
     <div class="floor-section bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md mb-6" data-floor="<?= $floorNum ?>">
         
         <!-- Floor Header -->
-        <div class="floor-header px-6 py-4 border-b border-slate-100/90 bg-gradient-to-r from-slate-50/90 via-white to-slate-50/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div class="flex items-center gap-3.5">
-                <div class="w-11 h-11 rounded-xl <?= $badgeStyle ?> flex items-center justify-center font-bold text-base shadow-sm shrink-0 border">
-                    <?= $floorNum ?>F
-                </div>
-                <div>
-                    <div class="flex items-center gap-2.5">
-                        <h2 class="text-base font-bold text-slate-900 leading-tight"><?= clean($floorTitle) ?></h2>
-                        <span class="floor-unit-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-900 text-white font-mono">
-                            <?= $floorCount ?> <?= $floorCount === 1 ? 'unit' : 'units' ?>
-                        </span>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-2">
-                        <span><?= clean($typeSummaryString) ?></span>
-                        <?php if ($availableCount > 0): ?>
-                            <span class="text-slate-300">•</span>
-                            <span class="text-emerald-600 font-medium"><?= $availableCount ?> Available</span>
-                        <?php endif; ?>
-                        <?php if ($occupiedCount > 0): ?>
-                            <span class="text-slate-300">•</span>
-                            <span class="text-slate-600 font-medium"><?= $occupiedCount ?> Occupied</span>
-                        <?php endif; ?>
-                        <?php if ($resaleCount > 0): ?>
-                            <span class="text-slate-300">•</span>
-                            <span class="text-blue-600 font-medium"><?= $resaleCount ?> Resale</span>
-                        <?php endif; ?>
-                        <?php if ($reservedCount > 0): ?>
-                            <span class="text-slate-300">•</span>
-                            <span class="text-amber-600 font-medium"><?= $reservedCount ?> Reserved</span>
-                        <?php endif; ?>
-                    </p>
-                </div>
+        <div class="floor-header px-6 py-4 border-b border-slate-100/90 bg-gradient-to-r from-slate-50/90 via-white to-slate-50/50 flex items-center gap-3.5">
+            <div class="w-10 h-10 rounded-xl <?= $badgeStyle ?> flex items-center justify-center font-bold text-sm shadow-sm shrink-0 border">
+                <?= $floorNum ?>F
             </div>
-
-            <div class="flex items-center gap-2 shrink-0">
-                <span class="text-xs text-slate-400 font-mono hidden md:inline-block">Floor #<?= str_pad($floorNum, 2, '0', STR_PAD_LEFT) ?></span>
-            </div>
+            <h2 class="text-base font-bold text-slate-900 leading-tight"><?= clean($floorTitle) ?></h2>
         </div>
 
         <!-- Floor Units Table -->
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+            <table class="w-full text-sm table-fixed min-w-[850px]">
                 <thead>
                     <tr class="border-b border-slate-100 bg-slate-50/50 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                        <th class="text-left px-5 py-3.5 whitespace-nowrap">UNIT</th>
-                        <th class="text-left px-4 py-3.5 whitespace-nowrap">LISTING</th>
-                        <th class="text-left px-4 py-3.5 whitespace-nowrap">STATUS</th>
-                        <th class="text-left px-4 py-3.5 whitespace-nowrap">TENANT & STAY</th>
-                        <th class="text-left px-4 py-3.5 whitespace-nowrap">RATE & TERM</th>
-                        <th class="text-right px-5 py-3.5 whitespace-nowrap">ACTIONS</th>
+                        <th class="text-left px-5 py-3.5 whitespace-nowrap w-[22%] min-w-[180px]">UNIT</th>
+                        <th class="text-left px-4 py-3.5 whitespace-nowrap w-[14%] min-w-[120px]">LISTING</th>
+                        <th class="text-left px-4 py-3.5 whitespace-nowrap w-[22%] min-w-[180px]">STATUS</th>
+                        <th class="text-left px-4 py-3.5 whitespace-nowrap w-[20%] min-w-[160px]">TENANT</th>
+                        <th class="text-left px-4 py-3.5 whitespace-nowrap w-[12%] min-w-[110px]">RATE</th>
+                        <th class="text-right px-5 py-3.5 whitespace-nowrap w-[10%] min-w-[90px]">ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
@@ -367,33 +310,11 @@ foreach ($unitsByFloor as $floorNum => $units) {
                             $dot_class = 'bg-slate-400';
                         }
 
-                        // Availability calculation with 2-year duration horizon
-                        $avail_info = getUnitAvailabilityInfo($conn, (int)$row['unit_id'], $unit_current_status, $row['move_out_date'] ?? null);
-
-                        // Tenant & Stay
+                        // Tenant status
                         $hasTenant = (!empty($row['tenant_name']) && $row['tenant_name'] !== 'No Tenant');
-                        $stay_dates_text = '';
-                        if ($hasTenant) {
-                            if (!empty($row['move_in_date']) && !empty($row['move_out_date']) && $row['move_in_date'] !== '0000-00-00' && $row['move_out_date'] !== '0000-00-00') {
-                                $inTs = strtotime($row['move_in_date']);
-                                $outTs = strtotime($row['move_out_date']);
-                                $durStr = getStayDurationText($row['move_in_date'], $row['move_out_date']);
-                                $stay_dates_text = date('M j', $inTs) . ' – ' . date('M j, Y', $outTs) . ($durStr ? " ({$durStr})" : "");
-                            } else {
-                                $stay_dates_text = '— Active stay';
-                            }
-                        }
 
-                        // Rate & Term
+                        // Rate value
                         $price_value = peso($row['lease_rate'], true);
-                        $stay_cat = strtolower(trim($row['stay_category'] ?? 'long term'));
-                        if ($stay_cat === 'short term') {
-                            $term_badge_label = 'Flexible term';
-                            $term_badge_class = 'bg-purple-100 text-purple-700 border-purple-200';
-                        } else {
-                            $term_badge_label = 'Long term';
-                            $term_badge_class = 'bg-sky-100 text-sky-700 border-sky-200';
-                        }
 
                         // Listing badge
                         $listing_type = strtolower(trim($row['listing_type'] ?? 'for lease'));
@@ -421,57 +342,42 @@ foreach ($unitsByFloor as $floorNum => $units) {
                         data-search-text="<?= strtolower("{$unit_number} {$unit_type} {$sqm_formatted} sqm {$floorTitle} Floor {$floorNum} {$listing_type} {$unit_current_status} {$unit_owner_name} {$unit_owner_email} {$tenant_name}") ?>">
                         
                         <!-- 1. UNIT -->
-                        <td class="px-5 py-4 whitespace-nowrap">
+                        <td class="px-5 py-3.5 whitespace-nowrap align-middle">
                             <div>
-                                <p class="unit-num font-bold text-slate-900 text-base leading-tight"><?= $unit_number ?></p>
-                                <p class="text-xs text-slate-500 mt-0.5"><?= $unit_type ?> <span class="text-slate-300">•</span> <span class="font-semibold text-slate-700"><?= $sqm_formatted ?> SQM</span></p>
+                                <p class="unit-num font-bold text-slate-900 text-sm leading-tight"><?= $unit_number ?></p>
+                                <p class="text-xs text-slate-500 mt-0.5"><?= $unit_type ?></p>
                             </div>
                         </td>
 
                         <!-- 2. LISTING -->
-                        <td class="px-4 py-4 whitespace-nowrap">
+                        <td class="px-4 py-3.5 whitespace-nowrap align-middle">
                             <?= $listing_badge_html ?>
                         </td>
 
                         <!-- 3. STATUS -->
-                        <td class="px-4 py-4 whitespace-nowrap">
-                            <div>
-                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border <?= $status_class ?>">
-                                    <span class="w-1.5 h-1.5 rounded-full <?= $dot_class ?>"></span>
-                                    <?= $unit_current_status ?>
-                                </span>
-                                <p class="text-xs text-slate-700 mt-1.5 font-medium leading-tight"><?= clean($avail_info['range']) ?></p>
-                                <p class="text-[11px] text-slate-400 mt-0.5"><?= clean($avail_info['duration']) ?></p>
-                            </div>
+                        <td class="px-4 py-3.5 whitespace-nowrap align-middle">
+                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border <?= $status_class ?>">
+                                <span class="w-1.5 h-1.5 rounded-full <?= $dot_class ?>"></span>
+                                <?= $unit_current_status ?>
+                            </span>
                         </td>
 
-                        <!-- 4. TENANT & STAY -->
-                        <td class="px-4 py-4 whitespace-nowrap">
-                            <div>
-                                <?php if ($hasTenant): ?>
-                                    <p class="font-bold text-slate-900 text-sm leading-snug"><?= $tenant_name ?></p>
-                                    <p class="text-xs text-slate-500 mt-1 font-normal"><?= clean($stay_dates_text) ?></p>
-                                <?php else: ?>
-                                    <p class="italic text-sm text-slate-500 font-medium leading-tight">No active tenant</p>
-                                    <p class="text-xs text-slate-400 mt-1">— Vacant</p>
-                                <?php endif; ?>
-                            </div>
+                        <!-- 4. TENANT -->
+                        <td class="px-4 py-3.5 whitespace-nowrap align-middle">
+                            <?php if ($hasTenant): ?>
+                                <p class="font-bold text-slate-900 text-sm leading-snug"><?= $tenant_name ?></p>
+                            <?php else: ?>
+                                <p class="italic text-sm text-slate-400 font-medium leading-tight">No active tenant</p>
+                            <?php endif; ?>
                         </td>
 
-                        <!-- 5. RATE & TERM -->
-                        <td class="px-4 py-4 whitespace-nowrap">
-                            <div>
-                                <p class="font-bold text-slate-900 font-mono text-sm leading-tight">
-                                    <?= $price_value ?> <span class="font-sans text-xs font-normal text-slate-500">/mo</span>
-                                </p>
-                                <span class="inline-block text-xs font-semibold px-2.5 py-0.5 rounded-md border <?= $term_badge_class ?> mt-1.5">
-                                    <?= $term_badge_label ?>
-                                </span>
-                            </div>
+                        <!-- 5. RATE -->
+                        <td class="px-4 py-3.5 whitespace-nowrap align-middle">
+                            <p class="font-bold text-slate-900 font-mono text-sm leading-tight"><?= $price_value ?></p>
                         </td>
 
                         <!-- 6. ACTIONS -->
-                        <td class="px-5 py-4 text-right whitespace-nowrap">
+                        <td class="px-5 py-3.5 text-right whitespace-nowrap align-middle">
                             <a 
                                 href="unitDetails.php?unit_id=<?= $unit_id ?>"
                                 class="view-btn btn-press inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-800 bg-white border border-slate-300 hover:bg-slate-50 px-3.5 py-1.5 rounded-lg active:scale-95 transition-all shadow-xs">
