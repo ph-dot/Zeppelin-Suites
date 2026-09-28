@@ -120,15 +120,20 @@ function getRemainingEligibleUnitCount(mysqli $conn, int $inq_id): int
     $sql = "
         SELECT
             u.unit_id,
-            MAX(r.move_out_date) AS latest_move_out
+            MAX(r.move_out_date) AS latest_move_out,
+            MAX(b.end_date) AS latest_blocked_out
         FROM units_table u
         LEFT JOIN reservation_table r
             ON u.unit_id = r.unit_id
             AND LOWER(r.reservation_status) NOT IN ('cancelled','rejected')
             AND r.move_in_date <= CURDATE()
             AND r.move_out_date >= CURDATE()
+        LEFT JOIN unit_blocked_dates b
+            ON u.unit_id = b.unit_id
+            AND b.start_date <= CURDATE()
+            AND b.end_date >= CURDATE()
         WHERE u.unit_type = ?
-        AND u.unit_current_status NOT IN ('Resale', 'On Hold', 'Under maintenance')
+        AND u.unit_current_status NOT IN ('Resale', 'On Hold', 'Under maintenance', 'Archived')
         AND u.unit_owner_id IS NOT NULL
         AND u.unit_id NOT IN (
             SELECT unit_id FROM owner_approval_requests WHERE inq_id = ?
@@ -148,9 +153,23 @@ function getRemainingEligibleUnitCount(mysqli $conn, int $inq_id): int
  
     $candidates = [];
     while ($row = $result->fetch_assoc()) {
-        $availableDate = $row['latest_move_out'] === null
-            ? new DateTime()
-            : new DateTime($row['latest_move_out']);
+        $busyEndDates = [];
+        if (!empty($row['latest_move_out'])) {
+            $busyEndDates[] = new DateTime($row['latest_move_out']);
+        }
+        if (!empty($row['latest_blocked_out'])) {
+            $busyEndDates[] = new DateTime($row['latest_blocked_out']);
+        }
+
+        if (empty($busyEndDates)) {
+            $availableDate = new DateTime();
+        } else {
+            $availableDate = max($busyEndDates);
+        }
+
+        if ($availableDate < $today) {
+            $availableDate = clone $today;
+        }
  
         if ($availableDate > $latestMoveIn) {
             continue;
@@ -164,50 +183,99 @@ function getRemainingEligibleUnitCount(mysqli $conn, int $inq_id): int
         return 0;
     }
  
-    // Find each candidate unit's next upcoming reservation (if any), so a
-    // unit with only a few days free before its next booking doesn't count
-    // as "eligible" when it can't actually meet the minimum stay.
     $unitIds = array_keys($candidates);
     $placeholders = implode(',', array_fill(0, count($unitIds), '?'));
     $types = str_repeat('i', count($unitIds));
+
+    $bookingsByUnit = [];
  
     $nextStmt = $conn->prepare("
-        SELECT unit_id, move_in_date
+        SELECT unit_id, move_in_date, move_out_date
         FROM reservation_table
         WHERE unit_id IN ($placeholders)
         AND LOWER(reservation_status) NOT IN ('cancelled','rejected')
         AND move_in_date IS NOT NULL
+        AND (move_out_date >= CURDATE() OR move_out_date IS NULL)
+        ORDER BY move_in_date ASC
     ");
-    $nextStmt->bind_param($types, ...$unitIds);
-    $nextStmt->execute();
-    $nextResult = $nextStmt->get_result();
- 
-    $nextBookingByUnit = [];
-    while ($nextRow = $nextResult->fetch_assoc()) {
-        $unitId = $nextRow['unit_id'];
-        $moveIn = new DateTime($nextRow['move_in_date']);
-        $availableDate = $candidates[$unitId];
- 
-        if ($moveIn <= $availableDate) {
-            continue;
+    if ($nextStmt) {
+        $nextStmt->bind_param($types, ...$unitIds);
+        $nextStmt->execute();
+        $nextResult = $nextStmt->get_result();
+     
+        while ($nextRow = $nextResult->fetch_assoc()) {
+            $bookingsByUnit[$nextRow['unit_id']][] = [
+                'move_in'  => new DateTime($nextRow['move_in_date']),
+                'move_out' => $nextRow['move_out_date'] ? new DateTime($nextRow['move_out_date']) : null,
+            ];
         }
- 
-        if (!isset($nextBookingByUnit[$unitId]) || $moveIn < $nextBookingByUnit[$unitId]) {
-            $nextBookingByUnit[$unitId] = $moveIn;
-        }
+        $nextStmt->close();
     }
-    $nextStmt->close();
+
+    $blockStmt = $conn->prepare("
+        SELECT unit_id, start_date, end_date
+        FROM unit_blocked_dates
+        WHERE unit_id IN ($placeholders)
+        AND start_date IS NOT NULL
+        AND (end_date >= CURDATE() OR end_date IS NULL)
+        ORDER BY start_date ASC
+    ");
+    if ($blockStmt) {
+        $blockStmt->bind_param($types, ...$unitIds);
+        $blockStmt->execute();
+        $blockResult = $blockStmt->get_result();
+
+        while ($bRow = $blockResult->fetch_assoc()) {
+            $bookingsByUnit[$bRow['unit_id']][] = [
+                'move_in'  => new DateTime($bRow['start_date']),
+                'move_out' => !empty($bRow['end_date']) ? new DateTime($bRow['end_date']) : null,
+            ];
+        }
+        $blockStmt->close();
+    }
+
+    foreach ($bookingsByUnit as $uId => &$intervals) {
+        usort($intervals, function($a, $b) {
+            if ($a['move_in'] == $b['move_in']) {
+                return 0;
+            }
+            return ($a['move_in'] < $b['move_in']) ? -1 : 1;
+        });
+    }
+    unset($intervals);
  
     $count = 0;
-    foreach ($candidates as $unitId => $availableDate) {
-        $leaseEnd = clone $availableDate;
-        $leaseEnd->modify("+".$months." months");
- 
-        if (isset($nextBookingByUnit[$unitId]) && $nextBookingByUnit[$unitId] < $leaseEnd) {
-            $gapDays = (int) $availableDate->diff($nextBookingByUnit[$unitId])->days;
-            if ($gapDays < $minStayDays) {
+    foreach ($candidates as $unitId => $initAvailableDate) {
+        $availableDate = clone $initAvailableDate;
+
+        foreach (($bookingsByUnit[$unitId] ?? []) as $booking) {
+            if ($booking['move_in'] <= $availableDate) {
+                if ($booking['move_out'] !== null && $booking['move_out'] > $availableDate) {
+                    $availableDate = clone $booking['move_out'];
+                }
                 continue;
             }
+
+            $gapDays = (int) $availableDate->diff($booking['move_in'])->days;
+
+            if ($gapDays < $minStayDays) {
+                if ($booking['move_out'] === null) {
+                    $availableDate = null;
+                    break;
+                }
+                $availableDate = clone $booking['move_out'];
+                continue;
+            }
+
+            break;
+        }
+
+        if ($availableDate === null) {
+            continue;
+        }
+
+        if ($availableDate > $latestMoveIn) {
+            continue;
         }
  
         $count++;

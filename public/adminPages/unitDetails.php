@@ -14,11 +14,6 @@ if ($unitId <= 0) {
     exit;
 }
 
-// Ensure unit_ownership_history table exists
-$chkTable = $conn->query("SHOW TABLES LIKE 'unit_ownership_history'");
-if (!$chkTable || $chkTable->num_rows === 0) {
-    require_once __DIR__ . '/../php_files/migrate_unit_ownership_history.php';
-}
 
 if (!function_exists('clean')) {
     function clean($value) {
@@ -86,6 +81,8 @@ $stmtUnit = $conn->prepare("
         u.sqm,
         u.floor_number,
         u.lease_rate,
+        COALESCE(u.resellling_price, u.reselling_price, NULL) AS reselling_price,
+        COALESCE(u.resellling_price, u.reselling_price, NULL) AS resellling_price,
         u.listing_type,
         u.stay_category,
         u.unit_owner_id,
@@ -117,6 +114,7 @@ $currentStatus = trim($unit['unit_current_status'] ?? 'Ready for Occupancy');
 $listingType = trim($unit['listing_type'] ?? 'For Lease');
 $stayCategory = trim($unit['stay_category'] ?? 'Long term');
 $leaseRate = (float)($unit['lease_rate'] ?? 0);
+$resellingPrice = (float)($unit['resellling_price'] ?? $unit['reselling_price'] ?? 0);
 $currentOwnerId = $unit['unit_owner_id'] !== null ? (int)$unit['unit_owner_id'] : null;
 
 // Status badge styling
@@ -492,20 +490,29 @@ $navBreadcrumb = '
           </p>
         </div>
 
-        <!-- Card 2: Lease Rate -->
+        <!-- Card 2: Lease / Resale Price -->
         <div class="bg-white rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-xs transition-all hover:shadow-sm flex flex-col justify-between min-h-[145px]">
           <div>
             <div class="flex items-center justify-between gap-2">
-              <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Lease Rate</p>
-              <span class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0">
+              <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider" id="cardRateTitle"><?= $listingType === 'Resale' ? 'Reselling Price' : 'Lease Rate' ?></p>
+              <span class="w-7 h-7 rounded-lg <?= $listingType === 'Resale' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600' ?> flex items-center justify-center font-bold text-xs shrink-0" id="cardRateIcon">
                 ₱
               </span>
             </div>
             <div class="mt-3">
-              <p class="text-lg md:text-xl font-bold text-slate-900 font-mono leading-tight" id="displayLeaseRate"><?= peso($leaseRate, true) ?></p>
+              <p class="text-lg md:text-xl font-bold text-slate-900 font-mono leading-tight" id="displayLeaseRate">
+                <?= $listingType === 'Resale' ? peso($resellingPrice > 0 ? $resellingPrice : $leaseRate, true) : peso($leaseRate, true) ?>
+              </p>
             </div>
           </div>
-          <p class="text-xs text-slate-500 mt-3">Per month standard rate</p>
+          <div class="flex items-center justify-between text-xs text-slate-500 mt-3 flex-wrap gap-1">
+            <span id="displayRateSub"><?= $listingType === 'Resale' ? 'Outright unit selling price' : 'Per month standard rate' ?></span>
+            <?php if ($listingType !== 'Resale' && $resellingPrice > 0): ?>
+              <span class="text-[11px] text-slate-400 font-mono">Resale: <?= peso($resellingPrice) ?> (Saved)</span>
+            <?php elseif ($listingType === 'Resale' && $leaseRate > 0): ?>
+              <span class="text-[11px] text-slate-400 font-mono">Lease: <?= peso($leaseRate) ?>/mo (Saved)</span>
+            <?php endif; ?>
+          </div>
         </div>
 
         <!-- Card 3: Term Type / Category -->
@@ -1005,16 +1012,33 @@ $navBreadcrumb = '
         </div>
 
         <!-- Lease Rate (Read-only) -->
-        <div>
-          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Lease Rate (PHP)</label>
-          <div class="relative">
-            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 font-mono text-sm">₱</span>
-            <input 
-              type="text" 
-              value="<?= number_format($leaseRate, 2) ?>" 
-              readonly 
-              tabindex="-1"
-              class="w-full pl-8 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 cursor-not-allowed select-none focus:outline-none focus:ring-0 shadow-2xs">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Lease Rate (Read-only) -->
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Lease Rate (PHP)</label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 font-mono text-sm">₱</span>
+              <input 
+                type="text" 
+                value="<?= $leaseRate > 0 ? number_format($leaseRate, 2) : '—' ?>" 
+                readonly 
+                tabindex="-1"
+                class="w-full pl-8 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 cursor-not-allowed select-none focus:outline-none focus:ring-0 shadow-2xs">
+            </div>
+          </div>
+
+          <!-- Reselling Price (Read-only) -->
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Reselling Price (PHP)</label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 font-mono text-sm">₱</span>
+              <input 
+                type="text" 
+                value="<?= $resellingPrice > 0 ? number_format($resellingPrice, 2) : '—' ?>" 
+                readonly 
+                tabindex="-1"
+                class="w-full pl-8 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 cursor-not-allowed select-none focus:outline-none focus:ring-0 shadow-2xs">
+            </div>
           </div>
         </div>
 
@@ -1022,7 +1046,7 @@ $navBreadcrumb = '
           <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-          Listing mode, lease term duration, and monthly lease rate can only be configured by the unit owner.
+          Listing mode, lease term duration, lease rate, and reselling price can only be configured by the unit owner.
         </p>
       </div>
 

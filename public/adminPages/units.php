@@ -164,6 +164,7 @@ tailwind.config = {
               <option value="Reserved">Reserved</option>
               <option value="Occupied">Occupied</option>
               <option value="Under maintenance">Under maintenance</option>
+              <option value="Archived">Archived</option>
             </select>
           </div>
 

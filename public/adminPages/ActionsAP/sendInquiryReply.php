@@ -16,6 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
+$userData = requireRole($conn, ['admin']);
+
 $inq_id = isset($_POST['inq_id']) ? (int)$_POST['inq_id'] : 0;
 $reply_to = trim($_POST['reply_to'] ?? '');
 $reply_subject = trim($_POST['reply_subject'] ?? '');
@@ -143,10 +145,6 @@ try {
 
     if (!$updateStmt->execute()) {
         throw new Exception("Status update failed: " . $updateStmt->error);
-    }
-
-    if ($updateStmt->affected_rows <= 0) {
-        throw new Exception("Email sent, but inquiry status was not updated. Check inquiry ID.");
     }
 
     $updateStmt->close();

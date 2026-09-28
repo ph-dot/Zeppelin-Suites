@@ -4,6 +4,8 @@ require_once __DIR__ . '/../../php_files/db.php';
 
 header('Content-Type: application/json');
 
+$userData = requireRole($conn, ['admin']);
+
 $data = json_decode(file_get_contents("php://input"), true);
 
 $reservation_id = $data['reservation_id'] ?? null;

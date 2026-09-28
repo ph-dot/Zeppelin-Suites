@@ -13,6 +13,8 @@ use PHPMailer\PHPMailer\Exception;
 
 header('Content-Type: application/json');
 
+$userData = requireRole($conn, ['admin']);
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode([
         'success' => false,

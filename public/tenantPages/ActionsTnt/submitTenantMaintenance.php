@@ -49,22 +49,46 @@ if (!in_array($priority, $allowedPriorities)) {
 $conn->begin_transaction();
 
 try {
-    // Fetch unit details and unit owner
+    // 1. Fetch authenticated tenant's identity (TASK-009)
+    $userStmt = $conn->prepare("SELECT email, full_name FROM users_table WHERE user_id = ? LIMIT 1");
+    if (!$userStmt) {
+        throw new Exception("Database error: " . $conn->error);
+    }
+    $userStmt->bind_param("i", $tenant_id);
+    $userStmt->execute();
+    $tenantUser = $userStmt->get_result()->fetch_assoc();
+    $userStmt->close();
+
+    if (!$tenantUser) {
+        throw new Exception("Tenant account not found.");
+    }
+
+    $tenantEmail = trim($tenantUser['email'] ?? '');
+    $tenantName = trim($tenantUser['full_name'] ?? '');
+
+    // 2. Strict Authorization Check (TASK-009)
+    // Confirm that the authenticated tenant has an active or approved lease for the specified unit_id
     $checkSql = "
-        SELECT unit_id, unit_owner_id 
-        FROM units_table 
-        WHERE unit_id = ? 
+        SELECT u.unit_id, u.unit_number, u.unit_owner_id 
+        FROM units_table u
+        INNER JOIN reservation_table r ON r.unit_id = u.unit_id
+        WHERE u.unit_id = ? 
+          AND (r.client_email = ? OR r.client_name = ?)
+          AND LOWER(r.reservation_status) NOT IN ('cancelled', 'rejected')
         LIMIT 1
     ";
     $checkStmt = $conn->prepare($checkSql);
-    $checkStmt->bind_param("i", $unit_id);
+    if (!$checkStmt) {
+        throw new Exception("Database error: " . $conn->error);
+    }
+    $checkStmt->bind_param("iss", $unit_id, $tenantEmail, $tenantName);
     $checkStmt->execute();
     $checkResult = $checkStmt->get_result();
     $unit = $checkResult->fetch_assoc();
     $checkStmt->close();
 
     if (!$unit) {
-        throw new Exception("Invalid unit selected.");
+        throw new Exception("Unauthorized: You do not have an active or approved lease for this unit. You can only submit maintenance tickets for your own leased unit.");
     }
 
     $unit_owner_id = (int)($unit['unit_owner_id'] ?? 0);

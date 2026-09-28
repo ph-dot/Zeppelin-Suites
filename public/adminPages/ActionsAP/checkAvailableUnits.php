@@ -5,6 +5,8 @@ require_once '../../php_files/sync_unit_status.php';
 
 header('Content-Type: application/json');
 
+$userData = requireRole($conn, ['admin']);
+
 syncExpiredUnitStatuses($conn);
 
 $unit_type = $_GET['unit_type'] ?? '';
@@ -193,7 +195,8 @@ SELECT
     u.lease_rate,
     u.unit_owner_id,
     owner.full_name AS owner_name,
-    MAX(r.move_out_date) AS latest_move_out
+    MAX(r.move_out_date) AS latest_move_out,
+    MAX(b.end_date) AS latest_blocked_out
 FROM units_table u
 LEFT JOIN users_table owner
     ON u.unit_owner_id = owner.user_id
@@ -202,8 +205,12 @@ LEFT JOIN reservation_table r
     AND LOWER(r.reservation_status) NOT IN ('cancelled','rejected')
     AND r.move_in_date <= CURDATE()
     AND r.move_out_date >= CURDATE()
+LEFT JOIN unit_blocked_dates b
+    ON u.unit_id = b.unit_id
+    AND b.start_date <= CURDATE()
+    AND b.end_date >= CURDATE()
 WHERE u.unit_type = ?
-AND u.unit_current_status NOT IN ('Resale', 'On Hold', 'Under maintenance')
+AND u.unit_current_status NOT IN ('Resale', 'On Hold', 'Under maintenance', 'Archived')
 AND u.unit_owner_id IS NOT NULL
 AND u.unit_id NOT IN (
     SELECT unit_id FROM owner_approval_requests
@@ -228,17 +235,28 @@ $stmt->execute();
 $result = $stmt->get_result();
 $candidates = [];
 
-// CHECK EACH UNIT'S IMMEDIATE AVAILABILITY (ignoring future bookings for now)
+// CHECK EACH UNIT'S IMMEDIATE AVAILABILITY (considering active reservations & blocked dates today)
 while ($row = $result->fetch_assoc()) {
-    // If no reservation, available today
-    if ($row['latest_move_out'] === null) {
+    $busyEndDates = [];
+    if (!empty($row['latest_move_out'])) {
+        $busyEndDates[] = new DateTime($row['latest_move_out']);
+    }
+    if (!empty($row['latest_blocked_out'])) {
+        $busyEndDates[] = new DateTime($row['latest_blocked_out']);
+    }
+
+    if (empty($busyEndDates)) {
         $availableDate = new DateTime();
     } else {
-        $availableDate = new DateTime($row['latest_move_out']);
+        $availableDate = max($busyEndDates);
     }
+
+    if ($availableDate < $today) {
+        $availableDate = clone $today;
+    }
+
     // Check customer preference only for future available units
     // Units available today can still be suggested
-
     if ($availableDate > $latestMoveIn) {
         continue;
     }
@@ -249,14 +267,10 @@ while ($row = $result->fetch_assoc()) {
     ];
 }
 
-// FETCH EVERY UPCOMING RESERVATION (not just the first one) FOR EACH CANDIDATE
-// UNIT, sorted by move-in date. A unit that's blocked by a booking starting
+// FETCH EVERY UPCOMING RESERVATION & BLOCKED DATE FOR EACH CANDIDATE UNIT,
+// sorted by start date. A unit that's blocked by a booking or blocked date starting
 // too soon (gap < MIN_STAY_DAYS) isn't necessarily unrentable for this
-// inquiry - it may open back up again once that booking's own move-out date
-// passes (e.g. a "not sure yet" customer with a 6-month window doesn't care
-// that the unit is briefly booked next week if it's free again next month).
-// We need the full list per unit so we can walk past those short bookings
-// instead of giving up at the first one.
+// inquiry - it may open back up again once that period passes.
 $bookingsByUnit = [];
 if (!empty($candidates)) {
     $unitIds = array_keys($candidates);
@@ -269,37 +283,81 @@ if (!empty($candidates)) {
         WHERE unit_id IN ($placeholders)
         AND LOWER(reservation_status) NOT IN ('cancelled','rejected')
         AND move_in_date IS NOT NULL
+        AND (move_out_date >= CURDATE() OR move_out_date IS NULL)
         ORDER BY move_in_date ASC
     ");
-    $nextStmt->bind_param($types, ...$unitIds);
-    $nextStmt->execute();
-    $nextResult = $nextStmt->get_result();
+    if ($nextStmt) {
+        $nextStmt->bind_param($types, ...$unitIds);
+        $nextStmt->execute();
+        $nextResult = $nextStmt->get_result();
 
-    while ($nextRow = $nextResult->fetch_assoc()) {
-        $bookingsByUnit[$nextRow['unit_id']][] = [
-            'move_in'  => new DateTime($nextRow['move_in_date']),
-            'move_out' => $nextRow['move_out_date'] ? new DateTime($nextRow['move_out_date']) : null,
-        ];
+        while ($nextRow = $nextResult->fetch_assoc()) {
+            $bookingsByUnit[$nextRow['unit_id']][] = [
+                'move_in'  => new DateTime($nextRow['move_in_date']),
+                'move_out' => $nextRow['move_out_date'] ? new DateTime($nextRow['move_out_date']) : null,
+                'source'   => 'reservation'
+            ];
+        }
+        $nextStmt->close();
     }
-    $nextStmt->close();
+
+    // Fetch administrative & owner blocked dates (maintenance / unavailable)
+    $blockStmt = $conn->prepare("
+        SELECT unit_id, start_date, end_date, block_type, remarks
+        FROM unit_blocked_dates
+        WHERE unit_id IN ($placeholders)
+        AND start_date IS NOT NULL
+        AND (end_date >= CURDATE() OR end_date IS NULL)
+        ORDER BY start_date ASC
+    ");
+    if ($blockStmt) {
+        $blockStmt->bind_param($types, ...$unitIds);
+        $blockStmt->execute();
+        $blockResult = $blockStmt->get_result();
+
+        while ($bRow = $blockResult->fetch_assoc()) {
+            $bookingsByUnit[$bRow['unit_id']][] = [
+                'move_in'    => new DateTime($bRow['start_date']),
+                'move_out'   => !empty($bRow['end_date']) ? new DateTime($bRow['end_date']) : null,
+                'source'     => 'blocked_date',
+                'block_type' => $bRow['block_type'] ?? 'Blocked'
+            ];
+        }
+        $blockStmt->close();
+    }
+
+    // Sort every unit's combined busy intervals chronologically
+    foreach ($bookingsByUnit as $uId => &$intervals) {
+        usort($intervals, function($a, $b) {
+            if ($a['move_in'] == $b['move_in']) {
+                return 0;
+            }
+            return ($a['move_in'] < $b['move_in']) ? -1 : 1;
+        });
+    }
+    unset($intervals);
 }
 
 $units = [];
 foreach ($candidates as $unitId => $candidate) {
     $row = $candidate['row'];
-    $availableDate = $candidate['availableDate'];
+    $availableDate = clone $candidate['availableDate'];
 
     $limitedAvailability = false;
     $nextBookingDate = null;
     $cappingBookingMoveIn = null;
+    $cappingSource = 'reservation';
+    $cappingType = null;
 
-    // Walk the unit's upcoming bookings in order. If one starts too soon to
-    // satisfy the minimum stay, jump availableDate past it (to its move-out)
-    // and keep looking - don't drop the unit just because the very next
-    // booking is too close. Stop at the first booking that leaves a real gap;
+    // Walk the unit's upcoming busy periods (reservations + blocked dates) in order.
+    // If one starts too soon to satisfy the minimum stay, jump availableDate past it
+    // (to its move-out / end date) and keep looking. Stop at the first interval that leaves a real gap;
     // that one caps the lease window.
     foreach (($bookingsByUnit[$unitId] ?? []) as $booking) {
         if ($booking['move_in'] <= $availableDate) {
+            if ($booking['move_out'] !== null && $booking['move_out'] > $availableDate) {
+                $availableDate = clone $booking['move_out'];
+            }
             continue;
         }
 
@@ -317,6 +375,8 @@ foreach ($candidates as $unitId => $candidate) {
         }
 
         $cappingBookingMoveIn = clone $booking['move_in'];
+        $cappingSource = $booking['source'] ?? 'reservation';
+        $cappingType = $booking['block_type'] ?? null;
         break;
     }
 
@@ -325,7 +385,7 @@ foreach ($candidates as $unitId => $candidate) {
     }
 
     // The real opening we landed on (possibly after skipping past several
-    // short bookings) still has to fall inside the customer's stated
+    // short busy periods) still has to fall inside the customer's stated
     // move-in window.
     if ($availableDate > $latestMoveIn) {
         continue;
@@ -335,7 +395,7 @@ foreach ($candidates as $unitId => $candidate) {
     $leaseEnd = clone $availableDate;
     $leaseEnd->modify("+".$months." months");
 
-    // If a booking follows this opening within the requested lease term,
+    // If an upcoming booking or blocked period follows this opening within the requested lease term,
     // cap the displayed availability window there instead of showing a
     // lease period that runs straight through it.
     if ($cappingBookingMoveIn !== null && $cappingBookingMoveIn < $leaseEnd) {
@@ -357,7 +417,8 @@ foreach ($candidates as $unitId => $candidate) {
         'availability_end' =>
             $leaseEnd->format('F d, Y'),
         'limited_availability' => $limitedAvailability,
-        'next_booking_date' => $nextBookingDate
+        'next_booking_date' => $nextBookingDate,
+        'limited_reason' => ($cappingSource === 'blocked_date') ? ($cappingType ?: 'Blocked') : 'Reserved'
     ];
 }
 

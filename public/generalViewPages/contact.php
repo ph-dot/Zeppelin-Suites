@@ -115,8 +115,8 @@
         <option value="" disabled selected>Choose option</option>
         <option value="Immediately">Immediately</option>
         <option value="Within 1 month">Within 1 month</option>
-        <option value="Within 1–3 months">Within 1–3 months</option>
-        <option value="Within 3–6 months">Within 3–6 months</option>
+        <option value="Within 1-3 months">Within 1-3 months</option>
+        <option value="Within 3-6 months">Within 3-6 months</option>
         <option value="Not sure yet">Not sure yet</option>
       </select>
 

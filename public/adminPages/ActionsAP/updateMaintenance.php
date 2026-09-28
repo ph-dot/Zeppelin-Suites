@@ -5,6 +5,8 @@ require_once __DIR__ . '/../../php_files/owner_notifications.php';
 
 header('Content-Type: text/plain; charset=UTF-8');
 
+$userData = requireRole($conn, ['admin']);
+
 function respond($statusCode, $message) {
     http_response_code($statusCode);
     echo $message;

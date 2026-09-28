@@ -107,14 +107,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('That email address is already used by another account.');
             }
 
-            // Your current users_table.sql stores plain text passwords, so this follows the current login pattern.
-            // For better security later, update your login to use password_verify() and save password_hash() here.
+            // Securely hash password with BCrypt
+            $hashed_password = password_hash($password, PASSWORD_BCRYPT);
             $sql = "INSERT INTO users_table (full_name, email, password, contact, user_role, resident_status) VALUES (?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             if (!$stmt) {
                 throw new Exception($conn->error);
             }
-            $stmt->bind_param('ssssss', $full_name, $email, $password, $contact, $user_role, $resident_status);
+            $stmt->bind_param('ssssss', $full_name, $email, $hashed_password, $contact, $user_role, $resident_status);
             $stmt->execute();
 
             redirect_with_message('success_message', 'Resident account added successfully.');
@@ -149,12 +149,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if ($new_password !== '') {
+                $hashed_new_password = password_hash($new_password, PASSWORD_BCRYPT);
                 $sql = "UPDATE users_table SET full_name = ?, email = ?, contact = ?, user_role = ?, resident_status = ?, password = ? WHERE user_id = ? AND user_role IN ('unit owner', 'tenant')";
                 $stmt = $conn->prepare($sql);
                 if (!$stmt) {
                     throw new Exception($conn->error);
                 }
-                $stmt->bind_param('ssssssi', $full_name, $email, $contact, $user_role, $resident_status, $new_password, $user_id);
+                $stmt->bind_param('ssssssi', $full_name, $email, $contact, $user_role, $resident_status, $hashed_new_password, $user_id);
             } else {
                 $sql = "UPDATE users_table SET full_name = ?, email = ?, contact = ?, user_role = ?, resident_status = ? WHERE user_id = ? AND user_role IN ('unit owner', 'tenant')";
                 $stmt = $conn->prepare($sql);

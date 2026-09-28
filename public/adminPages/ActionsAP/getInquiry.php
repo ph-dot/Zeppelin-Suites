@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../../php_files/auth.php';
 require_once __DIR__ . '/../../php_files/db.php';
 
+$userData = requireRole($conn, ['admin']);
+
 
 // Handle status update via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {

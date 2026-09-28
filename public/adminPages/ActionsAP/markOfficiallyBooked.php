@@ -8,6 +8,8 @@ if (session_status() === PHP_SESSION_NONE) {
 
 header('Content-Type: application/json');
 
+$userData = requireRole($conn, ['admin']);
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode([
         'success' => false,
@@ -101,34 +103,74 @@ try {
     }
 
     $unit_id = (int)$reservation['unit_id'];
+    $new_move_in = !empty($reservation['move_in_date']) && $reservation['move_in_date'] !== '0000-00-00'
+        ? $reservation['move_in_date']
+        : null;
+    $new_move_out = !empty($reservation['move_out_date']) && $reservation['move_out_date'] !== '0000-00-00'
+        ? $reservation['move_out_date']
+        : null;
 
     /*
-    Double booking protection.
-    Check if another reservation for the same unit is already active/reserved.
+    Double booking protection with date-boundary filtering (TASK-005).
+    A conflict exists only if another active reservation's dates overlap with the current reservation:
+    NOT (existing.move_out_date <= new.move_in_date OR existing.move_in_date >= new.move_out_date)
     */
-    $conflictSql = "
-        SELECT reservation_id
-        FROM reservation_table
-        WHERE unit_id = ?
-        AND reservation_id != ?
-        AND reservation_status IN (
-            'submitted',
-            'under review',
-            'requirements pending',
-            'requirements completed',
-            'reserved'
-        )
-        LIMIT 1
-        FOR UPDATE
-    ";
+    if ($new_move_in !== null) {
+        $conflictSql = "
+            SELECT reservation_id
+            FROM reservation_table
+            WHERE unit_id = ?
+            AND reservation_id != ?
+            AND reservation_status IN (
+                'submitted',
+                'under review',
+                'requirements pending',
+                'requirements completed',
+                'reserved'
+            )
+            AND NOT (
+                (move_out_date IS NOT NULL AND move_out_date <= ?)
+                OR
+                (? IS NOT NULL AND move_in_date IS NOT NULL AND move_in_date >= ?)
+            )
+            LIMIT 1
+            FOR UPDATE
+        ";
 
-    $conflictStmt = $conn->prepare($conflictSql);
+        $conflictStmt = $conn->prepare($conflictSql);
 
-    if (!$conflictStmt) {
-        throw new Exception("Prepare failed: " . $conn->error);
+        if (!$conflictStmt) {
+            throw new Exception("Prepare failed: " . $conn->error);
+        }
+
+        $conflictStmt->bind_param("iisss", $unit_id, $reservation_id, $new_move_in, $new_move_out, $new_move_out);
+    } else {
+        // Fallback if no move-in date is available
+        $conflictSql = "
+            SELECT reservation_id
+            FROM reservation_table
+            WHERE unit_id = ?
+            AND reservation_id != ?
+            AND reservation_status IN (
+                'submitted',
+                'under review',
+                'requirements pending',
+                'requirements completed',
+                'reserved'
+            )
+            LIMIT 1
+            FOR UPDATE
+        ";
+
+        $conflictStmt = $conn->prepare($conflictSql);
+
+        if (!$conflictStmt) {
+            throw new Exception("Prepare failed: " . $conn->error);
+        }
+
+        $conflictStmt->bind_param("ii", $unit_id, $reservation_id);
     }
 
-    $conflictStmt->bind_param("ii", $unit_id, $reservation_id);
     $conflictStmt->execute();
     $conflictResult = $conflictStmt->get_result();
     $conflict = $conflictResult->fetch_assoc();

@@ -5,6 +5,8 @@ require_once '../../php_files/eligible_units.php';
 
 header('Content-Type: application/json');
 
+$userData = requireRole($conn, ['admin']);
+
 $request_id = isset($_POST['request_id']) ? (int)$_POST['request_id'] : 0;
 $inq_id = isset($_POST['inq_id']) ? (int)$_POST['inq_id'] : 0;
 

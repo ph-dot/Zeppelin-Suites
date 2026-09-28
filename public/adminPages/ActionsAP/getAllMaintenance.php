@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../../php_files/auth.php';
 require_once __DIR__ . '/../../php_files/db.php';
 
+$userData = requireRole($conn, ['admin']);
+
 if (!function_exists('clean')) {
     function clean($val) {
         return htmlspecialchars((string)($val ?? ''), ENT_QUOTES, 'UTF-8');

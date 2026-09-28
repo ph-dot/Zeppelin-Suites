@@ -2,20 +2,9 @@
 require_once __DIR__ . '/../../php_files/auth.php';
 require_once __DIR__ . '/../../php_files/db.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 header('Content-Type: application/json');
 
-$role = strtolower($_SESSION['role'] ?? $_SESSION['user_role'] ?? '');
-if (!isset($_SESSION['user_id']) || $role !== 'admin') {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Unauthorized access. Only administrators can perform this action.'
-    ]);
-    exit;
-}
+$userData = requireRole($conn, ['admin']);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode([

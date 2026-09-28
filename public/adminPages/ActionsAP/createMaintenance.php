@@ -2,11 +2,8 @@
 require_once __DIR__ . '/../../php_files/auth.php';
 require_once __DIR__ . '/../../php_files/db.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-$admin_id = (int)($_SESSION['user_id'] ?? 0);
+$userData = requireRole($conn, ['admin']);
+$admin_id = (int)$userData['user_id'];
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $_SESSION['error_message'] = "Invalid request method.";

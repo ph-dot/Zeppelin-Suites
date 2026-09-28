@@ -2,10 +2,7 @@
 
 session_start();
 
-include(
-    $_SERVER['DOCUMENT_ROOT'] .
-    "/Zeppelin-Suites/public/php_files/db.php"
-);
+require_once __DIR__ . '/../../php_files/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: ../contact.php");
@@ -25,6 +22,11 @@ $preferred_move_in_time =
     isset($_POST['preferred_move_in_time'])
         ? trim($_POST['preferred_move_in_time'])
         : null;
+
+if ($preferred_move_in_time !== null) {
+    // Normalize Unicode en-dash, em-dash, or charset-corrupted artifacts to standard ASCII hyphen
+    $preferred_move_in_time = str_replace(['–', '—', '?"', 'â€“'], '-', $preferred_move_in_time);
+}
 
 $lease_duration = isset($_POST['lease_duration'])
     ? trim($_POST['lease_duration'])
@@ -52,7 +54,9 @@ $validUnits = [
 $validMoveInTimes = [
     'Immediately',
     'Within 1 month',
+    'Within 1-3 months',
     'Within 1–3 months',
+    'Within 3-6 months',
     'Within 3–6 months',
     'Not sure yet'
 ];

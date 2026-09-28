@@ -1,30 +1,22 @@
 <?php
+require_once __DIR__ . '/../../php_files/auth.php';
 require_once __DIR__ . '/../../php_files/db.php';
 require_once __DIR__ . '/../../php_files/eligible_units.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+$userData = requireRole($conn, ['admin']);
 
-if (!isset($_SESSION['user_id']) || strtolower($_SESSION['role'] ?? '') !== 'unit owner') {
-    $_SESSION['error_message'] = "Unauthorized access.";
-    header("Location: ../../unitOwnerPages/ownersInquiries.php");
-    exit();
-}
-
-$owner_id = (int)$_SESSION['user_id'];
 $request_id = isset($_POST['request_id']) ? (int)$_POST['request_id'] : 0;
 $action = $_POST['action'] ?? '';
 
 if ($request_id <= 0) {
     $_SESSION['error_message'] = "Invalid request ID.";
-    header("Location: ../../unitOwnerPages/ownersInquiries.php");
+    header("Location: ../inquiry.php");
     exit();
 }
 
 if ($action !== 'approve' && $action !== 'decline') {
     $_SESSION['error_message'] = "Invalid action.";
-    header("Location: ../../unitOwnerPages/ownersInquiries.php");
+    header("Location: ../inquiry.php");
     exit();
 }
 
@@ -39,7 +31,6 @@ try {
                 request_status
             FROM owner_approval_requests
             WHERE request_id = ?
-            AND unit_owner_id = ?
             FOR UPDATE";
 
     $stmt = $conn->prepare($sql);
@@ -48,7 +39,7 @@ try {
         throw new Exception("Prepare failed: " . $conn->error);
     }
 
-    $stmt->bind_param("ii", $request_id, $owner_id);
+    $stmt->bind_param("i", $request_id);
     $stmt->execute();
     $result = $stmt->get_result();
     $request = $result->fetch_assoc();
@@ -141,7 +132,7 @@ try {
         $conn->commit();
 
         $_SESSION['success_message'] = "Reservation request approved successfully.";
-        header("Location: ../../unitOwnerPages/ownersInquiries.php");
+        header("Location: ../inquiry.php");
         exit();
     }
 
@@ -198,7 +189,7 @@ try {
         $conn->commit();
 
         $_SESSION['success_message'] = "Reservation request declined.";
-        header("Location: ../../unitOwnerPages/ownersInquiries.php");
+        header("Location: ../inquiry.php");
         exit();
     }
 
@@ -206,7 +197,7 @@ try {
     $conn->rollback();
 
     $_SESSION['error_message'] = $e->getMessage();
-    header("Location: ../../unitOwnerPages/ownersInquiries.php");
+    header("Location: ../inquiry.php");
     exit();
 }
 

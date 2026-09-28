@@ -2,7 +2,9 @@
 require_once '../../php_files/session.php';
 require_once '../../php_files/db.php';
 
-session_start(); // Ensure session is started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $_SESSION['error_message'] = "Invalid request method.";
@@ -44,11 +46,41 @@ if ($result->num_rows === 0) {
 }
 
 $user = $result->fetch_assoc();
-error_log("User found: " . print_r($user, true));
 
-// Plain text password check (CHANGE TO HASHED IN PRODUCTION!)
-if ($password !== $user['password']) {
-    error_log("Password mismatch. Input: '$password', DB: '{$user['password']}'");
+$storedPassword = (string)($user['password'] ?? '');
+$isPasswordValid = false;
+
+// 1. Verify BCrypt / password_hash hashed password
+if ($storedPassword !== '' && password_verify($password, $storedPassword)) {
+    $isPasswordValid = true;
+
+    // Auto-rehash if algorithm or cost options changed
+    if (password_needs_rehash($storedPassword, PASSWORD_BCRYPT)) {
+        $newHash = password_hash($password, PASSWORD_BCRYPT);
+        $rehashStmt = $conn->prepare("UPDATE users_table SET password = ? WHERE user_id = ?");
+        if ($rehashStmt) {
+            $rehashStmt->bind_param("si", $newHash, $user['user_id']);
+            $rehashStmt->execute();
+            $rehashStmt->close();
+        }
+    }
+}
+// 2. Backward compatibility fallback: check for legacy plaintext password
+elseif ($storedPassword !== '' && $password === $storedPassword) {
+    $isPasswordValid = true;
+
+    // Seamlessly upgrade legacy plaintext password to secure BCrypt hash in DB
+    $newHash = password_hash($password, PASSWORD_BCRYPT);
+    $upgradeStmt = $conn->prepare("UPDATE users_table SET password = ? WHERE user_id = ?");
+    if ($upgradeStmt) {
+        $upgradeStmt->bind_param("si", $newHash, $user['user_id']);
+        $upgradeStmt->execute();
+        $upgradeStmt->close();
+    }
+}
+
+if (!$isPasswordValid) {
+    error_log("Password mismatch for email: $email");
     $_SESSION['error_message'] = "Incorrect password. Try again.";
     header("Location: ../login.php");
     exit();

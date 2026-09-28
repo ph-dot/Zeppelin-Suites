@@ -28,6 +28,8 @@ $sql = "
         u.listing_type,
         u.stay_category,
         u.lease_rate,
+        COALESCE(u.resellling_price, u.reselling_price, NULL) AS reselling_price,
+        COALESCE(u.resellling_price, u.reselling_price, NULL) AS resellling_price,
         u.unit_current_status,
 
         owner.full_name AS owner_name,
@@ -142,7 +144,15 @@ if (
     $is_lease = true;
 
 } elseif ($inquiry_type === 'resale inquiry') {
-    $price_basis = (float)$data['lease_rate'];
+    $resalePrice = 0;
+    if (isset($data['resellling_price']) && (float)$data['resellling_price'] > 0) {
+        $resalePrice = (float)$data['resellling_price'];
+    } elseif (isset($data['reselling_price']) && (float)$data['reselling_price'] > 0) {
+        $resalePrice = (float)$data['reselling_price'];
+    } elseif (isset($data['lease_rate']) && (float)$data['lease_rate'] > 0) {
+        $resalePrice = (float)$data['lease_rate'];
+    }
+    $price_basis = $resalePrice;
     $price_label = "Selling Price";
     $transaction_type = "Unit Resale";
     $resident_type = "Buyer";

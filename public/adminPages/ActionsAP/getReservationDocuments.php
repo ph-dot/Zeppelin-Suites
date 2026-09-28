@@ -5,6 +5,8 @@ require_once __DIR__ . '/../../php_files/document_requirements.php';
 
 header('Content-Type: application/json');
 
+$userData = requireRole($conn, ['admin']);
+
 if (!function_exists('e')) {
     function e($value) {
         return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');

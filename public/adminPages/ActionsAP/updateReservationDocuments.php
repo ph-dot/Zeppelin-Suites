@@ -4,6 +4,8 @@ require_once __DIR__ . '/../../php_files/db.php';
 
 header('Content-Type: application/json');
 
+$userData = requireRole($conn, ['admin']);
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode([
         'success' => false,
@@ -54,8 +56,8 @@ try {
         throw new Exception("Cannot update documents for a rejected or cancelled reservation.");
     }
 
-    $updated_by = (int)($_SESSION['user_id'] ?? 0);
-    $updated_by_role = $_SESSION['role'] ?? $_SESSION['user_role'] ?? 'admin';
+    $updated_by = (int)$userData['user_id'];
+    $updated_by_role = $userData['role'] ?? 'admin';
 
     $updateDocSql = "
         UPDATE reservation_documents

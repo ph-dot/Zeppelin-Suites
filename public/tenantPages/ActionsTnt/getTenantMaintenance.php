@@ -45,14 +45,15 @@ $tenantName = $tenantUser['full_name'] ?? $user['full_name'];
 $tenantEmail = $tenantUser['email'] ?? '';
 $tenantInitials = strtoupper(substr(trim($tenantName ?: 'T'), 0, 1));
 
-// Fetch units assigned to this tenant for the Create Maintenance modal
+// Fetch units assigned to this tenant for the Create Maintenance modal (TASK-009)
 $tenantUnitsSql = "
     SELECT DISTINCT u.unit_id, u.unit_number, u.unit_type, u.floor_number, u.unit_owner_id,
            owner.full_name AS owner_name
     FROM units_table u
     INNER JOIN reservation_table r ON r.unit_id = u.unit_id
     LEFT JOIN users_table owner ON u.unit_owner_id = owner.user_id
-    WHERE r.client_email = ? OR r.client_name = ?
+    WHERE (r.client_email = ? OR r.client_name = ?)
+      AND LOWER(r.reservation_status) NOT IN ('cancelled', 'rejected')
     ORDER BY u.unit_number ASC
 ";
 $tuStmt = $conn->prepare($tenantUnitsSql);
@@ -65,20 +66,6 @@ if ($tuStmt) {
         $tenantUnitsList[] = $u;
     }
     $tuStmt->close();
-}
-
-// If no direct reservation units found, allow fallback or check any available unit
-if (empty($tenantUnitsList)) {
-    // Check if user has unit from reservations regardless of status
-    $resCheck = $conn->prepare("SELECT u.unit_id, u.unit_number, u.unit_type, u.floor_number, u.unit_owner_id, owner.full_name AS owner_name FROM units_table u LEFT JOIN users_table owner ON u.unit_owner_id = owner.user_id LIMIT 1");
-    if ($resCheck) {
-        $resCheck->execute();
-        $rc = $resCheck->get_result()->fetch_assoc();
-        if ($rc) {
-            $tenantUnitsList[] = $rc;
-        }
-        $resCheck->close();
-    }
 }
 
 // Fetch maintenance tickets strictly submitted by this tenant

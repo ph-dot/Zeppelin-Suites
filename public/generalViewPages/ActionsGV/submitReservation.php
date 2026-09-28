@@ -63,6 +63,9 @@ $sql = "
         u.unit_id,
         u.unit_number,
         u.lease_rate,
+        COALESCE(NULLIF(u.resellling_price, 0), NULLIF(u.reselling_price, 0), u.lease_rate, 0) AS base_rate,
+        COALESCE(u.resellling_price, u.reselling_price, NULL) AS reselling_price,
+        COALESCE(u.resellling_price, u.reselling_price, NULL) AS resellling_price,
         u.unit_current_status,
         owner.full_name AS owner_name,
         owner.email AS owner_email
@@ -122,7 +125,17 @@ if (
         die("Move-out date is required for lease reservations.");
     }
 } elseif ($inquiry_type_normalized === 'resale inquiry') {
-    $price_basis = (float)$data['base_rate'];
+    $resalePrice = 0;
+    if (isset($data['resellling_price']) && (float)$data['resellling_price'] > 0) {
+        $resalePrice = (float)$data['resellling_price'];
+    } elseif (isset($data['reselling_price']) && (float)$data['reselling_price'] > 0) {
+        $resalePrice = (float)$data['reselling_price'];
+    } elseif (isset($data['base_rate']) && (float)$data['base_rate'] > 0) {
+        $resalePrice = (float)$data['base_rate'];
+    } elseif (isset($data['lease_rate']) && (float)$data['lease_rate'] > 0) {
+        $resalePrice = (float)$data['lease_rate'];
+    }
+    $price_basis = $resalePrice;
     $resident_type = "Buyer";
     $transaction_type = "Unit Resale";
     $reservation_type = "Unit Purchase";

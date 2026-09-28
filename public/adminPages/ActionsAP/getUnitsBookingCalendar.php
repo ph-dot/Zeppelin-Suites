@@ -4,6 +4,8 @@ require_once __DIR__ . '/../../php_files/db.php';
 
 header('Content-Type: application/json');
 
+$userData = requireRole($conn, ['admin']);
+
 // MAIN SOURCE: reservation_table
 $sql = "
     SELECT 

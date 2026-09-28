@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../../php_files/auth.php';
 require_once __DIR__ . '/../../php_files/db.php';
 
+$userData = requireRole($conn, ['admin']);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $unit_id = isset($_POST['unit_id']) ? (int)$_POST['unit_id'] : 0;
@@ -103,17 +105,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // =========================
-    // DELETE UNIT
-    // =========================
+    // =======================================================
+    // ARCHIVE / SOFT DELETE UNIT (TASK-008)
+    // Preserves historical reservations, tenant logs, and payments
+    // to prevent cascading data loss.
+    // =======================================================
     if ($action === 'delete') {
-        $stmt = $conn->prepare("DELETE FROM units_table WHERE unit_id=?");
-        if (!$stmt) die("Prepare failed (delete unit): ".$conn->error);
+        $stmt = $conn->prepare("UPDATE units_table SET unit_current_status = 'Archived' WHERE unit_id = ?");
+        if (!$stmt) die("Prepare failed (archive unit): ".$conn->error);
         $stmt->bind_param("i", $unit_id);
-        if (!$stmt->execute()) die("Delete failed: ".$stmt->error);
+        if (!$stmt->execute()) die("Archive failed: ".$stmt->error);
         $stmt->close();
 
-        header("Location: ../units.php?deleted=1");
+        header("Location: ../units.php?archived=1");
         exit;
     }
 }

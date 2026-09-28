@@ -5,6 +5,8 @@ require_once __DIR__ . '/../php_files/auth.php';
 require_once __DIR__ . '/../php_files/db.php';
 require_once __DIR__ . '/../php_files/sync_unit_status.php';
 
+$userData = requireRole($conn, ['admin']);
+
 syncExpiredUnitStatuses($conn);
 
 function e($value) {

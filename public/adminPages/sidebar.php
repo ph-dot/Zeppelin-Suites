@@ -24,7 +24,6 @@ if (empty($activeTab)) {
             break;
         case 'units.php':
         case 'unitDetails.php':
-        case 'roomsAdmin.php':
             $activeTab = 'units';
             break;
         case 'maintenance.php':

@@ -62,6 +62,8 @@ if ($isAdmin) {
             u.sqm,
             u.floor_number,
             u.lease_rate,
+            COALESCE(u.resellling_price, u.reselling_price, NULL) AS reselling_price,
+            COALESCE(u.resellling_price, u.reselling_price, NULL) AS resellling_price,
             u.listing_type,
             u.stay_category,
             u.unit_owner_id,
@@ -90,6 +92,8 @@ if ($isAdmin) {
             u.sqm,
             u.floor_number,
             u.lease_rate,
+            COALESCE(u.resellling_price, u.reselling_price, NULL) AS reselling_price,
+            COALESCE(u.resellling_price, u.reselling_price, NULL) AS resellling_price,
             u.listing_type,
             u.stay_category,
             u.unit_owner_id,
@@ -127,6 +131,7 @@ $currentStatus = trim($unit['unit_current_status'] ?? 'Ready for Occupancy');
 $listingType = trim($unit['listing_type'] ?? 'For Lease');
 $stayCategory = trim($unit['stay_category'] ?? 'Long term');
 $leaseRate = (float)($unit['lease_rate'] ?? 0);
+$resellingPrice = (float)($unit['resellling_price'] ?? $unit['reselling_price'] ?? 0);
 
 // Status badge styling
 $statusLower = strtolower($currentStatus);
@@ -513,20 +518,30 @@ tailwind.config = {
           </p>
         </div>
 
-        <!-- Card 2: Lease Rate -->
+        <!-- Card 2: Lease / Resale Price -->
         <div class="bg-white rounded-2xl border border-slate-200/90 p-5 md:p-6 shadow-xs transition-all hover:shadow-sm flex flex-col justify-between min-h-[145px]">
           <div>
             <div class="flex items-center justify-between gap-2">
-              <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Lease Rate</p>
-              <span class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0">
+              <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider" id="cardRateTitle"><?= $listingType === 'Resale' ? 'Reselling Price' : 'Lease Rate' ?></p>
+              <span class="w-7 h-7 rounded-lg <?= $listingType === 'Resale' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600' ?> flex items-center justify-center font-bold text-xs shrink-0" id="cardRateIcon">
                 ₱
               </span>
             </div>
             <div class="mt-3">
-              <p class="text-lg md:text-xl font-bold text-slate-900 font-mono leading-tight" id="displayLeaseRate"><?= peso($leaseRate, true) ?></p>
+              <p class="text-lg md:text-xl font-bold text-slate-900 font-mono leading-tight" id="displayLeaseRate">
+                <?= $listingType === 'Resale' ? peso($resellingPrice > 0 ? $resellingPrice : $leaseRate, true) : peso($leaseRate, true) ?>
+              </p>
             </div>
           </div>
-          <p class="text-xs text-slate-500 mt-3">Per month standard rate</p>
+          <div class="flex items-center justify-between text-xs text-slate-500 mt-3 flex-wrap gap-1">
+            <span id="displayRateSub"><?= $listingType === 'Resale' ? 'Outright unit selling price' : 'Per month standard rate' ?></span>
+            <span id="displayResaleSecondary" class="text-[11px] text-slate-400 font-mono <?= ($listingType !== 'Resale' && $resellingPrice > 0) ? '' : 'hidden' ?>">
+              Resale: <?= peso($resellingPrice) ?> (Saved)
+            </span>
+            <span id="displayLeaseSecondary" class="text-[11px] text-slate-400 font-mono <?= ($listingType === 'Resale' && $leaseRate > 0) ? '' : 'hidden' ?>">
+              Lease: <?= peso($leaseRate) ?>/mo (Saved)
+            </span>
+          </div>
         </div>
 
         <!-- Card 3: Term Type / Category -->
@@ -915,25 +930,57 @@ tailwind.config = {
         </div>
       </div>
 
-      <!-- Lease Rate Input -->
-      <div>
-        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2" for="leaseRateInput">
-          Monthly Lease Rate (PHP) <span class="text-red-500">*</span>
-        </label>
-        <div class="relative">
-          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 font-mono text-sm">₱</span>
-          <input 
-            type="number" 
-            step="100" 
-            min="0" 
-            id="leaseRateInput" 
-            name="lease_rate" 
-            value="<?= htmlspecialchars((string)$leaseRate) ?>" 
-            required 
-            placeholder="0.00" 
-            class="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 transition-all">
+      <!-- Pricing Controls: Monthly Lease Rate & Reselling Price -->
+      <div class="space-y-3.5">
+        <!-- Monthly Lease Rate -->
+        <div id="containerLeaseRate" class="p-3.5 rounded-xl border border-slate-200 transition-all bg-slate-50/50">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider" for="leaseRateInput">
+              Monthly Lease Rate (PHP) <span id="reqLeaseStar" class="text-red-500">*</span>
+            </label>
+            <span id="badgeLeaseRate" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Active Focus
+            </span>
+          </div>
+          <div class="relative">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 font-mono text-sm">₱</span>
+            <input 
+              type="number" 
+              step="100" 
+              min="0" 
+              id="leaseRateInput" 
+              name="lease_rate" 
+              value="<?= htmlspecialchars((string)($leaseRate > 0 ? $leaseRate : '')) ?>" 
+              placeholder="0.00" 
+              class="w-full pl-8 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-900 focus:outline-none focus:border-slate-900 transition-all">
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Asking monthly rental rate for leasing tenants. Retained when switching modes.</p>
         </div>
-        <p class="text-[11px] text-slate-400 mt-1">Standard asking rate for tenants or prospective applicants.</p>
+
+        <!-- Reselling Price -->
+        <div id="containerResellingPrice" class="p-3.5 rounded-xl border border-slate-200 transition-all bg-slate-50/50">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider" for="reselllingPriceInput">
+              Reselling Price (PHP) <span id="reqResaleStar" class="text-red-500 hidden">*</span>
+            </label>
+            <span id="badgeResellingPrice" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+              Saved in Background
+            </span>
+          </div>
+          <div class="relative">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 font-mono text-sm">₱</span>
+            <input 
+              type="number" 
+              step="1000" 
+              min="0" 
+              id="reselllingPriceInput" 
+              name="resellling_price" 
+              value="<?= htmlspecialchars((string)($resellingPrice > 0 ? $resellingPrice : '')) ?>" 
+              placeholder="0.00" 
+              class="w-full pl-8 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-900 focus:outline-none focus:border-slate-900 transition-all">
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Total property resale price for outright purchase. Retained when switching modes.</p>
+        </div>
       </div>
 
       <!-- Error / Feedback Notice -->
@@ -1005,6 +1052,7 @@ function openEditModal() {
   modal?.classList.add('open');
   document.body.style.overflow = 'hidden';
   document.getElementById('editErrorNotice')?.classList.add('hidden');
+  togglePricingInputs(false);
 }
 
 function closeEditModal() {
@@ -1012,6 +1060,79 @@ function closeEditModal() {
   modal?.classList.remove('open');
   document.body.style.overflow = '';
 }
+
+function togglePricingInputs(userInitiated = false) {
+  const isResale = document.querySelector('input[name="listing_type"][value="Resale"]')?.checked;
+  const leaseContainer = document.getElementById('containerLeaseRate');
+  const resaleContainer = document.getElementById('containerResellingPrice');
+  const badgeLease = document.getElementById('badgeLeaseRate');
+  const badgeResale = document.getElementById('badgeResellingPrice');
+  const reqLeaseStar = document.getElementById('reqLeaseStar');
+  const reqResaleStar = document.getElementById('reqResaleStar');
+  const leaseInput = document.getElementById('leaseRateInput');
+  const resaleInput = document.getElementById('reselllingPriceInput');
+
+  if (isResale) {
+    if (resaleContainer) {
+      resaleContainer.classList.remove('bg-slate-50/50', 'border-slate-200');
+      resaleContainer.classList.add('bg-blue-50/30', 'border-blue-400', 'shadow-xs');
+    }
+    if (badgeResale) {
+      badgeResale.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200';
+      badgeResale.textContent = 'Active Focus';
+    }
+    reqResaleStar?.classList.remove('hidden');
+    if (resaleInput) resaleInput.required = true;
+
+    if (leaseContainer) {
+      leaseContainer.classList.remove('bg-emerald-50/30', 'border-emerald-400', 'shadow-xs');
+      leaseContainer.classList.add('bg-slate-50/50', 'border-slate-200');
+    }
+    if (badgeLease) {
+      badgeLease.className = 'text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200';
+      badgeLease.textContent = 'Saved in Background';
+    }
+    reqLeaseStar?.classList.add('hidden');
+    if (leaseInput) leaseInput.required = false;
+
+    if (userInitiated && resaleInput) {
+      setTimeout(() => resaleInput.focus(), 50);
+    }
+  } else {
+    if (leaseContainer) {
+      leaseContainer.classList.remove('bg-slate-50/50', 'border-slate-200');
+      leaseContainer.classList.add('bg-emerald-50/30', 'border-emerald-400', 'shadow-xs');
+    }
+    if (badgeLease) {
+      badgeLease.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200';
+      badgeLease.textContent = 'Active Focus';
+    }
+    reqLeaseStar?.classList.remove('hidden');
+    if (leaseInput) leaseInput.required = true;
+
+    if (resaleContainer) {
+      resaleContainer.classList.remove('bg-blue-50/30', 'border-blue-400', 'shadow-xs');
+      resaleContainer.classList.add('bg-slate-50/50', 'border-slate-200');
+    }
+    if (badgeResale) {
+      badgeResale.className = 'text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200';
+      badgeResale.textContent = 'Saved in Background';
+    }
+    reqResaleStar?.classList.add('hidden');
+    if (resaleInput) resaleInput.required = false;
+
+    if (userInitiated && leaseInput) {
+      setTimeout(() => leaseInput.focus(), 50);
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  togglePricingInputs(false);
+  document.querySelectorAll('input[name="listing_type"]').forEach(r => {
+    r.addEventListener('change', () => togglePricingInputs(true));
+  });
+});
 
 function handleBackdropClick(e, id) {
   if (e.target === document.getElementById(id)) {
@@ -1087,11 +1208,66 @@ async function handleUnitUpdate(e) {
     if (res.success) {
       // Update displayed values immediately
       const data = res.data;
+      const isResale = (data.listing_type === 'Resale');
+
       document.getElementById('displayListingType').textContent = data.listing_type;
-      document.getElementById('displayListingSub').textContent = (data.listing_type === 'Resale') ? 'Listed for purchase / sale' : 'Offered for lease';
+      document.getElementById('displayListingSub').textContent = isResale ? 'Listed for purchase / sale' : 'Offered for lease';
       document.getElementById('displayStayCategory').textContent = data.stay_category;
       document.getElementById('displayStaySub').textContent = (data.stay_category.toLowerCase() === 'short term') ? 'Flexible short stay' : 'Standard 6-12+ mos lease';
-      document.getElementById('displayLeaseRate').textContent = data.lease_rate_formatted;
+
+      const cardTitle = document.getElementById('cardRateTitle');
+      const cardIcon = document.getElementById('cardRateIcon');
+      const displayRate = document.getElementById('displayLeaseRate');
+      const displayRateSub = document.getElementById('displayRateSub');
+      const resaleSec = document.getElementById('displayResaleSecondary');
+      const leaseSec = document.getElementById('displayLeaseSecondary');
+
+      const formattedResale = (data.resellling_price_formatted && data.resellling_price_formatted !== '—') ? data.resellling_price_formatted : (data.reselling_price_formatted || '—');
+
+      if (isResale) {
+        if (cardTitle) cardTitle.textContent = 'Reselling Price';
+        if (cardIcon) {
+          cardIcon.className = 'w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0';
+        }
+        if (displayRate) {
+          displayRate.textContent = (formattedResale !== '—') ? formattedResale : data.lease_rate_formatted;
+        }
+        if (displayRateSub) displayRateSub.textContent = 'Outright unit selling price';
+        if (resaleSec) resaleSec.classList.add('hidden');
+        if (leaseSec) {
+          if (data.lease_rate && Number(data.lease_rate) > 0) {
+            leaseSec.textContent = `Lease: ${data.lease_rate_formatted}/mo (Saved)`;
+            leaseSec.classList.remove('hidden');
+          } else {
+            leaseSec.classList.add('hidden');
+          }
+        }
+      } else {
+        if (cardTitle) cardTitle.textContent = 'Lease Rate';
+        if (cardIcon) {
+          cardIcon.className = 'w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0';
+        }
+        if (displayRate) displayRate.textContent = data.lease_rate_formatted;
+        if (displayRateSub) displayRateSub.textContent = 'Per month standard rate';
+        if (leaseSec) leaseSec.classList.add('hidden');
+        if (resaleSec) {
+          if (formattedResale !== '—') {
+            resaleSec.textContent = `Resale: ${formattedResale} (Saved)`;
+            resaleSec.classList.remove('hidden');
+          } else {
+            resaleSec.classList.add('hidden');
+          }
+        }
+      }
+
+      // Keep inputs in modal synced
+      if (document.getElementById('leaseRateInput')) {
+        document.getElementById('leaseRateInput').value = data.lease_rate > 0 ? data.lease_rate : '';
+      }
+      if (document.getElementById('reselllingPriceInput')) {
+        const rVal = (data.resellling_price !== null) ? data.resellling_price : data.reselling_price;
+        document.getElementById('reselllingPriceInput').value = (rVal && Number(rVal) > 0) ? rVal : '';
+      }
 
       // Update in specification card as well
       const specListing = document.getElementById('specListingType');
@@ -1104,7 +1280,7 @@ async function handleUnitUpdate(e) {
       }
       const specRate = document.getElementById('specLeaseRate');
       if (specRate) {
-        specRate.textContent = data.lease_rate_formatted;
+        specRate.textContent = isResale ? ((formattedResale !== '—') ? formattedResale : data.lease_rate_formatted) : data.lease_rate_formatted;
       }
 
       // If status changed to Resale

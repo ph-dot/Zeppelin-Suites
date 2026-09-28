@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!empty($newPassword)) {
                     $updates[] = "password = ?";
                     $types .= "s";
-                    $params[] = $newPassword;
+                    $params[] = password_hash($newPassword, PASSWORD_BCRYPT);
                 }
 
                 $types .= "i";

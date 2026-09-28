@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($new_password !== '') {
                     $updateFields[] = "password = ?";
                     $types .= "s";
-                    $params[] = $new_password;
+                    $params[] = password_hash($new_password, PASSWORD_BCRYPT);
                 }
                 if ($hasDobCol) {
                     $updateFields[] = "date_of_birth = ?";

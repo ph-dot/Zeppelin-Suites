@@ -8,6 +8,8 @@ if (session_status() === PHP_SESSION_NONE) {
 
 header('Content-Type: application/json; charset=UTF-8');
 
+$userData = requireRole($conn, ['admin']);
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode([
         'success' => false,
@@ -162,7 +164,8 @@ try {
             $upStmt->close();
         }
     } else {
-        // Provision new user in users_table
+        // Provision new user in users_table with BCrypt hash
+        $hashedDefaultPassword = password_hash($defaultPassword, PASSWORD_BCRYPT);
         $insertUserSql = "
             INSERT INTO users_table (full_name, email, password, contact, user_role, resident_status, created_at)
             VALUES (?, ?, ?, ?, 'tenant', 'Active', NOW())
@@ -171,7 +174,7 @@ try {
         if (!$insStmt) {
             throw new Exception("Failed to prepare tenant provisioning: " . $conn->error);
         }
-        $insStmt->bind_param("ssss", $client_name, $client_email, $defaultPassword, $client_contact);
+        $insStmt->bind_param("ssss", $client_name, $client_email, $hashedDefaultPassword, $client_contact);
         if (!$insStmt->execute()) {
             throw new Exception("Failed to create tenant account: " . $insStmt->error);
         }

@@ -5,6 +5,8 @@ require_once '../../php_files/sync_unit_status.php';
 
 header('Content-Type: application/json');
 
+$userData = requireRole($conn, ['admin']);
+
 syncExpiredUnitStatuses($conn);
 
 $inq_id = isset($_POST['inq_id']) ? (int)$_POST['inq_id'] : 0;

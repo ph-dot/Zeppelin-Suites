@@ -1427,9 +1427,13 @@ function checkAvailableUnits() {
 
         const isResale = unit.is_resale || (currentRow && (currentRow.dataset.inquiryType || '').toLowerCase() === 'resale inquiry');
 
+        const limitedReasonText = (unit.limited_reason && unit.limited_reason !== 'Reserved')
+          ? `blocked (${unit.limited_reason})`
+          : 'booked';
+
         const limitedNote = unit.limited_availability
           ? `<p class="text-xs text-amber-600 mt-1">
-               ⚠ Already booked starting ${unit.next_booking_date} — only free until then.
+               ⚠ Already ${limitedReasonText} starting ${unit.next_booking_date} — only free until then.
              </p>`
           : "";
 

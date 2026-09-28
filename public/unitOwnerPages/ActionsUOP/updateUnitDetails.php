@@ -20,7 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $unitId = isset($_POST['unit_id']) ? (int)$_POST['unit_id'] : 0;
 $listingType = trim($_POST['listing_type'] ?? 'For Lease');
 $stayCategory = trim($_POST['stay_category'] ?? 'Long term');
-$leaseRateRaw = trim($_POST['lease_rate'] ?? '0');
+$leaseRateRaw = trim($_POST['lease_rate'] ?? '');
+$resellingPriceRaw = trim($_POST['resellling_price'] ?? $_POST['reselling_price'] ?? '');
 
 if ($unitId <= 0) {
     echo json_encode(['success' => false, 'message' => 'Invalid unit ID.']);
@@ -28,11 +29,25 @@ if ($unitId <= 0) {
 }
 
 // Clean and validate lease rate
-$leaseRateClean = preg_replace('/[^\d.]/', '', $leaseRateRaw);
-$leaseRate = (float)$leaseRateClean;
-if ($leaseRate < 0) {
-    echo json_encode(['success' => false, 'message' => 'Lease rate cannot be negative.']);
-    exit;
+$leaseRate = null;
+if ($leaseRateRaw !== '') {
+    $leaseRateClean = preg_replace('/[^\d.]/', '', $leaseRateRaw);
+    $leaseRate = (float)$leaseRateClean;
+    if ($leaseRate < 0) {
+        echo json_encode(['success' => false, 'message' => 'Lease rate cannot be negative.']);
+        exit;
+    }
+}
+
+// Clean and validate reselling price
+$resellingPrice = null;
+if ($resellingPriceRaw !== '') {
+    $resellingPriceClean = preg_replace('/[^\d.]/', '', $resellingPriceRaw);
+    $resellingPrice = (float)$resellingPriceClean;
+    if ($resellingPrice < 0) {
+        echo json_encode(['success' => false, 'message' => 'Reselling price cannot be negative.']);
+        exit;
+    }
 }
 
 // Validate listing type
@@ -53,14 +68,14 @@ if (strtolower($stayCategory) === 'short term') {
 
 // Verify unit exists (and belongs to this owner if not admin)
 if ($isAdmin) {
-    $stmtCheck = $conn->prepare("SELECT unit_id, unit_current_status FROM units_table WHERE unit_id = ? LIMIT 1");
+    $stmtCheck = $conn->prepare("SELECT unit_id, unit_current_status, lease_rate, COALESCE(resellling_price, reselling_price) AS reselling_price FROM units_table WHERE unit_id = ? LIMIT 1");
     if (!$stmtCheck) {
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]);
         exit;
     }
     $stmtCheck->bind_param('i', $unitId);
 } else {
-    $stmtCheck = $conn->prepare("SELECT unit_id, unit_current_status FROM units_table WHERE unit_id = ? AND unit_owner_id = ? LIMIT 1");
+    $stmtCheck = $conn->prepare("SELECT unit_id, unit_current_status, lease_rate, COALESCE(resellling_price, reselling_price) AS reselling_price FROM units_table WHERE unit_id = ? AND unit_owner_id = ? LIMIT 1");
     if (!$stmtCheck) {
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]);
         exit;
@@ -88,12 +103,19 @@ if ($listingType === 'Resale' && $currentStatus === 'Ready for Occupancy') {
     $newStatus = 'Ready for Occupancy';
 }
 
+// Keep existing reselling_price if not provided in request so switching modes never loses the price
+$finalResalePrice = ($resellingPrice !== null) ? $resellingPrice : (isset($unitData['reselling_price']) ? (float)$unitData['reselling_price'] : null);
+// Keep existing lease_rate if not provided in request
+$finalLeaseRate = ($leaseRate !== null) ? $leaseRate : (isset($unitData['lease_rate']) ? (float)$unitData['lease_rate'] : 0.0);
+
 if ($isAdmin) {
     $stmtUpdate = $conn->prepare("
         UPDATE units_table 
         SET listing_type = ?,
             stay_category = ?,
             lease_rate = ?,
+            resellling_price = ?,
+            reselling_price = ?,
             unit_current_status = ?
         WHERE unit_id = ?
     ");
@@ -101,13 +123,15 @@ if ($isAdmin) {
         echo json_encode(['success' => false, 'message' => 'Database prepare failed: ' . $conn->error]);
         exit;
     }
-    $stmtUpdate->bind_param('ssdsi', $listingType, $stayCategory, $leaseRate, $newStatus, $unitId);
+    $stmtUpdate->bind_param('ssdddsi', $listingType, $stayCategory, $finalLeaseRate, $finalResalePrice, $finalResalePrice, $newStatus, $unitId);
 } else {
     $stmtUpdate = $conn->prepare("
         UPDATE units_table 
         SET listing_type = ?,
             stay_category = ?,
             lease_rate = ?,
+            resellling_price = ?,
+            reselling_price = ?,
             unit_current_status = ?
         WHERE unit_id = ? AND unit_owner_id = ?
     ");
@@ -115,7 +139,7 @@ if ($isAdmin) {
         echo json_encode(['success' => false, 'message' => 'Database prepare failed: ' . $conn->error]);
         exit;
     }
-    $stmtUpdate->bind_param('ssdsii', $listingType, $stayCategory, $leaseRate, $newStatus, $unitId, $ownerId);
+    $stmtUpdate->bind_param('ssdddsii', $listingType, $stayCategory, $finalLeaseRate, $finalResalePrice, $finalResalePrice, $newStatus, $unitId, $ownerId);
 }
 
 if ($stmtUpdate->execute()) {
@@ -127,8 +151,12 @@ if ($stmtUpdate->execute()) {
             'unit_id' => $unitId,
             'listing_type' => $listingType,
             'stay_category' => $stayCategory,
-            'lease_rate' => $leaseRate,
-            'lease_rate_formatted' => '₱' . number_format($leaseRate, 2),
+            'lease_rate' => $finalLeaseRate,
+            'lease_rate_formatted' => $finalLeaseRate > 0 ? '₱' . number_format($finalLeaseRate, 2) : '—',
+            'resellling_price' => $finalResalePrice,
+            'reselling_price' => $finalResalePrice,
+            'resellling_price_formatted' => ($finalResalePrice !== null && $finalResalePrice > 0) ? '₱' . number_format((float)$finalResalePrice, 2) : '—',
+            'reselling_price_formatted' => ($finalResalePrice !== null && $finalResalePrice > 0) ? '₱' . number_format((float)$finalResalePrice, 2) : '—',
             'unit_current_status' => $newStatus
         ]
     ]);

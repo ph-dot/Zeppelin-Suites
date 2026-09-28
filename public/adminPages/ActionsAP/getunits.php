@@ -3,6 +3,8 @@ require_once __DIR__ . '/../../php_files/auth.php';
 require_once __DIR__ . '/../../php_files/db.php';
 require_once __DIR__ . '/../../php_files/sync_unit_status.php';
 
+$userData = requireRole($conn, ['admin']);
+
 syncExpiredUnitStatuses($conn);
 
 if (!function_exists('clean')) {
@@ -170,6 +172,8 @@ $sql = "SELECT
             u.sqm,
             u.floor_number,
             u.lease_rate,
+            COALESCE(u.resellling_price, u.reselling_price, NULL) AS reselling_price,
+            COALESCE(u.resellling_price, u.reselling_price, NULL) AS resellling_price,
             u.listing_type,
             u.stay_category,
             u.unit_owner_id,
@@ -305,6 +309,9 @@ foreach ($unitsByFloor as $floorNum => $units) {
                         } elseif ($status_lower === 'under maintenance') {
                             $status_class = 'bg-orange-50 text-orange-700 border-orange-200';
                             $dot_class = 'bg-orange-500';
+                        } elseif ($status_lower === 'archived') {
+                            $status_class = 'bg-slate-100 text-slate-600 border-slate-300';
+                            $dot_class = 'bg-slate-400';
                         } else {
                             $status_class = 'bg-slate-50 text-slate-700 border-slate-200';
                             $dot_class = 'bg-slate-400';
@@ -313,12 +320,19 @@ foreach ($unitsByFloor as $floorNum => $units) {
                         // Tenant status
                         $hasTenant = (!empty($row['tenant_name']) && $row['tenant_name'] !== 'No Tenant');
 
-                        // Rate value
-                        $price_value = peso($row['lease_rate'], true);
-
                         // Listing badge
                         $listing_type = strtolower(trim($row['listing_type'] ?? 'for lease'));
-                        if ($listing_type === 'resale' || $status_lower === 'resale') {
+                        $is_resale = ($listing_type === 'resale' || $status_lower === 'resale');
+                        $resale_val = (float)($row['resellling_price'] ?? $row['reselling_price'] ?? 0);
+
+                        // Rate value
+                        if ($is_resale && $resale_val > 0) {
+                            $price_value = peso($resale_val);
+                        } else {
+                            $price_value = peso($row['lease_rate'], true);
+                        }
+
+                        if ($is_resale) {
                             $listing_badge_html = '<span class="inline-block text-xs font-semibold px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200">Resale</span>';
                         } else {
                             $listing_badge_html = '<span class="inline-block text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200">For Lease</span>';
@@ -332,6 +346,8 @@ foreach ($unitsByFloor as $floorNum => $units) {
                         data-floor-number="<?= $floorNum ?>"
                         data-floor-title="<?= clean($floorTitle) ?>"
                         data-lease-rate="<?= peso($row['lease_rate']) ?>"
+                        data-resellling-price="<?= peso($resale_val) ?>"
+                        data-reselling-price="<?= peso($resale_val) ?>"
                         data-unit-current-status="<?= $unit_current_status ?>"
                         data-listing-type="<?= $listing_type ?>"
                         data-tenant-name="<?= $tenant_name ?>"
