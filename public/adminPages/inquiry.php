@@ -114,7 +114,7 @@ $userData = requireRole($conn, ['admin']); ?>
 
    <!-- STAT CARDS -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm" onclick="setFilter('pending')">
             <div class="flex items-center gap-3 mb-3">
                 <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,10 +124,10 @@ $userData = requireRole($conn, ['admin']); ?>
                 <span class="text-sm font-semibold text-slate-600">New today</span>
             </div>
             <p class="text-3xl font-bold text-slate-900" style="font-family:'DM Mono',monospace" id="newTodayCount">0</p>
-            <p class="text-xs text-amber-500 font-semibold mt-1">↑ <span id="newTodayChange" class="text-slate-400 font-normal">calculating...</span></p>
+            <p class="text-xs text-amber-500 font-semibold mt-1">↑ <span id="newTodayChange" class="text-slate-400 font-normal">today</span></p>
         </div>
         
-        <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm" onclick="setFilter('pending')">
             <div class="flex items-center gap-3 mb-3">
                 <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,7 +140,7 @@ $userData = requireRole($conn, ['admin']); ?>
             <p class="text-xs text-blue-500 font-semibold mt-1">↑ <span class="text-slate-400 font-normal">awaiting reply</span></p>
         </div>
         
-        <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm" onclick="setFilter('responded')">
             <div class="flex items-center gap-3 mb-3">
                 <div class="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -474,7 +474,6 @@ $userData = requireRole($conn, ['admin']); ?>
 </div>
 
 <script>
-let sidebarCollapsed = false;
 let currentRow = null;
 let currentFilter = 'pending';
 let currentSearchQuery = '';
@@ -701,8 +700,8 @@ function updateStats() {
   }
 }
 
-// DOMContentLoaded setup
-document.addEventListener('DOMContentLoaded', function() {
+// Initialization setup
+function initInquiryPage() {
   // Update stats immediately
   updateStats();
   
@@ -715,14 +714,23 @@ document.addEventListener('DOMContentLoaded', function() {
     setFilter('pending');
   }, 100);
   
-  // Add modal CSS
-  const style = document.createElement('style');
-  style.textContent = `
-    .modal-backdrop:not(.open) { display: none !important; }
-    .modal-backdrop.open { display: flex !important; }
-  `;
-  document.head.appendChild(style);
-});
+  // Add modal CSS if not already added
+  if (!document.getElementById('zepInquiryModalStyles')) {
+    const style = document.createElement('style');
+    style.id = 'zepInquiryModalStyles';
+    style.textContent = `
+      .modal-backdrop:not(.open) { display: none !important; }
+      .modal-backdrop.open { display: flex !important; }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initInquiryPage);
+} else {
+  initInquiryPage();
+}
 
 // POLL FOR STATS
 let statsCheckInterval = setInterval(() => {
