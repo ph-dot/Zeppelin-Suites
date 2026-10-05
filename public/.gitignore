@@ -1,0 +1,13 @@
+# Local configuration secrets (TASK-006)
+*email_config.local.php
+email_config.local.php
+.env
+.env.local
+.env.*.local
+
+# Operating System & IDE artifacts
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
