@@ -92,126 +92,132 @@ require_once __DIR__ . '/ActionsTnt/getTenantOverview.php';
 <div class="main-scroll p-4 md:p-6 space-y-6">
   <div class="max-w-6xl mx-auto space-y-6">
 
-    <!-- Page Header (Home Title - Daily/Monthly Filter Removed) -->
-    <div class="flex items-center justify-between">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-xl font-bold text-slate-900">Home</h1>
-        <p class="text-xs text-slate-400 mt-0.5">Welcome back, <?= clean($tenantName) ?>! Here is an overview of your stay.</p>
+        <p class="text-xs text-slate-400 mt-0.5">Welcome back, <?= clean($tenantName) ?>!</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          Active Resident
+        </span>
       </div>
     </div>
 
-    <!-- Stat cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <!-- Overview Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
 
-      <!-- Rent Due -->
-      <div class="stat-card bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-2.5">
-            <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shrink-0 border border-emerald-100">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <!-- Card 1: Assigned Residence -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+        <div>
+          <!-- Header -->
+          <div class="flex items-center justify-between gap-3 mb-5">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-slate-900">Assigned Residence</h2>
+                <p class="text-xs text-slate-400"><?= clean($unitType) ?><?= !empty($leaseInfo['floor_number']) ? ' • Floor ' . clean($leaseInfo['floor_number']) : '' ?></p>
+              </div>
             </div>
-            <span class="text-sm font-bold text-slate-700">Rent Due this month</span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+              <?= clean($unitNumber !== '—' ? 'Active Lease' : 'Pending') ?>
+            </span>
           </div>
-          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <?= $monthlyRate > 0 ? 'Active Lease' : 'No Active Due' ?>
-          </span>
-        </div>
-        <p class="text-4xl font-bold text-slate-900 tracking-tight" style="font-family:'DM Mono',monospace">
-          ₱<?= number_format($monthlyRate, 2) ?>
-        </p>
-        <p class="text-xs text-emerald-600 font-semibold mt-2">Due Date: <span class="text-slate-500 font-normal"><?= clean($rentDueDate) ?></span></p>
-        <div class="mt-4 pt-4 border-t border-slate-50 flex items-center gap-2">
-          <a href="account.php" class="btn-press flex-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all text-center">View Lease Details</a>
-        </div>
-      </div>
 
-      <!-- Active Maintenance -->
-      <div class="stat-card bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-2.5">
-            <div class="w-10 h-10 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center shrink-0 border border-amber-100">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            </div>
-            <span class="text-sm font-bold text-slate-700">Active Maintenance</span>
+          <!-- Unit Display -->
+          <div class="mb-5">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Unit</p>
+            <h3 class="text-3xl font-bold text-slate-900 font-mono tracking-tight">
+              <?= clean($unitNumber !== '—' ? 'Unit ' . $unitNumber : 'Not Assigned') ?>
+            </h3>
           </div>
-          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full <?= $activeMaintenanceCount > 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-500' ?>">
-            <?= $activeMaintenanceCount ?> In Progress
-          </span>
+
+          <!-- Key Details -->
+          <div class="pt-4 border-t border-slate-100 grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <span class="text-slate-400 block mb-0.5">Move-in Date</span>
+              <span class="font-bold text-slate-800 font-mono text-sm"><?= clean(format_date_nice($moveInDate)) ?></span>
+            </div>
+            <div>
+              <span class="text-slate-400 block mb-0.5">Turnover Date</span>
+              <span class="font-bold text-slate-800 font-mono text-sm"><?= clean(format_date_nice($moveOutDate)) ?></span>
+            </div>
+            <div class="col-span-2 pt-2 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-slate-400">Unit Owner</span>
+              <div class="text-right">
+                <span class="font-bold text-slate-800"><?= clean($unitOwnerName) ?></span>
+                <?php if (!empty($leaseInfo['owner_contact'])): ?>
+                  <span class="text-slate-400 font-mono ml-1.5">(<?= clean($leaseInfo['owner_contact']) ?>)</span>
+                <?php endif; ?>
+              </div>
+            </div>
+          </div>
         </div>
-        <p class="text-4xl font-bold text-slate-900 tracking-tight" style="font-family:'DM Mono',monospace"><?= $activeMaintenanceCount ?></p>
-        <p class="text-xs text-amber-600 font-semibold mt-2">
-          <?= $activeMaintenanceCount > 0 ? 'Open service tickets' : 'No active issues reported' ?>
-        </p>
-        <div class="mt-4 pt-4 border-t border-slate-50 flex items-center gap-2">
-          <a href="maintenanceTenant.php" class="btn-press flex items-center justify-center w-full bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-xl transition-all border border-slate-200">
-            View Requests
+
+        <!-- Action Link -->
+        <div class="mt-5 pt-4 border-t border-slate-100">
+          <a href="account.php" class="btn-press flex items-center justify-between text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-xl px-4 py-2.5 transition-all">
+            <span>View Lease Details</span>
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
           </a>
         </div>
       </div>
 
-    </div>
-
-    <!-- Unit Information -->
-    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-      <!-- Header -->
-      <div class="bg-slate-900 px-6 py-4 flex items-center justify-between">
+      <!-- Card 2: Active Maintenance -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
         <div>
-          <h2 class="text-base font-bold text-white">Unit &amp; Lease Information</h2>
-          <p class="text-xs text-slate-400">Details of your currently assigned residence</p>
+          <!-- Header -->
+          <div class="flex items-center justify-between gap-3 mb-5">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0 border border-amber-100">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-slate-900">Maintenance</h2>
+                <p class="text-xs text-slate-400">Unit repair and service requests</p>
+              </div>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold shrink-0 <?= $activeMaintenanceCount > 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-600 border border-slate-200' ?>">
+              <?= $activeMaintenanceCount > 0 ? $activeMaintenanceCount . ' In Progress' : 'All Clear' ?>
+            </span>
+          </div>
+
+          <!-- Active Tickets Counter -->
+          <div class="mb-5">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Active Requests</p>
+            <div class="flex items-baseline gap-2">
+              <h3 class="text-3xl font-bold text-slate-900 font-mono tracking-tight"><?= $activeMaintenanceCount ?></h3>
+              <span class="text-xs text-slate-400">open ticket<?= $activeMaintenanceCount === 1 ? '' : 's' ?></span>
+            </div>
+          </div>
+
+          <!-- Status Note -->
+          <div class="pt-4 border-t border-slate-100">
+            <div class="bg-slate-50/70 border border-slate-100 rounded-xl p-3.5">
+              <p class="text-xs text-slate-600 leading-relaxed">
+                <?= $activeMaintenanceCount > 0 
+                  ? 'Your open maintenance ticket is currently being handled by management.' 
+                  : 'Everything in your unit is in good order. You can submit repair requests anytime.' ?>
+              </p>
+            </div>
+          </div>
         </div>
-        <a href="account.php" class="btn-press text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all">
-          Manage Account &rarr;
-        </a>
-      </div>
-      <!-- Content -->
-      <div class="p-6 space-y-4">
-        <div class="flex flex-wrap gap-x-8 gap-y-3">
-          <div>
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Unit Number</p>
-            <p class="text-base font-bold text-slate-900" style="font-family:'DM Mono',monospace">
-              <?= clean($unitNumber !== '—' ? 'Unit ' . $unitNumber : 'Not Assigned') ?>
-            </p>
-          </div>
-          <div class="w-px bg-slate-200 self-stretch hidden sm:block"></div>
-          <div>
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Unit Type</p>
-            <p class="text-base font-bold text-slate-900"><?= clean($unitType) ?></p>
-          </div>
-          <?php if (!empty($leaseInfo['floor_number'])): ?>
-          <div class="w-px bg-slate-200 self-stretch hidden sm:block"></div>
-          <div>
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Floor</p>
-            <p class="text-base font-bold text-slate-900" style="font-family:'DM Mono',monospace"><?= clean($leaseInfo['floor_number']) ?>F</p>
-          </div>
-          <?php endif; ?>
-        </div>
 
-        <div class="border-t border-slate-100 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Tenant Name</p>
-            <p class="text-sm text-slate-900 font-bold"><?= clean($tenantName) ?></p>
-            <p class="text-xs text-slate-400 mt-0.5"><?= clean($tenantEmail) ?></p>
-          </div>
-
-          <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Unit Owner</p>
-            <p class="text-sm text-slate-900 font-bold"><?= clean($unitOwnerName) ?></p>
-            <p class="text-xs text-slate-400 mt-0.5"><?= clean($leaseInfo['owner_contact'] ?? 'Contact via Management') ?></p>
-          </div>
-
-          <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Move-in Date (Lease Start)</p>
-            <p class="text-sm text-slate-900 font-semibold" style="font-family:'DM Mono',monospace">
-              <?= clean(format_date_nice($moveInDate)) ?>
-            </p>
-          </div>
-
-          <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Turnover Date (Lease End)</p>
-            <p class="text-sm text-slate-900 font-semibold" style="font-family:'DM Mono',monospace">
-              <?= clean(format_date_nice($moveOutDate)) ?>
-            </p>
-          </div>
+        <!-- Action Link -->
+        <div class="mt-5 pt-4 border-t border-slate-100">
+          <a href="maintenanceTenant.php" class="btn-press flex items-center justify-between text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-xl px-4 py-2.5 transition-all">
+            <span><?= $activeMaintenanceCount > 0 ? 'Track Active Requests' : 'View Maintenance' ?></span>
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </a>
         </div>
       </div>
 
