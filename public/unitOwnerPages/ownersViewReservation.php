@@ -230,7 +230,7 @@ $ownerPhoneDisplay = !empty($res['owner_contact']) ? $res['owner_contact'] : '09
 $isFlexibleSigning = !empty($res['is_flexible_signing']) && $res['is_flexible_signing'] == 1;
 $signingDateDisplay = 'Not Specified';
 if ($isFlexibleSigning) {
-    $signingDateDisplay = "I'm Flexible (Within validity window)";
+    $signingDateDisplay = 'Flexible';
 } elseif (!empty($res['lease_signing_date']) && $res['lease_signing_date'] !== '0000-00-00') {
     $signingDateDisplay = date('F j, Y', strtotime($res['lease_signing_date']));
 }
@@ -858,7 +858,7 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
               <div class="flex items-center justify-between">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Chosen Lease Signing Date</p>
                 <?php if ($isFlexibleSigning): ?>
-                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">Flexible Schedule</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">Before move-in</span>
                 <?php else: ?>
                   <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-100 text-violet-800 border border-violet-200">Fixed Date</span>
                 <?php endif; ?>
@@ -867,9 +867,9 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
               <div>
                 <h3 class="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight"><?= e($signingDateDisplay) ?></h3>
                 <?php if ($isFlexibleSigning): ?>
-                  <p class="text-xs text-slate-500 mt-1">Applicant selected "I'm Flexible". Appointment can be scheduled anytime within the form validity period before move-in.</p>
+                  <p class="text-xs text-slate-500 mt-1">Can be scheduled anytime before move-in.</p>
                 <?php else: ?>
-                  <p class="text-xs text-slate-500 mt-1">Applicant selected this specific date during form submission.</p>
+                  <p class="text-xs text-slate-500 mt-1">Confirmed signing date selected during reservation.</p>
                 <?php endif; ?>
               </div>
 

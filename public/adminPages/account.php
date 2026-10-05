@@ -122,6 +122,7 @@ tailwind.config = {
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 class="text-xl font-bold text-slate-900">Administrator Account</h1>
+          <p class="text-xs text-slate-400 mt-0.5">Administrator personal info, contact details, and credentials.</p>
         </div>
       </div>
 
@@ -168,11 +169,6 @@ tailwind.config = {
                   <span class="truncate font-medium"><?= e($additionalEmail) ?></span>
                 </div>
               <?php endif; ?>
-            </div>
-
-            <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 font-mono">
-              <span>USER ID</span>
-              <span class="font-semibold text-slate-600">#ADM-<?= str_pad((string)$adminId, 4, '0', STR_PAD_LEFT) ?></span>
             </div>
           </div>
         </div>

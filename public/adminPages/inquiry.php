@@ -84,9 +84,12 @@ $userData = requireRole($conn, ['admin']); ?>
     <div class="max-w-screen-2xl mx-auto space-y-6">
 
       <!-- Page header -->
-  <div class="flex items-center justify-between flex-wrap gap-3">
-    <h1 class="text-xl font-bold text-slate-900">Inquiries</h1>
-    <div class="flex items-center gap-2">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">Inquiries</h1>
+          <p class="text-xs text-slate-400 mt-0.5">Track and manage client messages, preferred units, and leasing inquiries.</p>
+        </div>
+        <div class="flex items-center gap-2">
         <div class="flex bg-slate-100 rounded-full p-1 gap-0.5 text-xs font-semibold">
             <button class="filter-btn active px-3.5 py-1.5 rounded-full bg-white text-slate-700 shadow-sm active:scale-95 transition-all" 
                     data-filter="pending"
@@ -164,8 +167,7 @@ $userData = requireRole($conn, ['admin']); ?>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Unit Preference</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide align-middle">Message Preview</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Date Submitted</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Status</th>
-                <th class="text-right px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-20 align-middle">Action</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Status</th>
               </tr>
             </thead>
              <tbody class="divide-y divide-slate-50" id="inqTableBody">

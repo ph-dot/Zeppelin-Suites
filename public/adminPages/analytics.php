@@ -998,32 +998,32 @@ $navExtraActions = '
             <table class="w-full text-sm">
               <thead class="bg-slate-50 border-b border-slate-100">
                 <tr>
-                  <th class="px-5 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">Room</th>
-                  <th class="px-4 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">Latest Issue</th>
-                  <th class="px-4 py-3 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">Open</th>
-                  <th class="px-4 py-3 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">Urgent</th>
-                  <th class="px-4 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">Level</th>
+                  <th class="px-5 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider align-middle">Room</th>
+                  <th class="px-4 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider align-middle">Latest Issue</th>
+                  <th class="px-4 py-3 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider align-middle">Open</th>
+                  <th class="px-4 py-3 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider align-middle">Urgent</th>
+                  <th class="px-5 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider align-middle">Level</th>
                 </tr>
               </thead>
               <tbody id="roomMaintenanceTable" class="divide-y divide-slate-100">
                 <?php if (empty($roomMaintenanceRows)): ?>
                   <tr>
-                    <td colspan="5" class="px-5 py-8 text-center text-sm text-slate-400">No maintenance requests found for this filter.</td>
+                    <td colspan="5" class="px-5 py-8 text-center text-sm text-slate-400 align-middle">No maintenance requests found for this filter.</td>
                   </tr>
                 <?php else: ?>
                   <?php foreach ($roomMaintenanceRows as $room): ?>
-                    <tr class="tbl-row">
-                      <td class="px-5 py-3.5 whitespace-nowrap">
+                    <tr class="tbl-row hover:bg-slate-50/80 transition-colors cursor-pointer" onclick="window.location.href='../adminPages/maintenance.php'">
+                      <td class="px-5 py-3.5 whitespace-nowrap align-middle">
                         <div class="font-bold text-slate-800" style="font-family:'DM Mono',monospace"><?= e($room['unit']) ?></div>
                         <div class="text-xs text-slate-400"><?= e($room['type']) ?></div>
                       </td>
-                      <td class="px-4 py-3.5 min-w-[220px]">
+                      <td class="px-4 py-3.5 min-w-[220px] align-middle">
                         <div class="font-semibold text-slate-700 text-xs"><?= e($room['latestIssue']) ?></div>
                         <div class="text-xs text-slate-400 mt-0.5"><?= e($room['latestCategory']) ?> · <?= e($room['latestDate']) ?></div>
                       </td>
-                      <td class="px-4 py-3.5 text-center font-bold text-slate-800" style="font-family:'DM Mono',monospace"><?= e($room['open']) ?></td>
-                      <td class="px-4 py-3.5 text-center font-bold text-red-600" style="font-family:'DM Mono',monospace"><?= e($room['urgent']) ?></td>
-                      <td class="px-4 py-3.5 whitespace-nowrap"><span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border <?= e($room['attentionClass']) ?>"><?= e($room['attentionLevel']) ?></span></td>
+                      <td class="px-4 py-3.5 text-center font-bold text-slate-800 align-middle" style="font-family:'DM Mono',monospace"><?= e($room['open']) ?></td>
+                      <td class="px-4 py-3.5 text-center font-bold text-red-600 align-middle" style="font-family:'DM Mono',monospace"><?= e($room['urgent']) ?></td>
+                      <td class="px-5 py-3.5 whitespace-nowrap align-middle"><span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border <?= e($room['attentionClass']) ?>"><?= e($room['attentionLevel']) ?></span></td>
                     </tr>
                   <?php endforeach; ?>
                 <?php endif; ?>

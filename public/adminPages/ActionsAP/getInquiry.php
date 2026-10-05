@@ -236,7 +236,7 @@ if ($result->num_rows > 0) {
             }
         }
 
-       echo "<tr class='inq-row' 
+       echo "<tr class='inq-row cursor-pointer hover:bg-slate-50/80 transition-colors' 
                 data-inq-id='" . (int)$row['inq_id'] . "'
                 data-status='{$status}'
                 data-approval-status='{$approval_status}'
@@ -270,19 +270,16 @@ if ($result->num_rows > 0) {
                 <td class='px-4 py-3.5 text-left align-middle text-slate-700 text-xs font-medium whitespace-nowrap'>{$displayUnitPref}</td>
                 <td class='px-4 py-3.5 text-left align-middle text-slate-400 text-xs max-w-xs truncate'>{$displayMessage}</td>
                 <td class='px-4 py-3.5 text-left align-middle text-slate-500 whitespace-nowrap text-xs' style='font-family:&quot;DM Mono&quot;,monospace'>{$dateOnly}</td>
-                <td class='px-4 py-3.5 text-left align-middle whitespace-nowrap'>
+                <td class='px-5 py-3.5 text-left align-middle whitespace-nowrap'>
                     <span class='status-badge {$status_class} text-xs font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center'>
                         {$displayStatus}
                     </span>
                     {$updateBadge}
                 </td>
-                <td class='px-4 py-3.5 text-right align-middle whitespace-nowrap'>
-                    <button class='btn-press text-xs font-semibold text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full active:scale-95 transition-all' onclick='event.stopPropagation(); openModal(this.closest(\"tr\"))'>View</button>
-                </td>
               </tr>";
     }
 } else {
-    echo "<tr><td colspan='7' class='text-center px-5 py-8 text-slate-400 text-sm'>No inquiries found.</td></tr>";
+    echo "<tr><td colspan='6' class='text-center px-5 py-8 text-slate-400 text-sm'>No inquiries found.</td></tr>";
 }
 
 $requestsStmt->close();
