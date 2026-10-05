@@ -170,15 +170,13 @@ $navItems = [
 </aside>
 
 <script>
-if (typeof sidebarCollapsed === 'undefined') {
-  var sidebarCollapsed = false;
-}
+window.sidebarCollapsed = window.sidebarCollapsed || false;
 function toggleCollapse() {
-  sidebarCollapsed = !sidebarCollapsed;
+  window.sidebarCollapsed = !window.sidebarCollapsed;
   var sb = document.getElementById('sidebar');
   var mw = document.getElementById('mainWrapper');
-  if (sb) sb.classList.toggle('collapsed', sidebarCollapsed);
-  if (mw) mw.classList.toggle('sidebar-collapsed', sidebarCollapsed);
+  if (sb) sb.classList.toggle('collapsed', window.sidebarCollapsed);
+  if (mw) mw.classList.toggle('sidebar-collapsed', window.sidebarCollapsed);
 }
 function openMobileSidebar() {
   var sb = document.getElementById('sidebar');

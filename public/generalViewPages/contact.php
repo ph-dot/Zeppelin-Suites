@@ -1,3 +1,10 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$errorMessage = $_SESSION['error_message'] ?? null;
+unset($_SESSION['error_message']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,25 +44,40 @@
     <!-- ── LEFT: CONTACT FORM ────────────────────────────── -->
    <div class="lg:col-span-2 border border-zinc-200 rounded-2xl p-8 md:p-10">
     
-       <form id="contactForm" action="ActionsGV/inquiryInput.php" method="POST" class="space-y-6">
+       <form id="contactForm" action="ActionsGV/inquiryInput.php" method="POST" class="space-y-6" novalidate>
+        <?php if ($errorMessage): ?>
+          <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center gap-3">
+            <svg class="w-5 h-5 shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span><?= htmlspecialchars($errorMessage) ?></span>
+          </div>
+        <?php endif; ?>
+
         <!-- Name -->
         <div>
-          <label class="block text-sm font-semibold text-zinc-800 mb-2">Name:</label>
-          <input type="text" name="sender_name" placeholder="Your full name" required
+          <label for="sender_name" class="block text-sm font-semibold text-zinc-800 mb-2">Name:</label>
+          <input type="text" name="sender_name" id="sender_name" placeholder="Your full name" required
             class="zep-input w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 transition-colors outline-none">
         </div>
 
         <!-- Email + Phone -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
-            <label class="block text-sm font-semibold text-zinc-800 mb-2">Email:</label>
-            <input type="email" name="sender_email" placeholder="your@email.com" required
+            <label for="sender_email" class="block text-sm font-semibold text-zinc-800 mb-2">Email:</label>
+            <input type="email" name="sender_email" id="sender_email" placeholder="your@email.com" required
               class="zep-input w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 transition-colors outline-none">
+            <p id="emailError" class="hidden text-xs text-rose-600 mt-1.5 flex items-center gap-1.5 font-medium transition-all">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span id="emailErrorText">Please enter a valid email address (e.g. name@domain.com)</span>
+            </p>
           </div>
           <div>
-            <label class="block text-sm font-semibold text-zinc-800 mb-2">Phone:</label>
-            <input type="tel" name="sender_contact" placeholder="09XX-XXX-XXXX"
+            <label for="sender_contact" class="block text-sm font-semibold text-zinc-800 mb-2">Phone:</label>
+            <input type="tel" name="sender_contact" id="sender_contact" placeholder="09XX-XXX-XXXX or +63 9XX..." required
               class="zep-input w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 transition-colors outline-none">
+            <p id="phoneError" class="hidden text-xs text-rose-600 mt-1.5 flex items-center gap-1.5 font-medium transition-all">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span id="phoneErrorText">Please enter a valid phone number (e.g. 0917-123-4567 or +63 917 123 4567)</span>
+            </p>
           </div>
         </div>
 
@@ -65,11 +87,10 @@
     <div class="relative">
       <select name="inquiry_type" id="inquiry_type" class="zep-select w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-600 appearance-none cursor-pointer focus:border-zinc-900 outline-none transition-colors" required>
         <option value="" disabled selected>Choose option</option>
-        <option value="Unit Reservation">Unit Reservation</option>
-        <option value="Resale Inquiry">Resale Inquiry</option>
-        <option value="Lease Inquiry">Lease Inquiry</option>
-        <option value="General Inquiry">General Inquiry</option>
-        <option value="Others">Others</option>
+        <option value="Unit Lease / Rental Reservation">Unit Lease / Rental Reservation</option>
+        <option value="Buy / Purchase a Unit (Resale)">Buy / Purchase a Unit (Resale)</option>
+        <option value="General Inquiry & Amenities">General Inquiry & Amenities</option>
+        <option value="Other Concerns">Other Concerns</option>
       </select>
       <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center">
         <svg width="12" height="8" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="#71717b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -102,7 +123,7 @@
     <label
       for="preferred_move_in_time"
       class="block text-sm font-semibold text-zinc-800 mb-2">
-      Preferred Move-In Time:
+      When do you plan to move in?
     </label>
 
     <div class="relative">
@@ -113,11 +134,11 @@
         class="zep-select w-full border border-zinc-300 rounded-xl bg-white px-4 py-3 text-sm text-zinc-600 appearance-none cursor-pointer focus:border-zinc-900 outline-none transition-colors">
 
         <option value="" disabled selected>Choose option</option>
-        <option value="Immediately">Immediately</option>
-        <option value="Within 1 month">Within 1 month</option>
-        <option value="Within 1-3 months">Within 1-3 months</option>
-        <option value="Within 3-6 months">Within 3-6 months</option>
-        <option value="Not sure yet">Not sure yet</option>
+        <option value="Immediately (Within 30 days)">Immediately (Within 30 days)</option>
+        <option value="Next Month (1-2 months)">Next Month (1-2 months)</option>
+        <option value="In 2-3 Months">In 2-3 Months</option>
+        <option value="In 3-6 Months">In 3-6 Months</option>
+        <option value="Flexible / Not sure yet">Flexible / Not sure yet</option>
       </select>
 
       <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center">
@@ -330,16 +351,20 @@ class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
     document.getElementById("lease_duration");
 
   function toggleFields() {
-    const inquiryType = inquiryTypeSelect.value;
+    const inquiryType = (inquiryTypeSelect.value || '').toLowerCase();
 
-    const needsUnitPreference =
-      inquiryType === "Resale Inquiry" ||
-      inquiryType === "Unit Reservation" ||
-      inquiryType === "Lease Inquiry";
+    const isLeaseFlow =
+      inquiryType.includes('lease') ||
+      inquiryType.includes('rental') ||
+      inquiryType.includes('unit reservation');
 
-    const needsLeaseDetails =
-      inquiryType === "Unit Reservation" ||
-      inquiryType === "Lease Inquiry";
+    const isResaleFlow =
+      inquiryType.includes('resale') ||
+      inquiryType.includes('buy') ||
+      inquiryType.includes('purchase');
+
+    const needsUnitPreference = isLeaseFlow || isResaleFlow;
+    const needsLeaseDetails = isLeaseFlow;
 
     // Unit preference
     unitPreferenceContainer.style.display =
@@ -375,13 +400,380 @@ class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
   toggleFields();
 
   inquiryTypeSelect.addEventListener("change", toggleFields);
+
+  // ── Email & Phone Security Validation ─────────────────────
+  const emailInput = document.getElementById("sender_email");
+  const emailError = document.getElementById("emailError");
+  const emailErrorText = document.getElementById("emailErrorText");
+
+  const phoneInput = document.getElementById("sender_contact");
+  const phoneError = document.getElementById("phoneError");
+  const phoneErrorText = document.getElementById("phoneErrorText");
+
+  let emailTouched = false;
+  let phoneTouched = false;
+
+  // Known typos for major providers
+  const typoDomains = {
+    "gmaidla.com": "gmail.com", "gmaild.com": "gmail.com", "gamil.com": "gmail.com",
+    "gmial.com": "gmail.com", "gmaill.com": "gmail.com", "gmai.com": "gmail.com",
+    "gmal.com": "gmail.com", "gmeil.com": "gmail.com", "gmaio.com": "gmail.com",
+    "gmail.co": "gmail.com", "gmaill.co": "gmail.com", "yaho.com": "yahoo.com",
+    "yahooo.com": "yahoo.com", "yaho.co": "yahoo.com", "ymail.co": "yahoo.com",
+    "outlok.com": "outlook.com", "outloo.com": "outlook.com", "hotmial.com": "hotmail.com",
+    "hotmai.com": "hotmail.com", "iclou.com": "icloud.com", "icld.com": "icloud.com"
+  };
+
+  const disposableDomains = [
+    "tempmail.com", "10minutemail.com", "mailinator.com",
+    "guerrillamail.com", "throwawaymail.com", "yopmail.com"
+  ];
+
+  function validateEmail(val) {
+    const trimmed = (val || "").trim();
+    if (!trimmed) {
+      return { valid: false, message: "Email address is required." };
+    }
+    if (/\s/.test(trimmed)) {
+      return { valid: false, message: "Email address cannot contain spaces." };
+    }
+    if (!trimmed.includes("@")) {
+      return { valid: false, message: "Email must include '@' (e.g. name@domain.com)." };
+    }
+    const parts = trimmed.split("@");
+    if (parts.length !== 2 || !parts[0] || !parts[1]) {
+      return { valid: false, message: "Please provide a valid username and domain." };
+    }
+    const user = parts[0].toLowerCase();
+    const domain = parts[1].toLowerCase();
+
+    if (!domain.includes(".")) {
+      return { valid: false, message: "Email domain must include an extension (e.g. .com, .ph)." };
+    }
+    const domainParts = domain.split(".");
+    const tld = domainParts[domainParts.length - 1];
+    if (tld.length < 2) {
+      return { valid: false, message: "Domain extension must be at least 2 letters (e.g. .com)." };
+    }
+
+    // Check known typo domains
+    if (typoDomains[domain]) {
+      return { valid: false, message: "Please enter a valid email domain provider (e.g. name@gmail.com)." };
+    }
+
+    // Check disposable domains
+    if (disposableDomains.includes(domain)) {
+      return { valid: false, message: "Please enter a valid personal or business email domain." };
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(trimmed)) {
+      return { valid: false, message: "Please enter a valid email format (e.g. name@domain.com)." };
+    }
+    return { valid: true };
+  }
+
+  function validatePhone(val) {
+    const trimmed = (val || "").trim();
+    if (!trimmed) {
+      return { valid: false, message: "Phone number is required." };
+    }
+
+    if (/[^0-9+\s\-()]/.test(trimmed)) {
+      return { valid: false, message: "Phone number can only contain digits, '+', '-', and spaces." };
+    }
+
+    const hasPlus = trimmed.startsWith("+");
+    const digitsOnly = trimmed.replace(/\D/g, "");
+
+    if (digitsOnly.length < 7) {
+      return { valid: false, message: "Phone number is too short (minimum 7 digits)." };
+    }
+    if (digitsOnly.length > 15) {
+      return { valid: false, message: "Phone number is too long (maximum 15 digits)." };
+    }
+
+    // Check dummy repeating digits (e.g. 09111111111, 09000000000)
+    if (/(.)\1{5,}/.test(digitsOnly)) {
+      return { valid: false, message: "Please enter a valid, active phone number (repeated digits detected)." };
+    }
+
+    // Check dummy sequential numbers (e.g. 12345678, 87654321)
+    if (digitsOnly.includes("12345678") || digitsOnly.includes("87654321") || digitsOnly.includes("01234567")) {
+      return { valid: false, message: "Please enter a valid, active phone number (sequential pattern detected)." };
+    }
+
+    if (hasPlus) {
+      if (digitsOnly.startsWith("63")) {
+        if (digitsOnly.length !== 12 || !digitsOnly.startsWith("639")) {
+          return { valid: false, message: "PH mobile with +63 must have 12 digits (e.g. +63 917 123 4567)." };
+        }
+      } else {
+        if (digitsOnly.length < 8 || digitsOnly.length > 15) {
+          return { valid: false, message: "Please enter a valid international number with country code (e.g. +1 555 123 4567)." };
+        }
+      }
+      return { valid: true };
+    }
+
+    if (digitsOnly.startsWith("09")) {
+      if (digitsOnly.length !== 11) {
+        return { valid: false, message: "Philippine mobile number must be 11 digits (e.g. 0917-123-4567)." };
+      }
+      const prefix4 = digitsOnly.substring(0, 4);
+      if (['0900', '0901', '0902', '0903', '0904'].includes(prefix4)) {
+        return { valid: false, message: `Prefix '${prefix4}' is not a valid Philippine mobile network prefix.` };
+      }
+      return { valid: true };
+    }
+
+    if (digitsOnly.startsWith("639")) {
+      if (digitsOnly.length !== 12) {
+        return { valid: false, message: "Philippine mobile number must be 12 digits (e.g. 639171234567)." };
+      }
+      return { valid: true };
+    }
+
+    if (digitsOnly.startsWith("0")) {
+      if (digitsOnly.length < 9 || digitsOnly.length > 11) {
+        return { valid: false, message: "Landline number must be 9–11 digits including area code." };
+      }
+      return { valid: true };
+    }
+
+    return { valid: false, message: "Please enter a valid phone number (e.g. 0917-123-4567 or +63 917 123 4567)." };
+  }
+
+  function applyValidationState(input, errorContainer, errorTextElem, result, showUI) {
+    if (!result.valid) {
+      if (showUI) {
+        errorTextElem.textContent = result.message;
+        errorContainer.classList.remove("hidden");
+        input.classList.add("border-rose-500", "focus:border-rose-500", "bg-rose-50/20");
+        input.classList.remove("border-zinc-300", "focus:border-zinc-900");
+      }
+      return false;
+    } else {
+      errorContainer.classList.add("hidden");
+      input.classList.remove("border-rose-500", "focus:border-rose-500", "bg-rose-50/20");
+      input.classList.add("border-zinc-300", "focus:border-zinc-900");
+      return true;
+    }
+  }
+
+  let emailDomainCheckTimer = null;
+  let lastCheckedEmail = "";
+  let isEmailDomainValid = true;
+
+  function verifyEmailDomainAsync(email) {
+    if (!email || !email.includes("@")) return;
+    const parts = email.split("@");
+    if (parts.length !== 2 || !parts[1].includes(".")) return;
+
+    if (email === lastCheckedEmail) return;
+
+    clearTimeout(emailDomainCheckTimer);
+    emailDomainCheckTimer = setTimeout(() => {
+      fetch('ActionsGV/checkEmailDomain.php?email=' + encodeURIComponent(email))
+        .then(res => res.json())
+        .then(data => {
+          lastCheckedEmail = email;
+          if (!data.valid) {
+            isEmailDomainValid = false;
+            emailErrorText.textContent = data.message;
+            emailError.classList.remove("hidden");
+            emailInput.classList.add("border-rose-500", "focus:border-rose-500", "bg-rose-50/20");
+            emailInput.classList.remove("border-zinc-300", "focus:border-zinc-900");
+          } else {
+            isEmailDomainValid = true;
+            const localRes = validateEmail(email);
+            if (localRes.valid) {
+              emailError.classList.add("hidden");
+              emailInput.classList.remove("border-rose-500", "focus:border-rose-500", "bg-rose-50/20");
+              emailInput.classList.add("border-zinc-300", "focus:border-zinc-900");
+            }
+          }
+        })
+        .catch(() => {
+          isEmailDomainValid = true;
+        });
+    }, 400);
+  }
+
+  function checkEmail(forceShow = false) {
+    if (!emailInput) return true;
+    const val = emailInput.value.trim();
+    const res = validateEmail(val);
+    const localOk = applyValidationState(emailInput, emailError, emailErrorText, res, forceShow || emailTouched);
+    if (localOk && val) {
+      verifyEmailDomainAsync(val);
+    }
+    return localOk && isEmailDomainValid;
+  }
+
+  function checkPhone(forceShow = false) {
+    if (!phoneInput) return true;
+    const res = validatePhone(phoneInput.value);
+    return applyValidationState(phoneInput, phoneError, phoneErrorText, res, forceShow || phoneTouched);
+  }
+
+  if (emailInput) {
+    emailInput.addEventListener("input", function () {
+      if (/\s/.test(emailInput.value)) {
+        emailTouched = true;
+      }
+      if (emailTouched) {
+        checkEmail(false);
+      }
+    });
+
+    emailInput.addEventListener("blur", function () {
+      if (emailInput.value.trim() !== "") {
+        emailTouched = true;
+        checkEmail(true);
+      }
+    });
+  }
+
+  if (phoneInput) {
+    phoneInput.addEventListener("input", function () {
+      if (/[^0-9+\s\-()]/.test(phoneInput.value)) {
+        phoneTouched = true;
+        checkPhone(true);
+        return;
+      }
+      if (phoneTouched) {
+        checkPhone(false);
+      }
+    });
+
+    phoneInput.addEventListener("blur", function () {
+      if (phoneInput.value.trim() !== "") {
+        phoneTouched = true;
+        checkPhone(true);
+      }
+    });
+  }
+
+  // Clear red borders on other inputs upon interaction
+  ['sender_name', 'inquiry_type', 'preferred_unit_id', 'preferred_move_in_time', 'lease_duration'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
+        el.classList.remove('border-rose-500');
+      });
+    }
+  });
+
+  const msgTextarea = document.querySelector('textarea[name="Message"]');
+  if (msgTextarea) {
+    msgTextarea.addEventListener('input', () => {
+      msgTextarea.classList.remove('border-rose-500');
+    });
+  }
+
+  // Expose check functions for openInquiryModal
+  window.checkEmailField = checkEmail;
+  window.checkPhoneField = checkPhone;
 });
 
-function openInquiryModal() {
+async function openInquiryModal() {
   const form = document.getElementById("contactForm");
+  if (!form) return;
 
-  if (!form.reportValidity()) {
+  const emailInput = document.getElementById("sender_email");
+  const phoneInput = document.getElementById("sender_contact");
+  const nameInput = document.getElementById("sender_name");
+  const inquirySelect = document.getElementById("inquiry_type");
+  const messageInput = form.querySelector('textarea[name="Message"]');
+
+  const isEmailOk = window.checkEmailField ? window.checkEmailField(true) : true;
+  const isPhoneOk = window.checkPhoneField ? window.checkPhoneField(true) : true;
+
+  let firstInvalid = null;
+
+  if (nameInput && !nameInput.value.trim()) {
+    firstInvalid = firstInvalid || nameInput;
+    nameInput.classList.add("border-rose-500");
+  } else if (nameInput) {
+    nameInput.classList.remove("border-rose-500");
+  }
+
+  if (!isEmailOk) {
+    firstInvalid = firstInvalid || emailInput;
+  }
+
+  if (!isPhoneOk) {
+    firstInvalid = firstInvalid || phoneInput;
+  }
+
+  if (inquirySelect && !inquirySelect.value) {
+    firstInvalid = firstInvalid || inquirySelect;
+    inquirySelect.classList.add("border-rose-500");
+  } else if (inquirySelect) {
+    inquirySelect.classList.remove("border-rose-500");
+  }
+
+  const unitContainer = document.getElementById("unit-preference");
+  const unitSelect = document.getElementById("preferred_unit_id");
+  if (unitContainer && unitContainer.style.display !== "none" && (!unitSelect || !unitSelect.value)) {
+    firstInvalid = firstInvalid || unitSelect;
+    if (unitSelect) unitSelect.classList.add("border-rose-500");
+  } else if (unitSelect) {
+    unitSelect.classList.remove("border-rose-500");
+  }
+
+  const moveInContainer = document.getElementById("preferred-move-in-container");
+  const moveInSelect = document.getElementById("preferred_move_in_time");
+  if (moveInContainer && moveInContainer.style.display !== "none" && (!moveInSelect || !moveInSelect.value)) {
+    firstInvalid = firstInvalid || moveInSelect;
+    if (moveInSelect) moveInSelect.classList.add("border-rose-500");
+  } else if (moveInSelect) {
+    moveInSelect.classList.remove("border-rose-500");
+  }
+
+  const leaseContainer = document.getElementById("lease-duration-container");
+  const leaseSelect = document.getElementById("lease_duration");
+  if (leaseContainer && leaseContainer.style.display !== "none" && (!leaseSelect || !leaseSelect.value)) {
+    firstInvalid = firstInvalid || leaseSelect;
+    if (leaseSelect) leaseSelect.classList.add("border-rose-500");
+  } else if (leaseSelect) {
+    leaseSelect.classList.remove("border-rose-500");
+  }
+
+  if (messageInput && !messageInput.value.trim()) {
+    firstInvalid = firstInvalid || messageInput;
+    messageInput.classList.add("border-rose-500");
+  } else if (messageInput) {
+    messageInput.classList.remove("border-rose-500");
+  }
+
+  if (firstInvalid) {
+    firstInvalid.scrollIntoView({ behavior: "smooth", block: "center" });
+    firstInvalid.focus();
     return;
+  }
+
+  // Pre-submit online domain verification
+  if (emailInput && emailInput.value.trim()) {
+    try {
+      const emailVal = emailInput.value.trim();
+      const res = await fetch('ActionsGV/checkEmailDomain.php?email=' + encodeURIComponent(emailVal));
+      const data = await res.json();
+      if (!data.valid) {
+        const emailError = document.getElementById("emailError");
+        const emailErrorText = document.getElementById("emailErrorText");
+        emailErrorText.textContent = data.message;
+        emailError.classList.remove("hidden");
+        emailInput.classList.add("border-rose-500", "focus:border-rose-500", "bg-rose-50/20");
+        emailInput.classList.remove("border-zinc-300", "focus:border-zinc-900");
+        emailInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        emailInput.focus();
+        return;
+      }
+    } catch (err) {
+      console.warn("Domain check skipped:", err);
+    }
   }
 
   document.getElementById("inquiryModal")
@@ -400,7 +792,7 @@ function closeInquiryModal(){
 }
 
 function submitInquiry() {
-  document.getElementById("contactForm").requestSubmit();
+  document.getElementById("contactForm").submit();
 }
 </script>
 

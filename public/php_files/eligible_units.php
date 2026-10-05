@@ -39,10 +39,12 @@ function getRemainingEligibleUnitCount(mysqli $conn, int $inq_id): int
     if (!$inquiry) {
         return 0;
     }
- 
     $unit_type = $inquiry['unit_type'];
     $inquiryTypeNormalized = strtolower(trim($inquiry['inquiry_type'] ?? ''));
-    $isResale = ($inquiryTypeNormalized === 'resale inquiry');
+    $isResale = ($inquiryTypeNormalized === 'resale inquiry')
+        || strpos($inquiryTypeNormalized, 'resale') !== false
+        || strpos($inquiryTypeNormalized, 'buy') !== false
+        || strpos($inquiryTypeNormalized, 'purchase') !== false;
 
     if ($isResale) {
         $stmt = $conn->prepare("
@@ -74,22 +76,30 @@ function getRemainingEligibleUnitCount(mysqli $conn, int $inq_id): int
  
     switch ($movePreference) {
         case 'immediately':
+        case 'immediately (within 30 days)':
             $latestMoveIn->modify('+30 days');
             break;
         case 'within 1 month':
-            $latestMoveIn->modify('+1 month');
+        case 'next month (1-2 months)':
+        case 'next month (1–2 months)':
+            $latestMoveIn->modify('+2 months');
             break;
         case 'within 1–3 months':
         case 'within 1-3 months':
+        case 'in 2-3 months':
+        case 'in 2–3 months':
             $earliestMoveIn->modify('+1 month');
             $latestMoveIn->modify('+3 months');
             break;
         case 'within 3–6 months':
         case 'within 3-6 months':
+        case 'in 3-6 months':
+        case 'in 3–6 months':
             $earliestMoveIn->modify('+3 months');
             $latestMoveIn->modify('+6 months');
             break;
         default:
+            // Not sure yet / Flexible / Not sure yet
             $latestMoveIn->modify('+6 months');
             break;
     }

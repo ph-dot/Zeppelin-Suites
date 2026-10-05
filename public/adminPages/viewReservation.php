@@ -967,6 +967,8 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
           <?php endif; ?>
 
         </section>
+      </div>
+
       <!-- TAB 4: DOCUMENTS (Matching Image 1) -->
       <div id="tabContent-documents" class="tab-panel space-y-6 hidden">
         <section id="requirementTrackingSection" class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm">
@@ -1267,7 +1269,6 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
 </div>
 
 <script>
-  let sidebarCollapsed = false;
   const currentReservationId = <?= json_encode((int)$res['reservation_id']) ?>;
   const currentReservationStatus = <?= json_encode($res['reservation_status'] ?? '') ?>;
   const currentPaymentStatus = <?= json_encode($res['payment_status'] ?? '') ?>;

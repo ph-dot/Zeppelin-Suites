@@ -112,10 +112,21 @@ if (
 $inquiry_type_normalized =
     strtolower(trim($data['inquiry_type']));
 
-if (
+$is_lease_inquiry = (
     $inquiry_type_normalized === 'unit reservation' ||
-    $inquiry_type_normalized === 'lease inquiry'
-) {
+    $inquiry_type_normalized === 'lease inquiry' ||
+    strpos($inquiry_type_normalized, 'lease') !== false ||
+    strpos($inquiry_type_normalized, 'rental') !== false
+);
+
+$is_resale_inquiry = (
+    $inquiry_type_normalized === 'resale inquiry' ||
+    strpos($inquiry_type_normalized, 'resale') !== false ||
+    strpos($inquiry_type_normalized, 'buy') !== false ||
+    strpos($inquiry_type_normalized, 'purchase') !== false
+);
+
+if ($is_lease_inquiry) {
     $price_basis = (float)$data['lease_rate'];
     $resident_type = "New Tenant";
     $transaction_type = "Unit Leasing";
@@ -124,7 +135,7 @@ if (
     if ($move_out_date === '') {
         die("Move-out date is required for lease reservations.");
     }
-} elseif ($inquiry_type_normalized === 'resale inquiry') {
+} elseif ($is_resale_inquiry) {
     $resalePrice = 0;
     if (isset($data['resellling_price']) && (float)$data['resellling_price'] > 0) {
         $resalePrice = (float)$data['resellling_price'];
@@ -170,10 +181,7 @@ try {
         ->fetch_assoc();
     $lockUnitStmt->close();
 
-    $is_lease = (
-        $inquiry_type_normalized === 'unit reservation' ||
-        $inquiry_type_normalized === 'lease inquiry'
-    );
+    $is_lease = $is_lease_inquiry;
 
     if (!$lockedUnit || $lockedUnit['unit_current_status'] === 'Under maintenance') {
         throw new Exception(
@@ -192,7 +200,7 @@ try {
             FROM reservation_table
             WHERE unit_id = ?
               AND reservation_status NOT IN ('cancelled', 'rejected')
-              AND inquiry_type IN ('Lease Inquiry', 'Unit Reservation')
+              AND (inquiry_type IN ('Lease Inquiry', 'Unit Reservation') OR inquiry_type LIKE '%Lease%' OR inquiry_type LIKE '%Rental%')
               AND move_in_date IS NOT NULL
               AND move_in_date <= ?
               AND COALESCE(move_out_date, move_in_date) >= ?

@@ -946,7 +946,10 @@ function openModal(row) {
 
   const showLeaseDetails =
     type === 'unit reservation' ||
-    type === 'lease inquiry';
+    type === 'lease inquiry' ||
+    type.includes('lease') ||
+    type.includes('rental') ||
+    type.includes('reservation');
 
   document.getElementById('unitSection').style.display =
     hideGeneral ? 'none' : '';
@@ -1397,7 +1400,8 @@ function checkAvailableUnits() {
 
       if (checkedAvailableUnits.length === 0) {
         countText.textContent = "No available units found";
-        const isResaleInq = data.is_resale || (currentRow && (currentRow.dataset.inquiryType || '').toLowerCase() === 'resale inquiry');
+        const rowType = (currentRow && currentRow.dataset.inquiryType || '').toLowerCase();
+        const isResaleInq = data.is_resale || rowType.includes('resale') || rowType.includes('buy') || rowType.includes('purchase');
         const emptyMsg = isResaleInq
           ? `No units currently listed for Resale with assigned owners were found for ${currentUnitPreference}.`
           : `No ready units with assigned owners were found for ${currentUnitPreference}.`;
@@ -1425,7 +1429,8 @@ function checkAvailableUnits() {
             })
           : null;
 
-        const isResale = unit.is_resale || (currentRow && (currentRow.dataset.inquiryType || '').toLowerCase() === 'resale inquiry');
+        const rowType = (currentRow && currentRow.dataset.inquiryType || '').toLowerCase();
+        const isResale = unit.is_resale || rowType.includes('resale') || rowType.includes('buy') || rowType.includes('purchase');
 
         const limitedReasonText = (unit.limited_reason && unit.limited_reason !== 'Reserved')
           ? `blocked (${unit.limited_reason})`

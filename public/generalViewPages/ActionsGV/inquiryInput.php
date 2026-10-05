@@ -37,11 +37,11 @@ $message = trim($_POST['Message'] ?? '');
 $status = 'pending';
 
 $validInquiryTypes = [
-    'Unit Reservation',
-    'Resale Inquiry',
-    'Lease Inquiry',
-    'General Inquiry',
-    'Others'
+    'Unit Lease / Rental Reservation',
+    'Buy / Purchase a Unit (Resale)',
+    'Buy / Purchase a Unit',
+    'General Inquiry & Amenities',
+    'Other Concerns'
 ];
 
 $validUnits = [
@@ -52,13 +52,11 @@ $validUnits = [
 ];
 
 $validMoveInTimes = [
-    'Immediately',
-    'Within 1 month',
-    'Within 1-3 months',
-    'Within 1–3 months',
-    'Within 3-6 months',
-    'Within 3–6 months',
-    'Not sure yet'
+    'Immediately (Within 30 days)',
+    'Next Month (1-2 months)',
+    'In 2-3 Months',
+    'In 3-6 Months',
+    'Flexible / Not sure yet'
 ];
 
 $validLeaseDurations = [
@@ -70,51 +68,141 @@ $validLeaseDurations = [
     'Not sure yet'
 ];
 
-$needsLeaseDetails = in_array(
-    $inquiry_type,
-    ['Unit Reservation', 'Lease Inquiry'],
-    true
-);
+$inqLower = strtolower($inquiry_type);
 
-$needsUnitPreference =
-    $needsLeaseDetails ||
-    $inquiry_type === 'Resale Inquiry';
+$isLeaseType = in_array($inquiry_type, ['Unit Reservation', 'Lease Inquiry'], true)
+    || strpos($inqLower, 'lease') !== false
+    || strpos($inqLower, 'rental') !== false
+    || strpos($inqLower, 'unit reservation') !== false;
 
-$isInvalid =
-    $sender_name === '' ||
-    !filter_var($sender_email, FILTER_VALIDATE_EMAIL) ||
-    !in_array($inquiry_type, $validInquiryTypes, true) ||
-    $message === '';
+$isResaleType = ($inquiry_type === 'Resale Inquiry')
+    || strpos($inqLower, 'resale') !== false
+    || strpos($inqLower, 'buy') !== false
+    || strpos($inqLower, 'purchase') !== false;
 
-if (
-    $needsUnitPreference &&
-    !in_array($preferred_unit_id, $validUnits, true)
-) {
-    $isInvalid = true;
+$needsLeaseDetails = $isLeaseType;
+$needsUnitPreference = $isLeaseType || $isResaleType;
+
+// Server-side security validation for Email
+$isValidEmail = false;
+$emailErrorMsg = null;
+
+if (!filter_var($sender_email, FILTER_VALIDATE_EMAIL) || !preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $sender_email)) {
+    $emailErrorMsg = 'Please provide a valid email address (e.g. name@domain.com).';
+} else {
+    $parts = explode('@', $sender_email);
+    $user = strtolower($parts[0]);
+    $domain = strtolower($parts[1]);
+
+    $typoMap = [
+        'gmaidla.com' => 'gmail.com', 'gmaild.com' => 'gmail.com', 'gamil.com' => 'gmail.com',
+        'gmial.com'   => 'gmail.com', 'gmaill.com' => 'gmail.com', 'gmai.com'  => 'gmail.com',
+        'gmal.com'    => 'gmail.com', 'gmeil.com'  => 'gmail.com', 'gmaio.com' => 'gmail.com',
+        'gmail.co'    => 'gmail.com', 'gmaill.co'  => 'gmail.com', 'yaho.com'  => 'yahoo.com',
+        'yahooo.com'  => 'yahoo.com', 'yaho.co'    => 'yahoo.com', 'outlok.com' => 'outlook.com',
+        'hotmial.com' => 'hotmail.com','iclou.com'  => 'icloud.com'
+    ];
+
+    if (isset($typoMap[$domain])) {
+        $emailErrorMsg = 'Please provide a valid email domain provider (e.g. name@gmail.com).';
+    } else {
+        // Levenshtein typo check
+        $majors = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com'];
+        foreach ($majors as $m) {
+            if ($domain !== $m && levenshtein($domain, $m) <= 2) {
+                $emailErrorMsg = 'Please provide a valid email domain provider (e.g. name@gmail.com).';
+                break;
+            }
+        }
+        // Check DNS MX record if no typo detected yet
+        if (!$emailErrorMsg && !checkdnsrr($domain, 'MX')) {
+            $emailErrorMsg = 'Please provide a valid email domain provider (e.g. name@gmail.com).';
+        }
+    }
+
+    if ($emailErrorMsg === null) {
+        $isValidEmail = true;
+    }
 }
 
-if (
+// Server-side security validation for Phone
+$cleanedPhone = preg_replace('/[\s\-\(\)]/', '', $sender_contact);
+$digitsOnly = preg_replace('/\D/', '', $cleanedPhone);
+$hasPlus = (strpos($cleanedPhone, '+') === 0);
+
+$isValidPhone = false;
+$phoneErrorMsg = null;
+
+if (!preg_match('/^[0-9+\s\-()]+$/', $sender_contact) || strlen($digitsOnly) < 7 || strlen($digitsOnly) > 15) {
+    $phoneErrorMsg = 'Please provide a valid phone number (e.g. 09XX-XXX-XXXX or +63 9XX...).';
+} elseif (preg_match('/(.)\1{5,}/', $digitsOnly)) {
+    $phoneErrorMsg = 'Please enter a valid, active phone number (repeated dummy digits detected).';
+} elseif (strpos($digitsOnly, '12345678') !== false || strpos($digitsOnly, '87654321') !== false || strpos($digitsOnly, '01234567') !== false) {
+    $phoneErrorMsg = 'Please enter a valid, active phone number (sequential test pattern detected).';
+} else {
+    if ($hasPlus) {
+        if (strpos($digitsOnly, '63') === 0) {
+            $isValidPhone = (strlen($digitsOnly) === 12 && strpos($digitsOnly, '639') === 0);
+            if (!$isValidPhone) {
+                $phoneErrorMsg = 'Philippine mobile number with +63 must be 12 digits (e.g. +63 917 123 4567).';
+            }
+        } else {
+            $isValidPhone = (strlen($digitsOnly) >= 8 && strlen($digitsOnly) <= 15);
+        }
+    } else {
+        if (strpos($digitsOnly, '09') === 0) {
+            if (strlen($digitsOnly) !== 11) {
+                $phoneErrorMsg = 'Philippine mobile number must be 11 digits (e.g. 0917-123-4567).';
+            } else {
+                $prefix4 = substr($digitsOnly, 0, 4);
+                if (in_array($prefix4, ['0900', '0901', '0902', '0903', '0904'], true)) {
+                    $phoneErrorMsg = "Prefix '{$prefix4}' is not a valid Philippine mobile network prefix.";
+                } else {
+                    $isValidPhone = true;
+                }
+            }
+        } elseif (strpos($digitsOnly, '639') === 0) {
+            $isValidPhone = (strlen($digitsOnly) === 12);
+            if (!$isValidPhone) {
+                $phoneErrorMsg = 'Philippine mobile number must be 12 digits (e.g. 639171234567).';
+            }
+        } elseif (strpos($digitsOnly, '0') === 0) {
+            $isValidPhone = (strlen($digitsOnly) >= 9 && strlen($digitsOnly) <= 11);
+            if (!$isValidPhone) {
+                $phoneErrorMsg = 'Landline number must be 9–11 digits including area code.';
+            }
+        } else {
+            $phoneErrorMsg = 'Please enter a valid phone number (e.g. 0917-123-4567 or +63 917 123 4567).';
+        }
+    }
+}
+
+$errorMessage = null;
+
+if ($sender_name === '') {
+    $errorMessage = 'Please provide your full name.';
+} elseif (!$isValidEmail) {
+    $errorMessage = $emailErrorMsg ?: 'Please provide a valid email address (e.g. name@domain.com).';
+} elseif (!$isValidPhone) {
+    $errorMessage = $phoneErrorMsg ?: 'Please provide a valid phone number (e.g. 0917-123-4567 or +63 917 123 4567).';
+} elseif (!in_array($inquiry_type, $validInquiryTypes, true)) {
+    $errorMessage = 'Please select a valid inquiry type.';
+} elseif ($message === '') {
+    $errorMessage = 'Please enter your inquiry message.';
+} elseif ($needsUnitPreference && !in_array($preferred_unit_id, $validUnits, true)) {
+    $errorMessage = 'Please select a preferred unit type.';
+} elseif (
     $needsLeaseDetails &&
     (
-        !in_array(
-            $preferred_move_in_time,
-            $validMoveInTimes,
-            true
-        ) ||
-        !in_array(
-            $lease_duration,
-            $validLeaseDurations,
-            true
-        )
+        !in_array($preferred_move_in_time, $validMoveInTimes, true) ||
+        !in_array($lease_duration, $validLeaseDurations, true)
     )
 ) {
-    $isInvalid = true;
+    $errorMessage = 'Please select your preferred move-in time and lease duration.';
 }
 
-if ($isInvalid) {
-    $_SESSION['error_message'] =
-        'Please complete all required inquiry fields.';
-
+if ($errorMessage !== null) {
+    $_SESSION['error_message'] = $errorMessage;
     header("Location: ../contact.php");
     exit();
 }

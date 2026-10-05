@@ -100,7 +100,9 @@ if ($avatar === '') {
 }
 
 $is_general = stripos($inquiry_type, 'general') !== false || stripos($inquiry_type, 'other') !== false;
-$is_lease_flow = in_array( $inquiry_type, ['Unit Reservation', 'Lease Inquiry'], true);
+$is_lease_flow = in_array($inquiry_type, ['Unit Reservation', 'Lease Inquiry'], true)
+    || stripos($inquiry_type, 'lease') !== false
+    || stripos($inquiry_type, 'rental') !== false;
 
 $unit_display = $preferred_unit ?: '—';
 $owner_display = '—';
@@ -112,7 +114,10 @@ $status_badge_class = 'text-slate-700 bg-slate-50 border-slate-200';
 
 $reply_subject = 'Inquiry Update - Zeppelin Suites';
 
-$is_resale = strtolower(trim($inquiry_type)) === 'resale inquiry';
+$is_resale = strtolower(trim($inquiry_type)) === 'resale inquiry'
+    || stripos($inquiry_type, 'resale') !== false
+    || stripos($inquiry_type, 'buy') !== false
+    || stripos($inquiry_type, 'purchase') !== false;
 
 if ($approval_status === 'approved') {
     $unit_display = trim($approved_unit_number . ' - ' . $approved_unit_type);

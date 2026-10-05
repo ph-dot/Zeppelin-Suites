@@ -156,7 +156,11 @@ try {
     }
 
     $inquiryType = strtolower(trim($reservation['inquiry_type']));
-    $releasedStatus = ($inquiryType === 'resale inquiry') ? 'Resale' : 'Ready for Occupancy';
+    $isResale = ($inquiryType === 'resale inquiry')
+        || strpos($inquiryType, 'resale') !== false
+        || strpos($inquiryType, 'buy') !== false
+        || strpos($inquiryType, 'purchase') !== false;
+    $releasedStatus = $isResale ? 'Resale' : 'Ready for Occupancy';
 
     $updateReservationSql = "
         UPDATE reservation_table

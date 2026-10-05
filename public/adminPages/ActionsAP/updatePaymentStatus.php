@@ -334,8 +334,12 @@ Zeppelin Suites Administration
 
     if ($action === 'reject') {
         $inquiryType = strtolower(trim($reservation['inquiry_type']));
+        $isResale = ($inquiryType === 'resale inquiry')
+            || strpos($inquiryType, 'resale') !== false
+            || strpos($inquiryType, 'buy') !== false
+            || strpos($inquiryType, 'purchase') !== false;
 
-        if ($inquiryType === 'resale inquiry') {
+        if ($isResale) {
             $releasedStatus = 'Resale';
         } else {
             $releasedStatus = 'Ready for Occupancy';

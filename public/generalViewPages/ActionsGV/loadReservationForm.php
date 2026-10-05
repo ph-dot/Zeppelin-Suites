@@ -109,7 +109,8 @@ $is_lease_for_gate = in_array(
     $inquiry_type_for_gate,
     ['lease inquiry', 'unit reservation'],
     true
-);
+) || strpos($inquiry_type_for_gate, 'lease') !== false
+  || strpos($inquiry_type_for_gate, 'rental') !== false;
 
 if (!$showing_submission_result) {
     if ($data['unit_current_status'] === 'Under maintenance') {
@@ -130,11 +131,11 @@ if (!$showing_submission_result) {
 
 $inquiry_type = strtolower(trim($data['inquiry_type']));
 
-$inquiry_type = strtolower(trim($data['inquiry_type']));
-
 if (
     $inquiry_type === 'lease inquiry' ||
-    $inquiry_type === 'unit reservation'
+    $inquiry_type === 'unit reservation' ||
+    strpos($inquiry_type, 'lease') !== false ||
+    strpos($inquiry_type, 'rental') !== false
 ) {
     $price_basis = (float)$data['lease_rate'];
     $price_label = "Monthly Lease Rate";
@@ -143,7 +144,12 @@ if (
     $reservation_type = "New Lease";
     $is_lease = true;
 
-} elseif ($inquiry_type === 'resale inquiry') {
+} elseif (
+    $inquiry_type === 'resale inquiry' ||
+    strpos($inquiry_type, 'resale') !== false ||
+    strpos($inquiry_type, 'buy') !== false ||
+    strpos($inquiry_type, 'purchase') !== false
+) {
     $resalePrice = 0;
     if (isset($data['resellling_price']) && (float)$data['resellling_price'] > 0) {
         $resalePrice = (float)$data['resellling_price'];
@@ -188,9 +194,9 @@ $move_in_max = date('Y-m-d', strtotime('+30 days'));
 // block a Lease calendar and vice versa — only compare like with like.
 $blocked_ranges = [];
 if ($is_lease) {
-    $blockedTypeFilter = "inquiry_type IN ('Lease Inquiry', 'Unit Reservation')";
+    $blockedTypeFilter = "(inquiry_type IN ('Lease Inquiry', 'Unit Reservation') OR inquiry_type LIKE '%Lease%' OR inquiry_type LIKE '%Rental%')";
 } else {
-    $blockedTypeFilter = "inquiry_type = 'Resale Inquiry'";
+    $blockedTypeFilter = "(inquiry_type = 'Resale Inquiry' OR inquiry_type LIKE '%Resale%' OR inquiry_type LIKE '%Buy%' OR inquiry_type LIKE '%Purchase%')";
 }
 
 $blockedStmt = $conn->prepare("
