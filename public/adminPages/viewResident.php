@@ -176,73 +176,86 @@ $additionalEmail = !empty($resident['additional_email']) ? $resident['additional
 
 // 1. Fetch Units from units_table with their current tenant
 $units = [];
-if ($isOwner) {
-    $u_sql = "
-        SELECT 
-            u.unit_id, 
-            u.unit_number, 
-            u.unit_type, 
-            u.floor_number, 
-            u.unit_current_status, 
-            u.lease_rate, 
-            u.created_at,
+$ownedUnitIds = [];
+
+// Fetch Owned Units
+$u_sql = "
+    SELECT 
+        u.unit_id, 
+        u.unit_number, 
+        u.unit_type, 
+        u.floor_number, 
+        u.unit_current_status, 
+        u.lease_rate, 
+        u.unit_owner_id,
+        u.created_at,
+        'Owned' AS ownership_type,
+        (
+            SELECT r.client_name 
+            FROM reservation_table r 
+            WHERE r.unit_id = u.unit_id 
+              AND (r.officially_booked_at IS NOT NULL OR r.reservation_status IN ('Approved', 'Completed', 'Confirmed', 'Active', 'reserved', 'moved in'))
+            ORDER BY r.created_at DESC 
+            LIMIT 1
+        ) AS current_tenant_name
+    FROM units_table u 
+    WHERE u.unit_owner_id = ? 
+       OR u.unit_owner_id IN (SELECT user_id FROM users_table WHERE email = ?)
+    ORDER BY u.unit_number ASC
+";
+$u_stmt = $conn->prepare($u_sql);
+if ($u_stmt) {
+    $u_stmt->bind_param('is', $user_id, $resident['email']);
+    $u_stmt->execute();
+    $u_res = $u_stmt->get_result();
+    while ($r = $u_res->fetch_assoc()) {
+        $r['ownership_type'] = 'Owned';
+        $units[] = $r;
+        $ownedUnitIds[] = (int)$r['unit_id'];
+    }
+    $u_stmt->close();
+}
+
+// Fetch Leased Units
+$u_sql_leased = "
+    SELECT DISTINCT
+        u.unit_id, 
+        u.unit_number, 
+        u.unit_type, 
+        u.floor_number, 
+        u.unit_current_status, 
+        u.lease_rate,
+        u.unit_owner_id,
+        'Leased' AS ownership_type,
+        COALESCE(
             (
-                SELECT r.client_name 
-                FROM reservation_table r 
-                WHERE r.unit_id = u.unit_id 
-                  AND (r.officially_booked_at IS NOT NULL OR r.reservation_status IN ('Approved', 'Completed', 'Confirmed', 'Active', 'reserved', 'moved in'))
-                ORDER BY r.created_at DESC 
+                SELECT r2.client_name 
+                FROM reservation_table r2 
+                WHERE r2.unit_id = u.unit_id 
+                  AND (r2.officially_booked_at IS NOT NULL OR r2.reservation_status IN ('Approved', 'Completed', 'Confirmed', 'Active', 'reserved', 'moved in'))
+                ORDER BY r2.created_at DESC 
                 LIMIT 1
-            ) AS current_tenant_name
-        FROM units_table u 
-        WHERE u.unit_owner_id = ? 
-           OR u.unit_owner_id IN (SELECT user_id FROM users_table WHERE email = ?)
-        ORDER BY u.unit_number ASC
-    ";
-    $u_stmt = $conn->prepare($u_sql);
-    if ($u_stmt) {
-        $u_stmt->bind_param('is', $user_id, $resident['email']);
-        $u_stmt->execute();
-        $u_res = $u_stmt->get_result();
-        while ($r = $u_res->fetch_assoc()) {
-            $units[] = $r;
+            ),
+            r.client_name
+        ) AS current_tenant_name
+    FROM reservation_table r
+    JOIN units_table u ON r.unit_id = u.unit_id
+    WHERE (r.client_email = ? OR r.client_name = ?)
+      AND LOWER(r.reservation_status) NOT IN ('cancelled', 'rejected')
+    ORDER BY u.unit_number ASC
+";
+$u_stmt2 = $conn->prepare($u_sql_leased);
+if ($u_stmt2) {
+    $u_stmt2->bind_param('ss', $resident['email'], $resident['full_name']);
+    $u_stmt2->execute();
+    $u_res2 = $u_stmt2->get_result();
+    while ($r2 = $u_res2->fetch_assoc()) {
+        if (!in_array((int)$r2['unit_id'], $ownedUnitIds, true)) {
+            $r2['ownership_type'] = 'Leased';
+            $units[] = $r2;
         }
     }
-} else {
-    // If tenant, fetch the units they are renting/staying in with their name as current tenant
-    $u_sql = "
-        SELECT DISTINCT
-            u.unit_id, 
-            u.unit_number, 
-            u.unit_type, 
-            u.floor_number, 
-            u.unit_current_status, 
-            u.lease_rate,
-            COALESCE(
-                (
-                    SELECT r2.client_name 
-                    FROM reservation_table r2 
-                    WHERE r2.unit_id = u.unit_id 
-                      AND (r2.officially_booked_at IS NOT NULL OR r2.reservation_status IN ('Approved', 'Completed', 'Confirmed', 'Active', 'reserved', 'moved in'))
-                    ORDER BY r2.created_at DESC 
-                    LIMIT 1
-                ),
-                r.client_name
-            ) AS current_tenant_name
-        FROM reservation_table r
-        JOIN units_table u ON r.unit_id = u.unit_id
-        WHERE r.client_email = ? OR r.client_name = ?
-        ORDER BY u.unit_number ASC
-    ";
-    $u_stmt = $conn->prepare($u_sql);
-    if ($u_stmt) {
-        $u_stmt->bind_param('ss', $resident['email'], $resident['full_name']);
-        $u_stmt->execute();
-        $u_res = $u_stmt->get_result();
-        while ($r = $u_res->fetch_assoc()) {
-            $units[] = $r;
-        }
-    }
+    $u_stmt2->close();
 }
 
 // 2. Fetch Reservations / Stays / Leases
@@ -467,15 +480,13 @@ $pendingRequests = count(array_filter($maintenance, fn($item) => strtolower($ite
 
           <!-- Tabs card -->
           <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8">
-            <div class="flex items-center gap-6 border-b border-slate-100 pb-3 overflow-x-auto">
+            <div class="flex items-center gap-6 border-b border-slate-100 pb-3">
               <button type="button" onclick="setProfileTab('profile', this)" class="profile-tab active text-sm font-semibold pb-3 whitespace-nowrap">Profile</button>
               <button type="button" onclick="setProfileTab('units', this)" class="profile-tab text-sm font-semibold pb-3 flex items-center gap-2 whitespace-nowrap">
-                Owned Units
-                <span class="text-[11px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full"><?= count($units) ?></span>
+                Unit
               </button>
               <button type="button" onclick="setProfileTab('request', this)" class="profile-tab text-sm font-semibold pb-3 flex items-center gap-2 whitespace-nowrap">
                 Maintenance
-                <span class="text-[11px] font-bold <?= $pendingRequests > 0 ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-700' ?> px-2 py-0.5 rounded-full"><?= $requestsCount ?></span>
               </button>
             </div>
 
@@ -502,10 +513,10 @@ $pendingRequests = count(array_filter($maintenance, fn($item) => strtolower($ite
               </dl>
             </div>
 
-            <!-- TAB 2: Owned Units -->
+            <!-- TAB 2: Units -->
             <div id="tab-units" class="pt-6 hidden">
               <div class="flex items-center justify-between mb-4">
-                <h3 class="text-sm font-bold text-slate-900">Owned Units</h3>
+                <h3 class="text-sm font-bold text-slate-900">Total Units</h3>
                 <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-mono"><?= count($units) ?> <?= count($units) === 1 ? 'Unit' : 'Units' ?></span>
               </div>
               <?php if (empty($units)): ?>
@@ -513,22 +524,37 @@ $pendingRequests = count(array_filter($maintenance, fn($item) => strtolower($ite
                   <p class="text-sm text-slate-500">No units currently assigned or associated with this resident.</p>
                 </div>
               <?php else: ?>
-                <div class="overflow-x-auto rounded-2xl border border-slate-100">
+                <div class="rounded-2xl border border-slate-100 overflow-hidden">
                   <table class="w-full text-sm">
                     <thead>
                       <tr class="bg-slate-50/60 border-b border-slate-100 text-slate-400 text-xs font-semibold uppercase tracking-wide text-left">
                         <th class="px-4 py-3">Unit Number</th>
                         <th class="px-4 py-3">Type</th>
                         <th class="px-4 py-3">Floor</th>
+                        <th class="px-4 py-3">Ownership</th>
                         <th class="px-4 py-3">Current Tenant</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
                       <?php foreach ($units as $u): ?>
+                        <?php 
+                          $isUnitOwned = (!empty($u['ownership_type']) && strtolower($u['ownership_type']) === 'owned')
+                              || (!empty($u['unit_owner_id']) && (int)$u['unit_owner_id'] === (int)$resident['user_id'])
+                              || ($isOwner && empty($u['ownership_type']));
+                          $ownershipText = $isUnitOwned ? 'Owned' : 'Leased';
+                          $ownershipBadgeClass = $isUnitOwned 
+                              ? 'bg-indigo-50 text-indigo-700 border-indigo-200' 
+                              : 'bg-blue-50 text-blue-700 border-blue-200';
+                        ?>
                         <tr class="hover:bg-slate-50/50 transition-colors">
                           <td class="px-4 py-3.5 font-semibold text-slate-900" style="font-family:'DM Mono',monospace">Unit <?= e($u['unit_number']) ?></td>
                           <td class="px-4 py-3.5 text-slate-600 font-medium"><?= e($u['unit_type'] ?: 'Standard') ?></td>
                           <td class="px-4 py-3.5 text-slate-500" style="font-family:'DM Mono',monospace"><?= e($u['floor_number'] ?: '—') ?></td>
+                          <td class="px-4 py-3.5">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border <?= $ownershipBadgeClass ?>">
+                              <?= $ownershipText ?>
+                            </span>
+                          </td>
                           <td class="px-4 py-3.5 text-slate-800">
                             <?php if (!empty($u['current_tenant_name'])): ?>
                               <span class="font-semibold text-slate-900"><?= e($u['current_tenant_name']) ?></span>

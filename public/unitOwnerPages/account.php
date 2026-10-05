@@ -433,7 +433,7 @@ tailwind.config = {
         <!-- RIGHT COLUMN: Detailed Tabs -->
         <div class="space-y-6">
           <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8">
-            <div class="flex items-center gap-6 border-b border-slate-100 pb-3 overflow-x-auto">
+            <div class="flex items-center gap-6 border-b border-slate-100 pb-3">
               <button type="button" id="tabBtn-profile" onclick="setProfileTab('profile', this)" class="profile-tab <?= $profileTab === 'profile' ? 'active' : '' ?> text-sm font-semibold pb-3 whitespace-nowrap">Profile</button>
               <button type="button" id="tabBtn-units" onclick="setProfileTab('units', this)" class="profile-tab <?= $profileTab === 'units' ? 'active' : '' ?> text-sm font-semibold pb-3 flex items-center gap-2 whitespace-nowrap">
                 Owned Units
@@ -489,7 +489,7 @@ tailwind.config = {
                   <p class="text-sm text-slate-500">No units currently registered under your account.</p>
                 </div>
               <?php else: ?>
-                <div class="overflow-x-auto rounded-2xl border border-slate-100">
+                <div class="rounded-2xl border border-slate-100 overflow-hidden">
                   <table class="w-full text-sm">
                     <thead>
                       <tr class="bg-slate-50/60 border-b border-slate-100 text-slate-400 text-xs font-semibold uppercase tracking-wide text-left">

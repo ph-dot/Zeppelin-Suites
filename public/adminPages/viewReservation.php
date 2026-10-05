@@ -369,7 +369,7 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
               onclick="switchReservationTab('payment')" 
               id="tabBtn-payment" 
               class="tab-nav-btn pb-3 text-sm font-medium text-slate-400 hover:text-slate-800 border-b-2 border-transparent transition-all shrink-0">
-              payment
+              Payment
             </button>
             <button 
               type="button" 

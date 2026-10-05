@@ -16,87 +16,7 @@ function format_date_short($date) {
     return $ts ? date('M d, Y', $ts) : '—';
 }
 
-// Check optional columns in users_table
-$colCheckDob = $conn->query("SHOW COLUMNS FROM users_table LIKE 'date_of_birth'");
-$hasDobCol = $colCheckDob && $colCheckDob->num_rows > 0;
 
-$colCheckPhone = $conn->query("SHOW COLUMNS FROM users_table LIKE 'additional_contact'");
-$hasAddPhoneCol = $colCheckPhone && $colCheckPhone->num_rows > 0;
-
-$colCheckEmail = $conn->query("SHOW COLUMNS FROM users_table LIKE 'additional_email'");
-$hasAddEmailCol = $colCheckEmail && $colCheckEmail->num_rows > 0;
-
-// Handle Form Submissions (Personal Info Update & Password Change)
-$toast = null;
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
-    if ($action === 'update_profile') {
-        $fullName = trim($_POST['full_name'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $contact = trim($_POST['contact'] ?? '');
-        $dob = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
-        $addContact = !empty($_POST['additional_contact']) ? trim($_POST['additional_contact']) : null;
-        $addEmail = !empty($_POST['additional_email']) ? trim($_POST['additional_email']) : null;
-        $newPassword = trim($_POST['new_password'] ?? '');
-
-        if ($fullName === '') {
-            $toast = ['type' => 'error', 'msg' => 'Full name cannot be empty.'];
-        } elseif ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $toast = ['type' => 'error', 'msg' => 'A valid email address is required.'];
-        } else {
-            // Check for email collision with other accounts
-            $dup_stmt = $conn->prepare("SELECT user_id FROM users_table WHERE email = ? AND user_id <> ? LIMIT 1");
-            $dup_stmt->bind_param('si', $email, $adminId);
-            $dup_stmt->execute();
-            $dup_res = $dup_stmt->get_result();
-            if ($dup_res && $dup_res->num_rows > 0) {
-                $toast = ['type' => 'error', 'msg' => 'This email address is already in use by another account.'];
-            } else {
-                $updates = ["full_name = ?", "email = ?", "contact = ?"];
-                $types = "sss";
-                $params = [$fullName, $email, $contact];
-
-                if ($hasDobCol) {
-                    $updates[] = "date_of_birth = ?";
-                    $types .= "s";
-                    $params[] = $dob;
-                }
-                if ($hasAddPhoneCol) {
-                    $updates[] = "additional_contact = ?";
-                    $types .= "s";
-                    $params[] = $addContact;
-                }
-                if ($hasAddEmailCol) {
-                    $updates[] = "additional_email = ?";
-                    $types .= "s";
-                    $params[] = $addEmail;
-                }
-                if (!empty($newPassword)) {
-                    $updates[] = "password = ?";
-                    $types .= "s";
-                    $params[] = password_hash($newPassword, PASSWORD_BCRYPT);
-                }
-
-                $types .= "i";
-                $params[] = $adminId;
-
-                $sql = "UPDATE users_table SET " . implode(', ', $updates) . " WHERE user_id = ?";
-                $stmt = $conn->prepare($sql);
-                if ($stmt) {
-                    $stmt->bind_param($types, ...$params);
-                    if ($stmt->execute()) {
-                        $_SESSION['full_name'] = $fullName;
-                        $toast = ['type' => 'success', 'msg' => 'Your admin profile has been updated successfully!'];
-                    } else {
-                        $toast = ['type' => 'error', 'msg' => 'Failed to update profile: ' . $stmt->error];
-                    }
-                    $stmt->close();
-                }
-            }
-            $dup_stmt->close();
-        }
-    }
-}
 
 // Fetch fresh admin data
 $stmt = $conn->prepare("SELECT * FROM users_table WHERE user_id = ? LIMIT 1");
@@ -198,29 +118,11 @@ tailwind.config = {
   <div class="main-scroll p-4 md:p-6 space-y-6">
     <div class="max-w-7xl mx-auto space-y-6">
 
-      <!-- Toast message -->
-      <?php if ($toast): ?>
-        <div class="p-4 rounded-2xl border <?= $toast['type'] === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-red-50 text-red-800 border-red-200' ?> text-sm font-medium flex items-center justify-between shadow-sm">
-          <div class="flex items-center gap-3">
-            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $toast['type'] === 'success' ? 'M5 13l4 4L19 7' : 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' ?>"/>
-            </svg>
-            <span><?= e($toast['msg']) ?></span>
-          </div>
-          <button onclick="this.parentElement.remove()" class="text-xs font-bold hover:opacity-70">&times;</button>
-        </div>
-      <?php endif; ?>
-
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 class="text-xl font-bold text-slate-900">Admin Account</h1>
-          <p class="text-xs text-slate-400 mt-0.5">Manage your administrator personal info, contact details, and credentials.</p>
+          <h1 class="text-xl font-bold text-slate-900">Administrator Account</h1>
         </div>
-        <button type="button" onclick="openEditModal()" class="btn-press flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-sm active:scale-95">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-          Edit Profile
-        </button>
       </div>
 
       <!-- MAIN GRID -->
@@ -280,15 +182,9 @@ tailwind.config = {
 
           <!-- CARD 1: Personal Information -->
           <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
-              <div>
-                <h3 class="text-base font-bold text-slate-900">Personal Information</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Admin identity and direct contact information.</p>
-              </div>
-              <button type="button" onclick="openEditModal()" class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                Edit
-              </button>
+            <div class="border-b border-slate-100 pb-4 mb-6">
+              <h3 class="text-base font-bold text-slate-900">Personal Information</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Admin identity and direct contact information.</p>
             </div>
 
             <dl class="grid grid-cols-1 md:grid-cols-2 gap-y-5 gap-x-8 text-sm">
@@ -326,14 +222,9 @@ tailwind.config = {
 
           <!-- CARD 2: Security & Permissions -->
           <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
-              <div>
-                <h3 class="text-base font-bold text-slate-900">Security & Permissions</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Account role privileges and access security.</p>
-              </div>
-              <button type="button" onclick="openEditModal()" class="text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors">
-                Change Password
-              </button>
+            <div class="border-b border-slate-100 pb-4 mb-6">
+              <h3 class="text-base font-bold text-slate-900">Security & Permissions</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Account role privileges and access security.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -373,97 +264,5 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- EDIT PROFILE MODAL -->
-<div id="editAdminModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-  <div class="bg-white rounded-3xl border border-slate-100 shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-    <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-      <div>
-        <h3 class="text-lg font-bold text-slate-900">Edit Admin Profile</h3>
-        <p class="text-xs text-slate-400">Update your administrator information and password.</p>
-      </div>
-      <button type="button" onclick="closeEditModal()" class="btn-press p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <form method="POST" class="p-6 space-y-4">
-      <input type="hidden" name="action" value="update_profile">
-      
-      <div>
-        <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Full Name <span class="text-red-500">*</span></label>
-        <input type="text" name="full_name" required value="<?= e($admin['full_name']) ?>" class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium">
-      </div>
-
-      <div>
-        <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Email Address <span class="text-red-500">*</span></label>
-        <input type="email" name="email" required value="<?= e($admin['email']) ?>" class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium">
-      </div>
-
-      <div>
-        <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Primary Contact Phone</label>
-        <input type="text" name="contact" value="<?= e($admin['contact']) ?>" class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium font-mono" placeholder="e.g. 09123456789">
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Date of Birth</label>
-          <input type="date" name="date_of_birth" value="<?= e($admin['date_of_birth'] ?? '') ?>" class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Additional Phone</label>
-          <input type="text" name="additional_contact" value="<?= e($admin['additional_contact'] ?? '') ?>" class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium font-mono" placeholder="Optional">
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Additional Email</label>
-        <input type="email" name="additional_email" value="<?= e($admin['additional_email'] ?? '') ?>" class="zep-input w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium" placeholder="Optional">
-      </div>
-
-      <div class="pt-3 border-t border-slate-100">
-        <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Change Password <span class="text-slate-400 font-normal normal-case">(leave blank to keep current)</span></label>
-        <div class="relative">
-          <input type="password" id="editAdminPassword" name="new_password" placeholder="••••••••" class="zep-input w-full pl-4 pr-11 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium">
-          <button type="button" onclick="togglePasswordVisibility('editAdminPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors p-1" title="Toggle password visibility">
-            <svg class="w-4 h-4 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-            <svg class="w-4 h-4 eye-slash-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="pt-4 flex items-center justify-end gap-3">
-        <button type="button" onclick="closeEditModal()" class="btn-press px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
-        <button type="submit" class="btn-press px-5 py-2.5 text-sm font-semibold bg-slate-900 text-white rounded-xl hover:bg-slate-800 shadow-md">Save Changes</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<script>
-  function openEditModal() {
-    const m = document.getElementById('editAdminModal');
-    m.classList.remove('hidden');
-    m.classList.add('flex');
-  }
-  function closeEditModal() {
-    const m = document.getElementById('editAdminModal');
-    m.classList.add('hidden');
-    m.classList.remove('flex');
-  }
-
-  function togglePasswordVisibility(inputId, btn) {
-    const input = document.getElementById(inputId);
-    const eyeIcon = btn.querySelector('.eye-icon');
-    const eyeSlashIcon = btn.querySelector('.eye-slash-icon');
-    if (input.type === 'password') {
-      input.type = 'text';
-      if (eyeIcon) eyeIcon.classList.add('hidden');
-      if (eyeSlashIcon) eyeSlashIcon.classList.remove('hidden');
-    } else {
-      input.type = 'password';
-      if (eyeIcon) eyeIcon.classList.remove('hidden');
-      if (eyeSlashIcon) eyeSlashIcon.classList.add('hidden');
-    }
-  }
-</script>
 </body>
 </html>
