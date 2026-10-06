@@ -116,8 +116,6 @@ if ($stmt) {
 .collapse-icon { transition:transform 0.3s ease; }
 .profile-dropdown { opacity:0; visibility:hidden; transform:translateY(-6px); transition:all 0.2s cubic-bezier(0.4,0,0.2,1); }
 .profile-dropdown:not(.hidden) { opacity:1; visibility:visible; transform:translateY(0); }
-.stat-card { transition:transform 0.22s ease,box-shadow 0.22s ease,border-color 0.22s ease; cursor:pointer; }
-.stat-card:hover { transform:translateY(-4px); box-shadow:0 20px 40px rgba(0,0,0,0.10); border-color:#0f172a; }
 .action-card { transition:all 0.22s ease; cursor:pointer; }
 .action-card:hover { transform:translateY(-3px); box-shadow:0 16px 32px rgba(0,0,0,0.08); }
 ::-webkit-scrollbar { width:4px; height:4px; }
@@ -159,25 +157,25 @@ if ($stmt) {
         </div>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <!-- Owned -->
-          <div class="stat-card bg-blue-50 rounded-2xl p-4 border border-blue-100">
+          <div class="bg-blue-50 rounded-2xl p-4 border border-blue-100">
             <p class="text-3xl font-bold text-blue-700 mb-1" style="font-family:'DM Mono',monospace"><?= ov_e($ownedUnits) ?></p>
             <p class="text-sm font-semibold text-blue-600">Owned</p>
             <p class="text-xs text-blue-400 mt-1">Total units owned</p>
           </div>
           <!-- Occupied -->
-          <div class="stat-card bg-orange-50 rounded-2xl p-4 border border-orange-100">
+          <div class="bg-orange-50 rounded-2xl p-4 border border-orange-100">
             <p class="text-3xl font-bold text-orange-600 mb-1" style="font-family:'DM Mono',monospace"><?= ov_e($occupiedUnits) ?></p>
             <p class="text-sm font-semibold text-orange-500">Occupied</p>
             <p class="text-xs text-orange-400 mt-1">Currently tenanted</p>
           </div>
           <!-- Available -->
-          <div class="stat-card bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
+          <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
             <p class="text-3xl font-bold text-emerald-600 mb-1" style="font-family:'DM Mono',monospace"><?= ov_e($availableUnits) ?></p>
             <p class="text-sm font-semibold text-emerald-600">Available</p>
             <p class="text-xs text-emerald-400 mt-1">Ready for occupancy</p>
           </div>
           <!-- Reserved -->
-          <div class="stat-card bg-yellow-50 rounded-2xl p-4 border border-yellow-100">
+          <div class="bg-yellow-50 rounded-2xl p-4 border border-yellow-100">
             <p class="text-3xl font-bold text-yellow-600 mb-1" style="font-family:'DM Mono',monospace"><?= ov_e($reservedUnits) ?></p>
             <p class="text-sm font-semibold text-yellow-600">Reserved</p>
             <p class="text-xs text-yellow-400 mt-1">Awaiting move-in</p>
