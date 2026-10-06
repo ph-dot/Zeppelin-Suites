@@ -94,43 +94,30 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 <body class="bg-slate-50 text-slate-900 min-h-screen">
 
-<!-- 1. HERO HEADER (KEPT AS REQUESTED) -->
-<header class="zep-hero relative overflow-hidden border-b border-slate-200">
+<!-- 1. HERO HEADER -->
+<header class="zep-hero relative overflow-hidden border-b border-slate-200 bg-white">
   <div class="building-mark hidden md:block"></div>
 
-  <div class="max-w-[1180px] mx-auto px-5 py-8 md:py-9 flex items-center justify-between gap-6 relative">
-    <div class="flex items-center gap-7">
-      <div class="w-[112px] flex flex-col items-center justify-center">
-        <div class="flex items-end justify-center gap-1.5 h-14 mb-2">
-          <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
-        </div>
-        <div class="text-[11px] tracking-[0.35em] leading-tight text-slate-700 text-center font-semibold">
-          ZEPPELIN<br>SUITES
-        </div>
-      </div>
-
-      <div class="hidden sm:block w-px h-16 bg-slate-200"></div>
-
-      <div>
-        <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-slate-950">
-          Condominium Reservation
-        </h1>
-        <p class="mt-3 text-base md:text-lg text-slate-600">
-          Reserve your preferred unit for 30 days.
-        </p>
-      </div>
+  <div class="max-w-[1180px] mx-auto px-5 py-7 md:py-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative">
+    <div>
+      <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-slate-950">
+        Condominium Reservation
+      </h1>
+      <p class="mt-2 text-base md:text-lg text-slate-600">
+        Reserve your preferred unit for 30 days.
+      </p>
     </div>
 
-    <div class="hidden md:flex items-start gap-3 pr-8">
-      <div class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+    <div class="hidden md:flex items-center gap-3 bg-white/70 backdrop-blur-xs border border-slate-200/80 rounded-2xl px-4 py-3 shadow-xs">
+      <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3l7 4v5c0 5-3.5 8.5-7 9-3.5-.5-7-4-7-9V7l7-4z"/>
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/>
         </svg>
       </div>
       <div>
-        <p class="font-bold text-slate-900">Secure &amp; Confidential</p>
-        <p class="text-sm text-slate-500">Your information is safe with us.</p>
+        <p class="font-bold text-slate-900 text-sm leading-tight">Secure &amp; Confidential</p>
+        <p class="text-xs text-slate-500 mt-0.5">Your information is safe with us.</p>
       </div>
     </div>
   </div>
@@ -144,10 +131,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     <!-- LEFT CONTENT: STATUS BANNER & FORM CARD -->
     <div class="space-y-8">
 
-      <!-- STATUS BANNER (KEPT AS REQUESTED) -->
-      <div class="status-banner rounded-xl border border-amber-200 bg-amber-50/80 shadow-sm px-7 py-5 flex items-center justify-between gap-5" id="statusBanner">
+      <!-- STATUS BANNER -->
+      <div class="status-banner rounded-xl border border-amber-200 bg-amber-50/80 shadow-sm px-5 sm:px-7 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-5" id="statusBanner">
         <div class="flex items-center gap-4">
-          <div class="w-14 h-14 rounded-full bg-white border border-amber-200 flex items-center justify-center shadow-sm" id="statusIconWrap">
+          <div class="w-14 h-14 rounded-full bg-white border border-amber-200 flex items-center justify-center shadow-sm shrink-0" id="statusIconWrap">
             <div id="countdownRing" class="relative w-11 h-11">
               <svg class="w-11 h-11 -rotate-90" viewBox="0 0 44 44">
                 <circle cx="22" cy="22" r="17" fill="none" stroke="#f1e1bd" stroke-width="4"/>
@@ -163,9 +150,28 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
           </div>
         </div>
 
-        <div class="rounded-xl border border-amber-200 bg-white/80 px-4 py-3 text-center min-w-[92px]">
-          <p class="font-mono text-xl font-bold text-orange-500 leading-none" id="statusMinutes">30 : 00</p>
-          <p class="text-[10px] font-bold text-orange-400 tracking-widest mt-1">DAYS&nbsp;&nbsp;&nbsp;HRS</p>
+        <!-- TIME AND HOUR COUNTDOWN BOX -->
+        <div class="rounded-xl border border-amber-200/90 bg-white/95 px-4 py-2.5 text-center shrink-0 shadow-xs self-start sm:self-auto" id="statusTimerBox">
+          <div class="flex items-center justify-center gap-2" id="timerGrid">
+            <!-- Days Column -->
+            <div class="flex flex-col items-center min-w-[32px]">
+              <span class="font-mono text-xl font-extrabold text-orange-600 leading-none" id="statusDays">30</span>
+              <span class="text-[9px] font-bold text-orange-400 tracking-wider uppercase mt-1">Days</span>
+            </div>
+
+            <!-- Separator Colon -->
+            <span class="font-mono text-lg font-bold text-orange-300 leading-none -mt-3.5 select-none">:</span>
+
+            <!-- Hours Column -->
+            <div class="flex flex-col items-center min-w-[32px]">
+              <span class="font-mono text-xl font-extrabold text-orange-600 leading-none" id="statusHours">00</span>
+              <span class="text-[9px] font-bold text-orange-400 tracking-wider uppercase mt-1">Hours</span>
+            </div>
+          </div>
+          <div id="statusExpiredText" class="hidden font-mono text-xs font-bold text-red-600 uppercase tracking-wider py-1 px-1">
+            Expired
+          </div>
+          <span id="statusMinutes" class="hidden"></span>
           <p class="hidden text-xs font-semibold mt-1" id="statusCountdown" style="font-family:'DM Mono',monospace"></p>
         </div>
       </div>
@@ -502,8 +508,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         </div>
 
         <p class="text-base leading-8 text-slate-800 mb-6">
-          A condominium unit may be reserved for thirty days by presenting a Reservation Fee of
-          <span class="font-bold text-blue-700">PHP 100,000</span> per unit, and the following documents:
+          A condominium unit may be reserved for thirty days by presenting a Reservation Fee per unit, and the following documents:
         </p>
 
         <div class="space-y-5 mb-7">
@@ -685,6 +690,11 @@ function updateStatus() {
   const msg = document.getElementById('statusMsg');
   const countdown = document.getElementById('statusCountdown');
   const minutesBox = document.getElementById('statusMinutes');
+  const daysBox = document.getElementById('statusDays');
+  const hoursBox = document.getElementById('statusHours');
+  const timerGrid = document.getElementById('timerGrid');
+  const expiredText = document.getElementById('statusExpiredText');
+  const timerCard = document.getElementById('statusTimerBox');
   const ring = document.getElementById('ringProgress');
   const ringLabel = document.getElementById('ringLabel');
   const formBody = document.getElementById('formBody');
@@ -693,22 +703,24 @@ function updateStatus() {
 
   if (now > expiresAt) {
     reservationStatus = 'expired';
-    banner.className = 'status-banner rounded-xl border px-7 py-5 flex items-center justify-between gap-5 bg-red-50 border-red-200 shadow-sm';
+    banner.className = 'status-banner rounded-xl border px-5 sm:px-7 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-5 bg-red-50 border-red-200 shadow-sm';
     document.getElementById('countdownRing').innerHTML = '<svg class="w-11 h-11 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
     title.textContent = 'Reservation Link Expired';
     title.className = 'font-bold text-red-800';
     msg.textContent = 'This reservation link has expired. Please submit a new inquiry.';
     msg.className = 'text-sm mt-1 text-red-700';
-    minutesBox.textContent = 'EXPIRED';
-    minutesBox.className = 'font-mono text-sm font-bold text-red-600 leading-none';
-    countdown.textContent = '';
+    if (timerGrid) timerGrid.classList.add('hidden');
+    if (expiredText) expiredText.classList.remove('hidden');
+    if (timerCard) timerCard.className = 'rounded-xl border border-red-200 bg-red-50/90 px-4 py-2.5 text-center shrink-0 shadow-xs self-start sm:self-auto';
+    if (minutesBox) minutesBox.textContent = 'EXPIRED';
+    if (countdown) countdown.textContent = '';
     formBody.classList.add('hidden');
     expiredOverlay.classList.remove('hidden');
     if (submitBtn) submitBtn.disabled = true;
     return;
   }
 
-  const remaining = Math.ceil((expiresAt - now) / 1000);
+  const remaining = Math.max(0, Math.ceil((expiresAt - now) / 1000));
   const days = Math.floor(remaining / 86400);
   const hours = Math.floor((remaining % 86400) / 3600);
   const fraction = remaining / expirationSeconds;
@@ -720,8 +732,12 @@ function updateStatus() {
   msg.textContent = 'Please complete the form and submit before the reservation link expires.';
   msg.className = 'text-sm text-slate-600 mt-1';
 
-  minutesBox.textContent = `${String(days).padStart(2, '0')} : ${String(hours).padStart(2, '0')}`;
-  countdown.textContent = `Time remaining: ${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}`;
+  if (timerGrid) timerGrid.classList.remove('hidden');
+  if (expiredText) expiredText.classList.add('hidden');
+  if (daysBox) daysBox.textContent = String(days).padStart(2, '0');
+  if (hoursBox) hoursBox.textContent = String(hours).padStart(2, '0');
+  if (minutesBox) minutesBox.textContent = `${String(days).padStart(2, '0')} : ${String(hours).padStart(2, '0')}`;
+  if (countdown) countdown.textContent = `Time remaining: ${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}`;
 
   if (ring) {
     ring.style.strokeDasharray = circumference;
