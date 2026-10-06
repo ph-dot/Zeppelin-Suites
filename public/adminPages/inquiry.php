@@ -162,11 +162,11 @@ $userData = requireRole($conn, ['admin']); ?>
           <table class="w-full text-sm" id="inqTable">
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50/60">
-                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquirer</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Date Submitted</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquirer</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquiry Type</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Unit Preference</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide align-middle">Message Preview</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Date Submitted</th>
                 <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Status</th>
               </tr>
             </thead>
@@ -595,7 +595,7 @@ function applyFiltersAndSearch() {
     if (!emptyRow) {
       emptyRow = document.createElement('tr');
       emptyRow.id = 'inqNoResultsRow';
-      emptyRow.innerHTML = '<td colspan="7" class="text-center px-5 py-8 text-slate-400 text-sm">No inquiries match the selected filter.</td>';
+      emptyRow.innerHTML = '<td colspan="6" class="text-center px-5 py-8 text-slate-400 text-sm">No inquiries match the selected filter.</td>';
       document.getElementById('inqTableBody').appendChild(emptyRow);
     } else {
       emptyRow.style.display = '';
@@ -778,7 +778,7 @@ function updateRowStatusCell(row) {
     if (approvalStatus === 'approved') {
       const approvedUnitInfo = approvedUnit ? ` - Unit ${escapeHtml(approvedUnit)}` : '';
       updateBadge = `
-        <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Owner has approved${approvedUnitInfo}'>
+        <span class='group relative inline-flex items-center cursor-help' title='Owner has approved${approvedUnitInfo}'>
           <span class='inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300 shadow-2xs hover:bg-emerald-200 transition-all'>
             <svg class='w-2.5 h-2.5 text-emerald-700' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M5 13l4 4L19 7'/></svg>
             Approved
@@ -793,7 +793,7 @@ function updateRowStatusCell(row) {
       `;
     } else if (approvalStatus === 'requested' || pendingCount > 0) {
       updateBadge = `
-        <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Request is still pending'>
+        <span class='group relative inline-flex items-center cursor-help' title='Request is still pending'>
           <span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300 shadow-2xs hover:bg-amber-200 transition-all'>
             !
           </span>
@@ -807,7 +807,7 @@ function updateRowStatusCell(row) {
       `;
     } else if (approvalStatus === 'declined') {
       updateBadge = `
-        <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Owner declined request'>
+        <span class='group relative inline-flex items-center cursor-help' title='Owner declined request'>
           <span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-100 text-red-700 text-[10px] font-bold border border-red-300 shadow-2xs hover:bg-red-200 transition-all'>
             ✕
           </span>
@@ -825,10 +825,12 @@ function updateRowStatusCell(row) {
   const statusCell = row.querySelector('.status-badge')?.closest('td') || (row.children && row.children[5]);
   if (statusCell) {
     statusCell.innerHTML = `
-      <span class='status-badge ${statusClass} text-xs font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center'>
-        ${displayStatus}
-      </span>
-      ${updateBadge}
+      <div class='inline-flex items-center gap-1.5'>
+        <span class='status-badge ${statusClass} text-xs font-semibold px-2.5 py-1 rounded-full inline-flex items-center justify-center leading-normal'>
+          ${displayStatus}
+        </span>
+        ${updateBadge}
+      </div>
     `;
   }
 }

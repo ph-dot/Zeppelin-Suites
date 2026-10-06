@@ -191,8 +191,7 @@ if ($result->num_rows > 0) {
         if ($status_lower === 'pending' || $status_lower === 'onhold') {
             if ($approval_lower === 'approved') {
                 $approvedUnitInfo = !empty($approved_unit_number) ? " - Unit " . $approved_unit_number : "";
-                $updateBadge = "
-                    <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Owner has approved{$approvedUnitInfo}'>
+                $updateBadge = "<span class='group relative inline-flex items-center cursor-help' title='Owner has approved{$approvedUnitInfo}'>
                         <span class='inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300 shadow-2xs hover:bg-emerald-200 transition-all'>
                             <svg class='w-2.5 h-2.5 text-emerald-700' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M5 13l4 4L19 7'/></svg>
                             Approved
@@ -203,11 +202,9 @@ if ($result->num_rows > 0) {
                             </span>
                             <span class='w-2 h-2 bg-slate-900 rotate-45 -mt-1'></span>
                         </span>
-                    </span>
-                ";
+                    </span>";
             } elseif ($approval_lower === 'requested' || $pendingRequestCount > 0) {
-                $updateBadge = "
-                    <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Request is still pending'>
+                $updateBadge = "<span class='group relative inline-flex items-center cursor-help' title='Request is still pending'>
                         <span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300 shadow-2xs hover:bg-amber-200 transition-all'>
                             !
                         </span>
@@ -217,11 +214,9 @@ if ($result->num_rows > 0) {
                             </span>
                             <span class='w-2 h-2 bg-slate-900 rotate-45 -mt-1'></span>
                         </span>
-                    </span>
-                ";
+                    </span>";
             } elseif ($approval_lower === 'declined') {
-                $updateBadge = "
-                    <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Owner declined request'>
+                $updateBadge = "<span class='group relative inline-flex items-center cursor-help' title='Owner declined request'>
                         <span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-100 text-red-700 text-[10px] font-bold border border-red-300 shadow-2xs hover:bg-red-200 transition-all'>
                             ✕
                         </span>
@@ -231,8 +226,7 @@ if ($result->num_rows > 0) {
                             </span>
                             <span class='w-2 h-2 bg-slate-900 rotate-45 -mt-1'></span>
                         </span>
-                    </span>
-                ";
+                    </span>";
             }
         }
 
@@ -254,7 +248,10 @@ if ($result->num_rows > 0) {
                 data-lease-duration='" . addslashes($lease_duration) . "'
                 data-message='" . addslashes($message) . "'
                 onclick='openModal(this)'>
-                <td class='px-5 py-4 text-left align-middle'>
+                <td class='px-5 py-3.5 text-left align-middle text-slate-500 whitespace-nowrap text-xs font-medium' style='font-family:&quot;DM Mono&quot;,monospace'>
+                    {$dateOnly}
+                </td>
+                <td class='px-4 py-3.5 text-left align-middle'>
                     <div class='min-w-[180px]'>
                         <p class='text-sm font-bold text-slate-900 leading-tight'>
                             {$sender_name}
@@ -269,12 +266,13 @@ if ($result->num_rows > 0) {
                 </td>
                 <td class='px-4 py-3.5 text-left align-middle text-slate-700 text-xs font-medium whitespace-nowrap'>{$displayUnitPref}</td>
                 <td class='px-4 py-3.5 text-left align-middle text-slate-400 text-xs max-w-xs truncate'>{$displayMessage}</td>
-                <td class='px-4 py-3.5 text-left align-middle text-slate-500 whitespace-nowrap text-xs' style='font-family:&quot;DM Mono&quot;,monospace'>{$dateOnly}</td>
                 <td class='px-5 py-3.5 text-left align-middle whitespace-nowrap'>
-                    <span class='status-badge {$status_class} text-xs font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center'>
-                        {$displayStatus}
-                    </span>
-                    {$updateBadge}
+                    <div class='inline-flex items-center gap-1.5'>
+                        <span class='status-badge {$status_class} text-xs font-semibold px-2.5 py-1 rounded-full inline-flex items-center justify-center leading-normal'>
+                            {$displayStatus}
+                        </span>
+                        {$updateBadge}
+                    </div>
                 </td>
               </tr>";
     }
