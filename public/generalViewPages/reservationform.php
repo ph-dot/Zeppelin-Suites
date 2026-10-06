@@ -100,13 +100,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
   <div class="max-w-[1180px] mx-auto px-5 py-8 md:py-9 flex items-center justify-between gap-6 relative">
     <div class="flex items-center gap-7">
-      <div class="w-[112px] flex flex-col items-center justify-center">
-        <div class="flex items-end justify-center gap-1.5 h-14 mb-2">
-          <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
-        </div>
-        <div class="text-[11px] tracking-[0.35em] leading-tight text-slate-700 text-center font-semibold">
-          ZEPPELIN<br>SUITES
-        </div>
+      <div class="flex items-center justify-center">
+        <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
       </div>
 
       <div class="hidden sm:block w-px h-16 bg-slate-200"></div>
@@ -163,9 +158,17 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
           </div>
         </div>
 
-        <div class="rounded-xl border border-amber-200 bg-white/80 px-4 py-3 text-center min-w-[92px]">
-          <p class="font-mono text-xl font-bold text-orange-500 leading-none" id="statusMinutes">30 : 00</p>
-          <p class="text-[10px] font-bold text-orange-400 tracking-widest mt-1">DAYS&nbsp;&nbsp;&nbsp;HRS</p>
+        <div class="rounded-xl border border-amber-200 bg-white/90 px-3.5 py-2.5 flex items-center gap-2 text-center shadow-xs" id="statusTimerBox">
+          <div class="flex flex-col items-center min-w-[34px]">
+            <span class="font-mono text-xl font-bold text-orange-600 leading-none" id="statusDaysVal">30</span>
+            <span class="text-[9px] font-bold text-orange-400 tracking-wider uppercase mt-1">DAYS</span>
+          </div>
+          <span class="font-mono text-base font-bold text-orange-400 -mt-3.5">:</span>
+          <div class="flex flex-col items-center min-w-[34px]">
+            <span class="font-mono text-xl font-bold text-orange-600 leading-none" id="statusHoursVal">00</span>
+            <span class="text-[9px] font-bold text-orange-400 tracking-wider uppercase mt-1">HRS</span>
+          </div>
+          <span class="hidden" id="statusMinutes">30 : 00</span>
           <p class="hidden text-xs font-semibold mt-1" id="statusCountdown" style="font-family:'DM Mono',monospace"></p>
         </div>
       </div>
@@ -273,7 +276,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                   </div>
                 </div>
 
-                <!-- Right: Sex, Age, Nationality -->
+                <!-- Right: Sex, Nationality -->
                 <div class="space-y-3.5">
                   <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Sex <span class="text-red-500">*</span></label>
@@ -282,10 +285,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                       <option value="Female">Female</option>
                       <option value="Male">Male</option>
                     </select>
-                  </div>
-                  <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Age <span class="text-red-500">*</span></label>
-                    <input type="number" name="client_age" min="18" max="120" placeholder="Input" required class="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-slate-900">
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Nationality <span class="text-red-500">*</span></label>
@@ -331,71 +330,78 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
             </div>
 
             <!-- 4. PAYMENT SECTION -->
-            <div class="mb-6">
-              <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide mb-3">PAYMENT</h3>
-
-              <!-- Payment Options Tabs -->
-              <div class="flex border border-slate-200 rounded-lg overflow-hidden mb-4 max-w-sm">
-                <button type="button" id="tabGcash" onclick="switchPaymentTab('GCash QR')" class="flex-1 py-2 px-3 text-xs font-bold transition-all bg-[#0f172a] text-white">
-                  Pay using GCASH QR
-                </button>
-                <button type="button" id="tabInHouse" onclick="switchPaymentTab('In-House')" class="flex-1 py-2 px-3 text-xs font-bold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200">
-                  Pay In-House
-                </button>
-              </div>
-
-              <!-- Payment Details: Left Option Content, Right Breakdown Card -->
-              <div class="grid grid-cols-1 sm:grid-cols-[1fr_240px] gap-4 items-start">
+            <div class="mt-8 mb-6 pt-6 border-t border-slate-100">
+              <div class="grid grid-cols-1 md:grid-cols-[1fr_250px] gap-5 items-start">
                 
-                <!-- Left Column: Option Panels -->
+                <!-- Left Column: Header, Tabs, Panels -->
                 <div>
-                  <!-- Panel 1: GCash QR -->
-                  <div id="panelGcash" class="flex flex-col sm:flex-row items-start gap-4">
-                    <!-- QR Code Box -->
-                    <div class="w-32 h-32 border border-slate-200 rounded-xl p-2 bg-slate-50 flex items-center justify-center shrink-0 cursor-pointer hover:border-slate-400 transition-all text-center group relative overflow-hidden" onclick="openQRModal()">
-                      <?php if ($owner_has_qr): ?>
-                        <img src="<?= htmlspecialchars($owner_qr_path) ?>" alt="Owner GCash QR" class="w-full h-full object-contain rounded-lg">
-                        <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold rounded-lg">
-                          Click to Enlarge
-                        </div>
-                      <?php else: ?>
-                        <div class="space-y-1">
-                          <svg class="w-6 h-6 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                          <span class="text-[10px] font-bold text-slate-700 tracking-wide block leading-tight">GCASH QR<br>PLACEHOLDER</span>
-                        </div>
-                      <?php endif; ?>
-                    </div>
-
-                    <!-- Right text & file upload -->
-                    <div class="flex-1 space-y-2 text-xs text-slate-600">
-                      <p class="leading-relaxed">Use the GCash app to scan and pay directly to the unit owner's GCash account.</p>
-                      <p class="font-medium text-slate-500">Click QR code to view full size.</p>
-                      
-                      <div>
-                        <label class="block text-xs font-bold text-slate-800 mb-1">Upload Proof of Payment <span class="text-red-500">*</span></label>
-                        <input type="file" id="proofUpload" name="payment_proof" accept=".jpg,.jpeg,.png,.webp" required class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[11px] file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer">
-                        <p class="text-[10px] text-slate-400 mt-1">Note: Only JPG, PNG, and WEBP files are accepted.</p>
-                      </div>
-                    </div>
+                  <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-4 h-4 text-slate-900 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide">PAYMENT</h3>
                   </div>
 
-                  <!-- Panel 2: Pay In-House (Hidden by default) -->
-                  <div id="panelInHouse" class="hidden p-4 border border-slate-200 rounded-xl bg-slate-50 space-y-2">
-                    <div class="flex items-center gap-2 text-slate-900">
-                      <svg class="w-4 h-4 text-slate-800 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                      </svg>
-                      <h4 class="text-xs font-bold uppercase">Pay In-House During Lease Signing</h4>
+                  <!-- Payment Options Tabs -->
+                  <div class="flex border border-slate-200 rounded-lg overflow-hidden mb-4 max-w-sm">
+                    <button type="button" id="tabGcash" onclick="switchPaymentTab('GCash QR')" class="flex-1 py-2 px-3 text-xs font-bold transition-all bg-[#0f172a] text-white">
+                      Pay using GCASH QR
+                    </button>
+                    <button type="button" id="tabInHouse" onclick="switchPaymentTab('In-House')" class="flex-1 py-2 px-3 text-xs font-bold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200">
+                      Pay In-House
+                    </button>
+                  </div>
+
+                  <!-- Panels -->
+                  <div>
+                    <!-- Panel 1: GCash QR -->
+                    <div id="panelGcash" class="flex flex-col sm:flex-row items-start gap-4">
+                      <!-- QR Code Box -->
+                      <div class="w-32 h-32 border border-slate-200 rounded-xl p-2 bg-slate-50 flex items-center justify-center shrink-0 cursor-pointer hover:border-slate-400 transition-all text-center group relative overflow-hidden" onclick="openQRModal()">
+                        <?php if ($owner_has_qr): ?>
+                          <img src="<?= htmlspecialchars($owner_qr_path) ?>" alt="Owner GCash QR" class="w-full h-full object-contain rounded-lg">
+                          <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold rounded-lg">
+                            Click to Enlarge
+                          </div>
+                        <?php else: ?>
+                          <div class="space-y-1">
+                            <svg class="w-6 h-6 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                            <span class="text-[10px] font-bold text-slate-700 tracking-wide block leading-tight">GCASH QR<br>PLACEHOLDER</span>
+                          </div>
+                        <?php endif; ?>
+                      </div>
+
+                      <!-- Right text & file upload -->
+                      <div class="flex-1 space-y-2 text-xs text-slate-600">
+                        <p class="leading-relaxed">Use the GCash app to scan and pay directly to the unit owner's GCash account.</p>
+                        <p class="font-medium text-slate-500">Click QR code to view full size.</p>
+                        
+                        <div>
+                          <label class="block text-xs font-bold text-slate-800 mb-1">Upload Proof of Payment <span class="text-red-500">*</span></label>
+                          <input type="file" id="proofUpload" name="payment_proof" accept=".jpg,.jpeg,.png,.webp" required class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[11px] file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer">
+                          <p class="text-[10px] text-slate-400 mt-1">Note: Only JPG, PNG, and WEBP files are accepted.</p>
+                        </div>
+                      </div>
                     </div>
-                    <p class="text-xs text-slate-700 leading-relaxed">
-                      Please prepare the payment amount (cash or manager's check). Payment will be settled in person during your scheduled lease signing appointment.
-                    </p>
-                    <p class="text-[11px] text-slate-500 italic">No online proof of payment is required for in-house payment.</p>
+
+                    <!-- Panel 2: Pay In-House (Hidden by default) -->
+                    <div id="panelInHouse" class="hidden p-4 border border-slate-200 rounded-xl bg-slate-50 space-y-2">
+                      <div class="flex items-center gap-2 text-slate-900">
+                        <svg class="w-4 h-4 text-slate-800 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                        <h4 class="text-xs font-bold uppercase">Pay In-House During Lease Signing</h4>
+                      </div>
+                      <p class="text-xs text-slate-700 leading-relaxed">
+                        Please prepare the payment amount (cash or manager's check). Payment will be settled in person during your scheduled lease signing appointment.
+                      </p>
+                      <p class="text-[11px] text-slate-500 italic">No online proof of payment is required for in-house payment.</p>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Right Column: PAYMENT BREAKDOWN CARD -->
-                <div class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/70 space-y-2.5">
+                <!-- Right Column: PAYMENT BREAKDOWN (In line with PAYMENT header) -->
+                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/80 space-y-2.5">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">PAYMENT BREAKDOWN</p>
                   <div>
                     <p class="text-[10px] text-slate-500 mb-0.5"><?= htmlspecialchars($price_label) ?></p>
@@ -407,16 +413,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                       <option value="0.35" selected>35% Down Payment</option>
                       <option value="0.50">50% Down Payment</option>
                       <option value="0.75">75% Down Payment</option>
-                      <option value="1.00">Full Payment (100%)</option>
                     </select>
                   </div>
-                  <div class="flex items-center justify-between text-xs pt-1.5 border-t border-slate-200/80">
+                  <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-200/80">
                     <span class="text-slate-500 font-medium">Required Amount</span>
                     <span class="font-bold text-slate-900 font-mono" id="dpAmount">₱<?= number_format($price_basis * 0.35, 2) ?></span>
-                  </div>
-                  <div class="flex items-center justify-between text-xs pt-1.5 border-t border-slate-200/80">
-                    <span class="text-slate-500 font-medium">Payment Status</span>
-                    <span class="text-[11px] font-bold text-amber-600">Pending Unit Owner Review</span>
                   </div>
                 </div>
 
@@ -424,18 +425,80 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
             </div>
 
             <!-- 5. LEASE SIGNING DATE -->
-            <div class="mb-6">
-              <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide">LEASE SIGNING DATE</h3>
-              <p class="text-xs text-slate-500 mb-2.5">Choose a date when you are available for the lease signing.</p>
-              
-              <div class="flex flex-wrap items-center gap-4">
-                <div class="flex-1 min-w-[180px] max-w-xs">
-                  <input type="date" id="leaseSigningDate" name="lease_signing_date" min="<?= date('Y-m-d') ?>" max="<?= $maxSigningDate ?>" class="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-slate-900">
+            <div class="mt-8 mb-6 pt-6 border-t border-slate-100">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-slate-900 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide">LEASE SIGNING DATE</h3>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-1">Select one or multiple dates you are available for lease signing.</p>
                 </div>
-                <label class="flex items-center gap-2 cursor-pointer select-none">
+                <label class="inline-flex items-center gap-2 cursor-pointer select-none bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors">
                   <input type="checkbox" id="imFlexible" name="is_flexible_signing" value="1" class="w-4 h-4 rounded text-slate-900 accent-slate-900" onchange="handleFlexibleSigning(this)">
                   <span class="text-xs font-semibold text-slate-700">Im Flexible</span>
                 </label>
+              </div>
+
+              <!-- Multi-date picker calendar container (Calendar on Left, Selected Dates on Right) -->
+              <div id="signingCalendarWrapper" class="border border-slate-200 rounded-xl bg-slate-50/60 p-4 transition-all">
+                <input type="hidden" id="leaseSigningDate" name="lease_signing_date" value="">
+
+                <div class="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-4 items-stretch">
+                  
+                  <!-- Left: Calendar Card -->
+                  <div id="calCard" class="bg-white border border-slate-200 rounded-xl p-3 shadow-xs">
+                    <!-- Calendar Header: Month Nav -->
+                    <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+                      <span id="calMonthYear" class="text-xs font-bold text-slate-900 tracking-wide uppercase">October 2026</span>
+                      <div class="flex items-center gap-1">
+                        <button type="button" id="calPrevBtn" onclick="navSigningCal(-1)" class="w-6 h-6 rounded border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-all text-xs font-bold disabled:opacity-25 disabled:cursor-not-allowed">‹</button>
+                        <button type="button" id="calNextBtn" onclick="navSigningCal(1)" class="w-6 h-6 rounded border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-all text-xs font-bold disabled:opacity-25 disabled:cursor-not-allowed">›</button>
+                      </div>
+                    </div>
+
+                    <!-- Day Names -->
+                    <div class="grid grid-cols-7 gap-1 text-center mb-1 text-[10px] font-semibold text-slate-400">
+                      <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                    </div>
+
+                    <!-- Days Grid -->
+                    <div id="calDaysGrid" class="grid grid-cols-7 gap-1 text-center text-xs">
+                      <!-- Populated dynamically via JS -->
+                    </div>
+                  </div>
+
+                  <!-- Right: Selected Dates Panel (Next to calendar) -->
+                  <div id="chipsSection" class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs flex flex-col justify-between self-stretch min-h-[200px]">
+                    <div>
+                      <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100">
+                        <span class="font-bold text-slate-700 text-[11px] uppercase tracking-wide">
+                          Selected Dates (<span id="selectedDatesCount">0</span>)
+                        </span>
+                        <button type="button" id="btnClearDates" onclick="clearSelectedDates()" class="text-[11px] text-slate-400 hover:text-red-600 hidden font-medium transition-colors">Clear all</button>
+                      </div>
+
+                      <div id="selectedDatesChips" class="flex flex-wrap items-center gap-1.5 min-h-[36px]">
+                        <span class="text-xs text-slate-400 italic" id="emptyDatesMsg">Click any date(s) on the calendar to select multiple dates.</span>
+                      </div>
+                    </div>
+
+                    <div class="mt-3 pt-2 border-t border-slate-100 text-[11px] text-slate-400 flex items-center gap-1.5">
+                      <svg class="w-3.5 h-3.5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      <span>Selected dates will be saved for scheduling.</span>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Flexible banner (shown when flexible is checked) -->
+                <div id="flexibleNotice" class="hidden mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2">
+                  <svg class="w-4 h-4 shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <span>You marked yourself as <strong>Flexible</strong>. A signing schedule will be coordinated with you within the validity window.</span>
+                </div>
+
               </div>
             </div>
 
@@ -502,8 +565,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         </div>
 
         <p class="text-base leading-8 text-slate-800 mb-6">
-          A condominium unit may be reserved for thirty days by presenting a Reservation Fee of
-          <span class="font-bold text-blue-700">PHP 100,000</span> per unit, and the following documents:
+          A condominium unit may be reserved for thirty days by presenting the required Reservation Fee and the following documents:
         </p>
 
         <div class="space-y-5 mb-7">
@@ -561,12 +623,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         </div>
 
         <div class="rounded-xl border border-blue-200 bg-blue-50/80 p-5 mt-5">
-          <div class="flex items-center gap-3 mb-4">
+          <div class="flex items-center gap-3 mb-3">
             <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">!</div>
             <p class="text-blue-700 font-bold uppercase tracking-wide">Please Note</p>
           </div>
-          <p class="text-sm leading-7 text-slate-800">
-            Completing this webform <span class="font-bold">enlists you for a reservation</span> and secures your intent to reserve the unit. You will be notified once the <span class="font-bold">reservation form is ready</span> for signing and notarization, if required. After submission, you must <span class="font-bold">meet with the owner, HOA, or authorized representative</span> to submit the signed Reservation Agreement and required IDs.
+          <p class="text-sm leading-relaxed text-slate-800">
+            Submitting this form reserves your unit. We will notify you when your agreement is ready to sign. Afterwards, meet with the owner or representative to submit your signed agreement and valid IDs.
           </p>
         </div>
       </div>
@@ -699,8 +761,14 @@ function updateStatus() {
     title.className = 'font-bold text-red-800';
     msg.textContent = 'This reservation link has expired. Please submit a new inquiry.';
     msg.className = 'text-sm mt-1 text-red-700';
-    minutesBox.textContent = 'EXPIRED';
-    minutesBox.className = 'font-mono text-sm font-bold text-red-600 leading-none';
+    if (minutesBox) {
+      minutesBox.textContent = 'EXPIRED';
+      minutesBox.className = 'font-mono text-sm font-bold text-red-600 leading-none';
+    }
+    const timerBox = document.getElementById('statusTimerBox');
+    if (timerBox) {
+      timerBox.innerHTML = '<span class="font-mono text-xs font-bold text-red-600 uppercase px-2 py-1">EXPIRED</span>';
+    }
     countdown.textContent = '';
     formBody.classList.add('hidden');
     expiredOverlay.classList.remove('hidden');
@@ -720,7 +788,11 @@ function updateStatus() {
   msg.textContent = 'Please complete the form and submit before the reservation link expires.';
   msg.className = 'text-sm text-slate-600 mt-1';
 
-  minutesBox.textContent = `${String(days).padStart(2, '0')} : ${String(hours).padStart(2, '0')}`;
+  const daysVal = document.getElementById('statusDaysVal');
+  const hoursVal = document.getElementById('statusHoursVal');
+  if (daysVal) daysVal.textContent = String(days).padStart(2, '0');
+  if (hoursVal) hoursVal.textContent = String(hours).padStart(2, '0');
+  if (minutesBox) minutesBox.textContent = `${String(days).padStart(2, '0')} : ${String(hours).padStart(2, '0')}`;
   countdown.textContent = `Time remaining: ${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}`;
 
   if (ring) {
@@ -785,18 +857,187 @@ function handleMoveInChange(moveInVal) {
   document.getElementById('moveOutDateDisplay').value = moveOutVal ? formatDisplayDate(moveOutVal) : '';
 }
 
-// ======= Flexible signing checkbox handler =======
-function handleFlexibleSigning(cb) {
-  const signingInput = document.getElementById('leaseSigningDate');
-  if (cb.checked) {
-    signingInput.value = '';
-    signingInput.disabled = true;
-    signingInput.classList.add('bg-slate-100', 'cursor-not-allowed', 'text-slate-400');
+// ======= Multi-Date Lease Signing Calendar =======
+const minSigningDate = '<?= date('Y-m-d') ?>';
+const maxSigningDate = '<?= $maxSigningDate ?>';
+const selectedSigningDates = new Set();
+
+const [startCalYear, startCalMonth] = '<?= date('Y-m') ?>'.split('-').map(Number);
+let calCurrentYear = startCalYear;
+let calCurrentMonth = startCalMonth - 1; // 0-indexed
+
+const calMonthNames = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+function renderSigningCalendar() {
+  const monthYearLabel = document.getElementById('calMonthYear');
+  const daysGrid = document.getElementById('calDaysGrid');
+  const prevBtn = document.getElementById('calPrevBtn');
+  const nextBtn = document.getElementById('calNextBtn');
+
+  if (!daysGrid) return;
+
+  if (monthYearLabel) {
+    monthYearLabel.textContent = `${calMonthNames[calCurrentMonth]} ${calCurrentYear}`;
+  }
+
+  // First day of month (0 = Sun, 1 = Mon, ...)
+  const firstDayIndex = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
+  // Total days in current month
+  const totalDays = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
+
+  // Bounds
+  const [minY, minM] = minSigningDate.split('-').map(Number);
+  const [maxY, maxM] = maxSigningDate.split('-').map(Number);
+
+  const prevMonthYear = calCurrentMonth === 0 ? calCurrentYear - 1 : calCurrentYear;
+  const prevMonthNum = calCurrentMonth === 0 ? 12 : calCurrentMonth; // 1-indexed
+
+  const nextMonthYear = calCurrentMonth === 11 ? calCurrentYear + 1 : calCurrentYear;
+  const nextMonthNum = calCurrentMonth === 11 ? 1 : calCurrentMonth + 2; // 1-indexed
+
+  if (prevBtn) {
+    prevBtn.disabled = (prevMonthYear < minY) || (prevMonthYear === minY && prevMonthNum < minM);
+  }
+  if (nextBtn) {
+    nextBtn.disabled = (nextMonthYear > maxY) || (nextMonthYear === maxY && nextMonthNum > maxM);
+  }
+
+  let html = '';
+
+  // Blank slots before day 1
+  for (let i = 0; i < firstDayIndex; i++) {
+    html += '<span class="py-1 text-transparent select-none">.</span>';
+  }
+
+  // Days
+  for (let d = 1; d <= totalDays; d++) {
+    const dayStr = String(d).padStart(2, '0');
+    const monthStr = String(calCurrentMonth + 1).padStart(2, '0');
+    const dateStr = `${calCurrentYear}-${monthStr}-${dayStr}`;
+
+    const isBeforeMin = dateStr < minSigningDate;
+    const isAfterMax = dateStr > maxSigningDate;
+    const isOutOfRange = isBeforeMin || isAfterMax;
+    const isSelected = selectedSigningDates.has(dateStr);
+
+    if (isOutOfRange) {
+      html += `<span class="py-1 text-slate-300 cursor-not-allowed select-none text-[11px]">${d}</span>`;
+    } else if (isSelected) {
+      html += `<button type="button" onclick="toggleSigningDate('${dateStr}')" class="py-1 bg-[#0f172a] text-white font-bold rounded-lg shadow-xs hover:bg-slate-800 transition-colors text-[11px]" title="Click to remove">${d}</button>`;
+    } else {
+      html += `<button type="button" onclick="toggleSigningDate('${dateStr}')" class="py-1 text-slate-700 hover:bg-blue-50 hover:text-blue-700 font-medium rounded-lg transition-colors text-[11px]">${d}</button>`;
+    }
+  }
+
+  daysGrid.innerHTML = html;
+  renderSelectedChips();
+}
+
+function navSigningCal(direction) {
+  calCurrentMonth += direction;
+  if (calCurrentMonth < 0) {
+    calCurrentMonth = 11;
+    calCurrentYear -= 1;
+  } else if (calCurrentMonth > 11) {
+    calCurrentMonth = 0;
+    calCurrentYear += 1;
+  }
+  renderSigningCalendar();
+}
+
+function toggleSigningDate(dateStr) {
+  if (document.getElementById('imFlexible').checked) return;
+
+  if (selectedSigningDates.has(dateStr)) {
+    selectedSigningDates.delete(dateStr);
   } else {
-    signingInput.disabled = false;
-    signingInput.classList.remove('bg-slate-100', 'cursor-not-allowed', 'text-slate-400');
+    selectedSigningDates.add(dateStr);
+  }
+  syncSigningInput();
+  renderSigningCalendar();
+}
+
+function removeSigningDate(dateStr) {
+  selectedSigningDates.delete(dateStr);
+  syncSigningInput();
+  renderSigningCalendar();
+}
+
+function clearSelectedDates() {
+  selectedSigningDates.clear();
+  syncSigningInput();
+  renderSigningCalendar();
+}
+
+function syncSigningInput() {
+  const hiddenInput = document.getElementById('leaseSigningDate');
+  const arr = Array.from(selectedSigningDates).sort();
+  if (hiddenInput) {
+    hiddenInput.value = arr.join(', ');
   }
 }
+
+function renderSelectedChips() {
+  const countEl = document.getElementById('selectedDatesCount');
+  const container = document.getElementById('selectedDatesChips');
+  const clearBtn = document.getElementById('btnClearDates');
+
+  const arr = Array.from(selectedSigningDates).sort();
+  if (countEl) countEl.textContent = arr.length;
+
+  if (clearBtn) {
+    if (arr.length > 0) clearBtn.classList.remove('hidden');
+    else clearBtn.classList.add('hidden');
+  }
+
+  if (!container) return;
+
+  if (arr.length === 0) {
+    container.innerHTML = '<span class="text-xs text-slate-400 italic" id="emptyDatesMsg">Click any date(s) on the calendar to select multiple dates.</span>';
+    return;
+  }
+
+  let chipsHtml = '';
+  arr.forEach(d => {
+    const formatted = formatDisplayDate(d);
+    chipsHtml += `
+      <span class="inline-flex items-center gap-1.5 bg-slate-900 text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full shadow-xs">
+        <span>${formatted}</span>
+        <button type="button" onclick="removeSigningDate('${d}')" class="text-slate-300 hover:text-white transition-colors" title="Remove date">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </span>
+    `;
+  });
+
+  container.innerHTML = chipsHtml;
+}
+
+// ======= Flexible signing checkbox handler =======
+function handleFlexibleSigning(cb) {
+  const calCard = document.getElementById('calCard');
+  const chipsSection = document.getElementById('chipsSection');
+  const flexNotice = document.getElementById('flexibleNotice');
+  const hiddenInput = document.getElementById('leaseSigningDate');
+
+  if (cb.checked) {
+    if (calCard) calCard.classList.add('opacity-40', 'pointer-events-none');
+    if (chipsSection) chipsSection.classList.add('opacity-40', 'pointer-events-none');
+    if (flexNotice) flexNotice.classList.remove('hidden');
+    if (hiddenInput) hiddenInput.value = '';
+  } else {
+    if (calCard) calCard.classList.remove('opacity-40', 'pointer-events-none');
+    if (chipsSection) chipsSection.classList.remove('opacity-40', 'pointer-events-none');
+    if (flexNotice) flexNotice.classList.add('hidden');
+    syncSigningInput();
+  }
+}
+
+// Initialize calendar
+renderSigningCalendar();
 
 // ======= Payment tab switcher =======
 function switchPaymentTab(type) {

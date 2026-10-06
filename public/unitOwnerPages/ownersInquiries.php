@@ -176,15 +176,13 @@ $user = requireRole($conn, ['unit owner']);
         <table class="w-full text-sm" id="resTable">
           <thead>
             <tr class="border-b border-slate-100 bg-slate-50/60">
-              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Res #</th>
-              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Full Name</th>
-              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Email</th>
-              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Contact</th>
-              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Res. Type</th>
-              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Res. Fee</th>
-              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Status</th>
-              <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Owner Decision</th>
-              <th class="px-4 py-3.5 w-20"></th>
+              <th class="text-center px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Res #</th>
+              <th class="text-center px-5 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquirer</th>
+              <th class="text-center px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Contact</th>
+              <th class="text-center px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquiry Type</th>
+              <th class="text-center px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Status</th>
+              <th class="text-center px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Owner Decision</th>
+              <th class="text-center px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide w-20 align-middle whitespace-nowrap">Action</th>
             </tr>
           </thead>
 

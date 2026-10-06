@@ -41,9 +41,9 @@ function format_role($role) {
 
 function status_badge($status) {
     if ($status === 'Active') {
-        return '<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Active</span>';
+        return '<span class="text-xs font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center bg-emerald-50 text-emerald-700 border border-emerald-200">Active</span>';
     }
-    return '<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200">Inactive</span>';
+    return '<span class="text-xs font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center bg-slate-100 text-slate-500 border border-slate-200">Inactive</span>';
 }
 
 function format_date_short($date) {
@@ -58,17 +58,16 @@ function render_resident_row($resident) {
     $userId = (int)$resident['user_id'];
     ?>
     <tr class="emp-row cursor-pointer" data-status="<?= e(strtolower($resident['resident_status'])) ?>" onclick="window.location.href='viewResident.php?id=<?= $userId ?>'">
-        <td class="px-4 py-3.5" onclick="event.stopPropagation()"><input type="checkbox" class="row-check rounded border-slate-300 w-4 h-4 cursor-pointer"></td>
-        <td class="px-4 py-3.5 font-semibold emp-name text-slate-800 whitespace-nowrap"><?= e($resident['full_name']) ?></td>
-        <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap"><?= e($resident['email']) ?></td>
-        <td class="px-4 py-3.5 text-slate-600 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= e($resident['contact'] ?: '—') ?></td>
-        <td class="px-4 py-3.5 text-slate-600 text-xs whitespace-nowrap"><?= e(format_role($resident['user_role'])) ?></td>
-        <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= e(format_date_short($resident['created_at'])) ?></td>
-        <td class="px-4 py-3.5"><?= status_badge($resident['resident_status']) ?></td>
-        <td class="px-4 py-3.5 text-right whitespace-nowrap">
+        <td class="px-5 py-3.5 font-semibold emp-name text-slate-800 whitespace-nowrap align-middle"><?= e($resident['full_name']) ?></td>
+        <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap align-middle"><?= e($resident['email']) ?></td>
+        <td class="px-4 py-3.5 text-center text-slate-600 text-xs whitespace-nowrap align-middle" style="font-family:'DM Mono',monospace"><?= e($resident['contact'] ?: '—') ?></td>
+        <td class="px-4 py-3.5 text-center text-slate-600 text-xs font-medium whitespace-nowrap align-middle"><?= e(format_role($resident['user_role'])) ?></td>
+        <td class="px-4 py-3.5 text-center text-slate-500 text-xs whitespace-nowrap align-middle" style="font-family:'DM Mono',monospace"><?= e(format_date_short($resident['created_at'])) ?></td>
+        <td class="px-4 py-3.5 text-center align-middle whitespace-nowrap"><?= status_badge($resident['resident_status']) ?></td>
+        <td class="px-4 py-3.5 text-center align-middle whitespace-nowrap">
             <a
                 href="viewResident.php?id=<?= $userId ?>"
-                class="view-btn btn-press inline-block text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all"
+                class="btn-press text-xs font-semibold text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full active:scale-95 transition-all inline-block"
                 onclick="event.stopPropagation()">View</a>
         </td>
     </tr>
@@ -271,7 +270,7 @@ if (!$list_stmt) {
 if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
     header('Content-Type: text/html; charset=UTF-8');
     if (empty($residents)) {
-        echo '<tr><td colspan="8" class="px-4 py-10 text-center text-slate-500 text-sm">No residents found.</td></tr>';
+        echo '<tr><td colspan="7" class="px-4 py-10 text-center text-slate-500 text-sm">No residents found.</td></tr>';
     } else {
         foreach ($residents as $resident) {
             echo render_resident_row($resident);
@@ -327,8 +326,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
 .emp-row:hover { background:#f1f5f9; }
 .emp-row .emp-name { transition:color 0.15s ease; }
 .emp-row:hover .emp-name { color:#1d4ed8; }
-.view-btn { opacity:0; transform:translateX(6px); transition:opacity 0.18s ease,transform 0.18s ease; }
-.emp-row:hover .view-btn { opacity:1; transform:translateX(0); }
 ::-webkit-scrollbar { width:4px; height:4px; }
 ::-webkit-scrollbar-track { background:#f1f5f9; }
 ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
@@ -430,20 +427,19 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
           <table class="w-full text-sm" id="empTable">
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50/60">
-                <th class="px-4 py-3 w-10"><input type="checkbox" class="rounded border-slate-300 w-4 h-4 cursor-pointer" id="selectAll" onchange="toggleAll(this)"></th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide cursor-pointer hover:text-slate-700 select-none" onclick="sortTable(1)">Name ↕</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Email</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Contact</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap cursor-pointer hover:text-slate-700 select-none" onclick="sortTable(4)">Role ↕</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap cursor-pointer hover:text-slate-700 select-none" onclick="sortTable(5)">Date Created ↕</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Status</th>
-                <th class="px-4 py-3 w-24"></th>
+                <th class="text-center px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide cursor-pointer hover:text-slate-700 select-none align-middle" onclick="sortTable(0)">Name ↕</th>
+                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Email</th>
+                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Contact</th>
+                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap cursor-pointer hover:text-slate-700 select-none align-middle" onclick="sortTable(3)">Role ↕</th>
+                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap cursor-pointer hover:text-slate-700 select-none align-middle" onclick="sortTable(4)">Date Created ↕</th>
+                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle cursor-pointer hover:text-slate-700 select-none" onclick="sortTable(5)">Status ↕</th>
+                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-20 align-middle">Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50" id="empBody">
               <?php if (empty($residents)): ?>
                 <tr>
-                  <td colspan="8" class="px-4 py-10 text-center text-slate-500 text-sm">No residents found.</td>
+                  <td colspan="7" class="px-4 py-10 text-center text-slate-500 text-sm">No residents found.</td>
                 </tr>
               <?php else: ?>
                 <?php foreach ($residents as $resident): ?>
@@ -519,13 +515,6 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
 </div>
 
 <script>
-  function toggleAll(cb) { document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked); }
-  function setView(v) {
-    const t = document.getElementById('viewTable'), g = document.getElementById('viewGrid');
-    if (!t || !g) return;
-    if (v === 'table') { t.classList.add('bg-white','text-slate-700','shadow-sm'); t.classList.remove('text-slate-500'); g.classList.remove('bg-white','shadow-sm'); g.classList.add('text-slate-500'); }
-    else { g.classList.add('bg-white','text-slate-700','shadow-sm'); g.classList.remove('text-slate-500'); t.classList.remove('bg-white','shadow-sm'); t.classList.add('text-slate-500'); }
-  }
   let sortDir = {};
   function sortTable(col) {
     const tbody = document.getElementById('empBody');

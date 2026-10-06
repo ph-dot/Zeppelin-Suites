@@ -11,12 +11,6 @@
 <style>
 * { font-family: 'DM Sans', sans-serif; }
 
-@keyframes indeterminateProgress {
-  0% { transform: translateX(-100%); width: 30%; }
-  50% { transform: translateX(50%); width: 50%; }
-  100% { transform: translateX(200%); width: 30%; }
-}
-
 /* ── Sidebar ───────────────────────────────────────────── */
 .sidebar {
   width: 256px;
@@ -330,36 +324,23 @@
 </div>
 
 <!-- Sending Loading Screen Overlay -->
-<div id="sendingLoadingOverlay" class="fixed inset-0 z-[1000] hidden items-center justify-center bg-slate-900/60 backdrop-blur-md px-4">
-  <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-slate-100 p-8 text-center animate-in fade-in zoom-in-95 duration-200">
+<div id="sendingLoadingOverlay" class="fixed inset-0 z-[1000] hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
+  <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl border border-slate-100 p-6 text-center animate-in fade-in zoom-in-95 duration-150">
     
-    <!-- Animated Sending Icon -->
-    <div class="relative w-16 h-16 mx-auto mb-5 flex items-center justify-center">
-      <div class="absolute inset-0 rounded-2xl bg-blue-500/20 animate-ping"></div>
-      <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-slate-900 to-slate-800 flex items-center justify-center text-white shadow-lg shadow-slate-900/20">
-        <svg class="w-8 h-8 text-blue-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-        </svg>
-      </div>
-    </div>
-
-    <h3 class="text-lg font-bold text-slate-900 mb-1.5">Sending Response...</h3>
-    <p class="text-xs text-slate-500 leading-relaxed mb-5">
-      Please wait while your email is being delivered to <span class="font-semibold text-slate-800" id="loadingRecipientEmail"><?php echo replyClean($sender_email); ?></span>. Do not refresh or close this window.
-    </p>
-
-    <!-- Animated Progress bar -->
-    <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden relative mb-4">
-      <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full w-2/3" style="animation: indeterminateProgress 1.6s infinite ease-in-out;"></div>
-    </div>
-
-    <div class="flex items-center justify-center gap-2 text-[11px] font-medium text-slate-400">
-      <svg class="w-3.5 h-3.5 animate-spin text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24">
+    <div class="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-7 h-7 text-slate-800 animate-spin" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
       </svg>
-      <span>Connecting to mail server & delivering...</span>
     </div>
+
+    <h2 class="text-lg font-bold text-slate-900 mb-1">
+      Sending Response...
+    </h2>
+
+    <p class="text-sm text-slate-500">
+      Please wait while your email is being delivered to <span class="font-medium text-slate-700" id="loadingRecipientEmail"><?php echo replyClean($sender_email); ?></span>.
+    </p>
 
   </div>
 </div>

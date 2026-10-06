@@ -38,7 +38,7 @@ if ($reservation_token === '') {
     die("Missing reservation token.");
 }
 
-if (!in_array($payment_percentage, [0.35, 0.50, 0.75, 1.00])) {
+if (!in_array($payment_percentage, [0.35, 0.50, 0.75])) {
     die("Invalid payment percentage.");
 }
 

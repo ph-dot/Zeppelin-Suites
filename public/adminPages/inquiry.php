@@ -159,13 +159,13 @@ $userData = requireRole($conn, ['admin']); ?>
           <table class="w-full text-sm" id="inqTable">
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50/60">
-                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquirer</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquiry Type</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Unit Preference</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide align-middle">Message Preview</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Date Submitted</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Status</th>
-                <th class="text-right px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-20 align-middle">Action</th>
+                <th class="text-center px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquirer</th>
+                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquiry Type</th>
+                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Unit Preference</th>
+                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide align-middle">Message Preview</th>
+                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Date Submitted</th>
+                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Status</th>
+                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-20 align-middle">Action</th>
               </tr>
             </thead>
              <tbody class="divide-y divide-slate-50" id="inqTableBody">
@@ -769,9 +769,8 @@ function updateRowStatusCell(row) {
       const approvedUnitInfo = approvedUnit ? ` - Unit ${escapeHtml(approvedUnit)}` : '';
       updateBadge = `
         <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Owner has approved${approvedUnitInfo}'>
-          <span class='inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300 shadow-2xs hover:bg-emerald-200 transition-all'>
+          <span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300 shadow-2xs hover:bg-emerald-200 transition-all'>
             <svg class='w-2.5 h-2.5 text-emerald-700' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M5 13l4 4L19 7'/></svg>
-            Approved
           </span>
           <span class='pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:flex flex-col items-center z-30'>
             <span class='bg-slate-900 text-white text-[11px] font-medium px-2.5 py-1 rounded-lg shadow-lg whitespace-nowrap'>
@@ -1478,7 +1477,7 @@ function checkAvailableUnits() {
             <div class="flex-1 flex items-center justify-between gap-3">
               <div>
                 <p class="text-sm font-semibold text-slate-800">
-                  ${unit.unit_number} — ${unit.unit_type}${unit.sqm ? ` • ${parseFloat(unit.sqm).toFixed(2)} SQM` : ''}
+                  ${unit.unit_number} — ${unit.unit_type}
                 </p>
                 <p class="text-xs text-slate-500">
                   Owner: ${unit.owner_name || "No owner"}${rateText}

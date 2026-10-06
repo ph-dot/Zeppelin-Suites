@@ -232,7 +232,16 @@ $signingDateDisplay = 'Not Specified';
 if ($isFlexibleSigning) {
     $signingDateDisplay = "I'm Flexible (Within validity window)";
 } elseif (!empty($res['lease_signing_date']) && $res['lease_signing_date'] !== '0000-00-00') {
-    $signingDateDisplay = date('F j, Y', strtotime($res['lease_signing_date']));
+    $rawDates = explode(',', $res['lease_signing_date']);
+    $formattedList = [];
+    foreach ($rawDates as $rawD) {
+        $trimmed = trim($rawD);
+        if (!empty($trimmed) && $trimmed !== '0000-00-00') {
+            $ts = strtotime($trimmed);
+            $formattedList[] = $ts ? date('F j, Y', $ts) : htmlspecialchars($trimmed);
+        }
+    }
+    $signingDateDisplay = !empty($formattedList) ? implode(' / ', $formattedList) : htmlspecialchars($res['lease_signing_date']);
 }
 
 $signingStatus = !empty($res['lease_signing_status']) ? $res['lease_signing_status'] : 'Pending Signing';

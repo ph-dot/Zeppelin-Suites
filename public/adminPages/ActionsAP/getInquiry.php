@@ -193,9 +193,8 @@ if ($result->num_rows > 0) {
                 $approvedUnitInfo = !empty($approved_unit_number) ? " - Unit " . $approved_unit_number : "";
                 $updateBadge = "
                     <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Owner has approved{$approvedUnitInfo}'>
-                        <span class='inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300 shadow-2xs hover:bg-emerald-200 transition-all'>
+                        <span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300 shadow-2xs hover:bg-emerald-200 transition-all'>
                             <svg class='w-2.5 h-2.5 text-emerald-700' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M5 13l4 4L19 7'/></svg>
-                            Approved
                         </span>
                         <span class='pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:flex flex-col items-center z-30'>
                             <span class='bg-slate-900 text-white text-[11px] font-medium px-2.5 py-1 rounded-lg shadow-lg whitespace-nowrap'>
@@ -267,16 +266,16 @@ if ($result->num_rows > 0) {
                 <td class='px-4 py-3.5 text-left align-middle whitespace-nowrap'>
                     <span class='text-xs font-semibold text-slate-800'>{$inquiry_type}</span>
                 </td>
-                <td class='px-4 py-3.5 text-left align-middle text-slate-700 text-xs font-medium whitespace-nowrap'>{$displayUnitPref}</td>
+                <td class='px-4 py-3.5 text-center align-middle text-slate-700 text-xs font-medium whitespace-nowrap'>{$displayUnitPref}</td>
                 <td class='px-4 py-3.5 text-left align-middle text-slate-400 text-xs max-w-xs truncate'>{$displayMessage}</td>
-                <td class='px-4 py-3.5 text-left align-middle text-slate-500 whitespace-nowrap text-xs' style='font-family:&quot;DM Mono&quot;,monospace'>{$dateOnly}</td>
-                <td class='px-4 py-3.5 text-left align-middle whitespace-nowrap'>
+                <td class='px-4 py-3.5 text-center align-middle text-slate-500 whitespace-nowrap text-xs' style='font-family:&quot;DM Mono&quot;,monospace'>{$dateOnly}</td>
+                <td class='px-4 py-3.5 text-center align-middle whitespace-nowrap'>
                     <span class='status-badge {$status_class} text-xs font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center'>
                         {$displayStatus}
                     </span>
                     {$updateBadge}
                 </td>
-                <td class='px-4 py-3.5 text-right align-middle whitespace-nowrap'>
+                <td class='px-4 py-3.5 text-center align-middle whitespace-nowrap'>
                     <button class='btn-press text-xs font-semibold text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full active:scale-95 transition-all' onclick='event.stopPropagation(); openModal(this.closest(\"tr\"))'>View</button>
                 </td>
               </tr>";

@@ -11,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) {
 if (!isset($_SESSION['user_id']) || strtolower($_SESSION['role'] ?? '') !== 'unit owner') {
     echo "
     <tr>
-        <td colspan='10' class='px-4 py-10 text-center text-sm text-red-500'>
+        <td colspan='7' class='px-4 py-10 text-center text-sm text-red-500'>
             Unauthorized access.
         </td>
     </tr>";
@@ -100,6 +100,17 @@ function getOwnerDecisionDisplay($request_status) {
     }
 
     return [titleStatus($status), 'bg-slate-50 text-slate-700 border-slate-100'];
+}
+
+function getInquiryTypeBadgeDisplay($type) {
+    $t = strtolower(trim((string)$type));
+    if (strpos($t, 'buy') !== false || strpos($t, 'purchase') !== false || strpos($t, 'resale') !== false) {
+        return 'bg-blue-50 text-blue-700 border-blue-100';
+    }
+    if (strpos($t, 'lease') !== false || strpos($t, 'rental') !== false || strpos($t, 'reservation') !== false) {
+        return 'bg-purple-50 text-purple-700 border-purple-100';
+    }
+    return 'bg-slate-50 text-slate-700 border-slate-100';
 }
 
 function formatDuration($startDateStr, $endDateStr) {
@@ -253,7 +264,7 @@ $stmt = $conn->prepare($sql);
 if (!$stmt) {
     echo "
     <tr>
-        <td colspan='10' class='px-4 py-10 text-center text-sm text-red-500'>
+        <td colspan='7' class='px-4 py-10 text-center text-sm text-red-500'>
             Prepare failed: " . clean($conn->error) . "
         </td>
     </tr>";
@@ -267,7 +278,7 @@ $result = $stmt->get_result();
 if ($result->num_rows === 0) {
     echo "
     <tr>
-        <td colspan='10' class='px-4 py-14 text-center'>
+        <td colspan='7' class='px-4 py-14 text-center'>
             <div class='flex flex-col items-center justify-center gap-2'>
                 <div class='w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center'>
                     <svg class='w-6 h-6 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -291,6 +302,7 @@ if ($result->num_rows === 0) {
 while ($row = $result->fetch_assoc()) {
     [$inquiryStatusText, $inquiryStatusClass] = getInquiryStatusDisplay($row['inquiry_status'] ?? '', $row['approval_status'] ?? '');
     [$ownerStatusText, $ownerStatusClass] = getOwnerDecisionDisplay($row['request_status'] ?? 'pending');
+    $inquiryTypeClass = getInquiryTypeBadgeDisplay($row['inquiry_type'] ?? '');
     $availInfo = computeUnitAvailability(
         $row['unit_current_status'] ?? '',
         $row['active_move_in'] ?? null,
@@ -330,50 +342,45 @@ while ($row = $result->fetch_assoc()) {
         data-inquiry-status='" . clean($inquiryStatusText) . "'
         onclick='openResModal(this)'>
 
-        <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap' style=\"font-family:'DM Mono',monospace\">
+        <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap text-center align-middle' style=\"font-family:'DM Mono',monospace\">
             " . clean($requestCode) . "
         </td>
 
-        <td colspan='2' class='px-4 py-3.5 border-b border-slate-100/50 whitespace-nowrap'>
-            <div class='flex flex-col gap-0.5'>
-                <p class='text-sm font-bold text-slate-900'>
-                    " . clean($row['sender_name']) . " - Unit " . clean($row['unit_number']) . "
+        <td class='px-5 py-3.5 border-b border-slate-100/50 whitespace-nowrap text-left align-middle'>
+            <div class='min-w-[160px]'>
+                <p class='text-sm font-bold text-slate-900 leading-tight'>
+                    " . clean($row['sender_name']) . "
                 </p>
-
-                <p class='text-xs text-slate-400'>
+                <p class='text-xs text-slate-400 mt-1 leading-tight'>
                     " . clean($row['sender_email']) . "
                 </p>
             </div>
         </td>
 
-        <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap' style=\"font-family:'DM Mono',monospace\">
+        <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap text-center align-middle' style=\"font-family:'DM Mono',monospace\">
             " . clean($row['sender_contact']) . "
         </td>
 
-        <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600'>
-            <span class='bg-purple-50 text-purple-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-purple-100'>
+        <td class='px-4 py-3.5 border-b border-slate-100/50 text-center align-middle whitespace-nowrap'>
+            <span class='inline-flex items-center justify-center " . $inquiryTypeClass . " text-xs font-semibold px-3 py-1 rounded-full border whitespace-nowrap shadow-2xs'>
                 " . clean($row['inquiry_type']) . "
             </span>
         </td>
 
-        <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap' style=\"font-family:'DM Mono',monospace\">
-            " . clean(peso($row['lease_rate'])) . "
-        </td>
-
-        <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap'>
-            <span class='" . $inquiryStatusClass . " text-xs font-semibold px-2.5 py-0.5 rounded-full border'>
+        <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap text-center align-middle'>
+            <span class='" . $inquiryStatusClass . " text-xs font-semibold px-2.5 py-0.5 rounded-full border inline-flex items-center justify-center whitespace-nowrap'>
                 " . clean($inquiryStatusText) . "
             </span>
         </td>
 
-        <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600'>
-            <span class='" . $ownerStatusClass . " text-xs font-semibold px-2.5 py-0.5 rounded-full border'>
+        <td class='px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap text-center align-middle'>
+            <span class='" . $ownerStatusClass . " text-xs font-semibold px-2.5 py-0.5 rounded-full border inline-flex items-center justify-center whitespace-nowrap'>
                 " . clean($ownerStatusText) . "
             </span>
         </td>
 
-        <td class='px-4 py-3.5 border-b border-slate-100/50 text-right'>
-            <button class='btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap'
+        <td class='px-4 py-3.5 border-b border-slate-100/50 text-center align-middle whitespace-nowrap'>
+            <button class='btn-press text-xs font-semibold text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full active:scale-95 transition-all whitespace-nowrap'
                     onclick='event.stopPropagation(); openResModal(this.closest(\"tr\"))'>
                 View
             </button>
