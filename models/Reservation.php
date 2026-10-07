@@ -428,4 +428,574 @@ class Reservation extends Model {
 
         return $this->fetchOne($sql, [$reservationId]);
     }
+
+    /**
+     * Load all reservation form data and precomputations for a given reservation token.
+     */
+    public function getReservationFormData(string $token): array {
+        if (trim($token) === '') {
+            return ['status' => 'error', 'message' => 'Invalid reservation link.'];
+        }
+
+        $sql = "
+            SELECT 
+                i.inq_id,
+                i.sender_name,
+                i.sender_email,
+                i.sender_contact,
+                i.inquiry_type,
+                i.lease_duration,
+                i.approval_status,
+                i.approved_unit_id,
+                i.reservation_token_expires_at,
+                i.preferred_move_in_time,
+
+                u.unit_id,
+                u.unit_type,
+                u.unit_number,
+                u.sqm,
+                u.floor_number,
+                u.listing_type,
+                u.stay_category,
+                u.lease_rate,
+                COALESCE(u.resellling_price, u.reselling_price, NULL) AS reselling_price,
+                u.unit_current_status,
+
+                owner.full_name AS owner_name,
+                owner.email AS owner_email,
+                owner.contact AS owner_contact,
+                owner.gcash_QR AS owner_gcash_qr
+            FROM inquiry_table i
+            INNER JOIN units_table u ON i.approved_unit_id = u.unit_id
+            LEFT JOIN users_table owner ON u.unit_owner_id = owner.user_id
+            WHERE i.reservation_token = ?
+            LIMIT 1
+        ";
+
+        $data = $this->fetchOne($sql, [$token]);
+        if (!$data) {
+            return ['status' => 'error', 'message' => 'Reservation link not found.'];
+        }
+
+        // Check if unit owner has a valid uploaded GCash QR code
+        $ownerHasQr = false;
+        $ownerQrPath = '';
+        if (!empty($data['owner_gcash_qr'])) {
+            $qrClean = ltrim((string)$data['owner_gcash_qr'], '/');
+            $projectRoot = dirname(__DIR__);
+            $qrFullPath = $projectRoot . '/public/' . $qrClean;
+            if (file_exists($qrFullPath)) {
+                $ownerHasQr = true;
+                $ownerQrPath = $qrClean;
+            }
+        }
+
+        // Check if already submitted
+        $alreadySubmitted = $this->fetchOne(
+            "SELECT reservation_id FROM reservation_table WHERE inq_id = ? LIMIT 1",
+            [(int)$data['inq_id']]
+        );
+
+        if ($alreadySubmitted) {
+            return [
+                'status' => 'already_submitted',
+                'token'  => $token,
+                'inq_id' => (int)$data['inq_id']
+            ];
+        }
+
+        if ($data['approval_status'] !== 'approved') {
+            return ['status' => 'error', 'message' => 'This inquiry is not approved for reservation.'];
+        }
+
+        if (!empty($data['reservation_token_expires_at']) && strtotime((string)$data['reservation_token_expires_at']) < time()) {
+            return ['status' => 'error', 'message' => 'This reservation link has expired.'];
+        }
+
+        $inqTypeLower = strtolower(trim((string)$data['inquiry_type']));
+        $isLease = (
+            $inqTypeLower === 'lease inquiry' ||
+            $inqTypeLower === 'unit reservation' ||
+            strpos($inqTypeLower, 'lease') !== false ||
+            strpos($inqTypeLower, 'rental') !== false
+        );
+
+        if ($data['unit_current_status'] === 'Under maintenance') {
+            return ['status' => 'error', 'message' => 'This unit is currently unavailable (under maintenance).'];
+        }
+
+        if (!$isLease && !in_array($data['unit_current_status'], ['Ready for Occupancy', 'Resale'], true)) {
+            return ['status' => 'error', 'message' => 'This unit is no longer available for reservation.'];
+        }
+
+        if ($isLease) {
+            $priceBasis = (float)($data['lease_rate'] ?? 0);
+            $priceLabel = "Monthly Lease Rate";
+            $transactionType = "Unit Leasing";
+            $residentType = "New Tenant";
+            $reservationType = "New Lease";
+        } elseif (
+            $inqTypeLower === 'resale inquiry' ||
+            strpos($inqTypeLower, 'resale') !== false ||
+            strpos($inqTypeLower, 'buy') !== false ||
+            strpos($inqTypeLower, 'purchase') !== false
+        ) {
+            $priceBasis = (float)($data['reselling_price'] ?? $data['lease_rate'] ?? 0);
+            $priceLabel = "Selling Price";
+            $transactionType = "Unit Resale";
+            $residentType = "Buyer";
+            $reservationType = "Unit Purchase";
+        } else {
+            return ['status' => 'error', 'message' => 'Reservation form is only available for Lease or Resale inquiries.'];
+        }
+
+        $leaseMonths = (int)preg_replace('/[^0-9]/', '', (string)($data['lease_duration'] ?? '12'));
+        if ($leaseMonths <= 0) {
+            $leaseMonths = 12;
+        }
+
+        $data['furnishing'] = !empty($data['furnishing']) ? $data['furnishing'] : 'Fully Furnished.';
+        $tokenExpiresAt = !empty($data['reservation_token_expires_at'])
+            ? (string)$data['reservation_token_expires_at']
+            : date('Y-m-d H:i:s', strtotime('+30 days'));
+        $maxSigningDate = date('Y-m-d', strtotime($tokenExpiresAt));
+
+        // Blocked ranges
+        $blockedRanges = [];
+        if ($isLease) {
+            $blockedTypeFilter = "(inquiry_type IN ('Lease Inquiry', 'Unit Reservation') OR inquiry_type LIKE '%Lease%' OR inquiry_type LIKE '%Rental%')";
+        } else {
+            $blockedTypeFilter = "(inquiry_type = 'Resale Inquiry' OR inquiry_type LIKE '%Resale%' OR inquiry_type LIKE '%Buy%' OR inquiry_type LIKE '%Purchase%')";
+        }
+
+        $blockedRows = $this->fetchAll("
+            SELECT move_in_date, move_out_date
+            FROM reservation_table
+            WHERE unit_id = ?
+              AND reservation_status NOT IN ('cancelled', 'rejected')
+              AND move_in_date IS NOT NULL
+              AND {$blockedTypeFilter}
+        ", [(int)$data['unit_id']]);
+
+        foreach ($blockedRows as $row) {
+            $blockedRanges[] = [
+                'start' => $row['move_in_date'],
+                'end'   => $row['move_out_date'] ?: $row['move_in_date'],
+            ];
+        }
+
+        return [
+            'status'           => 'ok',
+            'data'             => $data,
+            'owner_has_qr'     => $ownerHasQr,
+            'owner_qr_path'    => $ownerQrPath,
+            'is_lease'         => $isLease,
+            'price_basis'      => $priceBasis,
+            'price_label'      => $priceLabel,
+            'transaction_type' => $transactionType,
+            'resident_type'    => $residentType,
+            'reservation_type' => $reservationType,
+            'lease_months'     => $leaseMonths,
+            'max_signing_date' => $maxSigningDate,
+            'blocked_ranges'   => $blockedRanges,
+            'token'            => $token,
+        ];
+    }
+
+    /**
+     * Process public reservation form submission with file upload, validation, and database storage.
+     */
+    public function submitPublicReservation(array $post, array $files): array {
+        $token = trim((string)($post['reservation_token'] ?? ''));
+        $paymentPercentage = (float)($post['payment_percentage'] ?? 0);
+        $paymentReference = trim((string)($post['payment_reference'] ?? ''));
+        $declaredAmount = (float)($post['declared_amount'] ?? 0);
+        $moveInDate = trim((string)($post['move_in_date'] ?? ''));
+        $moveOutDate = trim((string)($post['move_out_date'] ?? ''));
+        $leaseDuration = trim((string)($post['lease_duration'] ?? ''));
+
+        $paymentMethod = trim((string)($post['payment_method'] ?? 'GCash QR'));
+        if (!in_array($paymentMethod, ['GCash QR', 'In-House'], true)) {
+            $paymentMethod = 'GCash QR';
+        }
+
+        $clientSex = trim((string)($post['client_sex'] ?? ''));
+        $clientAge = !empty($post['client_age']) ? (int)$post['client_age'] : null;
+        $clientNationality = trim((string)($post['client_nationality'] ?? ''));
+
+        $leaseSigningDate = !empty($post['lease_signing_date']) ? trim((string)$post['lease_signing_date']) : null;
+        $isFlexibleSigning = !empty($post['is_flexible_signing']) && (string)$post['is_flexible_signing'] === '1' ? 1 : 0;
+        if ($isFlexibleSigning) {
+            $leaseSigningDate = null;
+        }
+
+        $clientRemarks = trim((string)($post['remarks'] ?? ''));
+        if (mb_strlen($clientRemarks) > 500) {
+            $clientRemarks = mb_substr($clientRemarks, 0, 500);
+        }
+
+        if ($token === '') {
+            return ['success' => false, 'error' => 'Missing reservation token.'];
+        }
+
+        if (!in_array($paymentPercentage, [0.35, 0.50, 0.75], true)) {
+            return ['success' => false, 'error' => 'Invalid payment percentage.'];
+        }
+
+        if ($paymentReference === '') {
+            $paymentReference = 'N/A';
+        }
+
+        if ($moveInDate === '') {
+            return ['success' => false, 'error' => 'Move-in date / appointment date is required.'];
+        }
+
+        $formDetails = $this->getReservationFormData($token);
+        if ($formDetails['status'] !== 'ok') {
+            return ['success' => false, 'error' => $formDetails['message'] ?? 'Invalid reservation session.'];
+        }
+
+        $data = $formDetails['data'];
+        $isLease = $formDetails['is_lease'];
+        $priceBasis = $formDetails['price_basis'];
+        $transactionType = $formDetails['transaction_type'];
+        $residentType = $formDetails['resident_type'];
+        $reservationType = $formDetails['reservation_type'];
+
+        if (!$isLease) {
+            $moveOutDate = null;
+        }
+
+        $requiredAmount = $priceBasis * $paymentPercentage;
+        if ($declaredAmount <= 0) {
+            $declaredAmount = $requiredAmount;
+        }
+        $amountMatchStatus = 'match';
+        if (abs($declaredAmount - $requiredAmount) > 0.01) {
+            $amountMatchStatus = $declaredAmount < $requiredAmount ? 'short' : 'over';
+        }
+
+        // Upload payment proof if GCash QR
+        $dbFilePath = null;
+        $uploadedFsPath = null;
+        if ($paymentMethod === 'GCash QR') {
+            if (!isset($files['payment_proof']) || $files['payment_proof']['error'] !== UPLOAD_ERR_OK) {
+                return ['success' => false, 'error' => 'Proof of payment upload is required for GCash QR payments.'];
+            }
+
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+            $fileName = $files['payment_proof']['name'];
+            $fileTmp  = $files['payment_proof']['tmp_name'];
+            $fileSize = $files['payment_proof']['size'];
+            $fileExt  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+            if (!in_array($fileExt, $allowedExtensions, true)) {
+                return ['success' => false, 'error' => 'Invalid file type. Only JPG, PNG, and WEBP files are accepted.'];
+            }
+
+            if ($fileSize > 10 * 1024 * 1024) {
+                return ['success' => false, 'error' => 'File too large. Maximum size is 10MB.'];
+            }
+
+            $uploadDir = dirname(__DIR__) . '/public/uploads/payment_proofs/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+
+            $newFileName = 'payment_' . $data['inq_id'] . '_' . time() . '_' . bin2hex(random_bytes(6)) . '.' . $fileExt;
+            $uploadedFsPath = $uploadDir . $newFileName;
+
+            if (!move_uploaded_file($fileTmp, $uploadedFsPath)) {
+                return ['success' => false, 'error' => 'Failed to upload payment proof.'];
+            }
+
+            $dbFilePath = 'uploads/payment_proofs/' . $newFileName;
+        } else {
+            $dbFilePath = 'Pay In-House (During Lease Signing)';
+            $paymentReference = 'In-House';
+        }
+
+        try {
+            $this->db->beginTransaction();
+
+            // Lock unit
+            $stmt = $this->db->prepare("SELECT unit_current_status FROM units_table WHERE unit_id = ? FOR UPDATE");
+            $stmt->execute([(int)$data['unit_id']]);
+            $lockedUnit = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$lockedUnit || $lockedUnit['unit_current_status'] === 'Under maintenance') {
+                throw new RuntimeException("This unit is currently unavailable.");
+            }
+
+            if ($isLease) {
+                // Overlap check
+                $overlapStmt = $this->db->prepare("
+                    SELECT reservation_id
+                    FROM reservation_table
+                    WHERE unit_id = ?
+                      AND reservation_status NOT IN ('cancelled', 'rejected')
+                      AND (inquiry_type IN ('Lease Inquiry', 'Unit Reservation') OR inquiry_type LIKE '%Lease%' OR inquiry_type LIKE '%Rental%')
+                      AND move_in_date IS NOT NULL
+                      AND move_in_date <= ?
+                      AND COALESCE(move_out_date, move_in_date) >= ?
+                    FOR UPDATE
+                ");
+                $overlapStmt->execute([(int)$data['unit_id'], $moveOutDate, $moveInDate]);
+                if ($overlapStmt->fetch()) {
+                    throw new RuntimeException("Those move-in/move-out dates overlap with an existing reservation on this unit.");
+                }
+            } else {
+                if (!in_array($lockedUnit['unit_current_status'], ['Ready for Occupancy', 'Resale'], true)) {
+                    throw new RuntimeException("This unit is no longer available.");
+                }
+            }
+
+            // Check duplicate reservation
+            $checkStmt = $this->db->prepare("SELECT reservation_id FROM reservation_table WHERE inq_id = ? LIMIT 1");
+            $checkStmt->execute([(int)$data['inq_id']]);
+            if ($checkStmt->fetch()) {
+                throw new RuntimeException("Reservation already submitted.");
+            }
+
+            // Check GCash reference
+            if ($paymentReference !== '' && $paymentReference !== 'N/A' && $paymentReference !== 'In-House') {
+                $dupRefStmt = $this->db->prepare("
+                    SELECT reservation_id
+                    FROM reservation_table
+                    WHERE payment_reference = ?
+                      AND reservation_status NOT IN ('cancelled', 'rejected')
+                    LIMIT 1
+                ");
+                $dupRefStmt->execute([$paymentReference]);
+                if ($dupRefStmt->fetch()) {
+                    throw new RuntimeException("This GCash reference number has already been used for another reservation.");
+                }
+            }
+
+            // Insert into reservation_table
+            $insertSql = "
+                INSERT INTO reservation_table (
+                    inq_id, unit_id, client_name, client_email, client_contact,
+                    client_sex, client_age, client_nationality,
+                    inquiry_type, resident_type, transaction_type, reservation_type,
+                    move_in_date, move_out_date, lease_signing_date, is_flexible_signing,
+                    price_basis, payment_percentage, required_amount,
+                    payment_method, payment_reference, declared_amount, amount_match_status,
+                    payment_proof, payment_status, reservation_status, client_remarks
+                ) VALUES (
+                    ?, ?, ?, ?, ?,
+                    ?, ?, ?,
+                    ?, ?, ?, ?,
+                    ?, ?, ?, ?,
+                    ?, ?, ?,
+                    ?, ?, ?, ?,
+                    ?, 'pending review', 'submitted', ?
+                )
+            ";
+
+            $stmt = $this->db->prepare($insertSql);
+            $stmt->execute([
+                (int)$data['inq_id'],
+                (int)$data['unit_id'],
+                $data['sender_name'],
+                $data['sender_email'],
+                $data['sender_contact'],
+                $clientSex,
+                $clientAge,
+                $clientNationality,
+                $data['inquiry_type'],
+                $residentType,
+                $transactionType,
+                $reservationType,
+                $moveInDate,
+                $moveOutDate,
+                $leaseSigningDate,
+                $isFlexibleSigning,
+                $priceBasis,
+                $paymentPercentage,
+                $requiredAmount,
+                $paymentMethod,
+                $paymentReference,
+                $declaredAmount,
+                $amountMatchStatus,
+                $dbFilePath,
+                $clientRemarks
+            ]);
+
+            $reservationId = (int)$this->db->lastInsertId();
+
+            // Update lease duration if provided
+            if ($isLease && $leaseDuration !== '') {
+                $stmt = $this->db->prepare("UPDATE inquiry_table SET lease_duration = ? WHERE inq_id = ?");
+                $stmt->execute([$leaseDuration, (int)$data['inq_id']]);
+            }
+
+            // Update unit status to 'On Hold' for resale
+            if (!$isLease) {
+                $stmt = $this->db->prepare("UPDATE units_table SET unit_current_status = 'On Hold' WHERE unit_id = ?");
+                $stmt->execute([(int)$data['unit_id']]);
+            }
+
+            // Update inquiry status
+            $stmt = $this->db->prepare("UPDATE inquiry_table SET status = 'reservation submitted' WHERE inq_id = ?");
+            $stmt->execute([(int)$data['inq_id']]);
+
+            $this->db->commit();
+
+            // Notify owner
+            $ownerNotificationsFile = dirname(__DIR__) . '/public/php_files/owner_notifications.php';
+            if (file_exists($ownerNotificationsFile)) {
+                require_once $ownerNotificationsFile;
+                if (function_exists('notifyOwnerOfNewReservation')) {
+                    notifyOwnerOfNewReservation(
+                        (string)($data['owner_email'] ?? ''),
+                        (string)($data['owner_name'] ?? 'Unit Owner'),
+                        (string)($data['unit_number'] ?? ''),
+                        (string)($data['sender_name'] ?? 'A tenant'),
+                        $moveInDate
+                    );
+                }
+            }
+
+            return ['success' => true, 'token' => $token, 'reservation_id' => $reservationId];
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            if ($uploadedFsPath && file_exists($uploadedFsPath)) {
+                @unlink($uploadedFsPath);
+            }
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Retrieve a reservation eligible for client cancellation using token.
+     */
+    public function getReservationForClientCancellation(string $token): array {
+        if (trim($token) === '') {
+            return ['status' => 'error', 'message' => 'Invalid cancellation link.'];
+        }
+
+        $sql = "
+            SELECT 
+                r.reservation_id,
+                r.client_name,
+                r.client_email,
+                r.reservation_status,
+                r.payment_status,
+                r.cancellation_status,
+                r.client_cancel_token_expires_at,
+                u.unit_type,
+                u.unit_number
+            FROM reservation_table r
+            LEFT JOIN units_table u ON r.unit_id = u.unit_id
+            WHERE r.client_cancel_token = ?
+            LIMIT 1
+        ";
+
+        $res = $this->fetchOne($sql, [$token]);
+        if (!$res) {
+            return ['status' => 'error', 'message' => 'Invalid or expired cancellation link.'];
+        }
+
+        if (!empty($res['client_cancel_token_expires_at']) && strtotime((string)$res['client_cancel_token_expires_at']) < time()) {
+            return ['status' => 'error', 'message' => 'This cancellation link has expired.'];
+        }
+
+        if ($res['payment_status'] !== 'verified') {
+            return ['status' => 'error', 'message' => 'Cancellation request is only available after payment verification.'];
+        }
+
+        if (in_array(strtolower((string)$res['reservation_status']), ['cancelled', 'rejected', 'reserved'], true)) {
+            return ['status' => 'error', 'message' => 'Cancellation request is no longer available for this reservation.'];
+        }
+
+        if ($res['cancellation_status'] === 'requested') {
+            return ['status' => 'error', 'message' => 'A cancellation request has already been submitted for this reservation.'];
+        }
+
+        return ['status' => 'ok', 'reservation' => $res, 'token' => $token];
+    }
+
+    /**
+     * Submit client cancellation request.
+     */
+    public function submitClientCancellationRequest(string $token, string $reason): array {
+        $token = trim($token);
+        $reason = trim($reason);
+
+        if ($token === '' || $reason === '') {
+            return ['success' => false, 'error' => 'Token and cancellation reason are required.'];
+        }
+
+        try {
+            $this->db->beginTransaction();
+
+            $sql = "
+                SELECT 
+                    reservation_id,
+                    payment_status,
+                    reservation_status,
+                    cancellation_status,
+                    client_cancel_token_expires_at
+                FROM reservation_table
+                WHERE client_cancel_token = ?
+                LIMIT 1
+                FOR UPDATE
+            ";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$token]);
+            $res = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$res) {
+                throw new RuntimeException("Invalid cancellation token.");
+            }
+
+            if (!empty($res['client_cancel_token_expires_at']) && strtotime((string)$res['client_cancel_token_expires_at']) < time()) {
+                throw new RuntimeException("This cancellation link has expired.");
+            }
+
+            if ($res['payment_status'] !== 'verified') {
+                throw new RuntimeException("Cancellation request is only available after payment verification.");
+            }
+
+            if (in_array(strtolower((string)$res['reservation_status']), ['cancelled', 'rejected', 'reserved'], true)) {
+                throw new RuntimeException("Cancellation request is no longer available for this reservation.");
+            }
+
+            if ($res['cancellation_status'] === 'requested') {
+                throw new RuntimeException("A cancellation request has already been submitted.");
+            }
+
+            if ($res['cancellation_status'] === 'approved') {
+                throw new RuntimeException("This cancellation request was already approved.");
+            }
+
+            $updateSql = "
+                UPDATE reservation_table
+                SET cancellation_status = 'requested',
+                    cancellation_reason = ?,
+                    cancellation_requested_by = NULL,
+                    cancellation_requested_by_role = 'client',
+                    cancellation_requested_at = NOW(),
+                    client_cancel_token = NULL,
+                    client_cancel_token_expires_at = NULL
+                WHERE reservation_id = ?
+            ";
+
+            $stmt = $this->db->prepare($updateSql);
+            $stmt->execute([$reason, (int)$res['reservation_id']]);
+
+            $this->db->commit();
+            return ['success' => true];
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
 }
+

@@ -238,4 +238,63 @@ class Inquiry extends Model {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
+
+    /**
+     * Create a new public visitor inquiry submitted from the contact form.
+     */
+    public function createPublicInquiry(array $data): array {
+        $senderName = trim((string)($data['sender_name'] ?? ''));
+        $senderEmail = trim((string)($data['sender_email'] ?? ''));
+        $senderContact = trim((string)($data['sender_contact'] ?? ''));
+        $inquiryType = trim((string)($data['inquiry_type'] ?? ''));
+        $preferredUnit = !empty($data['Preferred_unit_id']) ? trim((string)$data['Preferred_unit_id']) : null;
+        $preferredMoveIn = !empty($data['preferred_move_in_time']) ? trim((string)$data['preferred_move_in_time']) : null;
+        $leaseDuration = !empty($data['lease_duration']) ? trim((string)$data['lease_duration']) : null;
+        $message = trim((string)($data['Message'] ?? $data['message'] ?? ''));
+
+        if ($senderName === '' || $senderEmail === '' || $senderContact === '' || $inquiryType === '') {
+            return ['success' => false, 'error' => 'Please fill in all required fields.'];
+        }
+
+        if (!filter_var($senderEmail, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'error' => 'Please enter a valid email address.'];
+        }
+
+        if ($preferredMoveIn !== null) {
+            $preferredMoveIn = str_replace(['–', '—', '?"', 'â€“'], '-', $preferredMoveIn);
+        }
+
+        $sql = "
+            INSERT INTO inquiry_table (
+                sender_name,
+                sender_email,
+                sender_contact,
+                inquiry_type,
+                Preferred_unit_id,
+                preferred_move_in_time,
+                lease_duration,
+                message,
+                status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+        ";
+
+        try {
+            $this->execute($sql, [
+                $senderName,
+                $senderEmail,
+                $senderContact,
+                $inquiryType,
+                $preferredUnit,
+                $preferredMoveIn,
+                $leaseDuration,
+                $message
+            ]);
+
+            return ['success' => true, 'inq_id' => (int)$this->db->lastInsertId()];
+        } catch (\Throwable $e) {
+            error_log('createPublicInquiry error: ' . $e->getMessage());
+            return ['success' => false, 'error' => 'Database error submitting inquiry. Please try again.'];
+        }
+    }
 }
+

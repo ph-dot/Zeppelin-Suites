@@ -1,63 +1,56 @@
-/**
- * Zeppelin Suites - Reusable Navigation Bar Component
- * Dynamically renders the navigation bar with active link highlighting and mobile menu toggles.
- */
-(function () {
-  function getCurrentPage() {
-    const path = window.location.pathname;
-    const page = path.split('/').pop().toLowerCase();
-    if (!page || page === '' || page === 'index.html' || page === 'index.php') {
-      return 'index.html';
-    }
-    return page;
-  }
-
+// Dynamic Navbar Component
+(function() {
   function renderNavbar() {
     const target = document.getElementById('navbar');
     if (!target) return;
 
-    const page = getCurrentPage();
+    // Detect active page from clean path or current script
+    const path = window.location.pathname.toLowerCase();
 
-    const isHome = page === 'index.html';
-    const isTour = page === 'tour.html';
-    const isStudioA = page === 'studiotypea.html';
-    const isStudioB = page === 'studiotypeb.html';
-    const isOneBed = page === 'onebedroom.html';
-    const isTwoBed = page === 'twobedroom.html';
+    const isHome = path.endsWith('/public/') || path.endsWith('/public') || path.endsWith('/index.html') || path.endsWith('/home') || path === '/';
+    const isTour = path.includes('tour');
+    const isStudioA = path.includes('studio-type-a') || path.includes('studiotypea');
+    const isStudioB = path.includes('studio-type-b') || path.includes('studiotypeb');
+    const isOneBed = path.includes('one-bedroom') || path.includes('onebedroom');
+    const isTwoBed = path.includes('two-bedroom') || path.includes('twobedroom');
     const isUnit = isStudioA || isStudioB || isOneBed || isTwoBed;
-    const isFaq = page === 'faq.html';
-    const isAbout = page === 'aboutus.html';
-    const isContact = page === 'contact.php';
+    const isFaq = path.includes('faq');
+    const isAbout = path.includes('about');
+    const isContact = path.includes('contact');
 
-    const getLinkClass = (active) =>
-      active
-        ? 'text-sm text-zinc-900 font-medium hover:text-zinc-600 transition-colors'
+    function getLinkClass(active) {
+      return active
+        ? 'text-sm font-medium text-zinc-900 border-b-2 border-zinc-900 pb-1'
         : 'text-sm text-zinc-500 hover:text-zinc-800 transition-colors';
+    }
 
-    const getDropdownItemClass = (active) =>
-      active
-        ? 'block px-4 py-2 text-sm text-zinc-900 font-medium bg-zinc-50'
-        : 'block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50';
+    function getDropdownItemClass(active) {
+      return active
+        ? 'block px-4 py-2 text-sm text-zinc-900 bg-zinc-50 font-medium'
+        : 'block px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-50 transition-colors';
+    }
 
-    const getMobileLinkClass = (active) =>
-      active
-        ? 'px-4 py-2.5 rounded-lg text-sm text-zinc-900 font-semibold bg-zinc-100/70'
-        : 'px-4 py-2.5 rounded-lg text-sm text-zinc-500 hover:bg-zinc-50';
+    function getMobileLinkClass(active) {
+      return active
+        ? 'px-4 py-2.5 rounded-lg text-sm font-semibold text-zinc-900 bg-zinc-100'
+        : 'px-4 py-2.5 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50';
+    }
 
-    const getMobileSubItemClass = (active) =>
-      active
-        ? 'px-4 py-2 rounded-lg text-sm text-zinc-900 font-semibold bg-zinc-100/50'
+    function getMobileSubItemClass(active) {
+      return active
+        ? 'px-4 py-2 rounded-lg text-sm font-semibold text-zinc-900 bg-zinc-100'
         : 'px-4 py-2 rounded-lg text-sm text-zinc-600 hover:bg-zinc-50';
+    }
 
     const navHtml = `
   <nav class="sticky top-0 w-full bg-white/80 backdrop-blur-md px-6 md:px-16 lg:px-24 xl:px-32 py-4 flex items-center justify-between z-50 border-b border-zinc-200/50">
-    <a href="../generalViewPages/index.html">
+    <a href="../">
       <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;"
         onerror="this.outerHTML='<span class=\\'font-bold text-xl tracking-tight text-zinc-900\\'>ZEPPELIN<br><span class=\\'text-xs font-normal tracking-widest\\'>SUITES</span></span>'">
     </a>
     <div class="hidden min-[851px]:flex items-center gap-8">
-      <a href="../generalViewPages/index.html" class="${getLinkClass(isHome)}">Home</a>
-      <a href="../generalViewPages/tour.html" class="${getLinkClass(isTour)}">Take a Tour</a>
+      <a href="../" class="${getLinkClass(isHome)}">Home</a>
+      <a href="../tour" class="${getLinkClass(isTour)}">Take a Tour</a>
       <div class="relative group">
         <button
           class="flex items-center gap-1.5 text-sm cursor-pointer bg-transparent border-0 py-2 transition-colors ${
@@ -70,15 +63,15 @@
         </button>
         <div
           class="absolute top-full left-0 mt-1 w-44 bg-white border border-zinc-200 rounded-xl shadow-lg py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-          <a href="../generalViewPages/studioTypeA.html" class="${getDropdownItemClass(isStudioA)}">Studio Type A</a>
-          <a href="../generalViewPages/studioTypeB.html" class="${getDropdownItemClass(isStudioB)}">Studio Type B</a>
-          <a href="../generalViewPages/oneBedroom.html" class="${getDropdownItemClass(isOneBed)}">One Bedroom</a>
-          <a href="../generalViewPages/twoBedroom.html" class="${getDropdownItemClass(isTwoBed)}">Two Bedroom</a>
+          <a href="../units/studio-type-a" class="${getDropdownItemClass(isStudioA)}">Studio Type A</a>
+          <a href="../units/studio-type-b" class="${getDropdownItemClass(isStudioB)}">Studio Type B</a>
+          <a href="../units/one-bedroom" class="${getDropdownItemClass(isOneBed)}">One Bedroom</a>
+          <a href="../units/two-bedroom" class="${getDropdownItemClass(isTwoBed)}">Two Bedroom</a>
         </div>
       </div>
-      <a href="../generalViewPages/faq.html" class="${getLinkClass(isFaq)}">FAQ</a>
-      <a href="../generalViewPages/aboutUs.html" class="${getLinkClass(isAbout)}">About Us</a>
-      <a href="../generalViewPages/contact.php" class="${getLinkClass(isContact)}">Contact</a>
+      <a href="../faq" class="${getLinkClass(isFaq)}">FAQ</a>
+      <a href="../about" class="${getLinkClass(isAbout)}">About Us</a>
+      <a href="../contact" class="${getLinkClass(isContact)}">Contact</a>
     </div>
     <button onclick="toggleMenu()"
       class="min-[851px]:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1"
@@ -89,8 +82,8 @@
     </button>
     <div id="mobileMenu"
       class="absolute top-full left-0 w-full bg-white border-t border-zinc-200 flex-col p-5 gap-1 min-[851px]:hidden z-50 hidden">
-      <a href="../generalViewPages/index.html" class="${getMobileLinkClass(isHome)}">Home</a>
-      <a href="../generalViewPages/tour.html" class="${getMobileLinkClass(isTour)}">Take a Tour</a>
+      <a href="../" class="${getMobileLinkClass(isHome)}">Home</a>
+      <a href="../tour" class="${getMobileLinkClass(isTour)}">Take a Tour</a>
       <button onclick="toggleDropdown('mobileDropdown','mobileChevron')"
         class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-zinc-50 bg-transparent border-0 cursor-pointer ${
           isUnit ? 'text-zinc-900 font-semibold' : 'text-zinc-500'
@@ -100,49 +93,55 @@
         </svg>
       </button>
       <div id="mobileDropdown" class="${isUnit ? 'flex' : 'hidden'} flex-col pl-4">
-        <a href="../generalViewPages/studioTypeA.html" class="${getMobileSubItemClass(isStudioA)}">Studio Type A</a>
-        <a href="../generalViewPages/studioTypeB.html" class="${getMobileSubItemClass(isStudioB)}">Studio Type B</a>
-        <a href="../generalViewPages/oneBedroom.html" class="${getMobileSubItemClass(isOneBed)}">One Bedroom</a>
-        <a href="../generalViewPages/twoBedroom.html" class="${getMobileSubItemClass(isTwoBed)}">Two Bedroom</a>
+        <a href="../units/studio-type-a" class="${getMobileSubItemClass(isStudioA)}">Studio Type A</a>
+        <a href="../units/studio-type-b" class="${getMobileSubItemClass(isStudioB)}">Studio Type B</a>
+        <a href="../units/one-bedroom" class="${getMobileSubItemClass(isOneBed)}">One Bedroom</a>
+        <a href="../units/two-bedroom" class="${getMobileSubItemClass(isTwoBed)}">Two Bedroom</a>
       </div>
-      <a href="../generalViewPages/faq.html" class="${getMobileLinkClass(isFaq)}">FAQ</a>
-      <a href="../generalViewPages/aboutUs.html" class="${getMobileLinkClass(isAbout)}">About Us</a>
-      <a href="../generalViewPages/contact.php" class="${getMobileLinkClass(isContact)}">Contact</a>
+      <a href="../faq" class="${getMobileLinkClass(isFaq)}">FAQ</a>
+      <a href="../about" class="${getMobileLinkClass(isAbout)}">About Us</a>
+      <a href="../contact" class="${getMobileLinkClass(isContact)}">Contact</a>
     </div>
   </nav>`;
 
     target.outerHTML = navHtml;
   }
 
-  // Global mobile navigation toggle handlers
-  window.toggleMenu = function () {
+  window.toggleMenu = function() {
     const menu = document.getElementById('mobileMenu');
     const bar1 = document.getElementById('bar1');
     const bar2 = document.getElementById('bar2');
     const bar3 = document.getElementById('bar3');
     if (!menu) return;
-
-    const isClosed = menu.classList.contains('hidden');
-    menu.classList.toggle('hidden', !isClosed);
-    menu.classList.toggle('flex', isClosed);
-
-    if (bar1 && bar2 && bar3) {
-      bar1.style.transform = isClosed ? 'translateY(8px) rotate(45deg)' : '';
-      bar2.style.opacity = isClosed ? '0' : '1';
-      bar3.style.transform = isClosed ? 'translateY(-8px) rotate(-45deg)' : '';
+    const isHidden = menu.classList.contains('hidden');
+    if (isHidden) {
+      menu.classList.remove('hidden');
+      menu.classList.add('flex');
+      if (bar1) bar1.style.transform = 'translateY(8px) rotate(45deg)';
+      if (bar2) bar2.style.opacity = '0';
+      if (bar3) bar3.style.transform = 'translateY(-8px) rotate(-45deg)';
+    } else {
+      menu.classList.add('hidden');
+      menu.classList.remove('flex');
+      if (bar1) bar1.style.transform = 'none';
+      if (bar2) bar2.style.opacity = '1';
+      if (bar3) bar3.style.transform = 'none';
     }
   };
 
-  window.toggleDropdown = function (id, chevronId) {
-    const el = document.getElementById(id);
-    const ch = document.getElementById(chevronId);
-    if (!el) return;
-
-    const hidden = el.classList.contains('hidden');
-    el.classList.toggle('hidden', !hidden);
-    el.classList.toggle('flex', hidden);
-    if (ch) {
-      ch.style.transform = hidden ? 'rotate(180deg)' : '';
+  window.toggleDropdown = function(dropdownId, chevronId) {
+    const dropdown = document.getElementById(dropdownId);
+    const chevron = document.getElementById(chevronId);
+    if (!dropdown) return;
+    const isHidden = dropdown.classList.contains('hidden');
+    if (isHidden) {
+      dropdown.classList.remove('hidden');
+      dropdown.classList.add('flex');
+      if (chevron) chevron.classList.add('rotate-180');
+    } else {
+      dropdown.classList.add('hidden');
+      dropdown.classList.remove('flex');
+      if (chevron) chevron.classList.remove('rotate-180');
     }
   };
 

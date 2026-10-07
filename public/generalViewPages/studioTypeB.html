@@ -2,87 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zeppelin Suites — Browse Units</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="navbar.js?v=2" defer></script>
-  <script src="footer.js?v=3" defer></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
-    * { font-family: "Geist", sans-serif; }
-    .btn-primary { transition: all 0.15s ease; }
-    .btn-primary:active { transform: scale(0.95); }
-    .footer-bg { background-color: #c4c4c4; }
-    /* Slider */
-    .slider-wrap { overflow: hidden; position: relative; }
-    .slider-track { display: flex; transition: transform 0.4s ease; }
-    .slide { min-width: 100%; }
-  </style>
+  <meta http-equiv="refresh" content="0; url=../units/studio-type-b">
+  <title>Redirecting — Zeppelin Suites</title>
+  <script>
+    window.location.replace('../units/studio-type-b' + window.location.search);
+  </script>
 </head>
-<body class="bg-white text-zinc-900">
-
-<!-- ── NAV ──────────────────────────────────────────────── -->
-<div id="navbar"></div>
-
-<!-- ── PAGE HERO ─────────────────────────────────────────── -->
-<section class="px-6 md:px-16 lg:px-24 xl:px-32 py-16 border-b border-zinc-100">
-  <p class="text-xs tracking-widest uppercase text-zinc-400 mb-2">Explore Our</p>
-  <h1 class="text-4xl md:text-5xl font-bold text-zinc-900">Studio Type Units</h1>
-  <p class="text-zinc-500 mt-3 max-w-lg">Discover the perfect home for your lifestyle. Each unit is thoughtfully designed to deliver comfort, style, and convenience.</p>
-</section>
-
-<!-- ── UNIT CARDS ────────────────────────────────────────── -->
-<section class="px-6 md:px-16 lg:px-24 xl:px-32 py-16 space-y-24">
-
-  <!-- STUDIO TYPE B -->
-  <div id="studio-a" class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center scroll-mt-24">
-    <div class="slider-wrap rounded-2xl overflow-hidden shadow-sm">
-      <div class="slider-track" id="slider-sa">
-        <div class="slide bg-zinc-100 aspect-video flex items-center justify-center">
-          <img src="../images/studio_b.jpg" alt="Studio A" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<span class=\'text-zinc-400 font-bold text-xl\'>ROOM IMG</span>'">
-        </div>
-        <div class="slide bg-zinc-200 aspect-video flex items-center justify-center">
-          <img src="../images/studio_b_2.jpg" alt="Studio A 2" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<span class=\'text-zinc-400 font-bold text-xl\'>ROOM IMG</span>'">
-        </div>
-      </div>
-      <div class="flex justify-between absolute top-1/2 -translate-y-1/2 w-full px-3" style="position:relative;margin-top:-3rem;">
-        <button onclick="slide('slider-sa','sliderIdx-sa',-1)" class="bg-white/80 rounded-full w-9 h-9 flex items-center justify-center shadow text-zinc-700 font-bold hover:bg-white transition-colors">‹</button>
-        <button onclick="slide('slider-sa','sliderIdx-sa',1)" class="bg-white/80 rounded-full w-9 h-9 flex items-center justify-center shadow text-zinc-700 font-bold hover:bg-white transition-colors">›</button>
-      </div>
-      <input type="hidden" id="sliderIdx-sa" value="0">
-    </div>
-    <div>
-      <p class="text-xs tracking-widest uppercase text-zinc-400 mb-2">Studio</p>
-      <h2 class="text-3xl font-bold text-zinc-900 mb-4">Studio Type B</h2>
-      <p class="text-zinc-500 leading-relaxed mb-4">An upgraded take on compact luxury, offering an expansive feel with an extended floor plan. It features distinct zones for rest and daily activity, elevated by high-quality fixtures and sleek finishes.</p>
-      <ul class="space-y-2 mb-6">
-        <li class="flex items-center gap-2 text-sm text-zinc-600"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Floor Area: 40.65 sqm</li>
-        <li class="flex items-center gap-2 text-sm text-zinc-600"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>L-shaped zoning for semi-private sleeping quarters</li>
-        <li class="flex items-center gap-2 text-sm text-zinc-600"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>Premium panoramic window layout for enhanced ambient light</li>
-        <li class="flex items-center gap-2 text-sm text-zinc-600"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block"></span>For individuals desiring a more defined living area</li>
-      </ul>
-      <div class="flex gap-3">
-        <a href="../generalViewPages/contact.php" class="btn-primary bg-zinc-900 text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-zinc-700 active:scale-95 transition-all">Inquire Now</a>
-        <a href="#" class="btn-primary border border-zinc-300 text-zinc-700 px-6 py-3 rounded-full text-sm font-semibold hover:bg-zinc-50 active:scale-95 transition-all">Virtual Tour →</a>
-      </div>
-    </div>
-  </div>
-
-</section>
-
-<!-- ── PREMIUM FOOTER ────────────────────────────────────────────── -->
-<div id="footer"></div>
-<script>
-  const sliderState = {};
-  function slide(trackId, idxId, dir) {
-    const track = document.getElementById(trackId);
-    const idxInput = document.getElementById(idxId);
-    let idx = parseInt(idxInput.value);
-    const total = track.children.length;
-    idx = (idx + dir + total) % total;
-    idxInput.value = idx;
-    track.style.transform = `translateX(-${idx * 100}%)`;
-  }
-</script>
+<body style="font-family: sans-serif; text-align: center; padding: 40px; color: #475569;">
+  <p>Redirecting to <a href="../units/studio-type-b" style="color: #0f172a; font-weight: bold;">Studio Type B</a>...</p>
 </body>
 </html>

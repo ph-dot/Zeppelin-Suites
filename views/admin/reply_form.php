@@ -71,7 +71,7 @@ if ($approval_status === 'approved') {
     $email_body .= "\n";
     if (!empty($inquiry['reservation_token'])) {
         $email_body .= "Please proceed to finalize your reservation at the link below:\n";
-        $email_body .= "{$baseUrl}/generalViewPages/reservationform.php?token=" . urlencode((string)$inquiry['reservation_token']) . "\n\n";
+        $email_body .= "{$baseUrl}/reservation?token=" . urlencode((string)$inquiry['reservation_token']) . "\n\n";
     }
 } else {
     $email_body .= "We are currently reviewing your request for " . ($unit_display ?: 'our suites') . " and our team is actively coordinating availability.\n\n";

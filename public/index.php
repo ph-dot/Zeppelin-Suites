@@ -51,11 +51,45 @@ $basePath = parse_url($appUrl, PHP_URL_PATH) ?? '';
 $router = new Router($basePath);
 
 // 6. Define Application Routes
-// Landing / Default Route
-$router->get('/', function () {
-    header('Location: generalViewPages/index.html');
-    exit;
-});
+// Public & General Marketing Routes
+$router->get('/', [GeneralController::class, 'index']);
+$router->get('/home', [GeneralController::class, 'index']);
+$router->get('/about', [GeneralController::class, 'about']);
+$router->get('/about-us', [GeneralController::class, 'about']);
+$router->get('/faq', [GeneralController::class, 'faq']);
+$router->get('/tour', [GeneralController::class, 'tour']);
+$router->get('/virtual-tour', [GeneralController::class, 'tour']);
+
+// Unit Showcase Routes
+$router->get('/units/studio-type-a', [GeneralController::class, 'studioTypeA']);
+$router->get('/units/studio-type-b', [GeneralController::class, 'studioTypeB']);
+$router->get('/units/one-bedroom', [GeneralController::class, 'oneBedroom']);
+$router->get('/units/two-bedroom', [GeneralController::class, 'twoBedroom']);
+
+// Policy & Legal Routes
+$router->get('/privacy-policy', [GeneralController::class, 'privacyPolicy']);
+$router->get('/terms-of-service', [GeneralController::class, 'termsOfService']);
+
+// Contact & Inquiry Submission Routes
+$router->get('/contact', [GeneralController::class, 'contact']);
+$router->post('/contact', [GeneralController::class, 'submitInquiry']);
+$router->post('/inquiry/submit', [GeneralController::class, 'submitInquiry']);
+$router->get('/inquiry-confirmation', [GeneralController::class, 'inquiryConfirmation']);
+
+// Public Reservation Routes
+$router->get('/reservation', [GeneralController::class, 'reservationForm']);
+$router->post('/reservation', [GeneralController::class, 'submitReservation']);
+$router->post('/reservation/submit', [GeneralController::class, 'submitReservation']);
+$router->get('/reservation-confirmation', [GeneralController::class, 'reservationConfirmation']);
+
+// Client Cancellation Request Routes
+$router->get('/cancel-reservation', [GeneralController::class, 'cancelReservation']);
+$router->post('/cancel-reservation', [GeneralController::class, 'submitCancellation']);
+$router->post('/cancel-reservation/submit', [GeneralController::class, 'submitCancellation']);
+$router->get('/cancellation-confirmation', [GeneralController::class, 'cancellationConfirmation']);
+
+// Public API Utility Routes
+$router->get('/api/check-email-domain', [GeneralController::class, 'checkEmailDomain']);
 
 // Authentication Routes
 $router->get('/login', [AuthController::class, 'showLogin']);
@@ -127,7 +161,73 @@ $router->get('/owner/maintenance', [UnitOwnerController::class, 'maintenance'], 
 $router->get('/owner/account', [UnitOwnerController::class, 'account'], ['unit owner']);
 $router->post('/owner/account', [UnitOwnerController::class, 'account'], ['unit owner']);
 
-// 7. Dispatch incoming HTTP request
+// 7. Legacy Infrastructure 301 Fallback Redirections
+$legacyRouteMap = [
+    // Admin legacy paths
+    '/adminPages/analytics.php'       => '/admin/analytics',
+    '/admin/analytics.php'            => '/admin/analytics',
+    '/adminPages/homeAdmin.php'       => '/admin/home',
+    '/adminPages/account.php'         => '/admin/account',
+    '/adminPages/inquiry.php'         => '/admin/inquiries',
+    '/adminPages/replyform.php'       => '/admin/inquiries/reply',
+    '/adminPages/reservation.php'     => '/admin/reservations',
+    '/adminPages/viewReservation.php' => '/admin/reservations/view',
+    '/adminPages/residents.php'       => '/admin/residents',
+    '/adminPages/viewResident.php'    => '/admin/residents/view',
+    '/adminPages/units.php'           => '/admin/units',
+    '/adminPages/unitDetails.php'     => '/admin/units/view',
+    '/adminPages/maintenance.php'     => '/admin/maintenance',
+    '/adminPages/bookingcalendar.php' => '/admin/booking-calendar',
+
+    // Tenant legacy paths
+    '/tenantPages/homeTenant.php'        => '/tenant/home',
+    '/tenantPages/account.php'           => '/tenant/account',
+    '/tenantPages/maintenanceTenant.php' => '/tenant/maintenance',
+
+    // Unit Owner legacy paths
+    '/unitOwnerPages/overview.php'              => '/owner/overview',
+    '/unitOwnerPages/ownersUnit.php'            => '/owner/units',
+    '/unitOwnerPages/unitDetails.php'           => '/owner/units/view',
+    '/unitOwnerPages/ownersInquiries.php'       => '/owner/inquiries',
+    '/unitOwnerPages/ownersReservations.php'    => '/owner/reservations',
+    '/unitOwnerPages/ownersUnitReservations.php'=> '/owner/reservations',
+    '/unitOwnerPages/ownersViewReservation.php' => '/owner/reservations/view',
+    '/unitOwnerPages/ownersBookingCalendar.php' => '/owner/booking-calendar',
+    '/unitOwnerPages/tenants.php'               => '/owner/tenants',
+    '/unitOwnerPages/ownersMaintenance.php'     => '/owner/maintenance',
+    '/unitOwnerPages/account.php'               => '/owner/account',
+
+    // General / Public legacy paths
+    '/generalViewPages/index.html'               => '/',
+    '/generalViewPages/aboutUs.html'             => '/about',
+    '/generalViewPages/faq.html'                 => '/faq',
+    '/generalViewPages/tour.html'                => '/tour',
+    '/generalViewPages/studioTypeA.html'         => '/units/studio-type-a',
+    '/generalViewPages/studioTypeB.html'         => '/units/studio-type-b',
+    '/generalViewPages/oneBedroom.html'          => '/units/one-bedroom',
+    '/generalViewPages/twoBedroom.html'          => '/units/two-bedroom',
+    '/generalViewPages/privacy-policy.html'      => '/privacy-policy',
+    '/generalViewPages/terms-of-service.htm'     => '/terms-of-service',
+    '/generalViewPages/contact.php'              => '/contact',
+    '/generalViewPages/inquiryConfirmation.html' => '/inquiry-confirmation',
+    '/generalViewPages/reservationform.php'      => '/reservation',
+    '/generalViewPages/reservationConfirmation.html' => '/reservation-confirmation',
+    '/generalViewPages/cancelReservation.php'    => '/cancel-reservation',
+    '/generalViewPages/cancellationConfirmation.html'=> '/cancellation-confirmation',
+    '/generalViewPages/login.php'                => '/login',
+];
+
+foreach ($legacyRouteMap as $legacyPath => $cleanTarget) {
+    $router->any($legacyPath, function () use ($appUrl, $cleanTarget) {
+        $baseUrl = rtrim($appUrl, '/');
+        $qs = !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '';
+        header('HTTP/1.1 301 Moved Permanently');
+        header("Location: {$baseUrl}{$cleanTarget}{$qs}");
+        exit;
+    });
+}
+
+// 8. Dispatch incoming HTTP request
 $router->dispatch();
 
 

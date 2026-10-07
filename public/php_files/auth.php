@@ -15,9 +15,9 @@ if (!function_exists('getAuthLoginRedirectUrl')) {
             strpos($scriptName, '/ActionsUOP/') !== false || 
             strpos($scriptName, '/ActionsTnt/') !== false || 
             strpos($scriptName, '/ActionsGV/') !== false) {
-            return '../../generalViewPages/login.php';
+            return '../../login';
         }
-        return '../generalViewPages/login.php';
+        return '../login';
     }
 }
 
