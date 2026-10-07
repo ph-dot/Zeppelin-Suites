@@ -673,6 +673,12 @@ function openModal(row) {
     document.getElementById('approvedApprovalBox').classList.remove('hidden');
 
     document.getElementById('approvedUnitText').textContent = 'Assigned unit: ' + approvedUnit + (approvedAt ? ' • ' + approvedAt : '');
+    if (row.dataset.ownerRemarks) {
+      document.getElementById('approvedOwnerRemarksText').textContent = row.dataset.ownerRemarks;
+      document.getElementById('approvedOwnerRemarksRow').classList.remove('hidden');
+    } else {
+      document.getElementById('approvedOwnerRemarksRow').classList.add('hidden');
+    }
   } else if (approvalStatus === 'requested' && pendingCount > 0) {
     document.getElementById('approvalStatusText').textContent = 'Waiting for owner approval';
     document.getElementById('approvalSubText').textContent = declinedCount > 0
@@ -686,6 +692,14 @@ function openModal(row) {
     document.getElementById('waitingApprovalBox').classList.remove('hidden');
     document.getElementById('checkUnitsBtn').classList.remove('hidden');
     document.getElementById('sendApprovalBtn').classList.add('hidden');
+  } else if (approvalStatus === 'declined' || (sentRequests.length > 0 && pendingCount === 0 && declinedCount === sentRequests.length)) {
+    document.getElementById('approvalStatusText').textContent = 'No approval received';
+    document.getElementById('approvalSubText').textContent = 'All unit owners declined or the request was closed.';
+    const badge = document.getElementById('approvalStatusBadge');
+    badge.textContent = 'Declined';
+    badge.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-200 shrink-0';
+    document.getElementById('declinedApprovalBox').classList.remove('hidden');
+    document.getElementById('checkUnitsBtn').classList.remove('hidden');
   }
 
   const type = (row.dataset.inquiryType || '').toLowerCase();
@@ -710,13 +724,400 @@ function renderSentRequests(requests) {
     list.innerHTML = '';
     return;
   }
-  list.innerHTML = requests.map(r => `
-    <div class="flex items-start justify-between gap-3 text-xs py-1.5 border-b border-slate-100/70 last:border-0">
-      <span class="text-slate-800 font-semibold">${escapeHtml(r.unit_number)} — ${escapeHtml(r.owner_name)}</span>
-      <span class="font-semibold px-2 py-0.5 rounded-full border text-[11px]">${escapeHtml(r.request_status)}</span>
-    </div>
-  `).join('');
+
+  const statusStyles = {
+    pending:  ['Pending',  'bg-amber-50 text-amber-700 border-amber-200'],
+    approved: ['Approved', 'bg-emerald-50 text-emerald-700 border-emerald-200'],
+    declined: ['Declined', 'bg-red-50 text-red-700 border-red-200'],
+    expired:  ['Expired',  'bg-slate-100 text-slate-500 border-slate-200']
+  };
+
+  list.innerHTML = requests.map(r => {
+    const statusKey = (r.request_status || 'pending').toLowerCase();
+    const [label, cls] = statusStyles[statusKey] || [r.request_status, 'bg-slate-100 text-slate-500 border-slate-200'];
+
+    const cancelBtn = (statusKey === 'pending' && r.request_id)
+      ? `<button type="button" onclick="cancelSentRequest(${r.request_id})" class="btn-press text-[10px] font-semibold text-slate-500 border border-slate-200 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 px-2 py-0.5 rounded-full active:scale-95 transition-all">Cancel</button>`
+      : '';
+
+    const remarksHtml = r.owner_remarks
+      ? `<p class="text-[11px] text-slate-600 italic mt-0.5"><span class="font-medium text-slate-500 not-italic">Remarks:</span> "${escapeHtml(r.owner_remarks)}"</p>`
+      : '';
+
+    return `
+      <div class="flex items-start justify-between gap-3 text-xs py-1.5 border-b border-slate-100/70 last:border-0">
+        <div>
+          <span class="text-slate-800 font-semibold">${escapeHtml(r.unit_number)} — ${escapeHtml(r.owner_name)}</span>
+          ${remarksHtml}
+        </div>
+        <span class="flex items-center gap-1.5 shrink-0">
+          <span class="font-semibold px-2 py-0.5 rounded-full border ${cls}">${label}</span>
+          ${cancelBtn}
+        </span>
+      </div>
+    `;
+  }).join('');
   box.classList.remove('hidden');
+}
+
+function checkAvailableUnits() {
+  if (!currentInquiryId) {
+    alert('No inquiry selected.');
+    return;
+  }
+
+  if (!currentUnitPreference) {
+    alert('No unit preference found for this inquiry.');
+    return;
+  }
+
+  const countText = document.getElementById("availableUnitsCount");
+  const list = document.getElementById("availableUnitsList");
+  const sendBtn = document.getElementById("sendApprovalBtn");
+  const checkBtn = document.getElementById("checkUnitsBtn");
+
+  countText.textContent = "Checking...";
+  list.innerHTML = "";
+  list.classList.add("hidden");
+  sendBtn.classList.add("hidden");
+
+  checkBtn.disabled = true;
+  checkBtn.innerHTML = `
+    <span class="inline-flex items-center gap-1.5">
+      <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+      <span>Checking...</span>
+    </span>
+  `;
+
+  fetch(`${BASE_URL}/admin/inquiries/check-units?unit_type=${encodeURIComponent(currentUnitPreference)}&inq_id=${encodeURIComponent(currentInquiryId)}`)
+    .then(res => res.json())
+    .then(data => {
+      checkBtn.disabled = false;
+      checkBtn.innerHTML = "Check Units";
+
+      if (!data.success) {
+        countText.textContent = "Unable to check units";
+        alert(data.message || 'Something went wrong while checking units.');
+        return;
+      }
+
+      checkedAvailableUnits = data.units || [];
+      selectedUnitIds = new Set();
+
+      const selectAllRow = document.getElementById("selectAllRow");
+
+      if (checkedAvailableUnits.length === 0) {
+        countText.textContent = "No available units found";
+        const isResaleInq = data.is_resale || (currentRow && (currentRow.dataset.inquiryType || '').toLowerCase().includes('resale'));
+        const emptyMsg = isResaleInq
+          ? `No units currently listed for Resale with assigned owners were found for ${escapeHtml(currentUnitPreference)}.`
+          : `No ready units with assigned owners were found for ${escapeHtml(currentUnitPreference)}.`;
+        list.innerHTML = `
+          <div class="bg-white border border-slate-100 rounded-xl px-3 py-3">
+            <p class="text-sm font-semibold text-slate-700">No units available</p>
+            <p class="text-xs text-slate-500 mt-0.5">${emptyMsg}</p>
+          </div>
+        `;
+        list.classList.remove("hidden");
+        selectAllRow.classList.add("hidden");
+        return;
+      }
+
+      countText.textContent = `${checkedAvailableUnits.length} available unit(s) found`;
+
+      list.innerHTML = checkedAvailableUnits.map(unit => {
+        const hasRate = unit.lease_rate && Number(unit.lease_rate) > 0;
+        const rate = hasRate
+          ? Number(unit.lease_rate).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : null;
+
+        const isResale = unit.is_resale || (currentRow && (currentRow.dataset.inquiryType || '').toLowerCase().includes('resale'));
+        const limitedReasonText = (unit.limited_reason && unit.limited_reason !== 'Reserved')
+          ? `blocked (${unit.limited_reason})`
+          : 'booked';
+
+        const limitedNote = unit.limited_availability
+          ? `<p class="text-xs text-amber-600 mt-1">⚠ Already ${limitedReasonText} starting ${unit.next_booking_date} — only free until then.</p>`
+          : "";
+
+        const badge = isResale
+          ? `<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 shrink-0">Resale</span>`
+          : (unit.limited_availability
+            ? `<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100 shrink-0">Limited</span>`
+            : `<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 shrink-0">Available</span>`);
+
+        const availabilityText = isResale
+          ? `<p class="text-xs text-slate-500 mt-1">Status: <span class="font-medium text-slate-700">Listed for Resale</span></p>`
+          : `<p class="text-xs text-slate-500 mt-1">Availability: ${unit.availability_start} – ${unit.availability_end}</p>`;
+
+        const rateText = rate ? ` · ₱${rate}` : '';
+
+        return `
+          <div class="flex items-center gap-3 bg-white border border-slate-100 rounded-xl px-3 py-2">
+            <input 
+              type="checkbox" 
+              class="unit-select-checkbox w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 shrink-0 cursor-pointer"
+              data-unit-id="${unit.unit_id}"
+              onchange="toggleUnitSelection(${unit.unit_id}, this.checked)">
+
+            <div class="flex-1 flex items-center justify-between gap-3">
+              <div>
+                <p class="text-sm font-semibold text-slate-800">
+                  ${escapeHtml(unit.unit_number)} — ${escapeHtml(unit.unit_type)}${unit.sqm ? ` • ${parseFloat(unit.sqm).toFixed(2)} SQM` : ''}
+                </p>
+                <p class="text-xs text-slate-500">
+                  Owner: ${escapeHtml(unit.owner_name || "No owner")}${rateText}
+                </p>
+                ${availabilityText}
+                ${limitedNote}
+              </div>
+              ${badge}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      list.classList.remove("hidden");
+      selectAllRow.classList.remove("hidden");
+      document.getElementById("selectAllUnitsCheckbox").checked = false;
+      sendBtn.classList.remove("hidden");
+      updateSelectedUnitsUI();
+    })
+    .catch(err => {
+      checkBtn.disabled = false;
+      checkBtn.innerHTML = "Check Units";
+      countText.textContent = "Unable to check units";
+      alert("Error checking available units: " + err.message);
+    });
+}
+
+function toggleUnitSelection(unitId, checked) {
+  if (checked) {
+    selectedUnitIds.add(Number(unitId));
+  } else {
+    selectedUnitIds.delete(Number(unitId));
+  }
+  const selectAllCheckbox = document.getElementById("selectAllUnitsCheckbox");
+  if (selectAllCheckbox) {
+    selectAllCheckbox.checked = checkedAvailableUnits.length > 0 && selectedUnitIds.size === checkedAvailableUnits.length;
+  }
+  updateSelectedUnitsUI();
+}
+
+function toggleSelectAllUnits(checked) {
+  selectedUnitIds = new Set();
+  document.querySelectorAll(".unit-select-checkbox").forEach(cb => {
+    cb.checked = checked;
+    if (checked) {
+      selectedUnitIds.add(Number(cb.dataset.unitId));
+    }
+  });
+  updateSelectedUnitsUI();
+}
+
+function updateSelectedUnitsUI() {
+  const count = selectedUnitIds.size;
+  document.getElementById("selectedUnitsCount").textContent = `${count} selected`;
+
+  const sendBtn = document.getElementById("sendApprovalBtn");
+  sendBtn.disabled = (count === 0);
+  sendBtn.textContent = (count === 0)
+    ? "Select at least one unit"
+    : `Send Request to ${count} Selected Unit Owner${count > 1 ? "s" : ""}`;
+}
+
+function sendApprovalToOwners() {
+  if (!currentInquiryId) {
+    alert('No inquiry selected.');
+    return;
+  }
+  if (checkedAvailableUnits.length === 0) {
+    alert('Please check available units first.');
+    return;
+  }
+  if (selectedUnitIds.size === 0) {
+    alert('Please select at least one unit to send a request for.');
+    return;
+  }
+
+  const unitIds = Array.from(selectedUnitIds);
+  const count = unitIds.length;
+  const sendBtn = document.getElementById("sendApprovalBtn");
+  sendBtn.disabled = true;
+  sendBtn.innerHTML = `
+    <span class="inline-flex items-center justify-center gap-2">
+      <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+      <span>Sending Request to ${count} Unit Owner${count > 1 ? 's' : ''}...</span>
+    </span>
+  `;
+
+  const formData = new FormData();
+  formData.append("inq_id", currentInquiryId);
+  formData.append("unit_ids", JSON.stringify(unitIds));
+
+  fetch(`${BASE_URL}/admin/inquiries/send-approval`, {
+    method: "POST",
+    body: formData
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) {
+        updateSelectedUnitsUI();
+        alert(data.message || 'Unable to send approval requests.');
+        return;
+      }
+
+      currentSentRequests = data.requests || [];
+      renderSentRequests(currentSentRequests);
+
+      const pendingCount = (typeof data.pending_count === 'number')
+        ? data.pending_count
+        : currentSentRequests.filter(r => r.request_status === "pending").length;
+
+      const targetRow = currentRow || document.querySelector(`tr.inq-row[data-inq-id="${currentInquiryId}"]`);
+      if (targetRow) {
+        targetRow.dataset.requests = JSON.stringify(currentSentRequests);
+        targetRow.dataset.approvalStatus = data.approval_status || "requested";
+        targetRow.dataset.pendingCount = pendingCount;
+        updateRowStatusCell(targetRow);
+      }
+
+      document.getElementById("approvalStatusText").textContent = "Waiting for owner approval";
+      document.getElementById("approvalSubText").textContent =
+        `Request was sent to ${count} unit owner${count > 1 ? "s" : ""}.`;
+
+      const badge = document.getElementById("approvalStatusBadge");
+      badge.textContent = "On Hold";
+      badge.className = "text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 shrink-0";
+
+      document.getElementById("sendApprovalBtn").classList.add("hidden");
+      document.getElementById("waitingApprovalBox").classList.remove("hidden");
+      document.getElementById("availableUnitsList").classList.add("hidden");
+      document.getElementById("selectAllRow").classList.add("hidden");
+
+      alert(`Approval request${count > 1 ? 's have' : ' has'} been successfully sent to ${count} unit owner${count > 1 ? 's' : ''}.`);
+    })
+    .catch(err => {
+      updateSelectedUnitsUI();
+      alert("Error sending approval requests: " + err.message);
+    });
+}
+
+function cancelSentRequest(requestId) {
+  if (!currentInquiryId) {
+    alert('No inquiry selected.');
+    return;
+  }
+
+  if (!confirm('Cancel this pending request? The unit owner will no longer be able to respond to it.')) {
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("request_id", requestId);
+  formData.append("inq_id", currentInquiryId);
+
+  fetch(`${BASE_URL}/admin/inquiries/cancel-approval`, {
+    method: "POST",
+    body: formData
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) {
+        alert(data.message || 'Unable to cancel this request.');
+        return;
+      }
+
+      currentSentRequests = currentSentRequests.filter(r => r.request_id !== requestId);
+      renderSentRequests(currentSentRequests);
+
+      const targetRow = currentRow || document.querySelector(`tr.inq-row[data-inq-id="${currentInquiryId}"]`);
+      if (targetRow) {
+        targetRow.dataset.requests = JSON.stringify(currentSentRequests);
+        targetRow.dataset.pendingCount = data.pending_count;
+        if (data.approval_status) targetRow.dataset.approvalStatus = data.approval_status;
+        if (data.status) targetRow.dataset.status = data.status;
+        updateRowStatusCell(targetRow);
+      }
+
+      const pendingCount = data.pending_count;
+      const declinedCount = currentSentRequests.filter(r => r.request_status === 'declined').length;
+
+      if (pendingCount > 0) {
+        document.getElementById('approvalSubText').textContent = declinedCount > 0
+          ? `${declinedCount} owner(s) already declined - still waiting on ${pendingCount} more.`
+          : `Request was sent to ${currentSentRequests.length} unit owner(s).`;
+      } else {
+        document.getElementById('approvalStatusText').textContent = "Not yet requested";
+        document.getElementById('approvalSubText').textContent = "Check available units first, then send approval requests to unit owners.";
+        const badge = document.getElementById("approvalStatusBadge");
+        badge.textContent = "Not Requested";
+        badge.className = "text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 shrink-0";
+        document.getElementById('waitingApprovalBox').classList.add('hidden');
+      }
+
+      alert('Request cancelled successfully.');
+    })
+    .catch(err => {
+      alert("Error cancelling request: " + err.message);
+    });
+}
+
+function updateRowStatusCell(row) {
+  if (!row) return;
+  const statusLower = (row.dataset.status || 'pending').toLowerCase();
+  const approvalLower = (row.dataset.approvalStatus || 'not_requested').toLowerCase();
+  const pendingCount = parseInt(row.dataset.pendingCount || '0', 10);
+  const approvedUnit = row.dataset.approvedUnit || '';
+
+  let displayStatus = 'Pending';
+  let statusClass = 'bg-amber-50 text-amber-700 border border-amber-200';
+  if (statusLower === 'responded') {
+    displayStatus = 'Responded';
+    statusClass = 'bg-blue-50 text-blue-700 border border-blue-200';
+  } else if (statusLower === 'onhold') {
+    displayStatus = 'On Hold';
+    statusClass = 'bg-orange-50 text-orange-700 border border-orange-200';
+  } else if (statusLower === 'declined') {
+    displayStatus = 'Declined';
+    statusClass = 'bg-red-50 text-red-700 border border-red-200';
+  } else if (statusLower === 'reservation submitted') {
+    displayStatus = 'Submitted';
+    statusClass = 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+  } else if (statusLower === 'officially booked') {
+    displayStatus = 'Officially Booked';
+    statusClass = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+  }
+
+  let updateBadge = '';
+  if (statusLower === 'pending' || statusLower === 'onhold') {
+    if (approvalLower === 'approved') {
+      const unitInfo = approvedUnit ? ' - Unit ' + approvedUnit : '';
+      updateBadge = `<span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300' title='Owner has approved${unitInfo}'>✓</span>`;
+    } else if (approvalLower === 'requested' || pendingCount > 0) {
+      updateBadge = `<span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300' title='Request is still pending'>!</span>`;
+    } else if (approvalLower === 'declined') {
+      updateBadge = `<span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-100 text-red-700 text-[10px] font-bold border border-red-300' title='Owner declined request'>✕</span>`;
+    }
+  }
+
+  const statusCell = row.cells[5];
+  if (statusCell) {
+    statusCell.innerHTML = `
+      <div class="inline-flex items-center gap-1.5">
+        <span class="status-badge ${statusClass} text-xs font-semibold px-2.5 py-1 rounded-full inline-flex items-center justify-center leading-normal">
+          ${displayStatus}
+        </span>
+        ${updateBadge}
+      </div>
+    `;
+  }
 }
 
 function closeModal() {

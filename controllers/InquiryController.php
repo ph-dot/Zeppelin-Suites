@@ -122,11 +122,76 @@ class InquiryController extends Controller {
         $result = $this->inquiryModel->sendReply($inqId, $replyTo, $subject, $emailBody);
 
         if ($result['success']) {
-            $_SESSION['success_message'] = 'Reply email sent successfully. Inquiry status updated to Responded.';
+            $_SESSION['success_message'] = $result['message'] ?? 'Reply email sent successfully. Inquiry status updated to Responded.';
         } else {
             $_SESSION['error_message'] = 'Failed to send email: ' . ($result['error'] ?? 'Unknown error');
         }
 
         $this->redirect("{$baseUrl}/admin/inquiries/reply?inq_id={$inqId}");
     }
+
+    /**
+     * Check available units for an inquiry via AJAX GET.
+     */
+    public function checkUnits(): void {
+        Middleware::requireRole(['admin']);
+
+        $inqId = (int)$this->getQuery('inq_id', 0);
+        $unitType = trim((string)$this->getQuery('unit_type', ''));
+
+        if ($inqId <= 0 || $unitType === '') {
+            $this->json(['success' => false, 'message' => 'Missing inquiry or unit preference information.'], 400);
+            return;
+        }
+
+        $result = $this->inquiryModel->getAvailableUnits($inqId, $unitType);
+        $this->json($result);
+    }
+
+    /**
+     * Send owner approval requests for selected units via AJAX POST.
+     */
+    public function sendApproval(): void {
+        Middleware::requireRole(['admin']);
+
+        $inqId = (int)$this->getPost('inq_id', 0);
+        $unitIdsRaw = $this->getPost('unit_ids');
+
+        $unitIds = [];
+        if (is_array($unitIdsRaw)) {
+            $unitIds = array_map('intval', $unitIdsRaw);
+        } elseif (is_string($unitIdsRaw)) {
+            $decoded = json_decode($unitIdsRaw, true);
+            if (is_array($decoded)) {
+                $unitIds = array_map('intval', $decoded);
+            }
+        }
+
+        if ($inqId <= 0 || empty($unitIds)) {
+            $this->json(['success' => false, 'message' => 'Please select at least one unit.'], 400);
+            return;
+        }
+
+        $result = $this->inquiryModel->sendApprovalRequests($inqId, $unitIds);
+        $this->json($result);
+    }
+
+    /**
+     * Cancel an owner approval request via AJAX POST.
+     */
+    public function cancelApproval(): void {
+        Middleware::requireRole(['admin']);
+
+        $inqId = (int)$this->getPost('inq_id', 0);
+        $requestId = (int)$this->getPost('request_id', 0);
+
+        if ($inqId <= 0 || $requestId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid cancellation parameters.'], 400);
+            return;
+        }
+
+        $result = $this->inquiryModel->cancelApprovalRequest($inqId, $requestId);
+        $this->json($result);
+    }
 }
+

@@ -109,6 +109,17 @@ $router->get('/admin/inquiries', [InquiryController::class, 'index'], ['admin'])
 $router->post('/admin/inquiries/status', [InquiryController::class, 'updateStatus'], ['admin']);
 $router->get('/admin/inquiries/reply', [InquiryController::class, 'replyForm'], ['admin']);
 $router->post('/admin/inquiries/reply', [InquiryController::class, 'sendReply'], ['admin']);
+$router->get('/admin/inquiries/check-units', [InquiryController::class, 'checkUnits'], ['admin']);
+$router->post('/admin/inquiries/send-approval', [InquiryController::class, 'sendApproval'], ['admin']);
+$router->post('/admin/inquiries/cancel-approval', [InquiryController::class, 'cancelApproval'], ['admin']);
+
+// Legacy API aliases for inquiry unit approval
+$router->get('/ActionsAP/checkAvailableUnits.php', [InquiryController::class, 'checkUnits'], ['admin']);
+$router->post('/ActionsAP/sendApprovalRequests.php', [InquiryController::class, 'sendApproval'], ['admin']);
+$router->post('/ActionsAP/cancelApprovalRequest.php', [InquiryController::class, 'cancelApproval'], ['admin']);
+$router->get('/adminPages/ActionsAP/checkAvailableUnits.php', [InquiryController::class, 'checkUnits'], ['admin']);
+$router->post('/adminPages/ActionsAP/sendApprovalRequests.php', [InquiryController::class, 'sendApproval'], ['admin']);
+$router->post('/adminPages/ActionsAP/cancelApprovalRequest.php', [InquiryController::class, 'cancelApproval'], ['admin']);
 
 $router->get('/admin/reservations', [ReservationController::class, 'index'], ['admin']);
 $router->get('/admin/reservations/view', [ReservationController::class, 'show'], ['admin']);

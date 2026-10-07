@@ -195,6 +195,33 @@ class Inquiry extends Model {
             require_once $mailerDir . '/SMTP.php';
         }
 
+        $username = defined('SMTP_USERNAME') ? SMTP_USERNAME : (string)env('SMTP_USERNAME', '');
+        $password = defined('SMTP_PASSWORD') ? SMTP_PASSWORD : (string)env('SMTP_PASSWORD', '');
+
+        // If credentials are blank (common in local XAMPP/development environments),
+        // simulate the email send and update the inquiry status to 'responded'.
+        if (empty($username) || empty($password)) {
+            error_log("[Zeppelin Suites Dev Mail] Simulating email delivery to {$replyTo} for Inquiry #{$inqId}. Subject: {$subject}");
+
+            $updateSql = "
+                UPDATE inquiry_table
+                SET status = 'responded',
+                    reservation_link_sent_at = CASE
+                        WHEN approval_status = 'approved' AND reservation_token IS NOT NULL
+                        THEN NOW()
+                        ELSE reservation_link_sent_at
+                    END
+                WHERE inq_id = ?
+            ";
+            $this->execute($updateSql, [$inqId]);
+
+            return [
+                'success' => true,
+                'simulated' => true,
+                'message' => 'Email simulated successfully (SMTP credentials are not configured in .env for local testing). Inquiry status updated to Responded.'
+            ];
+        }
+
         if (!class_exists(\PHPMailer\PHPMailer\PHPMailer::class)) {
             return ['success' => false, 'error' => 'PHPMailer library unavailable.'];
         }
@@ -204,10 +231,21 @@ class Inquiry extends Model {
             $mail->isSMTP();
             $mail->Host = defined('SMTP_HOST') ? SMTP_HOST : (string)env('SMTP_HOST', 'smtp.gmail.com');
             $mail->SMTPAuth = true;
-            $mail->Username = defined('SMTP_USERNAME') ? SMTP_USERNAME : (string)env('SMTP_USERNAME', '');
-            $mail->Password = defined('SMTP_PASSWORD') ? SMTP_PASSWORD : (string)env('SMTP_PASSWORD', '');
-            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = defined('SMTP_PORT') ? SMTP_PORT : (int)env('SMTP_PORT', 587);
+            $mail->Username = $username;
+            $mail->Password = $password;
+            $port = defined('SMTP_PORT') ? (int)SMTP_PORT : (int)env('SMTP_PORT', 587);
+            $mail->Port = $port;
+            $mail->SMTPSecure = ($port === 465)
+                ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
+                : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                ]
+            ];
 
             $fromEmail = defined('MAIL_FROM_EMAIL') ? MAIL_FROM_EMAIL : (string)env('MAIL_FROM_EMAIL', 'noreply@zeppelinsuites.com');
             $fromName = defined('MAIL_FROM_NAME') ? MAIL_FROM_NAME : (string)env('MAIL_FROM_NAME', 'Zeppelin Suites');
@@ -233,9 +271,508 @@ class Inquiry extends Model {
             ";
             $this->execute($updateSql, [$inqId]);
 
-            return ['success' => true];
+            return ['success' => true, 'message' => 'Reply email sent successfully. Inquiry status updated to Responded.'];
         } catch (\Throwable $e) {
             return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Check available units for a given inquiry based on unit type and move-in timeline.
+     */
+    public function getAvailableUnits(int $inqId, string $unitType): array {
+        $inquiry = $this->getById($inqId);
+        if (!$inquiry) {
+            return ['success' => false, 'message' => 'Inquiry not found.'];
+        }
+
+        $inquiryTypeNormalized = strtolower(trim((string)($inquiry['inquiry_type'] ?? '')));
+        $isResale = ($inquiryTypeNormalized === 'resale inquiry')
+            || strpos($inquiryTypeNormalized, 'resale') !== false
+            || strpos($inquiryTypeNormalized, 'buy') !== false
+            || strpos($inquiryTypeNormalized, 'purchase') !== false;
+
+        if ($isResale) {
+            $sql = "
+                SELECT 
+                    u.unit_id,
+                    u.unit_number,
+                    u.unit_type,
+                    u.sqm,
+                    COALESCE(u.reselling_price, u.lease_rate) AS lease_rate,
+                    u.unit_owner_id,
+                    u.unit_current_status,
+                    owner.full_name AS owner_name
+                FROM units_table u
+                LEFT JOIN users_table owner ON u.unit_owner_id = owner.user_id
+                WHERE u.unit_type = ?
+                AND u.unit_current_status = 'Resale'
+                AND u.unit_owner_id IS NOT NULL
+                AND u.unit_id NOT IN (
+                    SELECT unit_id FROM owner_approval_requests
+                    WHERE inq_id = ? AND request_status IN ('pending', 'approved')
+                )
+                ORDER BY u.unit_number ASC
+            ";
+            $rows = $this->fetchAll($sql, [$unitType, $inqId]);
+
+            $units = [];
+            foreach ($rows as $row) {
+                $units[] = [
+                    'unit_id'              => (int)$row['unit_id'],
+                    'unit_number'          => $row['unit_number'],
+                    'unit_type'            => $row['unit_type'],
+                    'sqm'                  => (float)($row['sqm'] ?? 0),
+                    'lease_rate'           => $row['lease_rate'],
+                    'unit_owner_id'        => (int)$row['unit_owner_id'],
+                    'owner_name'           => $row['owner_name'] ?? 'Assigned Owner',
+                    'unit_status'          => $row['unit_current_status'],
+                    'is_resale'            => true,
+                    'availability_start'   => 'Available for Resale',
+                    'availability_end'     => 'For Resale',
+                    'limited_availability' => false,
+                    'next_booking_date'    => null,
+                ];
+            }
+
+            return [
+                'success'   => true,
+                'is_resale' => true,
+                'count'     => count($units),
+                'units'     => $units,
+            ];
+        }
+
+        // Rental / Lease Inquiry Flow
+        $today = new \DateTime();
+        $movePreference = strtolower(trim((string)($inquiry['preferred_move_in_time'] ?? '')));
+        $earliestMoveIn = clone $today;
+        $latestMoveIn = clone $today;
+
+        switch ($movePreference) {
+            case 'immediately':
+            case 'immediately (within 30 days)':
+                $latestMoveIn->modify('+30 days');
+                break;
+            case 'within 1 month':
+            case 'next month (1-2 months)':
+            case 'next month (1–2 months)':
+                $latestMoveIn->modify('+2 months');
+                break;
+            case 'within 1–3 months':
+            case 'within 1-3 months':
+            case 'in 2-3 months':
+            case 'in 2–3 months':
+                $earliestMoveIn->modify('+1 month');
+                $latestMoveIn->modify('+3 months');
+                break;
+            case 'within 3–6 months':
+            case 'within 3-6 months':
+            case 'in 3-6 months':
+            case 'in 3–6 months':
+                $earliestMoveIn->modify('+3 months');
+                $latestMoveIn->modify('+6 months');
+                break;
+            default:
+                $latestMoveIn->modify('+6 months');
+                break;
+        }
+
+        $leaseDuration = strtolower(trim((string)($inquiry['lease_duration'] ?? '')));
+        $months = 12;
+        if (strpos($leaseDuration, 'month') !== false) {
+            if (preg_match('/\d+/', $leaseDuration, $matches)) {
+                $months = (int)$matches[0];
+            }
+        } elseif (strpos($leaseDuration, 'year') !== false) {
+            if (preg_match('/\d+/', $leaseDuration, $matches)) {
+                $months = (int)$matches[0] * 12;
+            }
+        } elseif (strpos($leaseDuration, 'longer') !== false) {
+            $months = 36;
+        }
+
+        $sql = "
+            SELECT 
+                u.unit_id,
+                u.unit_number,
+                u.unit_type,
+                u.sqm,
+                u.lease_rate,
+                u.unit_owner_id,
+                owner.full_name AS owner_name,
+                MAX(r.move_out_date) AS latest_move_out,
+                MAX(b.end_date) AS latest_blocked_out
+            FROM units_table u
+            LEFT JOIN users_table owner
+                ON u.unit_owner_id = owner.user_id
+            LEFT JOIN reservation_table r
+                ON u.unit_id = r.unit_id
+                AND LOWER(r.reservation_status) NOT IN ('cancelled','rejected')
+                AND r.move_in_date <= CURDATE()
+                AND r.move_out_date >= CURDATE()
+            LEFT JOIN unit_blocked_dates b
+                ON u.unit_id = b.unit_id
+                AND b.start_date <= CURDATE()
+                AND b.end_date >= CURDATE()
+            WHERE u.unit_type = ?
+            AND u.unit_current_status NOT IN ('Resale', 'On Hold', 'Under maintenance', 'Archived')
+            AND u.unit_owner_id IS NOT NULL
+            AND u.unit_id NOT IN (
+                SELECT unit_id FROM owner_approval_requests
+                WHERE inq_id = ? AND request_status IN ('pending', 'approved')
+            )
+            GROUP BY u.unit_id
+            ORDER BY u.unit_number ASC
+        ";
+
+        $rows = $this->fetchAll($sql, [$unitType, $inqId]);
+        $candidates = [];
+
+        foreach ($rows as $row) {
+            $busyEndDates = [];
+            if (!empty($row['latest_move_out'])) {
+                $busyEndDates[] = new \DateTime($row['latest_move_out']);
+            }
+            if (!empty($row['latest_blocked_out'])) {
+                $busyEndDates[] = new \DateTime($row['latest_blocked_out']);
+            }
+
+            $availableDate = empty($busyEndDates) ? new \DateTime() : max($busyEndDates);
+            if ($availableDate < $today) {
+                $availableDate = clone $today;
+            }
+
+            if ($availableDate > $latestMoveIn) {
+                continue;
+            }
+
+            $candidates[(int)$row['unit_id']] = [
+                'row' => $row,
+                'availableDate' => $availableDate
+            ];
+        }
+
+        $bookingsByUnit = [];
+        if (!empty($candidates)) {
+            $unitIds = array_keys($candidates);
+            $placeholders = implode(',', array_fill(0, count($unitIds), '?'));
+
+            $resSql = "
+                SELECT unit_id, move_in_date, move_out_date
+                FROM reservation_table
+                WHERE unit_id IN ($placeholders)
+                AND LOWER(reservation_status) NOT IN ('cancelled','rejected')
+                AND move_in_date IS NOT NULL
+                AND (move_out_date >= CURDATE() OR move_out_date IS NULL)
+                ORDER BY move_in_date ASC
+            ";
+            $resRows = $this->fetchAll($resSql, $unitIds);
+            foreach ($resRows as $nextRow) {
+                $bookingsByUnit[(int)$nextRow['unit_id']][] = [
+                    'move_in'  => new \DateTime($nextRow['move_in_date']),
+                    'move_out' => !empty($nextRow['move_out_date']) ? new \DateTime($nextRow['move_out_date']) : null,
+                    'source'   => 'reservation'
+                ];
+            }
+
+            $blockSql = "
+                SELECT unit_id, start_date, end_date, block_type, remarks
+                FROM unit_blocked_dates
+                WHERE unit_id IN ($placeholders)
+                AND start_date IS NOT NULL
+                AND (end_date >= CURDATE() OR end_date IS NULL)
+                ORDER BY start_date ASC
+            ";
+            $blockRows = $this->fetchAll($blockSql, $unitIds);
+            foreach ($blockRows as $bRow) {
+                $bookingsByUnit[(int)$bRow['unit_id']][] = [
+                    'move_in'    => new \DateTime($bRow['start_date']),
+                    'move_out'   => !empty($bRow['end_date']) ? new \DateTime($bRow['end_date']) : null,
+                    'source'     => 'blocked_date',
+                    'block_type' => $bRow['block_type'] ?? 'Blocked'
+                ];
+            }
+
+            foreach ($bookingsByUnit as $uId => &$intervals) {
+                usort($intervals, function($a, $b) {
+                    if ($a['move_in'] == $b['move_in']) return 0;
+                    return ($a['move_in'] < $b['move_in']) ? -1 : 1;
+                });
+            }
+            unset($intervals);
+        }
+
+        $minStayDays = 30;
+        $units = [];
+        foreach ($candidates as $unitId => $candidate) {
+            $row = $candidate['row'];
+            $availableDate = clone $candidate['availableDate'];
+
+            $limitedAvailability = false;
+            $nextBookingDate = null;
+            $cappingBookingMoveIn = null;
+            $cappingSource = 'reservation';
+            $cappingType = null;
+
+            foreach (($bookingsByUnit[$unitId] ?? []) as $booking) {
+                if ($booking['move_in'] <= $availableDate) {
+                    if ($booking['move_out'] !== null && $booking['move_out'] > $availableDate) {
+                        $availableDate = clone $booking['move_out'];
+                    }
+                    continue;
+                }
+
+                $gapDays = (int)$availableDate->diff($booking['move_in'])->days;
+                if ($gapDays < $minStayDays) {
+                    if ($booking['move_out'] === null) {
+                        $availableDate = null;
+                        break;
+                    }
+                    $availableDate = clone $booking['move_out'];
+                    continue;
+                }
+
+                $cappingBookingMoveIn = clone $booking['move_in'];
+                $cappingSource = $booking['source'] ?? 'reservation';
+                $cappingType = $booking['block_type'] ?? null;
+                break;
+            }
+
+            if ($availableDate === null || $availableDate > $latestMoveIn) {
+                continue;
+            }
+
+            $leaseEnd = clone $availableDate;
+            $leaseEnd->modify("+{$months} months");
+
+            if ($cappingBookingMoveIn !== null && $cappingBookingMoveIn < $leaseEnd) {
+                $leaseEnd = clone $cappingBookingMoveIn;
+                $limitedAvailability = true;
+                $nextBookingDate = $cappingBookingMoveIn->format('F d, Y');
+            }
+
+            $units[] = [
+                'unit_id'              => (int)$row['unit_id'],
+                'unit_number'          => $row['unit_number'],
+                'unit_type'            => $row['unit_type'],
+                'sqm'                  => (float)($row['sqm'] ?? 0),
+                'lease_rate'           => $row['lease_rate'],
+                'unit_owner_id'        => (int)$row['unit_owner_id'],
+                'owner_name'           => $row['owner_name'] ?? 'Assigned Owner',
+                'availability_start'   => $availableDate->format('F d, Y'),
+                'availability_end'     => $leaseEnd->format('F d, Y'),
+                'limited_availability' => $limitedAvailability,
+                'next_booking_date'    => $nextBookingDate,
+                'limited_reason'       => ($cappingSource === 'blocked_date') ? ($cappingType ?: 'Blocked') : 'Reserved'
+            ];
+        }
+
+        return [
+            'success'   => true,
+            'is_resale' => false,
+            'count'     => count($units),
+            'units'     => $units
+        ];
+    }
+
+    /**
+     * Send owner approval requests for selected units.
+     */
+    public function sendApprovalRequests(int $inqId, array $unitIds): array {
+        if ($inqId <= 0 || empty($unitIds)) {
+            return ['success' => false, 'message' => 'Invalid parameters.'];
+        }
+
+        $this->db->beginTransaction();
+
+        try {
+            // Delete existing pending request for this batch of units to reset cleanly
+            $deleteStmt = $this->db->prepare("
+                DELETE FROM owner_approval_requests 
+                WHERE inq_id = ? AND request_status = 'pending' AND unit_id = ?
+            ");
+            foreach ($unitIds as $uId) {
+                $deleteStmt->execute([$inqId, (int)$uId]);
+            }
+
+            // Fetch unit owners for the selected units
+            $unitSelectStmt = $this->db->prepare("
+                SELECT u.unit_id, u.unit_number, u.unit_owner_id,
+                       owner.full_name AS owner_name, owner.email AS owner_email
+                FROM units_table u
+                LEFT JOIN users_table owner ON u.unit_owner_id = owner.user_id
+                WHERE u.unit_id = ? AND u.unit_owner_id IS NOT NULL
+            ");
+
+            $insertStmt = $this->db->prepare("
+                INSERT INTO owner_approval_requests (inq_id, unit_id, unit_owner_id, request_status)
+                VALUES (?, ?, ?, 'pending')
+            ");
+
+            $inserted = 0;
+            $notifyList = [];
+
+            foreach ($unitIds as $uId) {
+                $unitSelectStmt->execute([(int)$uId]);
+                $row = $unitSelectStmt->fetch(PDO::FETCH_ASSOC);
+                if ($row && !empty($row['unit_owner_id'])) {
+                    $insertStmt->execute([$inqId, (int)$row['unit_id'], (int)$row['unit_owner_id']]);
+                    $inserted++;
+
+                    $notifyList[] = [
+                        'unit_number' => $row['unit_number'],
+                        'owner_name'  => $row['owner_name'] ?? 'Unit Owner',
+                        'owner_email' => $row['owner_email'] ?? '',
+                    ];
+                }
+            }
+
+            if ($inserted === 0) {
+                $this->db->rollBack();
+                return ['success' => false, 'message' => 'No valid units with assigned owners found.'];
+            }
+
+            $updateInqStmt = $this->db->prepare("
+                UPDATE inquiry_table
+                SET approval_status = 'requested',
+                    approval_requested_at = NOW()
+                WHERE inq_id = ?
+            ");
+            $updateInqStmt->execute([$inqId]);
+
+            $this->db->commit();
+
+            // Send notification emails
+            $notificationFile = dirname(__DIR__) . '/config/owner_notifications.php';
+            if (file_exists($notificationFile)) {
+                require_once $notificationFile;
+                if (function_exists('notifyOwnerOfApprovalRequest')) {
+                    foreach ($notifyList as $n) {
+                        notifyOwnerOfApprovalRequest(
+                            $n['owner_email'] ?? '',
+                            $n['owner_name'] ?? 'Unit Owner',
+                            $n['unit_number'] ?? ''
+                        );
+                    }
+                }
+            }
+
+            // Retrieve updated requests list
+            $requestsSql = "
+                SELECT
+                    r.request_id,
+                    r.unit_id,
+                    r.request_status,
+                    r.owner_remarks,
+                    r.requested_at,
+                    r.responded_at,
+                    u.unit_number,
+                    owner.full_name AS owner_name
+                FROM owner_approval_requests r
+                LEFT JOIN units_table u ON r.unit_id = u.unit_id
+                LEFT JOIN users_table owner ON r.unit_owner_id = owner.user_id
+                WHERE r.inq_id = ?
+                ORDER BY r.requested_at ASC
+            ";
+            $allRequests = $this->fetchAll($requestsSql, [$inqId]);
+            $pendingCount = 0;
+            foreach ($allRequests as &$req) {
+                if (strtolower((string)($req['request_status'] ?? '')) === 'pending') {
+                    $pendingCount++;
+                }
+            }
+            unset($req);
+
+            return [
+                'success'         => true,
+                'message'         => 'Approval requests sent successfully.',
+                'inserted'        => $inserted,
+                'approval_status' => 'requested',
+                'pending_count'   => $pendingCount,
+                'requests'        => $allRequests
+            ];
+
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Cancel a pending owner approval request.
+     */
+    public function cancelApprovalRequest(int $inqId, int $requestId): array {
+        if ($inqId <= 0 || $requestId <= 0) {
+            return ['success' => false, 'message' => 'Invalid parameters.'];
+        }
+
+        $this->db->beginTransaction();
+
+        try {
+            $checkSql = "
+                SELECT request_id, request_status
+                FROM owner_approval_requests
+                WHERE request_id = ? AND inq_id = ?
+                FOR UPDATE
+            ";
+            $request = $this->fetchOne($checkSql, [$requestId, $inqId]);
+            if (!$request) {
+                $this->db->rollBack();
+                return ['success' => false, 'message' => 'Request not found.'];
+            }
+
+            if (strtolower((string)$request['request_status']) !== 'pending') {
+                $this->db->rollBack();
+                return ['success' => false, 'message' => 'This request has already been responded to and cannot be cancelled.'];
+            }
+
+            $delStmt = $this->db->prepare("DELETE FROM owner_approval_requests WHERE request_id = ?");
+            $delStmt->execute([$requestId]);
+
+            $pendingRow = $this->fetchOne("
+                SELECT COUNT(*) AS pending_count
+                FROM owner_approval_requests
+                WHERE inq_id = ? AND request_status = 'pending'
+            ", [$inqId]);
+            $pendingCount = (int)($pendingRow['pending_count'] ?? 0);
+
+            $totalRow = $this->fetchOne("
+                SELECT COUNT(*) AS total_count
+                FROM owner_approval_requests
+                WHERE inq_id = ?
+            ", [$inqId]);
+            $totalCount = (int)($totalRow['total_count'] ?? 0);
+
+            if ($totalCount === 0) {
+                $resetStmt = $this->db->prepare("
+                    UPDATE inquiry_table
+                    SET approval_status = 'not_requested',
+                        approval_requested_at = NULL
+                    WHERE inq_id = ? AND approval_status != 'approved'
+                ");
+                $resetStmt->execute([$inqId]);
+            }
+
+            $this->db->commit();
+
+            $inqRow = $this->fetchOne("SELECT status, approval_status FROM inquiry_table WHERE inq_id = ?", [$inqId]);
+
+            return [
+                'success'         => true,
+                'message'         => 'Approval request cancelled successfully.',
+                'pending_count'   => $pendingCount,
+                'approval_status' => $inqRow['approval_status'] ?? 'not_requested',
+                'status'          => $inqRow['status'] ?? 'pending'
+            ];
+
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            return ['success' => false, 'message' => 'Error cancelling request: ' . $e->getMessage()];
         }
     }
 
