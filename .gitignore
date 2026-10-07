@@ -1,0 +1,22 @@
+# Environment configuration (NEVER COMMIT SENSITIVE SECRETS)
+.env
+.env.local
+.env.*.local
+*.local.php
+email_config.local.php
+
+# Dependency & package directories
+node_modules/
+vendor/
+
+# Temporary and upload files
+*.log
+Thumbs.db
+.DS_Store
+public/uploads/temp/
+
+# IDE configurations
+.idea/
+.vscode/
+*.suo
+*.user

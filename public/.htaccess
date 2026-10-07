@@ -1,2 +1,16 @@
 # Disable directory browsing across all subfolders
 Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Prevent loop if already rewritten to index.php
+    RewriteRule ^index\.php$ - [L]
+
+    # If requested file or directory physically exists, serve it directly
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Forward all other requests to front controller
+    RewriteRule . index.php [L,QSA]
+</IfModule>
