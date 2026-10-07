@@ -1,21 +1,7 @@
-<!-- Navigation Bar -->
-<header class="w-full border-b border-slate-100 bg-white/95 backdrop-blur-md sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <a href="<?= htmlspecialchars($baseUrl) ?>/" class="flex items-center gap-3 group">
-            <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-bold text-lg tracking-wider transition-transform group-hover:scale-105">
-                ZS
-            </div>
-            <div>
-                <span class="text-xl font-bold tracking-tight text-slate-900 block leading-tight">Zeppelin Suites</span>
-                <span class="text-[11px] font-medium uppercase tracking-wider text-slate-400">Luxury Residences</span>
-            </div>
-        </a>
-        <a href="<?= htmlspecialchars($baseUrl) ?>/" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            Back to Home
-        </a>
-    </div>
-</header>
+<?php
+$activePage = 'login';
+include __DIR__ . '/../components/public_navbar.php';
+?>
 
 <!-- Main Section: Two-Column Login View -->
 <main class="flex flex-1 w-full min-h-[calc(100vh-80px)]">

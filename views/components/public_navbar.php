@@ -61,17 +61,6 @@ $dropdownClass = function (bool $isActive): string {
     <a href="<?= htmlspecialchars($baseUrl) ?>/contact" class="<?= $linkClass($activePage === 'contact') ?>">Contact</a>
   </div>
 
-  <!-- Right Actions: Portal Login -->
-  <div class="hidden min-[900px]:flex items-center gap-4">
-    <a href="<?= htmlspecialchars($baseUrl) ?>/login"
-      class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-zinc-950 text-white hover:bg-zinc-800 text-xs font-semibold tracking-wider uppercase shadow-sm transition-all hover:shadow hover:-translate-y-0.5 active:translate-y-0 active:scale-95">
-      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-      </svg>
-      <span>Portal Login</span>
-    </a>
-  </div>
-
   <!-- Mobile Menu Button -->
   <button id="mobileMenuBtn" type="button" aria-label="Toggle Navigation Menu"
     class="min-[900px]:hidden p-2 rounded-xl text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100 transition-colors">
@@ -104,14 +93,6 @@ $dropdownClass = function (bool $isActive): string {
     <a href="<?= htmlspecialchars($baseUrl) ?>/faq" class="px-4 py-2 rounded-lg text-sm <?= $activePage === 'faq' ? 'bg-zinc-100 font-bold text-zinc-900' : 'text-zinc-700 hover:bg-zinc-50' ?>">FAQ</a>
     <a href="<?= htmlspecialchars($baseUrl) ?>/about" class="px-4 py-2 rounded-lg text-sm <?= $activePage === 'about' ? 'bg-zinc-100 font-bold text-zinc-900' : 'text-zinc-700 hover:bg-zinc-50' ?>">About Us</a>
     <a href="<?= htmlspecialchars($baseUrl) ?>/contact" class="px-4 py-2 rounded-lg text-sm <?= $activePage === 'contact' ? 'bg-zinc-100 font-bold text-zinc-900' : 'text-zinc-700 hover:bg-zinc-50' ?>">Contact</a>
-
-    <div class="pt-3 border-t border-zinc-100 mt-2">
-      <a href="<?= htmlspecialchars($baseUrl) ?>/login"
-        class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-950 text-white text-xs font-semibold tracking-wider uppercase">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
-        <span>Portal Login</span>
-      </a>
-    </div>
   </div>
 </div>
 
