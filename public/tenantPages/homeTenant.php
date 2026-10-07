@@ -82,212 +82,142 @@ require_once __DIR__ . '/ActionsTnt/getTenantOverview.php';
 </head>
 <body class="bg-slate-50 text-slate-800 overflow-hidden">
 
-<!-- Overlay -->
-<div class="overlay fixed inset-0 bg-transparent z-40" id="overlay" onclick="closeMobileSidebar()"></div>
-
-<!-- SIDEBAR -->
-<aside class="sidebar fixed left-0 top-0 h-full border-r border-slate-100/80 flex flex-col z-50 md:z-40 shadow-2xl md:shadow-none" id="sidebar">
-  <div class="px-4 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 min-h-[73px]">
-    <a href="homeTenant.php" class="sidebar-logo shrink-0 flex items-center">
-      <img src="../images/zeppelin-logo.png" alt="Zeppelin Suites" class="h-10 w-auto object-contain" onerror="this.outerHTML='<span class=\'font-bold text-slate-900 text-sm\'>ZEPPELIN SUITES</span>'">
-    </a>
-    <button onclick="toggleCollapse()" class="hidden md:flex btn-press p-1.5 rounded-lg hover:bg-slate-100 transition-colors active:scale-95 shrink-0 ml-1">
-      <svg class="collapse-icon w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
-    </button>
-  </div>
-  <nav class="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden">
-    <!-- Home -->
-    <a href="homeTenant.php" data-tooltip="Home" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-      <span class="nav-label">Home</span>
-    </a>
-    <!-- Maintenance -->
-    <a href="maintenanceTenant.php" data-tooltip="Maintenance" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      <span class="nav-label">Maintenance</span>
-    </a>
-    <!-- Account -->
-    <a href="account.php" data-tooltip="Account" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500">
-      <svg class="nav-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-      <span class="nav-label">Account</span>
-    </a>
-  </nav>
-</aside>
+<?php include __DIR__ . '/sidebar.php'; ?>
 
 <!-- ── MAIN WRAPPER ─────────────────────────────────────── -->
 <div class="main-wrapper h-screen flex flex-col" id="mainWrapper">
-
-<!-- TOP BAR -->
-<header class="glass-header border-b border-slate-100/80 px-4 md:px-6 py-3.5 flex items-center gap-4 shrink-0 z-30">
-  <button class="md:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors btn-press active:scale-95" onclick="openMobileSidebar()">
-    <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-  </button>
-  
-  <div class="relative flex-1 max-w-sm">
-    <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-    <input type="text" placeholder="Search..." class="zep-input w-full pl-10 pr-4 py-2 bg-slate-50/80 border border-slate-200 rounded-full text-sm transition-all">
-  </div>
-  
-  <div class="flex items-center gap-2 ml-auto">
-    <!-- Profile -->
-    <div class="relative" id="profileWrapper">
-      <button onclick="toggleProfile()" class="flex items-center gap-2.5 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl px-3 py-1.5 transition-all btn-press">
-        <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold shrink-0">
-          <?= clean($tenantInitials) ?>
-        </div>
-        <div class="hidden sm:block text-left">
-          <p class="text-sm font-semibold text-slate-800 truncate"><?= clean($tenantName) ?></p>
-          <p class="text-xs text-slate-400 font-medium">Tenant</p>
-        </div>
-        <svg class="w-3.5 h-3.5 text-slate-400" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-      </button>
-      
-      <!-- Profile Dropdown -->
-      <div class="profile-dropdown absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50 hidden" id="profileDropdown">
-        <a href="account.php" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-lg mx-1">Account</a>
-        <div class="border-t border-slate-100 my-1"></div>
-        <button onclick="confirmLogout()" class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg mx-1">Sign out</button>
-      </div>
-    </div>
-  </div>
-</header>
-
-<!-- LOGOUT MODAL -->
-<div id="logoutModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[999] hidden flex items-center justify-center p-4" onclick="if(event.target===this) hideModal()">
-  <div class="bg-white rounded-2xl p-6 w-full max-w-sm border border-slate-100 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-    <h3 class="text-lg font-bold text-slate-900 mb-2">Sign out?</h3>
-    <p class="text-sm text-slate-600 mb-6">Are you sure you want to logout from your account?</p>
-    <div class="flex gap-3 justify-end">
-      <button onclick="hideModal()" class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl border border-slate-200 transition-all btn-press">Cancel</button>
-      <button onclick="doLogout()" class="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-all btn-press">Logout</button>
-    </div>
-  </div>
-</div>
+  <?php include __DIR__ . '/navbar.php'; ?>
 
 <!-- CONTENT AREA -->
 <div class="main-scroll p-4 md:p-6 space-y-6">
   <div class="max-w-6xl mx-auto space-y-6">
 
-    <!-- Page Header (Home Title - Daily/Monthly Filter Removed) -->
-    <div class="flex items-center justify-between">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-xl font-bold text-slate-900">Home</h1>
-        <p class="text-xs text-slate-400 mt-0.5">Welcome back, <?= clean($tenantName) ?>! Here is an overview of your stay.</p>
+        <p class="text-xs text-slate-400 mt-0.5">Welcome back, <?= clean($tenantName) ?>!</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          Active Resident
+        </span>
       </div>
     </div>
 
-    <!-- Stat cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <!-- Overview Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
 
-      <!-- Rent Due -->
-      <div class="stat-card bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-2.5">
-            <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shrink-0 border border-emerald-100">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <!-- Card 1: Assigned Residence -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+        <div>
+          <!-- Header -->
+          <div class="flex items-center justify-between gap-3 mb-5">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-slate-900">Assigned Residence</h2>
+                <p class="text-xs text-slate-400"><?= clean($unitType) ?><?= !empty($leaseInfo['floor_number']) ? ' • Floor ' . clean($leaseInfo['floor_number']) : '' ?></p>
+              </div>
             </div>
-            <span class="text-sm font-bold text-slate-700">Rent Due this month</span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+              <?= clean($unitNumber !== '—' ? 'Active Lease' : 'Pending') ?>
+            </span>
           </div>
-          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <?= $monthlyRate > 0 ? 'Active Lease' : 'No Active Due' ?>
-          </span>
-        </div>
-        <p class="text-4xl font-bold text-slate-900 tracking-tight" style="font-family:'DM Mono',monospace">
-          ₱<?= number_format($monthlyRate, 2) ?>
-        </p>
-        <p class="text-xs text-emerald-600 font-semibold mt-2">Due Date: <span class="text-slate-500 font-normal"><?= clean($rentDueDate) ?></span></p>
-        <div class="mt-4 pt-4 border-t border-slate-50 flex items-center gap-2">
-          <a href="account.php" class="btn-press flex-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all text-center">View Lease Details</a>
-        </div>
-      </div>
 
-      <!-- Active Maintenance -->
-      <div class="stat-card bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-2.5">
-            <div class="w-10 h-10 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center shrink-0 border border-amber-100">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            </div>
-            <span class="text-sm font-bold text-slate-700">Active Maintenance</span>
+          <!-- Unit Display -->
+          <div class="mb-5">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Unit</p>
+            <h3 class="text-3xl font-bold text-slate-900 font-mono tracking-tight">
+              <?= clean($unitNumber !== '—' ? 'Unit ' . $unitNumber : 'Not Assigned') ?>
+            </h3>
           </div>
-          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full <?= $activeMaintenanceCount > 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-500' ?>">
-            <?= $activeMaintenanceCount ?> In Progress
-          </span>
+
+          <!-- Key Details -->
+          <div class="pt-4 border-t border-slate-100 grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <span class="text-slate-400 block mb-0.5">Move-in Date</span>
+              <span class="font-bold text-slate-800 font-mono text-sm"><?= clean(format_date_nice($moveInDate)) ?></span>
+            </div>
+            <div>
+              <span class="text-slate-400 block mb-0.5">Turnover Date</span>
+              <span class="font-bold text-slate-800 font-mono text-sm"><?= clean(format_date_nice($moveOutDate)) ?></span>
+            </div>
+            <div class="col-span-2 pt-2 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-slate-400">Unit Owner</span>
+              <div class="text-right">
+                <span class="font-bold text-slate-800"><?= clean($unitOwnerName) ?></span>
+                <?php if (!empty($leaseInfo['owner_contact'])): ?>
+                  <span class="text-slate-400 font-mono ml-1.5">(<?= clean($leaseInfo['owner_contact']) ?>)</span>
+                <?php endif; ?>
+              </div>
+            </div>
+          </div>
         </div>
-        <p class="text-4xl font-bold text-slate-900 tracking-tight" style="font-family:'DM Mono',monospace"><?= $activeMaintenanceCount ?></p>
-        <p class="text-xs text-amber-600 font-semibold mt-2">
-          <?= $activeMaintenanceCount > 0 ? 'Open service tickets' : 'No active issues reported' ?>
-        </p>
-        <div class="mt-4 pt-4 border-t border-slate-50 flex items-center gap-2">
-          <a href="maintenanceTenant.php" class="btn-press flex items-center justify-center w-full bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-xl transition-all border border-slate-200">
-            View Requests
+
+        <!-- Action Link -->
+        <div class="mt-5 pt-4 border-t border-slate-100">
+          <a href="account.php" class="btn-press flex items-center justify-between text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-xl px-4 py-2.5 transition-all">
+            <span>View Lease Details</span>
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
           </a>
         </div>
       </div>
 
-    </div>
-
-    <!-- Unit Information -->
-    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-      <!-- Header -->
-      <div class="bg-slate-900 px-6 py-4 flex items-center justify-between">
+      <!-- Card 2: Active Maintenance -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
         <div>
-          <h2 class="text-base font-bold text-white">Unit &amp; Lease Information</h2>
-          <p class="text-xs text-slate-400">Details of your currently assigned residence</p>
+          <!-- Header -->
+          <div class="flex items-center justify-between gap-3 mb-5">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0 border border-amber-100">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-slate-900">Maintenance</h2>
+                <p class="text-xs text-slate-400">Unit repair and service requests</p>
+              </div>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold shrink-0 <?= $activeMaintenanceCount > 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-600 border border-slate-200' ?>">
+              <?= $activeMaintenanceCount > 0 ? $activeMaintenanceCount . ' In Progress' : 'All Clear' ?>
+            </span>
+          </div>
+
+          <!-- Active Tickets Counter -->
+          <div class="mb-5">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Active Requests</p>
+            <div class="flex items-baseline gap-2">
+              <h3 class="text-3xl font-bold text-slate-900 font-mono tracking-tight"><?= $activeMaintenanceCount ?></h3>
+              <span class="text-xs text-slate-400">open ticket<?= $activeMaintenanceCount === 1 ? '' : 's' ?></span>
+            </div>
+          </div>
+
+          <!-- Status Note -->
+          <div class="pt-4 border-t border-slate-100">
+            <div class="bg-slate-50/70 border border-slate-100 rounded-xl p-3.5">
+              <p class="text-xs text-slate-600 leading-relaxed">
+                <?= $activeMaintenanceCount > 0 
+                  ? 'Your open maintenance ticket is currently being handled by management.' 
+                  : 'Everything in your unit is in good order. You can submit repair requests anytime.' ?>
+              </p>
+            </div>
+          </div>
         </div>
-        <a href="account.php" class="btn-press text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all">
-          Manage Account &rarr;
-        </a>
-      </div>
-      <!-- Content -->
-      <div class="p-6 space-y-4">
-        <div class="flex flex-wrap gap-x-8 gap-y-3">
-          <div>
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Unit Number</p>
-            <p class="text-base font-bold text-slate-900" style="font-family:'DM Mono',monospace">
-              <?= clean($unitNumber !== '—' ? 'Unit ' . $unitNumber : 'Not Assigned') ?>
-            </p>
-          </div>
-          <div class="w-px bg-slate-200 self-stretch hidden sm:block"></div>
-          <div>
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Unit Type</p>
-            <p class="text-base font-bold text-slate-900"><?= clean($unitType) ?></p>
-          </div>
-          <?php if (!empty($leaseInfo['floor_number'])): ?>
-          <div class="w-px bg-slate-200 self-stretch hidden sm:block"></div>
-          <div>
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Floor</p>
-            <p class="text-base font-bold text-slate-900" style="font-family:'DM Mono',monospace"><?= clean($leaseInfo['floor_number']) ?>F</p>
-          </div>
-          <?php endif; ?>
-        </div>
 
-        <div class="border-t border-slate-100 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Tenant Name</p>
-            <p class="text-sm text-slate-900 font-bold"><?= clean($tenantName) ?></p>
-            <p class="text-xs text-slate-400 mt-0.5"><?= clean($tenantEmail) ?></p>
-          </div>
-
-          <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Unit Owner</p>
-            <p class="text-sm text-slate-900 font-bold"><?= clean($unitOwnerName) ?></p>
-            <p class="text-xs text-slate-400 mt-0.5"><?= clean($leaseInfo['owner_contact'] ?? 'Contact via Management') ?></p>
-          </div>
-
-          <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Move-in Date (Lease Start)</p>
-            <p class="text-sm text-slate-900 font-semibold" style="font-family:'DM Mono',monospace">
-              <?= clean(format_date_nice($moveInDate)) ?>
-            </p>
-          </div>
-
-          <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Turnover Date (Lease End)</p>
-            <p class="text-sm text-slate-900 font-semibold" style="font-family:'DM Mono',monospace">
-              <?= clean(format_date_nice($moveOutDate)) ?>
-            </p>
-          </div>
+        <!-- Action Link -->
+        <div class="mt-5 pt-4 border-t border-slate-100">
+          <a href="maintenanceTenant.php" class="btn-press flex items-center justify-between text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-xl px-4 py-2.5 transition-all">
+            <span><?= $activeMaintenanceCount > 0 ? 'Track Active Requests' : 'View Maintenance' ?></span>
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </a>
         </div>
       </div>
 
@@ -298,49 +228,5 @@ require_once __DIR__ . '/ActionsTnt/getTenantOverview.php';
 
 </div><!-- /main-wrapper -->
 
-<script>
-let sidebarCollapsed = false;
-function toggleCollapse() {
-  sidebarCollapsed = !sidebarCollapsed;
-  document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
-  document.getElementById('mainWrapper').classList.toggle('sidebar-collapsed', sidebarCollapsed);
-}
-function openMobileSidebar() {
-  document.getElementById('sidebar').classList.add('open');
-  document.getElementById('overlay').classList.add('show');
-}
-function closeMobileSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('overlay').classList.remove('show');
-}
-
-function toggleProfile() {
-  const dropdown = document.getElementById('profileDropdown');
-  const chevron = document.getElementById('profileChevron');
-  const isHidden = dropdown.classList.toggle('hidden');
-  chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
-}
-
-document.addEventListener('click', function(e) {
-  const profileWrapper = document.getElementById('profileWrapper');
-  if (profileWrapper && !profileWrapper.contains(e.target)) {
-    document.getElementById('profileDropdown')?.classList.add('hidden');
-    const chevron = document.getElementById('profileChevron');
-    if (chevron) chevron.style.transform = 'rotate(0deg)';
-  }
-});
-
-function confirmLogout() {
-  document.getElementById('logoutModal').classList.remove('hidden');
-}
-
-function hideModal() {
-  document.getElementById('logoutModal').classList.add('hidden');
-}
-
-function doLogout() {
-  window.location.href = '../php_files/logout_session.php';
-}
-</script>
 </body>
 </html>

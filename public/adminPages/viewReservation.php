@@ -230,7 +230,7 @@ $ownerPhoneDisplay = !empty($res['owner_contact']) ? $res['owner_contact'] : '09
 $isFlexibleSigning = !empty($res['is_flexible_signing']) && $res['is_flexible_signing'] == 1;
 $signingDateDisplay = 'Not Specified';
 if ($isFlexibleSigning) {
-    $signingDateDisplay = "I'm Flexible (Within validity window)";
+    $signingDateDisplay = 'Flexible';
 } elseif (!empty($res['lease_signing_date']) && $res['lease_signing_date'] !== '0000-00-00') {
     $rawDates = explode(',', $res['lease_signing_date']);
     $formattedList = [];
@@ -336,7 +336,6 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
             Back to Lease Management
           </a>
-          <span class="text-xs text-slate-400 font-mono">ID: #<?= e($formattedResId) ?></span>
         </div>
 
         <div class="flex items-center gap-2">
@@ -378,7 +377,7 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
               onclick="switchReservationTab('payment')" 
               id="tabBtn-payment" 
               class="tab-nav-btn pb-3 text-sm font-medium text-slate-400 hover:text-slate-800 border-b-2 border-transparent transition-all shrink-0">
-              payment
+              Payment
             </button>
             <button 
               type="button" 
@@ -401,9 +400,9 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
         <div id="tabContent-lease" class="tab-panel space-y-6">
 
           <!-- Client Information Section -->
-          <div>
-            <div class="flex items-center gap-3 mb-5">
-              <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+          <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 sm:p-6">
+            <div class="flex items-center gap-3 mb-5 pb-4 border-b border-slate-200/60">
+              <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100/80 text-blue-600 flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c-4.418 0-8 2.015-8 4.5V20h16v-1.5c0-2.485-3.582-4.5-8-4.5z"/>
                 </svg>
@@ -445,12 +444,10 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
             </div>
           </div>
 
-          <div class="border-t border-slate-100 my-6"></div>
-
           <!-- Unit and Lease specification Section -->
-          <div>
-            <div class="flex items-center gap-3 mb-5">
-              <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+          <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 sm:p-6">
+            <div class="flex items-center gap-3 mb-5 pb-4 border-b border-slate-200/60">
+              <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100/80 text-blue-600 flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                 </svg>
@@ -462,8 +459,8 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
             </div>
 
             <!-- Unit Owner Subheading -->
-            <h3 class="text-sm font-bold text-slate-900 mb-3">Unit Owner</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-y-4 sm:gap-y-5 gap-x-6 mb-6">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Unit Owner</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-y-4 sm:gap-y-5 gap-x-6 mb-6 pb-6 border-b border-slate-200/60">
               <div>
                 <p class="text-xs font-normal text-slate-400">Full Name</p>
                 <p class="text-sm font-bold text-slate-900 mt-1"><?= e($ownerNameDisplay) ?></p>
@@ -481,6 +478,7 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
             </div>
 
             <!-- Unit Specifications -->
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Unit Specifications</h3>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-y-4 sm:gap-y-5 gap-x-6">
               <div>
                 <p class="text-xs font-normal text-slate-400">Unit</p>
@@ -510,11 +508,20 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
             </div>
           </div>
 
-          <div class="border-t border-slate-100 my-6"></div>
-
           <!-- Lease commencement and Expiration Section -->
-          <div>
-            <h3 class="text-sm font-bold text-slate-900 mb-3">Lease commencement and Expiration</h3>
+          <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 sm:p-6">
+            <div class="flex items-center gap-3 mb-5 pb-4 border-b border-slate-200/60">
+              <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100/80 text-blue-600 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-slate-900">Lease Commencement and Expiration</h2>
+                <p class="text-xs text-slate-400">Move-in, move-out schedule and stay duration</p>
+              </div>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-y-4 sm:gap-y-5 gap-x-6">
               <div>
                 <p class="text-xs font-normal text-slate-400">Move in Date</p>
@@ -531,9 +538,9 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
             </div>
 
             <!-- Client Remarks / Message under Lease Commencement -->
-            <div class="mt-5 pt-4 border-t border-slate-100">
+            <div class="mt-5 pt-4 border-t border-slate-200/60">
               <p class="text-xs font-normal text-slate-400">Remarks / Client Message</p>
-              <div class="mt-1.5 p-4 bg-slate-50 border border-slate-200/80 rounded-xl text-xs sm:text-sm text-slate-700 leading-relaxed">
+              <div class="mt-1.5 p-4 bg-white border border-slate-200/80 rounded-xl text-xs sm:text-sm text-slate-700 leading-relaxed shadow-2xs">
                 <?php if (!empty($res['client_remarks'])): ?>
                   <p class="font-medium text-slate-800"><?= nl2br(e($res['client_remarks'])) ?></p>
                 <?php else: ?>
@@ -543,13 +550,21 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
             </div>
 
             <!-- View Inquiry Action Button/Link -->
-            <div class="flex justify-end mt-6">
+            <div class="flex justify-end mt-6 pt-4 border-t border-slate-200/60">
               <?php if (!empty($res['inq_id'])): ?>
-                <a href="inquiry.php?inq_id=<?= (int)$res['inq_id'] ?>" class="text-sm font-bold text-slate-900 hover:text-blue-600 transition-colors inline-flex items-center gap-1.5">
+                <a href="inquiry.php?inq_id=<?= (int)$res['inq_id'] ?>" class="btn-press inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-900 hover:text-white hover:border-slate-900 rounded-xl transition-all shadow-xs active:scale-95">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                  </svg>
                   <span>View Inquiry</span>
                 </a>
               <?php else: ?>
-                <span class="text-sm font-bold text-slate-900 cursor-pointer">View Inquiry</span>
+                <a href="inquiry.php" class="btn-press inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-900 hover:text-white hover:border-slate-900 rounded-xl transition-all shadow-xs active:scale-95">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                  </svg>
+                  <span>View Inquiries</span>
+                </a>
               <?php endif; ?>
             </div>
           </div>
@@ -827,119 +842,80 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
       <div id="tabContent-lease-signing" class="tab-panel space-y-6 hidden">
         <section class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm">
           <div class="flex items-center justify-between flex-wrap gap-4 mb-6 pb-4 border-b border-slate-100">
-            <div class="flex items-center gap-2.5">
-              <div class="w-9 h-9 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100/80 text-blue-600 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                 </svg>
               </div>
               <div>
-                <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Lease Signing</h2>
-                <p class="text-xs text-slate-500">Contract execution schedule and completion status</p>
+                <h2 class="text-sm font-bold text-slate-900">Lease Signing</h2>
+                <p class="text-xs text-slate-400">Contract execution schedule and completion status</p>
               </div>
             </div>
 
             <div class="flex items-center gap-2">
               <?php if ($isSigningCompleted): ?>
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                   Signing Completed
                 </span>
               <?php else: ?>
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
-                  <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                   Pending Signing
                 </span>
               <?php endif; ?>
             </div>
           </div>
 
-          <!-- Schedule & Tenant Overview Cards -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-            
-            <!-- Card 1: Chosen Lease Signing Date -->
-            <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-5 space-y-4">
-              <div class="flex items-center justify-between">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Chosen Lease Signing Date</p>
-                <?php if ($isFlexibleSigning): ?>
-                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">Flexible Schedule</span>
-                <?php else: ?>
-                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-100 text-violet-800 border border-violet-200">Fixed Date</span>
-                <?php endif; ?>
-              </div>
-
+          <!-- Schedule & Signer Card -->
+          <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 sm:p-6 mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h3 class="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight"><?= e($signingDateDisplay) ?></h3>
-                <?php if ($isFlexibleSigning): ?>
-                  <p class="text-xs text-slate-500 mt-1">Applicant selected "I'm Flexible". Appointment can be scheduled anytime within the form validity period before move-in.</p>
-                <?php else: ?>
-                  <p class="text-xs text-slate-500 mt-1">Applicant selected this specific date during form submission.</p>
-                <?php endif; ?>
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Scheduled Signing Date</p>
+                <div class="flex items-center gap-3 mt-1.5 flex-wrap">
+                  <h3 class="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight"><?= e($signingDateDisplay) ?></h3>
+                  <?php if ($isFlexibleSigning): ?>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">Before move-in</span>
+                  <?php elseif (!empty($res['lease_signing_date']) && $res['lease_signing_date'] !== '0000-00-00'): ?>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-200">Fixed Date</span>
+                  <?php endif; ?>
+                </div>
               </div>
 
-              <div class="pt-3 border-t border-slate-200/70 grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <span class="text-slate-400 block mb-0.5">Move-in Date:</span>
-                  <span class="font-bold text-slate-900"><?= e($moveInDisplay) ?></span>
-                </div>
-                <div>
-                  <span class="text-slate-400 block mb-0.5">Payment Method:</span>
-                  <span class="font-bold text-slate-900"><?= e($paymentMethod) ?></span>
-                </div>
+              <div class="text-left sm:text-right border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200/60">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Contract Signer</p>
+                <p class="text-sm font-bold text-slate-900 mt-1"><?= e($res['client_name']) ?></p>
               </div>
             </div>
 
-            <!-- Card 2: Applicant & Unit Details -->
-            <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-5 space-y-4">
-              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Signer &amp; Unit Details</p>
-
-              <div class="space-y-2.5 text-xs sm:text-sm">
-                <div class="flex items-center justify-between gap-2">
-                  <span class="text-slate-400 font-medium">Tenant / Applicant:</span>
-                  <span class="font-bold text-slate-900 text-right"><?= e($res['client_name']) ?></span>
-                </div>
-                <div class="flex items-center justify-between gap-2">
-                  <span class="text-slate-400 font-medium">Contact Number:</span>
-                  <span class="font-bold text-slate-900 font-mono text-right"><?= e($res['client_contact'] ?: ($res['client_user_contact'] ?? '0912 345 7890')) ?></span>
-                </div>
-                <div class="flex items-center justify-between gap-2">
-                  <span class="text-slate-400 font-medium">Email:</span>
-                  <span class="font-semibold text-slate-800 text-right truncate max-w-[200px]"><?= e($res['client_email']) ?></span>
-                </div>
-                <div class="flex items-center justify-between gap-2">
-                  <span class="text-slate-400 font-medium">Assigned Unit:</span>
-                  <span class="font-bold text-slate-900 text-right"><?= e($unitSpecificationText) ?></span>
-                </div>
+            <?php if ($isInHousePayment): ?>
+              <div class="mt-4 pt-3.5 border-t border-slate-200/70 flex items-center gap-2.5 text-xs text-amber-800 bg-amber-50/80 border border-amber-200/80 rounded-xl px-4 py-2.5">
+                <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span>In-House Payment: Collect <strong><?= peso($res['required_amount'] ?: ($res['price_basis'] * $res['payment_percentage'])) ?></strong> downpayment upon contract signing.</span>
               </div>
-
-              <?php if ($isInHousePayment): ?>
-                <div class="pt-3 border-t border-amber-200 bg-amber-50/60 -mx-5 -mb-5 p-3 rounded-b-xl text-[11px] text-amber-800 flex items-center gap-1.5">
-                  <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                  <span>Reminder: Collect <strong><?= peso($res['required_amount'] ?: ($res['price_basis'] * $res['payment_percentage'])) ?></strong> downpayment in cash/check during this signing appointment.</span>
-                </div>
-              <?php endif; ?>
-            </div>
-
+            <?php endif; ?>
           </div>
 
-          <!-- Signing Status Banner & Action Buttons -->
+          <!-- Signing Status & Action Banner -->
           <?php if ($isSigningCompleted): ?>
             <!-- Completed State -->
-            <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="rounded-2xl border border-emerald-200/80 bg-emerald-50/70 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div class="flex items-start gap-3.5">
                 <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                 </div>
                 <div>
-                  <h4 class="text-sm font-bold text-emerald-900">Lease Signing Completed &amp; Executed</h4>
+                  <h4 class="text-sm font-bold text-emerald-950">Contract Signed &amp; Completed</h4>
                   <p class="text-xs text-emerald-700 mt-0.5">
-                    Lease contract was marked as completed on <strong><?= e(format_datetime_text($res['lease_signed_at'])) ?></strong>
+                    Completed on <strong><?= e(format_datetime_text($res['lease_signed_at'])) ?></strong>
                     <?php if (!empty($res['lease_signed_by_name'])): ?>
-                      by <strong><?= e($res['lease_signed_by_name']) ?></strong>.
+                      by <strong><?= e($res['lease_signed_by_name']) ?></strong>
                     <?php endif; ?>
                   </p>
                   <?php if (!empty($res['lease_signing_remarks'])): ?>
-                    <p class="text-xs text-emerald-900/90 mt-2 italic bg-white/70 px-3 py-1.5 rounded-lg border border-emerald-200/60 inline-block">
+                    <p class="text-xs text-emerald-800 mt-2 bg-white/80 border border-emerald-200/80 px-3 py-1.5 rounded-lg inline-block">
                       Remarks: <?= e($res['lease_signing_remarks']) ?>
                     </p>
                   <?php endif; ?>
@@ -949,29 +925,27 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
               <button 
                 type="button" 
                 onclick="openSigningModal('reset')"
-                class="btn-press text-xs font-semibold text-slate-500 hover:text-slate-800 bg-white border border-slate-200 rounded-xl px-4 py-2 hover:bg-slate-50 shadow-2xs transition-all">
+                class="btn-press text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl px-4 py-2 shadow-xs transition-all shrink-0">
                 Reset Status
               </button>
             </div>
           <?php else: ?>
-            <!-- Action Bar: Complete Lease Signing -->
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div class="space-y-1">
-                <h4 class="text-sm font-bold text-slate-900">Finalize &amp; Complete Lease Signing</h4>
-                <p class="text-xs text-slate-500">
-                  Once the lease contract agreement has been formally signed by both the tenant and unit owner, click below to mark the signing appointment as complete.
+            <!-- Pending State -->
+            <div class="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h4 class="text-sm font-bold text-slate-900">Execution Confirmation</h4>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  Confirm lease contract execution once formally signed by both tenant and unit owner.
                 </p>
               </div>
 
-              <div class="flex items-center gap-3 shrink-0">
-                <button 
-                  type="button" 
-                  onclick="openSigningModal('complete')"
-                  class="btn-press px-5 py-2.5 bg-[#0f172a] hover:bg-[#1e293b] active:scale-95 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md flex items-center gap-2 transition-all">
-                  <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                  Complete Lease Signing
-                </button>
-              </div>
+              <button 
+                type="button" 
+                onclick="openSigningModal('complete')"
+                class="btn-press px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-2 transition-all shrink-0">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                <span>Complete Lease Signing</span>
+              </button>
             </div>
           <?php endif; ?>
 

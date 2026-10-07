@@ -12,8 +12,8 @@ unset($_SESSION['error_message']);
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Zeppelin Suites — Contact</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="navbar.js" defer></script>
-  <script src="footer.js" defer></script>
+  <script src="navbar.js?v=2" defer></script>
+  <script src="footer.js?v=3" defer></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
     * { font-family: "Geist", sans-serif; }

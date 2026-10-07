@@ -28,7 +28,6 @@
     const isFaq = page === 'faq.html';
     const isAbout = page === 'aboutus.html';
     const isContact = page === 'contact.php';
-    const isLogin = page === 'login.php';
 
     const getLinkClass = (active) =>
       active
@@ -80,7 +79,6 @@
       <a href="../generalViewPages/faq.html" class="${getLinkClass(isFaq)}">FAQ</a>
       <a href="../generalViewPages/aboutUs.html" class="${getLinkClass(isAbout)}">About Us</a>
       <a href="../generalViewPages/contact.php" class="${getLinkClass(isContact)}">Contact</a>
-      <a href="../generalViewPages/login.php" class="${getLinkClass(isLogin)}">Portal</a>
     </div>
     <button onclick="toggleMenu()"
       class="min-[851px]:hidden flex flex-col gap-1.5 cursor-pointer bg-transparent border-0 p-1"
@@ -110,7 +108,6 @@
       <a href="../generalViewPages/faq.html" class="${getMobileLinkClass(isFaq)}">FAQ</a>
       <a href="../generalViewPages/aboutUs.html" class="${getMobileLinkClass(isAbout)}">About Us</a>
       <a href="../generalViewPages/contact.php" class="${getMobileLinkClass(isContact)}">Contact</a>
-      <a href="../generalViewPages/login.php" class="${getMobileLinkClass(isLogin)}">Portal</a>
     </div>
   </nav>`;
 

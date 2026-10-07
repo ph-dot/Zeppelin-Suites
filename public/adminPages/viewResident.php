@@ -176,73 +176,86 @@ $additionalEmail = !empty($resident['additional_email']) ? $resident['additional
 
 // 1. Fetch Units from units_table with their current tenant
 $units = [];
-if ($isOwner) {
-    $u_sql = "
-        SELECT 
-            u.unit_id, 
-            u.unit_number, 
-            u.unit_type, 
-            u.floor_number, 
-            u.unit_current_status, 
-            u.lease_rate, 
-            u.created_at,
+$ownedUnitIds = [];
+
+// Fetch Owned Units
+$u_sql = "
+    SELECT 
+        u.unit_id, 
+        u.unit_number, 
+        u.unit_type, 
+        u.floor_number, 
+        u.unit_current_status, 
+        u.lease_rate, 
+        u.unit_owner_id,
+        u.created_at,
+        'Owned' AS ownership_type,
+        (
+            SELECT r.client_name 
+            FROM reservation_table r 
+            WHERE r.unit_id = u.unit_id 
+              AND (r.officially_booked_at IS NOT NULL OR r.reservation_status IN ('Approved', 'Completed', 'Confirmed', 'Active', 'reserved', 'moved in'))
+            ORDER BY r.created_at DESC 
+            LIMIT 1
+        ) AS current_tenant_name
+    FROM units_table u 
+    WHERE u.unit_owner_id = ? 
+       OR u.unit_owner_id IN (SELECT user_id FROM users_table WHERE email = ?)
+    ORDER BY u.unit_number ASC
+";
+$u_stmt = $conn->prepare($u_sql);
+if ($u_stmt) {
+    $u_stmt->bind_param('is', $user_id, $resident['email']);
+    $u_stmt->execute();
+    $u_res = $u_stmt->get_result();
+    while ($r = $u_res->fetch_assoc()) {
+        $r['ownership_type'] = 'Owned';
+        $units[] = $r;
+        $ownedUnitIds[] = (int)$r['unit_id'];
+    }
+    $u_stmt->close();
+}
+
+// Fetch Leased Units
+$u_sql_leased = "
+    SELECT DISTINCT
+        u.unit_id, 
+        u.unit_number, 
+        u.unit_type, 
+        u.floor_number, 
+        u.unit_current_status, 
+        u.lease_rate,
+        u.unit_owner_id,
+        'Leased' AS ownership_type,
+        COALESCE(
             (
-                SELECT r.client_name 
-                FROM reservation_table r 
-                WHERE r.unit_id = u.unit_id 
-                  AND (r.officially_booked_at IS NOT NULL OR r.reservation_status IN ('Approved', 'Completed', 'Confirmed', 'Active', 'reserved', 'moved in'))
-                ORDER BY r.created_at DESC 
+                SELECT r2.client_name 
+                FROM reservation_table r2 
+                WHERE r2.unit_id = u.unit_id 
+                  AND (r2.officially_booked_at IS NOT NULL OR r2.reservation_status IN ('Approved', 'Completed', 'Confirmed', 'Active', 'reserved', 'moved in'))
+                ORDER BY r2.created_at DESC 
                 LIMIT 1
-            ) AS current_tenant_name
-        FROM units_table u 
-        WHERE u.unit_owner_id = ? 
-           OR u.unit_owner_id IN (SELECT user_id FROM users_table WHERE email = ?)
-        ORDER BY u.unit_number ASC
-    ";
-    $u_stmt = $conn->prepare($u_sql);
-    if ($u_stmt) {
-        $u_stmt->bind_param('is', $user_id, $resident['email']);
-        $u_stmt->execute();
-        $u_res = $u_stmt->get_result();
-        while ($r = $u_res->fetch_assoc()) {
-            $units[] = $r;
+            ),
+            r.client_name
+        ) AS current_tenant_name
+    FROM reservation_table r
+    JOIN units_table u ON r.unit_id = u.unit_id
+    WHERE (r.client_email = ? OR r.client_name = ?)
+      AND LOWER(r.reservation_status) NOT IN ('cancelled', 'rejected')
+    ORDER BY u.unit_number ASC
+";
+$u_stmt2 = $conn->prepare($u_sql_leased);
+if ($u_stmt2) {
+    $u_stmt2->bind_param('ss', $resident['email'], $resident['full_name']);
+    $u_stmt2->execute();
+    $u_res2 = $u_stmt2->get_result();
+    while ($r2 = $u_res2->fetch_assoc()) {
+        if (!in_array((int)$r2['unit_id'], $ownedUnitIds, true)) {
+            $r2['ownership_type'] = 'Leased';
+            $units[] = $r2;
         }
     }
-} else {
-    // If tenant, fetch the units they are renting/staying in with their name as current tenant
-    $u_sql = "
-        SELECT DISTINCT
-            u.unit_id, 
-            u.unit_number, 
-            u.unit_type, 
-            u.floor_number, 
-            u.unit_current_status, 
-            u.lease_rate,
-            COALESCE(
-                (
-                    SELECT r2.client_name 
-                    FROM reservation_table r2 
-                    WHERE r2.unit_id = u.unit_id 
-                      AND (r2.officially_booked_at IS NOT NULL OR r2.reservation_status IN ('Approved', 'Completed', 'Confirmed', 'Active', 'reserved', 'moved in'))
-                    ORDER BY r2.created_at DESC 
-                    LIMIT 1
-                ),
-                r.client_name
-            ) AS current_tenant_name
-        FROM reservation_table r
-        JOIN units_table u ON r.unit_id = u.unit_id
-        WHERE r.client_email = ? OR r.client_name = ?
-        ORDER BY u.unit_number ASC
-    ";
-    $u_stmt = $conn->prepare($u_sql);
-    if ($u_stmt) {
-        $u_stmt->bind_param('ss', $resident['email'], $resident['full_name']);
-        $u_stmt->execute();
-        $u_res = $u_stmt->get_result();
-        while ($r = $u_res->fetch_assoc()) {
-            $units[] = $r;
-        }
-    }
+    $u_stmt2->close();
 }
 
 // 2. Fetch Reservations / Stays / Leases
@@ -449,13 +462,15 @@ $pendingRequests = count(array_filter($maintenance, fn($item) => strtolower($ite
             </div>
 
             <div class="mt-6 flex flex-col gap-2">
-              <form method="POST" onsubmit="return confirm('Change status for this resident?');">
-                <input type="hidden" name="action" value="toggle_status">
-                <input type="hidden" name="resident_status" value="<?= $resident['resident_status'] === 'Active' ? 'Inactive' : 'Active' ?>">
-                <button type="submit" class="btn-press w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all active:scale-95 <?= $resident['resident_status'] === 'Active' ? 'text-red-600 bg-red-50 hover:bg-red-100 border border-red-200' : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200' ?>">
-                  <?= $resident['resident_status'] === 'Active' ? 'Deactivate Account' : 'Activate Account' ?>
-                </button>
-              </form>
+              <button type="button" onclick="openStatusModal()" class="btn-press w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all active:scale-95 <?= $resident['resident_status'] === 'Active' ? 'text-red-600 bg-red-50 hover:bg-red-100 border border-red-200' : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200' ?>">
+                <?php if ($resident['resident_status'] === 'Active'): ?>
+                  <svg class="w-4 h-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                  Deactivate Account
+                <?php else: ?>
+                  <svg class="w-4 h-4 shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  Activate Account
+                <?php endif; ?>
+              </button>
             </div>
           </div>
 
@@ -467,15 +482,13 @@ $pendingRequests = count(array_filter($maintenance, fn($item) => strtolower($ite
 
           <!-- Tabs card -->
           <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8">
-            <div class="flex items-center gap-6 border-b border-slate-100 pb-3 overflow-x-auto">
+            <div class="flex items-center gap-6 border-b border-slate-100 pb-3">
               <button type="button" onclick="setProfileTab('profile', this)" class="profile-tab active text-sm font-semibold pb-3 whitespace-nowrap">Profile</button>
               <button type="button" onclick="setProfileTab('units', this)" class="profile-tab text-sm font-semibold pb-3 flex items-center gap-2 whitespace-nowrap">
-                Owned Units
-                <span class="text-[11px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full"><?= count($units) ?></span>
+                Unit
               </button>
               <button type="button" onclick="setProfileTab('request', this)" class="profile-tab text-sm font-semibold pb-3 flex items-center gap-2 whitespace-nowrap">
                 Maintenance
-                <span class="text-[11px] font-bold <?= $pendingRequests > 0 ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-700' ?> px-2 py-0.5 rounded-full"><?= $requestsCount ?></span>
               </button>
             </div>
 
@@ -502,10 +515,10 @@ $pendingRequests = count(array_filter($maintenance, fn($item) => strtolower($ite
               </dl>
             </div>
 
-            <!-- TAB 2: Owned Units -->
+            <!-- TAB 2: Units -->
             <div id="tab-units" class="pt-6 hidden">
               <div class="flex items-center justify-between mb-4">
-                <h3 class="text-sm font-bold text-slate-900">Owned Units</h3>
+                <h3 class="text-sm font-bold text-slate-900">Total Units</h3>
                 <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-mono"><?= count($units) ?> <?= count($units) === 1 ? 'Unit' : 'Units' ?></span>
               </div>
               <?php if (empty($units)): ?>
@@ -513,23 +526,38 @@ $pendingRequests = count(array_filter($maintenance, fn($item) => strtolower($ite
                   <p class="text-sm text-slate-500">No units currently assigned or associated with this resident.</p>
                 </div>
               <?php else: ?>
-                <div class="overflow-x-auto rounded-2xl border border-slate-100">
+                <div class="rounded-2xl border border-slate-100 overflow-hidden">
                   <table class="w-full text-sm">
                     <thead>
                       <tr class="bg-slate-50/60 border-b border-slate-100 text-slate-400 text-xs font-semibold uppercase tracking-wide text-left">
-                        <th class="px-4 py-3">Unit Number</th>
-                        <th class="px-4 py-3">Type</th>
-                        <th class="px-4 py-3">Floor</th>
-                        <th class="px-4 py-3">Current Tenant</th>
+                        <th class="px-5 py-3 align-middle">Unit Number</th>
+                        <th class="px-4 py-3 align-middle">Type</th>
+                        <th class="px-4 py-3 align-middle">Floor</th>
+                        <th class="px-4 py-3 align-middle">Ownership</th>
+                        <th class="px-5 py-3 align-middle">Current Tenant</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
                       <?php foreach ($units as $u): ?>
-                        <tr class="hover:bg-slate-50/50 transition-colors">
-                          <td class="px-4 py-3.5 font-semibold text-slate-900" style="font-family:'DM Mono',monospace">Unit <?= e($u['unit_number']) ?></td>
-                          <td class="px-4 py-3.5 text-slate-600 font-medium"><?= e($u['unit_type'] ?: 'Standard') ?></td>
-                          <td class="px-4 py-3.5 text-slate-500" style="font-family:'DM Mono',monospace"><?= e($u['floor_number'] ?: '—') ?></td>
-                          <td class="px-4 py-3.5 text-slate-800">
+                        <?php 
+                          $isUnitOwned = (!empty($u['ownership_type']) && strtolower($u['ownership_type']) === 'owned')
+                              || (!empty($u['unit_owner_id']) && (int)$u['unit_owner_id'] === (int)$resident['user_id'])
+                              || ($isOwner && empty($u['ownership_type']));
+                          $ownershipText = $isUnitOwned ? 'Owned' : 'Leased';
+                          $ownershipBadgeClass = $isUnitOwned 
+                              ? 'bg-indigo-50 text-indigo-700 border-indigo-200' 
+                              : 'bg-blue-50 text-blue-700 border-blue-200';
+                        ?>
+                        <tr class="hover:bg-slate-50/80 transition-colors cursor-pointer" onclick="window.location.href='unitDetails.php?unit_id=<?= (int)$u['unit_id'] ?>'">
+                          <td class="px-5 py-3.5 font-semibold text-slate-900 align-middle" style="font-family:'DM Mono',monospace">Unit <?= e($u['unit_number']) ?></td>
+                          <td class="px-4 py-3.5 text-slate-600 font-medium align-middle"><?= e($u['unit_type'] ?: 'Standard') ?></td>
+                          <td class="px-4 py-3.5 text-slate-500 align-middle" style="font-family:'DM Mono',monospace"><?= e($u['floor_number'] ?: '—') ?></td>
+                          <td class="px-4 py-3.5 align-middle">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border <?= $ownershipBadgeClass ?>">
+                              <?= $ownershipText ?>
+                            </span>
+                          </td>
+                          <td class="px-5 py-3.5 text-slate-800 align-middle">
                             <?php if (!empty($u['current_tenant_name'])): ?>
                               <span class="font-semibold text-slate-900"><?= e($u['current_tenant_name']) ?></span>
                             <?php else: ?>
@@ -561,10 +589,10 @@ $pendingRequests = count(array_filter($maintenance, fn($item) => strtolower($ite
                   <table class="w-full text-sm">
                     <thead>
                       <tr class="bg-slate-50/60 border-b border-slate-100 text-slate-400 text-xs font-semibold uppercase tracking-wide text-left">
-                        <th class="px-4 py-3">Unit Number</th>
-                        <th class="px-4 py-3">Issue</th>
-                        <th class="px-4 py-3">Priority</th>
-                        <th class="px-4 py-3">Status</th>
+                        <th class="px-5 py-3 align-middle">Unit Number</th>
+                        <th class="px-4 py-3 align-middle">Issue</th>
+                        <th class="px-4 py-3 align-middle">Priority</th>
+                        <th class="px-5 py-3 align-middle">Status</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
@@ -584,11 +612,11 @@ $pendingRequests = count(array_filter($maintenance, fn($item) => strtolower($ite
                               default => 'bg-yellow-50 text-yellow-700 border-yellow-200'
                           };
                         ?>
-                        <tr class="hover:bg-slate-50/50 transition-colors">
-                          <td class="px-4 py-3.5 font-semibold text-slate-900" style="font-family:'DM Mono',monospace"><?= e($m['unit_number'] ? 'Unit ' . $m['unit_number'] : 'General') ?></td>
-                          <td class="px-4 py-3.5 font-medium text-slate-800"><?= e($m['issue_title'] ?? 'Maintenance Request') ?></td>
-                          <td class="px-4 py-3.5"><span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border <?= $mPriorityClass ?>"><?= e(ucfirst($mPriority)) ?></span></td>
-                          <td class="px-4 py-3.5"><span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border <?= $mStatusClass ?>"><?= e(ucfirst($mStatus)) ?></span></td>
+                        <tr class="hover:bg-slate-50/80 transition-colors cursor-pointer" onclick="window.location.href='maintenance.php'">
+                          <td class="px-5 py-3.5 font-semibold text-slate-900 align-middle" style="font-family:'DM Mono',monospace"><?= e($m['unit_number'] ? 'Unit ' . $m['unit_number'] : 'General') ?></td>
+                          <td class="px-4 py-3.5 font-medium text-slate-800 align-middle"><?= e($m['issue_title'] ?? 'Maintenance Request') ?></td>
+                          <td class="px-4 py-3.5 align-middle"><span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border <?= $mPriorityClass ?>"><?= e(ucfirst($mPriority)) ?></span></td>
+                          <td class="px-5 py-3.5 align-middle"><span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border <?= $mStatusClass ?>"><?= e(ucfirst($mStatus)) ?></span></td>
                         </tr>
                       <?php endforeach; ?>
                     </tbody>
@@ -672,6 +700,55 @@ $pendingRequests = count(array_filter($maintenance, fn($item) => strtolower($ite
   </div>
 </div>
 
+<!-- Status Confirmation Modal -->
+<div id="statusConfirmModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/40 backdrop-blur-xs px-4" onclick="if(event.target===this) closeStatusModal()">
+  <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-md overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+    <div class="p-6">
+      <div class="flex items-start justify-between gap-4 mb-4">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 <?= $resident['resident_status'] === 'Active' ? 'bg-red-50 text-red-600 ring-8 ring-red-50/50' : 'bg-emerald-50 text-emerald-600 ring-8 ring-emerald-50/50' ?>">
+          <?php if ($resident['resident_status'] === 'Active'): ?>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          <?php else: ?>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <?php endif; ?>
+        </div>
+        <button type="button" onclick="closeStatusModal()" class="btn-press w-9 h-9 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center" aria-label="Close dialog">✕</button>
+      </div>
+
+      <h3 class="text-lg font-bold text-slate-900 mb-1.5">
+        <?= $resident['resident_status'] === 'Active' ? 'Deactivate Resident Account?' : 'Activate Resident Account?' ?>
+      </h3>
+
+      <p class="text-xs text-slate-500 leading-relaxed mb-5">
+        <?php if ($resident['resident_status'] === 'Active'): ?>
+          Are you sure you want to deactivate the account for <strong class="text-slate-800"><?= e($resident['full_name']) ?></strong>? This resident will immediately lose access to their resident portal and won't be able to log in until reactivated.
+        <?php else: ?>
+          Are you sure you want to activate the account for <strong class="text-slate-800"><?= e($resident['full_name']) ?></strong>? This will restore portal login access and active resident privileges for this user.
+        <?php endif; ?>
+      </p>
+
+      <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs mb-6">
+        <span class="text-slate-500 font-medium">Resident Role</span>
+        <span class="font-semibold text-slate-800"><?= e(format_role($resident['user_role'])) ?></span>
+      </div>
+
+      <form method="POST">
+        <input type="hidden" name="action" value="toggle_status">
+        <input type="hidden" name="resident_status" value="<?= $resident['resident_status'] === 'Active' ? 'Inactive' : 'Active' ?>">
+
+        <div class="flex items-center justify-end gap-2.5">
+          <button type="button" onclick="closeStatusModal()" class="btn-press px-4 py-2.5 text-xs font-semibold border border-slate-200 rounded-full text-slate-600 hover:bg-slate-50">
+            Cancel
+          </button>
+          <button type="submit" class="btn-press px-5 py-2.5 text-xs font-semibold rounded-full text-white transition-all shadow-sm <?= $resident['resident_status'] === 'Active' ? 'bg-red-600 hover:bg-red-700 shadow-red-600/20' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20' ?>">
+            <?= $resident['resident_status'] === 'Active' ? 'Yes, Deactivate Account' : 'Yes, Activate Account' ?>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
   function setProfileTab(tab, btn) {
     document.querySelectorAll('.profile-tab').forEach(el => el.classList.remove('active'));
@@ -692,6 +769,28 @@ $pendingRequests = count(array_filter($maintenance, fn($item) => strtolower($ite
     m.classList.add('hidden');
     m.classList.remove('flex');
   }
+
+  function openStatusModal() {
+    const m = document.getElementById('statusConfirmModal');
+    if (m) {
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+  }
+  function closeStatusModal() {
+    const m = document.getElementById('statusConfirmModal');
+    if (m) {
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeStatusModal();
+      closeEditModal();
+    }
+  });
 
   function togglePasswordVisibility(inputId, btn) {
     const input = document.getElementById(inputId);

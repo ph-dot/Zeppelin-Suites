@@ -57,7 +57,7 @@ function render_resident_row($resident) {
     ob_start();
     $userId = (int)$resident['user_id'];
     ?>
-    <tr class="emp-row cursor-pointer" data-status="<?= e(strtolower($resident['resident_status'])) ?>" onclick="window.location.href='viewResident.php?id=<?= $userId ?>'">
+    <tr class="emp-row cursor-pointer hover:bg-slate-50/80 transition-colors" data-status="<?= e(strtolower($resident['resident_status'])) ?>" onclick="window.location.href='viewResident.php?id=<?= $userId ?>'">
         <td class="px-5 py-3.5 font-semibold emp-name text-slate-800 whitespace-nowrap align-middle"><?= e($resident['full_name']) ?></td>
         <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap align-middle"><?= e($resident['email']) ?></td>
         <td class="px-4 py-3.5 text-center text-slate-600 text-xs whitespace-nowrap align-middle" style="font-family:'DM Mono',monospace"><?= e($resident['contact'] ?: '—') ?></td>
@@ -358,7 +358,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
       <div class="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 class="text-xl font-bold text-slate-900">Residents</h1>
-          <p class="text-sm text-slate-500 mt-1">Manage unit owner and tenant accounts from users_table.</p>
+          <p class="text-xs text-slate-400 mt-0.5">Manage unit owner and tenant accounts.</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
           <div class="flex items-center gap-2 flex-wrap" id="filterBar">
@@ -455,7 +455,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
             Showing <span class="font-semibold text-slate-700" id="resultCount"><?= count($residents) ?></span>
             of <span class="font-semibold text-slate-700"><?= (int)$stats['total_residents'] ?></span> residents
           </p>
-          <p class="text-xs text-slate-400">Use View to edit account details or change Active/Inactive status.</p>
+          <p class="text-xs text-slate-400">Click any row to view resident details or manage account status.</p>
         </div>
       </div>
 

@@ -84,9 +84,12 @@ $userData = requireRole($conn, ['admin']); ?>
     <div class="max-w-screen-2xl mx-auto space-y-6">
 
       <!-- Page header -->
-  <div class="flex items-center justify-between flex-wrap gap-3">
-    <h1 class="text-xl font-bold text-slate-900">Inquiries</h1>
-    <div class="flex items-center gap-2">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">Inquiries</h1>
+          <p class="text-xs text-slate-400 mt-0.5">Track and manage client messages, preferred units, and leasing inquiries.</p>
+        </div>
+        <div class="flex items-center gap-2">
         <div class="flex bg-slate-100 rounded-full p-1 gap-0.5 text-xs font-semibold">
             <button class="filter-btn active px-3.5 py-1.5 rounded-full bg-white text-slate-700 shadow-sm active:scale-95 transition-all" 
                     data-filter="pending"
@@ -114,7 +117,7 @@ $userData = requireRole($conn, ['admin']); ?>
 
    <!-- STAT CARDS -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm" onclick="setFilter('pending')">
             <div class="flex items-center gap-3 mb-3">
                 <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,10 +127,10 @@ $userData = requireRole($conn, ['admin']); ?>
                 <span class="text-sm font-semibold text-slate-600">New today</span>
             </div>
             <p class="text-3xl font-bold text-slate-900" style="font-family:'DM Mono',monospace" id="newTodayCount">0</p>
-            <p class="text-xs text-amber-500 font-semibold mt-1">↑ <span id="newTodayChange" class="text-slate-400 font-normal">calculating...</span></p>
+            <p class="text-xs text-amber-500 font-semibold mt-1">↑ <span id="newTodayChange" class="text-slate-400 font-normal">today</span></p>
         </div>
         
-        <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm" onclick="setFilter('pending')">
             <div class="flex items-center gap-3 mb-3">
                 <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,7 +143,7 @@ $userData = requireRole($conn, ['admin']); ?>
             <p class="text-xs text-blue-500 font-semibold mt-1">↑ <span class="text-slate-400 font-normal">awaiting reply</span></p>
         </div>
         
-        <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm" onclick="setFilter('responded')">
             <div class="flex items-center gap-3 mb-3">
                 <div class="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,13 +162,12 @@ $userData = requireRole($conn, ['admin']); ?>
           <table class="w-full text-sm" id="inqTable">
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50/60">
-                <th class="text-center px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquirer</th>
-                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquiry Type</th>
-                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Unit Preference</th>
-                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide align-middle">Message Preview</th>
-                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Date Submitted</th>
-                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Status</th>
-                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-20 align-middle">Action</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Date Submitted</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquirer</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquiry Type</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Unit Preference</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide align-middle">Message Preview</th>
+                <th class="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Status</th>
               </tr>
             </thead>
              <tbody class="divide-y divide-slate-50" id="inqTableBody">
@@ -474,7 +476,6 @@ $userData = requireRole($conn, ['admin']); ?>
 </div>
 
 <script>
-let sidebarCollapsed = false;
 let currentRow = null;
 let currentFilter = 'pending';
 let currentSearchQuery = '';
@@ -594,7 +595,7 @@ function applyFiltersAndSearch() {
     if (!emptyRow) {
       emptyRow = document.createElement('tr');
       emptyRow.id = 'inqNoResultsRow';
-      emptyRow.innerHTML = '<td colspan="7" class="text-center px-5 py-8 text-slate-400 text-sm">No inquiries match the selected filter.</td>';
+      emptyRow.innerHTML = '<td colspan="6" class="text-center px-5 py-8 text-slate-400 text-sm">No inquiries match the selected filter.</td>';
       document.getElementById('inqTableBody').appendChild(emptyRow);
     } else {
       emptyRow.style.display = '';
@@ -701,8 +702,8 @@ function updateStats() {
   }
 }
 
-// DOMContentLoaded setup
-document.addEventListener('DOMContentLoaded', function() {
+// Initialization setup
+function initInquiryPage() {
   // Update stats immediately
   updateStats();
   
@@ -715,14 +716,23 @@ document.addEventListener('DOMContentLoaded', function() {
     setFilter('pending');
   }, 100);
   
-  // Add modal CSS
-  const style = document.createElement('style');
-  style.textContent = `
-    .modal-backdrop:not(.open) { display: none !important; }
-    .modal-backdrop.open { display: flex !important; }
-  `;
-  document.head.appendChild(style);
-});
+  // Add modal CSS if not already added
+  if (!document.getElementById('zepInquiryModalStyles')) {
+    const style = document.createElement('style');
+    style.id = 'zepInquiryModalStyles';
+    style.textContent = `
+      .modal-backdrop:not(.open) { display: none !important; }
+      .modal-backdrop.open { display: flex !important; }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initInquiryPage);
+} else {
+  initInquiryPage();
+}
 
 // POLL FOR STATS
 let statsCheckInterval = setInterval(() => {
@@ -768,7 +778,7 @@ function updateRowStatusCell(row) {
     if (approvalStatus === 'approved') {
       const approvedUnitInfo = approvedUnit ? ` - Unit ${escapeHtml(approvedUnit)}` : '';
       updateBadge = `
-        <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Owner has approved${approvedUnitInfo}'>
+        <span class='group relative inline-flex items-center cursor-help' title='Owner has approved${approvedUnitInfo}'>
           <span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300 shadow-2xs hover:bg-emerald-200 transition-all'>
             <svg class='w-2.5 h-2.5 text-emerald-700' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M5 13l4 4L19 7'/></svg>
           </span>
@@ -782,7 +792,7 @@ function updateRowStatusCell(row) {
       `;
     } else if (approvalStatus === 'requested' || pendingCount > 0) {
       updateBadge = `
-        <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Request is still pending'>
+        <span class='group relative inline-flex items-center cursor-help' title='Request is still pending'>
           <span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300 shadow-2xs hover:bg-amber-200 transition-all'>
             !
           </span>
@@ -796,7 +806,7 @@ function updateRowStatusCell(row) {
       `;
     } else if (approvalStatus === 'declined') {
       updateBadge = `
-        <span class='group relative inline-flex items-center ml-1.5 align-middle cursor-help' title='Owner declined request'>
+        <span class='group relative inline-flex items-center cursor-help' title='Owner declined request'>
           <span class='inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-100 text-red-700 text-[10px] font-bold border border-red-300 shadow-2xs hover:bg-red-200 transition-all'>
             ✕
           </span>
@@ -814,10 +824,12 @@ function updateRowStatusCell(row) {
   const statusCell = row.querySelector('.status-badge')?.closest('td') || (row.children && row.children[5]);
   if (statusCell) {
     statusCell.innerHTML = `
-      <span class='status-badge ${statusClass} text-xs font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center'>
-        ${displayStatus}
-      </span>
-      ${updateBadge}
+      <div class='inline-flex items-center gap-1.5'>
+        <span class='status-badge ${statusClass} text-xs font-semibold px-2.5 py-1 rounded-full inline-flex items-center justify-center leading-normal'>
+          ${displayStatus}
+        </span>
+        ${updateBadge}
+      </div>
     `;
   }
 }

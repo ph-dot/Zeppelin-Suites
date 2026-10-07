@@ -636,17 +636,17 @@ $navBreadcrumb = '
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50/50 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                <th class="text-left px-6 py-3.5 whitespace-nowrap">Previous Owner</th>
-                <th class="text-left px-4 py-3.5 whitespace-nowrap">Ownership Period</th>
-                <th class="text-left px-4 py-3.5 whitespace-nowrap">Duration</th>
-                <th class="text-left px-4 py-3.5 whitespace-nowrap">Transfer Type / Status</th>
-                <th class="text-left px-6 py-3.5 whitespace-nowrap">Notes & Remarks</th>
+                <th class="text-left px-6 py-3.5 whitespace-nowrap align-middle">Previous Owner</th>
+                <th class="text-left px-4 py-3.5 whitespace-nowrap align-middle">Ownership Period</th>
+                <th class="text-left px-4 py-3.5 whitespace-nowrap align-middle">Duration</th>
+                <th class="text-left px-4 py-3.5 whitespace-nowrap align-middle">Transfer Type / Status</th>
+                <th class="text-left px-6 py-3.5 whitespace-nowrap align-middle">Notes & Remarks</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
               <?php if (empty($pastOwners)): ?>
                 <tr>
-                  <td colspan="5" class="px-6 py-10 text-center">
+                  <td colspan="5" class="px-6 py-10 text-center align-middle">
                     <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
                       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
@@ -667,7 +667,7 @@ $navBreadcrumb = '
                 ?>
                 <tr class="hover:bg-slate-50/80 transition-colors">
                   <!-- Previous Owner -->
-                  <td class="px-6 py-4 whitespace-nowrap">
+                  <td class="px-6 py-4 whitespace-nowrap align-middle">
                     <div class="flex items-center gap-3">
                       <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0">
                         <?= strtoupper(substr($pName, 0, 1)) ?>
@@ -680,26 +680,26 @@ $navBreadcrumb = '
                   </td>
 
                   <!-- Period -->
-                  <td class="px-4 py-4 whitespace-nowrap text-xs font-mono text-slate-800">
+                  <td class="px-4 py-4 whitespace-nowrap text-xs font-mono text-slate-800 align-middle">
                     <span><?= $sDate ?></span>
                     <span class="text-slate-400 mx-1">→</span>
                     <span class="font-medium"><?= $eDate ?></span>
                   </td>
 
                   <!-- Duration -->
-                  <td class="px-4 py-4 whitespace-nowrap text-xs font-medium text-slate-600">
+                  <td class="px-4 py-4 whitespace-nowrap text-xs font-medium text-slate-600 align-middle">
                     <?= $pDur ?>
                   </td>
 
                   <!-- Transfer Type / Status -->
-                  <td class="px-4 py-4 whitespace-nowrap">
+                  <td class="px-4 py-4 whitespace-nowrap align-middle">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                       <?= $transType ?>
                     </span>
                   </td>
 
                   <!-- Remarks -->
-                  <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-500">
+                  <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-500 align-middle">
                     <?= $remarks ?>
                   </td>
                 </tr>
@@ -814,20 +814,19 @@ $navBreadcrumb = '
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50/50 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                <th class="text-left px-6 py-3.5 whitespace-nowrap">Tenant / Client</th>
-                <th class="text-left px-4 py-3.5 whitespace-nowrap">Unit Owner at Stay</th>
-                <th class="text-left px-4 py-3.5 whitespace-nowrap">Type / Stay</th>
-                <th class="text-left px-4 py-3.5 whitespace-nowrap">Move-in Date</th>
-                <th class="text-left px-4 py-3.5 whitespace-nowrap">Move-out Date</th>
-                <th class="text-left px-4 py-3.5 whitespace-nowrap">Duration</th>
-                <th class="text-left px-4 py-3.5 whitespace-nowrap">Status</th>
-                <th class="text-right px-6 py-3.5 whitespace-nowrap">Actions</th>
+                <th class="text-left px-6 py-3.5 whitespace-nowrap align-middle">Tenant / Client</th>
+                <th class="text-left px-4 py-3.5 whitespace-nowrap align-middle">Unit Owner at Stay</th>
+                <th class="text-left px-4 py-3.5 whitespace-nowrap align-middle">Type / Stay</th>
+                <th class="text-left px-4 py-3.5 whitespace-nowrap align-middle">Move-in Date</th>
+                <th class="text-left px-4 py-3.5 whitespace-nowrap align-middle">Move-out Date</th>
+                <th class="text-left px-4 py-3.5 whitespace-nowrap align-middle">Duration</th>
+                <th class="text-left px-6 py-3.5 whitespace-nowrap align-middle">Status</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50" id="tenantsTableBody">
               <?php if (empty($allTenantsList)): ?>
                 <tr>
-                  <td colspan="8" class="px-6 py-12 text-center">
+                  <td colspan="7" class="px-6 py-12 text-center align-middle">
                     <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
                       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     </div>
@@ -873,10 +872,10 @@ $navBreadcrumb = '
                     $badgeHtml = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">Past Tenant</span>';
                   }
                 ?>
-                <tr class="tenant-row hover:bg-slate-50/80 transition-colors" data-group="<?= $rowGroup ?>">
+                <tr class="tenant-row hover:bg-slate-50/80 transition-colors cursor-pointer" data-group="<?= $rowGroup ?>" onclick="window.location.href='viewReservation.php?id=<?= $resId ?>'">
                   
                   <!-- Tenant / Client -->
-                  <td class="px-6 py-4 whitespace-nowrap">
+                  <td class="px-6 py-4 whitespace-nowrap align-middle">
                     <div class="flex items-center gap-3">
                       <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0">
                         <?= strtoupper(substr($cName, 0, 1)) ?>
@@ -889,7 +888,7 @@ $navBreadcrumb = '
                   </td>
 
                   <!-- Unit Owner at Stay -->
-                  <td class="px-4 py-4 whitespace-nowrap">
+                  <td class="px-4 py-4 whitespace-nowrap align-middle">
                     <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80">
                       <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                       <?= $ownerDuringStay ?>
@@ -897,40 +896,29 @@ $navBreadcrumb = '
                   </td>
 
                   <!-- Type / Resident -->
-                  <td class="px-4 py-4 whitespace-nowrap">
+                  <td class="px-4 py-4 whitespace-nowrap align-middle">
                     <p class="text-xs font-medium text-slate-800"><?= $transType ?></p>
                     <p class="text-[11px] text-slate-400 mt-0.5"><?= clean($l['resident_type'] ?: 'Standard Resident') ?></p>
                   </td>
 
                   <!-- Move In -->
-                  <td class="px-4 py-4 whitespace-nowrap text-xs font-mono text-slate-700">
+                  <td class="px-4 py-4 whitespace-nowrap text-xs font-mono text-slate-700 align-middle">
                     <?= $mIn ?>
                   </td>
 
                   <!-- Move Out -->
-                  <td class="px-4 py-4 whitespace-nowrap text-xs font-mono font-medium text-slate-900">
+                  <td class="px-4 py-4 whitespace-nowrap text-xs font-mono font-medium text-slate-900 align-middle">
                     <?= $mOut ?>
                   </td>
 
                   <!-- Duration -->
-                  <td class="px-4 py-4 whitespace-nowrap text-xs font-medium text-slate-600">
+                  <td class="px-4 py-4 whitespace-nowrap text-xs font-medium text-slate-600 align-middle">
                     <?= $durationText ?>
                   </td>
 
                   <!-- Status -->
-                  <td class="px-4 py-4 whitespace-nowrap">
+                  <td class="px-6 py-4 whitespace-nowrap align-middle">
                     <?= $badgeHtml ?>
-                  </td>
-
-                  <!-- Action: View Reservation (Admin link) -->
-                  <td class="px-6 py-4 whitespace-nowrap text-right">
-                    <a 
-                      href="viewReservation.php?id=<?= $resId ?>" 
-                      class="btn-press inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-900 hover:text-white hover:border-slate-900 px-3 py-1.5 rounded-lg active:scale-95 transition-all shadow-xs"
-                      title="Open full reservation details in Admin">
-                      <span>View Reservation</span>
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                    </a>
                   </td>
                 </tr>
                 <?php endforeach; ?>

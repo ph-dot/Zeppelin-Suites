@@ -129,12 +129,12 @@ tailwind.config = {
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div class="flex items-center gap-3">
-              <h1 class="text-2xl font-bold text-slate-900">Tickets</h1>
+              <h1 class="text-xl font-bold text-slate-900">Tickets</h1>
               <span id="totalTicketsBadge" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-mono">
                 Total <?= $totalTicketsCount ?> Tickets
               </span>
             </div>
-            <p class="text-xs text-slate-500 mt-1">Review, monitor, and update building maintenance tickets submitted by unit owners and residents.</p>
+            <p class="text-xs text-slate-400 mt-0.5">Review, monitor, and update building maintenance tickets submitted by unit owners and residents.</p>
           </div>
 
           <!-- Status Tabs -->

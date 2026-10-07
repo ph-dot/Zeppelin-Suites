@@ -23,7 +23,7 @@ if (isset($_SESSION['user_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="../output.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="navbar.js" defer></script>
+    <script src="navbar.js?v=2" defer></script>
     <title>Zeppelin Suites - Login Page</title>
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');

@@ -177,7 +177,7 @@ $result = $conn->query($sql);
 if (!$result) {
     echo "
     <tr>
-        <td colspan='9' class='px-4 py-6 text-center text-sm text-red-500'>
+        <td colspan='8' class='px-4 py-6 text-center text-sm text-red-500'>
             Unable to load reservations. " . e($conn->error) . "
         </td>
     </tr>";
@@ -187,7 +187,7 @@ if (!$result) {
 if ($result->num_rows === 0) {
     echo "
     <tr>
-        <td colspan='9' class='px-4 py-6 text-center text-sm text-slate-400'>
+        <td colspan='8' class='px-4 py-6 text-center text-sm text-slate-400'>
             No reservations found.
         </td>
     </tr>";
@@ -248,28 +248,28 @@ while ($row = $result->fetch_assoc()) {
         data-timeline='{$timelineJson}'
         onclick='openActivityTimelineModal(this)'>
 
-        <td class='px-4 py-3.5 font-semibold text-slate-700 whitespace-nowrap' style=\"font-family:'DM Mono',monospace\">
+        <td class='px-5 py-3.5 font-semibold text-slate-700 whitespace-nowrap align-middle' style=\"font-family:'DM Mono',monospace\">
             " . e($reservationId) . "
         </td>
 
-        <td class='px-4 py-3.5 whitespace-nowrap'>
+        <td class='px-4 py-3.5 whitespace-nowrap align-middle'>
             <p class='font-semibold res-name text-slate-800'>" . e($row['client_name']) . "</p>
             <p class='text-xs text-slate-400'>" . e($row['client_email']) . "</p>
         </td>
 
-        <td class='px-4 py-3.5 text-slate-700 text-xs font-medium whitespace-nowrap'>
+        <td class='px-4 py-3.5 text-slate-700 text-xs font-medium whitespace-nowrap align-middle'>
             " . e($unitDisplay) . "
         </td>
 
-        <td class='px-4 py-3.5 text-slate-600 text-xs whitespace-nowrap'>
+        <td class='px-4 py-3.5 text-slate-600 text-xs whitespace-nowrap align-middle'>
             " . e($row['transaction_type'] ?? '-') . "
         </td>
 
-        <td class='px-4 py-3.5 font-semibold text-slate-700 whitespace-nowrap' style=\"font-family:'DM Mono',monospace\">
+        <td class='px-4 py-3.5 font-semibold text-slate-700 whitespace-nowrap align-middle' style=\"font-family:'DM Mono',monospace\">
             " . e(peso($row['required_amount'])) . "
         </td>
 
-        <td class='px-4 py-3.5 whitespace-nowrap'>
+        <td class='px-4 py-3.5 whitespace-nowrap align-middle'>
             <div class='flex items-center gap-2'>
                 " . badge($row['payment_status']) . "
                 " . (
@@ -284,7 +284,7 @@ while ($row = $result->fetch_assoc()) {
             </div>
         </td>
 
-        <td class='px-4 py-3.5 whitespace-nowrap'>
+        <td class='px-4 py-3.5 whitespace-nowrap align-middle'>
             <div class='flex items-center gap-2'>
                 " . badge($row['reservation_status']) . "
                 " . (
@@ -301,32 +301,8 @@ while ($row = $result->fetch_assoc()) {
             </div>
         </td>
 
-        <td class='px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap' style=\"font-family:'DM Mono',monospace\">
+        <td class='px-5 py-3.5 text-slate-500 text-xs whitespace-nowrap align-middle' style=\"font-family:'DM Mono',monospace\">
             " . e($submittedDate) . "
-        </td>
-
-        <td class='px-4 py-3.5 text-right whitespace-nowrap'>
-            <div class='flex items-center justify-end gap-1.5' onclick='event.stopPropagation()'>
-                " . (
-                    !$isMovedIn && strtolower($row['payment_status'] ?? '') !== 'rejected' && strtolower($row['cancellation_status'] ?? '') !== 'approved'
-                    ? "<button
-                        type='button'
-                        onclick=\"openHandoverModal(" . (int)$row['reservation_id'] . ", '" . e(addslashes($row['client_name'])) . "', '" . e(addslashes($row['client_email'])) . "', '" . e(addslashes($unitDisplay)) . "', '" . e(addslashes($row['client_contact'] ?? '')) . "')\"
-                        class='handover-btn btn-press inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-full active:scale-95 transition-all shadow-sm'
-                        title='Handover unit and move in tenant'>
-                        <svg class='w-3.5 h-3.5 text-emerald-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'/></svg>
-                        Handover
-                    </button>"
-                    : ""
-                ) . "
-                <button
-                    type='button'
-                    onclick='openActivityTimelineModal(this.closest(\"tr\")); event.stopPropagation();'
-                    class='view-btn btn-press inline-flex items-center text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all'
-                    title='View activity timeline summary'>
-                    View
-                </button>
-            </div>
         </td>
     </tr>";
 }

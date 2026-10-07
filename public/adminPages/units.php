@@ -106,9 +106,8 @@ tailwind.config = {
         <!-- Header Title & Counter -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div class="flex items-center gap-3">
-              <h1 class="text-2xl font-bold text-slate-900">Units</h1>
-            </div>
+            <h1 class="text-xl font-bold text-slate-900">Units</h1>
+            <p class="text-xs text-slate-400 mt-0.5">Manage building units, occupancy status, and floor specifications.</p>
           </div>
 
           <!-- Add Unit Button -->

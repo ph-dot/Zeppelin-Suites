@@ -401,8 +401,8 @@ $userData = requireRole($conn, ['admin']);
     <!-- Page Title Bar -->
     <div class="glass-header relative z-40 border border-slate-100/80 px-5 py-4 mb-5 rounded-2xl flex items-center justify-between">
       <div>
-        <h1 class="text-xl font-bold text-slate-900 mb-0.5">Booking Calendar</h1>
-        <p class="text-slate-500 text-xs">Click any empty date cell to block dates for maintenance or unavailable. Hover a bar for details.</p>
+        <h1 class="text-xl font-bold text-slate-900">Booking Calendar</h1>
+        <p class="text-xs text-slate-400 mt-0.5">Click any empty date cell to block dates or hover for reservation details.</p>
       </div>
       <div class="flex items-center gap-2 relative">
         <button class="btn-press px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium transition-all active:scale-95" onclick="changeMonth(-1)" title="Previous month">
