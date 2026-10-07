@@ -252,13 +252,12 @@ tailwind.config = {
               <div class="overflow-x-auto">
                 <table class="w-full text-sm table-fixed min-w-[850px]">
                   <thead>
-                    <tr class="border-b border-slate-100 bg-slate-50/50 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                      <th class="text-left px-5 py-3.5 whitespace-nowrap w-[22%] min-w-[180px]">UNIT</th>
-                      <th class="text-left px-4 py-3.5 whitespace-nowrap w-[14%] min-w-[120px]">LISTING</th>
-                      <th class="text-left px-4 py-3.5 whitespace-nowrap w-[22%] min-w-[180px]">STATUS</th>
-                      <th class="text-left px-4 py-3.5 whitespace-nowrap w-[20%] min-w-[160px]">TENANT</th>
-                      <th class="text-left px-4 py-3.5 whitespace-nowrap w-[12%] min-w-[110px]">RATE</th>
-                      <th class="text-right px-5 py-3.5 whitespace-nowrap w-[10%] min-w-[90px]">ACTIONS</th>
+                    <tr class="border-b border-slate-100 bg-slate-50/50 text-slate-500 text-xs font-bold uppercase tracking-wider select-none">
+                      <th class="text-left px-5 py-3.5 whitespace-nowrap w-[24%] min-w-[180px]">UNIT</th>
+                      <th class="text-left px-4 py-3.5 whitespace-nowrap w-[15%] min-w-[120px]">LISTING</th>
+                      <th class="text-left px-4 py-3.5 whitespace-nowrap w-[24%] min-w-[180px]">STATUS</th>
+                      <th class="text-left px-4 py-3.5 whitespace-nowrap w-[22%] min-w-[160px]">TENANT</th>
+                      <th class="text-left px-5 py-3.5 whitespace-nowrap w-[15%] min-w-[110px]">RATE</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-50">
@@ -310,7 +309,12 @@ tailwind.config = {
                             $listing_badge_html = '<span class="inline-block text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200">For Lease</span>';
                         }
                     ?>
-                      <tr class="unit-row hover:bg-slate-50/80 transition-colors"
+                      <tr class="unit-row cursor-pointer hover:bg-amber-50/40 hover:border-amber-200 transition-all group"
+                          tabindex="0"
+                          role="link"
+                          title="Click to view Unit <?= $unit_number ?> details"
+                          onclick="window.location.href='<?= htmlspecialchars($baseUrl) ?>/owner/units/view?id=<?= $unit_id ?>'"
+                          data-href="<?= htmlspecialchars($baseUrl) ?>/owner/units/view?id=<?= $unit_id ?>"
                           data-unit-id="<?= $unit_id ?>"
                           data-unit-number="<?= $unit_number ?>"
                           data-unit-type="<?= $unit_type ?>"
@@ -326,7 +330,7 @@ tailwind.config = {
                           <!-- UNIT -->
                           <td class="px-5 py-3.5 whitespace-nowrap align-middle">
                               <div>
-                                  <p class="unit-num font-bold text-slate-900 text-sm leading-tight"><?= $unit_number ?></p>
+                                  <p class="unit-num font-bold text-slate-900 group-hover:text-amber-600 transition-colors text-sm leading-tight"><?= $unit_number ?></p>
                                   <p class="text-xs text-slate-500 mt-0.5"><?= $unit_type ?></p>
                               </div>
                           </td>
@@ -354,18 +358,8 @@ tailwind.config = {
                           </td>
 
                           <!-- RATE -->
-                          <td class="px-4 py-3.5 whitespace-nowrap align-middle">
-                              <p class="font-bold text-slate-900 font-mono text-sm leading-tight"><?= $price_value ?></p>
-                          </td>
-
-                          <!-- ACTIONS -->
-                          <td class="px-5 py-3.5 text-right whitespace-nowrap align-middle">
-                              <a 
-                                  href="<?= htmlspecialchars($baseUrl) ?>/owner/units/view?id=<?= $unit_id ?>"
-                                  class="btn-press inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-800 bg-white border border-slate-300 hover:bg-slate-50 px-3.5 py-1.5 rounded-lg active:scale-95 transition-all shadow-xs">
-                                  <svg class="w-4 h-4 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                  <span>View</span>
-                              </a>
+                          <td class="px-5 py-3.5 whitespace-nowrap align-middle">
+                              <p class="font-bold text-slate-900 font-mono text-sm leading-tight group-hover:text-amber-600 transition-colors"><?= $price_value ?></p>
                           </td>
                       </tr>
                     <?php endforeach; ?>
@@ -486,6 +480,19 @@ function clearFilters() {
 
   applyFilters();
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.unit-row[data-href]').forEach(row => {
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (row.dataset.href) {
+          window.location.href = row.dataset.href;
+        }
+      }
+    });
+  });
+});
 </script>
 </body>
 </html>

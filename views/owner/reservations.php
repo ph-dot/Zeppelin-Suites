@@ -190,13 +190,12 @@ $totalCount = count($reservations);
                 <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Payment</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Reservation</th>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Submitted</th>
-                <th class="px-4 py-3 w-16"></th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50" id="resBody">
               <?php if (empty($reservations)): ?>
                 <tr>
-                  <td colspan="9" class="px-4 py-8 text-center text-sm text-slate-400">
+                  <td colspan="8" class="px-4 py-8 text-center text-sm text-slate-400">
                     No reservations found for your units.
                   </td>
                 </tr>
@@ -230,16 +229,19 @@ $totalCount = count($reservations);
                     ];
                     $timelineJson = htmlspecialchars(json_encode($timelineData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8');
                 ?>
-                  <tr class="res-row cursor-pointer hover:bg-slate-50 transition-colors"
+                  <tr class="res-row cursor-pointer hover:bg-slate-50/80 transition-colors group"
+                      tabindex="0"
+                      role="button"
+                      title="Click to view activity timeline for Res. #<?= clean($reservationId) ?>"
                       data-timeline="<?= $timelineJson ?>"
                       onclick="openActivityTimelineModal(this)">
 
-                      <td class="px-4 py-3.5 font-semibold text-slate-700 whitespace-nowrap font-mono">
+                      <td class="px-4 py-3.5 font-semibold text-slate-700 whitespace-nowrap font-mono group-hover:text-blue-600 transition-colors">
                           <?= clean($reservationId) ?>
                       </td>
 
                       <td class="px-4 py-3.5 whitespace-nowrap">
-                          <p class="font-semibold res-name text-slate-800"><?= clean($row['client_name']) ?></p>
+                          <p class="font-semibold res-name text-slate-800 group-hover:text-blue-600 transition-colors"><?= clean($row['client_name']) ?></p>
                           <p class="text-xs text-slate-400"><?= clean($row['client_email']) ?></p>
                       </td>
 
@@ -265,16 +267,6 @@ $totalCount = count($reservations);
 
                       <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap font-mono">
                           <?= clean($submittedDate) ?>
-                      </td>
-
-                      <td class="px-4 py-3.5 text-right">
-                          <button
-                              type="button"
-                              onclick="openActivityTimelineModal(this.closest('tr')); event.stopPropagation();"
-                              class="view-btn btn-press inline-flex items-center text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all"
-                              title="View activity timeline summary">
-                              View
-                          </button>
                       </td>
                   </tr>
                 <?php endforeach; ?>
@@ -539,6 +531,17 @@ function renderActivityTimelineSteps(data) {
 
   container.innerHTML = html;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.res-row').forEach(row => {
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openActivityTimelineModal(row);
+      }
+    });
+  });
+});
 </script>
 </body>
 </html>

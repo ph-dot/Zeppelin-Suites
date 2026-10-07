@@ -121,8 +121,12 @@ if (!function_exists('ov_e')) {
                 </tr>
               <?php else: ?>
                 <?php foreach ($recentTenants as $tenant): ?>
-                  <tr class="hover:bg-slate-50/60 transition-colors">
-                    <td class="px-5 py-3.5 font-semibold text-slate-800 whitespace-nowrap"><?= ov_e($tenant['client_name'] ?? '') ?></td>
+                  <tr class="cursor-pointer hover:bg-slate-100/70 transition-colors group"
+                      tabindex="0"
+                      role="link"
+                      title="Click to view all tenants"
+                      onclick="window.location.href='<?= htmlspecialchars($baseUrl) ?>/owner/tenants'">
+                    <td class="px-5 py-3.5 font-semibold text-slate-800 group-hover:text-blue-600 transition-colors whitespace-nowrap"><?= ov_e($tenant['client_name'] ?? '') ?></td>
                     <td class="px-4 py-3.5 text-slate-500 text-sm" style="font-family:'DM Mono',monospace"><?= ov_e($tenant['client_contact'] ?: '—') ?></td>
                     <td class="px-4 py-3.5"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">Unit <?= ov_e($tenant['unit_number'] ?? '') ?></span></td>
                     <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= ov_e(!empty($tenant['move_in_date']) ? date('M d, Y', strtotime((string)$tenant['move_in_date'])) : '—') ?></td>
@@ -166,8 +170,12 @@ if (!function_exists('ov_e')) {
                     $st = strtolower((string)($req['status'] ?? ''));
                     $statusClass = $maintStatusClasses[$st] ?? 'bg-slate-50 text-slate-700 border-slate-100'; 
                     ?>
-                    <tr class="hover:bg-slate-50/60 transition-colors">
-                      <td class="px-5 py-3.5 font-semibold text-slate-800 whitespace-nowrap" style="font-family:'DM Mono',monospace">#<?= ov_e($req['maintenance_id']) ?></td>
+                    <tr class="cursor-pointer hover:bg-slate-100/70 transition-colors group"
+                        tabindex="0"
+                        role="link"
+                        title="Click to view maintenance requests"
+                        onclick="window.location.href='<?= htmlspecialchars($baseUrl) ?>/owner/maintenance'">
+                      <td class="px-5 py-3.5 font-semibold text-slate-800 group-hover:text-blue-600 transition-colors whitespace-nowrap" style="font-family:'DM Mono',monospace">#<?= ov_e($req['maintenance_id']) ?></td>
                       <td class="px-4 py-3.5"><span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-100">Unit <?= ov_e($req['unit_number'] ?? 'N/A') ?></span></td>
                       <td class="px-4 py-3.5"><span class="<?= ov_e($statusClass) ?> text-xs font-semibold px-2.5 py-0.5 rounded-full border"><?= ov_e(ucwords((string)$req['status'])) ?></span></td>
                     </tr>
@@ -200,13 +208,17 @@ if (!function_exists('ov_e')) {
               <table class="w-full text-sm">
                 <tbody class="divide-y divide-slate-50">
                   <?php foreach ($reservationRequests as $reqItem): ?>
-                    <tr class="hover:bg-slate-50/60 transition-colors">
+                    <tr class="cursor-pointer hover:bg-slate-100/70 transition-colors group"
+                        tabindex="0"
+                        role="link"
+                        title="Click to respond to inquiry request"
+                        onclick="window.location.href='<?= htmlspecialchars($baseUrl) ?>/owner/inquiries'">
                       <td class="px-5 py-3.5">
-                        <p class="font-semibold text-slate-800 whitespace-nowrap"><?= ov_e($reqItem['sender_name'] ?? 'Unknown') ?></p>
+                        <p class="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors whitespace-nowrap"><?= ov_e($reqItem['sender_name'] ?? 'Unknown') ?></p>
                         <p class="text-xs text-slate-400">Unit <?= ov_e($reqItem['unit_number'] ?? 'N/A') ?></p>
                       </td>
                       <td class="px-4 py-3.5 text-right">
-                        <a href="<?= htmlspecialchars($baseUrl) ?>/owner/inquiries" class="btn-press inline-flex items-center justify-center text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full active:scale-95 transition-all">Respond</a>
+                        <span class="btn-press inline-flex items-center justify-center text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 group-hover:bg-blue-600 group-hover:text-white px-3 py-1.5 rounded-full active:scale-95 transition-all">Respond</span>
                       </td>
                     </tr>
                   <?php endforeach; ?>

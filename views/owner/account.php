@@ -253,8 +253,12 @@ tailwind.config = {
                     </thead>
                     <tbody class="divide-y divide-slate-50">
                       <?php foreach ($units as $u): ?>
-                        <tr class="hover:bg-slate-50/50 transition-colors">
-                          <td class="px-4 py-3.5 font-semibold text-slate-900" style="font-family:'DM Mono',monospace">Unit <?= e($u['unit_number']) ?></td>
+                        <tr class="cursor-pointer hover:bg-slate-100/70 transition-colors group"
+                            tabindex="0"
+                            role="link"
+                            title="Click to view details for Unit <?= e($u['unit_number']) ?>"
+                            onclick="window.location.href='<?= htmlspecialchars($baseUrl) ?>/owner/units/view?id=<?= (int)($u['unit_id'] ?? 0) ?>'">
+                          <td class="px-4 py-3.5 font-semibold text-slate-900 group-hover:text-blue-600 transition-colors" style="font-family:'DM Mono',monospace">Unit <?= e($u['unit_number']) ?></td>
                           <td class="px-4 py-3.5 text-slate-600 font-medium"><?= e($u['unit_type'] ?: 'Standard') ?></td>
                           <td class="px-4 py-3.5 text-slate-500" style="font-family:'DM Mono',monospace"><?= e($u['floor_number'] ?: '—') ?></td>
                           <td class="px-4 py-3.5 text-slate-800">
@@ -312,8 +316,12 @@ tailwind.config = {
                               default => 'bg-yellow-50 text-yellow-700 border-yellow-200'
                           };
                         ?>
-                        <tr class="hover:bg-slate-50/50 transition-colors">
-                          <td class="px-4 py-3.5 font-semibold text-slate-900" style="font-family:'DM Mono',monospace"><?= e($m['unit_number'] ? 'Unit ' . $m['unit_number'] : 'General') ?></td>
+                        <tr class="cursor-pointer hover:bg-slate-100/70 transition-colors group"
+                            tabindex="0"
+                            role="link"
+                            title="Click to view maintenance"
+                            onclick="window.location.href='<?= htmlspecialchars($baseUrl) ?>/owner/maintenance'">
+                          <td class="px-4 py-3.5 font-semibold text-slate-900 group-hover:text-blue-600 transition-colors" style="font-family:'DM Mono',monospace"><?= e($m['unit_number'] ? 'Unit ' . $m['unit_number'] : 'General') ?></td>
                           <td class="px-4 py-3.5 font-medium text-slate-800"><?= e($m['issue_title'] ?? 'Maintenance Request') ?></td>
                           <td class="px-4 py-3.5"><span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border <?= $mPriorityClass ?>"><?= e(ucfirst($mPriority)) ?></span></td>
                           <td class="px-4 py-3.5"><span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border <?= $mStatusClass ?>"><?= e(ucfirst($mStatus)) ?></span></td>

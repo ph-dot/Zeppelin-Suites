@@ -106,13 +106,12 @@ $unitBadgeClasses = [
                 <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Lease-End</th>
                 <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Contact</th>
                 <th class="text-left px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">Status</th>
-                <th class="px-4 py-3.5 w-20"></th>
               </tr>
             </thead>
             <tbody id="tenantsBody">
               <?php if (empty($tenants)): ?>
                 <tr>
-                  <td colspan="7" class="px-4 py-12 text-center text-sm text-slate-400">No tenants under your units yet.</td>
+                  <td colspan="6" class="px-4 py-12 text-center text-sm text-slate-400">No tenants under your units yet.</td>
                 </tr>
               <?php else: ?>
                 <?php foreach ($tenants as $tenant): ?>
@@ -136,14 +135,17 @@ $unitBadgeClasses = [
                     ];
                     $modalJson = htmlspecialchars(json_encode($modalData), ENT_QUOTES, 'UTF-8');
                   ?>
-                  <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50" onclick="openTenantModal(<?= $modalJson ?>)">
-                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap"><?= tn_e($tenant['client_name'] ?? '—') ?></td>
+                  <tr class="group cursor-pointer transition-colors hover:bg-slate-50/70"
+                      tabindex="0"
+                      role="button"
+                      title="Click to view tenant details for <?= tn_e($tenant['client_name'] ?? 'tenant') ?>"
+                      onclick="openTenantModal(<?= $modalJson ?>)">
+                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm font-semibold text-slate-800 whitespace-nowrap group-hover:text-blue-600 transition-colors"><?= tn_e($tenant['client_name'] ?? '—') ?></td>
                     <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="<?= tn_e($typeClass) ?> text-xs font-semibold px-2.5 py-0.5 rounded-full border"><?= tn_e($tenant['unit_number'] ?? '—') ?></span></td>
                     <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= tn_e(tn_date($tenant['move_in_date'] ?? '')) ?></td>
                     <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= tn_e(tn_date($tenant['move_out_date'] ?? '')) ?></td>
                     <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600 whitespace-nowrap" style="font-family:'DM Mono',monospace"><?= tn_e($tenant['client_contact'] ?: '—') ?></td>
                     <td class="px-4 py-3.5 border-b border-slate-100/50 text-sm text-zinc-600"><span class="<?= tn_e($statusClass) ?> text-xs font-semibold px-2.5 py-0.5 rounded-full border"><?= tn_e($statusLabel) ?></span></td>
-                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-right"><button class="btn-press text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full active:scale-95 transition-all opacity-0 group-hover:opacity-100 whitespace-nowrap" onclick="event.stopPropagation();openTenantModal(<?= $modalJson ?>)">View</button></td>
                   </tr>
                 <?php endforeach; ?>
               <?php endif; ?>
@@ -228,6 +230,17 @@ $unitBadgeClasses = [
       r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
     });
   }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('#tenantsBody tr[role="button"]').forEach(row => {
+      row.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          row.click();
+        }
+      });
+    });
+  });
 </script>
 </body>
 </html>

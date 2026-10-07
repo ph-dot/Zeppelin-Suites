@@ -481,20 +481,19 @@ tailwind.config = {
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="border-b border-slate-100 bg-slate-50/50 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+              <tr class="border-b border-slate-100 bg-slate-50/50 text-slate-400 text-xs font-semibold uppercase tracking-wider select-none">
                 <th class="text-left px-6 py-3.5 whitespace-nowrap">Tenant / Client</th>
                 <th class="text-left px-4 py-3.5 whitespace-nowrap">Type / Stay</th>
                 <th class="text-left px-4 py-3.5 whitespace-nowrap">Move-in Date</th>
                 <th class="text-left px-4 py-3.5 whitespace-nowrap">Move-out / Occupied Up To</th>
                 <th class="text-left px-4 py-3.5 whitespace-nowrap">Duration</th>
-                <th class="text-left px-4 py-3.5 whitespace-nowrap">Status</th>
-                <th class="text-right px-6 py-3.5 whitespace-nowrap">Actions</th>
+                <th class="text-left px-6 py-3.5 whitespace-nowrap">Status</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50" id="leaseTableBody">
               <?php if (empty($leasesList)): ?>
                 <tr>
-                  <td colspan="7" class="px-6 py-12 text-center">
+                  <td colspan="6" class="px-6 py-12 text-center">
                     <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
                       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     </div>
@@ -532,14 +531,20 @@ tailwind.config = {
                     $badgeHtml = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">Past Tenant</span>';
                   }
                 ?>
-                <tr class="lease-row hover:bg-slate-50/80 transition-colors" data-group="<?= $rowGroup ?>">
+                <tr class="lease-row cursor-pointer hover:bg-slate-100/70 transition-colors group"
+                    tabindex="0"
+                    role="link"
+                    title="Click to view lease info for <?= clean($cName) ?>"
+                    onclick="window.location.href='<?= htmlspecialchars($baseUrl) ?>/owner/reservations/view?reservation_id=<?= $resId ?>'"
+                    data-href="<?= htmlspecialchars($baseUrl) ?>/owner/reservations/view?reservation_id=<?= $resId ?>"
+                    data-group="<?= $rowGroup ?>">
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0">
+                      <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors">
                         <?= strtoupper(substr($cName, 0, 1)) ?>
                       </div>
                       <div>
-                        <p class="font-semibold text-slate-900 text-xs sm:text-sm leading-tight"><?= $cName ?></p>
+                        <p class="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-xs sm:text-sm leading-tight"><?= $cName ?></p>
                         <p class="text-xs text-slate-400 mt-0.5 font-mono"><?= $cContact !== '—' ? $cContact : $cEmail ?></p>
                       </div>
                     </div>
@@ -551,16 +556,7 @@ tailwind.config = {
                   <td class="px-4 py-4 whitespace-nowrap text-xs font-mono text-slate-700"><?= $mIn ?></td>
                   <td class="px-4 py-4 whitespace-nowrap text-xs font-mono font-medium text-slate-900"><?= $mOut ?></td>
                   <td class="px-4 py-4 whitespace-nowrap text-xs font-medium text-slate-600"><?= $durationText ?></td>
-                  <td class="px-4 py-4 whitespace-nowrap"><?= $badgeHtml ?></td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right">
-                    <a 
-                      href="<?= htmlspecialchars($baseUrl) ?>/owner/reservations/view?reservation_id=<?= $resId ?>" 
-                      class="btn-press inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-900 hover:text-white hover:border-slate-900 px-3 py-1.5 rounded-lg active:scale-95 transition-all shadow-xs"
-                      title="Open full reservation and contract details">
-                      <span>View Lease Info</span>
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                    </a>
-                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap"><?= $badgeHtml ?></td>
                 </tr>
                 <?php endforeach; ?>
               <?php endif; ?>
@@ -898,6 +894,19 @@ async function handleUnitUpdate(e) {
     btn.innerHTML = 'Save Changes';
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.lease-row[data-href]').forEach(row => {
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (row.dataset.href) {
+          window.location.href = row.dataset.href;
+        }
+      }
+    });
+  });
+});
 </script>
 </body>
 </html>

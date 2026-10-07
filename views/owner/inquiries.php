@@ -276,14 +276,13 @@ $inquiries = $inquiries ?? [];
               <th class="text-center px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Inquiry Type</th>
               <th class="text-center px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Status</th>
               <th class="text-center px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle">Owner Decision</th>
-              <th class="text-center px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide w-20 align-middle whitespace-nowrap">Action</th>
             </tr>
           </thead>
 
           <tbody id="resBody">
             <?php if (empty($inquiries)): ?>
               <tr>
-                <td colspan="7" class="px-4 py-14 text-center">
+                <td colspan="6" class="px-4 py-14 text-center">
                   <div class="flex flex-col items-center justify-center gap-2">
                     <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
                       <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -309,7 +308,10 @@ $inquiries = $inquiries ?? [];
                   );
                   $requestCode = 'REQ-' . str_pad((string)$row['request_id'], 3, '0', STR_PAD_LEFT);
               ?>
-                <tr class="group cursor-pointer transition-colors hover:bg-slate-50/50 approval-row"
+                <tr class="group cursor-pointer transition-colors hover:bg-slate-50/70 approval-row"
+                    tabindex="0"
+                    role="button"
+                    title="Click to view details for <?= clean($requestCode) ?>"
                     data-request-id="<?= clean($row['request_id']) ?>"
                     data-request-code="<?= clean($requestCode) ?>"
                     data-name="<?= clean($row['sender_name']) ?>"
@@ -343,7 +345,7 @@ $inquiries = $inquiries ?? [];
 
                     <td class="px-5 py-3.5 border-b border-slate-100/50 whitespace-nowrap text-left align-middle">
                         <div class="min-w-[160px]">
-                            <p class="text-sm font-bold text-slate-900 leading-tight"><?= clean($row['sender_name']) ?></p>
+                            <p class="text-sm font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors"><?= clean($row['sender_name']) ?></p>
                             <p class="text-xs text-slate-400 mt-1 leading-tight"><?= clean($row['sender_email']) ?></p>
                         </div>
                     </td>
@@ -368,13 +370,6 @@ $inquiries = $inquiries ?? [];
                         <span class="<?= $ownerStatusClass ?> text-xs font-semibold px-2.5 py-0.5 rounded-full border inline-flex items-center justify-center whitespace-nowrap">
                             <?= clean($ownerStatusText) ?>
                         </span>
-                    </td>
-
-                    <td class="px-4 py-3.5 border-b border-slate-100/50 text-center align-middle whitespace-nowrap">
-                        <button class="btn-press text-xs font-semibold text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full active:scale-95 transition-all whitespace-nowrap"
-                                onclick="event.stopPropagation(); openResModal(this.closest('tr'))">
-                            View
-                        </button>
                     </td>
                 </tr>
               <?php endforeach; ?>
@@ -854,6 +849,17 @@ $inquiries = $inquiries ?? [];
     document.body.appendChild(form);
     form.submit();
   }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.approval-row').forEach(row => {
+      row.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openResModal(row);
+        }
+      });
+    });
+  });
 </script>
 </body>
 </html>
