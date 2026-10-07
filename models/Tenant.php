@@ -57,7 +57,9 @@ class Tenant extends Model {
                 r.reservation_id DESC
             LIMIT 1
         ";
-        $leaseInfo = $this->fetchOne($leaseSql, [$email, $name]);
+        $lookupEmail = $email !== '' ? $email : (string)($user['email'] ?? '');
+        $lookupName  = $name !== '' ? $name : (string)($user['full_name'] ?? '');
+        $leaseInfo = $this->fetchOne($leaseSql, [$lookupEmail, $lookupName]);
 
         // 3. Count active maintenance requests
         $mCountSql = "

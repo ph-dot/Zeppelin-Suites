@@ -27,7 +27,7 @@ class AuthController extends Controller {
 
         // If user is already authenticated, redirect to their role-specific dashboard
         if (!empty($_SESSION['user_id']) && !empty($_SESSION['role'])) {
-            $dashboardUrl = $this->getDashboardUrl((string)$_SESSION['role']);
+            $dashboardUrl = Middleware::getDashboardUrlForRole((string)$_SESSION['role']);
             $this->redirect($dashboardUrl);
             return;
         }
@@ -103,12 +103,13 @@ class AuthController extends Controller {
         $displayInfo = $this->userModel->getUserDisplayInfo((int)$user['user_id'], $role);
 
         $_SESSION['user_id']   = (int)$user['user_id'];
+        $_SESSION['email']     = (string)($user['email'] ?? '');
         $_SESSION['role']      = $role;
         $_SESSION['full_name'] = $displayInfo['full_name'];
         $_SESSION['initial']   = $displayInfo['initial'];
 
         // Determine destination dashboard
-        $destination = $this->getDashboardUrl($role);
+        $destination = Middleware::getDashboardUrlForRole($role);
 
         if ($this->isAjax()) {
             $this->json([
@@ -155,23 +156,5 @@ class AuthController extends Controller {
 
         $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $this->redirect("{$baseUrl}/login");
-    }
-
-    /**
-     * Helper to compute dashboard URL for a user role.
-     */
-    private function getDashboardUrl(string $role): string {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
-
-        switch (Middleware::normalizeRole($role)) {
-            case 'admin':
-                return "{$baseUrl}/admin/home";
-            case 'unit owner':
-                return "{$baseUrl}/owner/overview";
-            case 'tenant':
-                return "{$baseUrl}/tenant/home";
-            default:
-                return "{$baseUrl}/login";
-        }
     }
 }

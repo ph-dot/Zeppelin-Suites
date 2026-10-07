@@ -53,6 +53,7 @@ class Middleware {
 
         return [
             'user_id'   => (int)$userId,
+            'email'     => (string)($_SESSION['email'] ?? ''),
             'role'      => $role,
             'full_name' => (string)($_SESSION['full_name'] ?? 'User'),
             'initial'   => (string)($_SESSION['initial'] ?? 'U'),
@@ -83,12 +84,11 @@ class Middleware {
         
         switch (self::normalizeRole($role)) {
             case 'admin':
-                // Check if new clean route or legacy path
-                return "{$baseUrl}/admin/dashboard";
+                return "{$baseUrl}/admin/home";
             case 'unit owner':
                 return "{$baseUrl}/owner/overview";
             case 'tenant':
-                return "{$baseUrl}/tenant/dashboard";
+                return "{$baseUrl}/tenant/home";
             default:
                 return "{$baseUrl}/login";
         }

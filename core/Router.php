@@ -7,10 +7,26 @@ declare(strict_types=1);
  */
 class Router {
     private array $routes = [];
+    private array $redirects = [];
     private string $basePath = '';
 
     public function __construct(string $basePath = '') {
         $this->basePath = rtrim($basePath, '/');
+    }
+
+    /**
+     * Register legacy URL 301 redirect mappings: ['/old-path' => '/new-target']
+     */
+    public function registerRedirects(array $map): self {
+        foreach ($map as $from => $to) {
+            $cleanFrom = '/' . trim($from, '/');
+            $cleanTo = '/' . trim($to, '/');
+            if ($cleanTo === '//') {
+                $cleanTo = '/';
+            }
+            $this->redirects[$cleanFrom] = $cleanTo;
+        }
+        return $this;
     }
 
     /**
@@ -89,6 +105,15 @@ class Router {
         $cleanPath = '/' . trim($path, '/');
         if ($cleanPath === '//' || $cleanPath === '') {
             $cleanPath = '/';
+        }
+
+        // Fast O(1) check for legacy 301 redirects
+        if (isset($this->redirects[$cleanPath])) {
+            $target = $this->redirects[$cleanPath];
+            $qs = !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '';
+            header('HTTP/1.1 301 Moved Permanently');
+            header("Location: {$this->basePath}{$target}{$qs}");
+            exit;
         }
 
         // Match against registered routes
@@ -189,9 +214,20 @@ class Router {
 
         $viewsBaseDir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'views';
         $notFoundView = $viewsBaseDir . DIRECTORY_SEPARATOR . 'errors' . DIRECTORY_SEPARATOR . '404.php';
+        $errorView    = $viewsBaseDir . DIRECTORY_SEPARATOR . 'general' . DIRECTORY_SEPARATOR . 'error.php';
 
         if (file_exists($notFoundView)) {
             include $notFoundView;
+            exit;
+        }
+
+        if (file_exists($errorView)) {
+            $baseUrl = $this->basePath;
+            $pageTitle = '404 — Page Not Found';
+            $errorTitle = 'Page Not Found';
+            $errorMessage = "The requested page '" . htmlspecialchars($path, ENT_QUOTES, 'UTF-8') . "' could not be found on this server.";
+            $activePage = '';
+            include $errorView;
             exit;
         }
 
@@ -200,7 +236,7 @@ class Router {
         echo "<body class='h-screen flex items-center justify-center bg-slate-50 text-slate-800 font-sans'>";
         echo "<div class='text-center p-8 bg-white rounded-2xl shadow-sm border border-slate-100 max-w-md w-full'>";
         echo "<h1 class='text-4xl font-bold text-slate-900 mb-2'>404</h1>";
-        echo "<p class='text-slate-600 mb-6'>Page not found: <code class='bg-slate-100 px-2 py-1 rounded text-sm text-slate-800'>" . htmlspecialchars($path) . "</code></p>";
+        echo "<p class='text-slate-600 mb-6'>Page not found: <code class='bg-slate-100 px-2 py-1 rounded text-sm text-slate-800'>" . htmlspecialchars($path, ENT_QUOTES, 'UTF-8') . "</code></p>";
         echo "<a href='" . htmlspecialchars(rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/')) . "/login' class='inline-block px-5 py-2.5 rounded-full bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors'>Return to Login</a>";
         echo "</div></body></html>";
         exit;

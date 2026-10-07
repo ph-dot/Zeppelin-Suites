@@ -141,6 +141,7 @@ $router->post('/admin/booking-calendar/unblock', [BookingCalendarController::cla
 // Tenant Portal Routes (Guarded by 'tenant' role middleware)
 $router->get('/tenant', [TenantController::class, 'home'], ['tenant']);
 $router->get('/tenant/home', [TenantController::class, 'home'], ['tenant']);
+$router->get('/tenant/dashboard', [TenantController::class, 'home'], ['tenant']);
 $router->get('/tenant/account', [TenantController::class, 'account'], ['tenant']);
 $router->post('/tenant/account', [TenantController::class, 'account'], ['tenant']);
 $router->get('/tenant/maintenance', [TenantController::class, 'maintenance'], ['tenant']);
@@ -161,7 +162,7 @@ $router->get('/owner/maintenance', [UnitOwnerController::class, 'maintenance'], 
 $router->get('/owner/account', [UnitOwnerController::class, 'account'], ['unit owner']);
 $router->post('/owner/account', [UnitOwnerController::class, 'account'], ['unit owner']);
 
-// 7. Legacy Infrastructure 301 Fallback Redirections
+// 7. Legacy Infrastructure 301 Fallback Redirections (O(1) lookup in Router)
 $legacyRouteMap = [
     // Admin legacy paths
     '/adminPages/analytics.php'       => '/admin/analytics',
@@ -237,15 +238,7 @@ $legacyRouteMap = [
     '/public/generalViewPages/cancelReservation.php' => '/cancel-reservation',
 ];
 
-foreach ($legacyRouteMap as $legacyPath => $cleanTarget) {
-    $router->any($legacyPath, function () use ($appUrl, $cleanTarget) {
-        $baseUrl = rtrim($appUrl, '/');
-        $qs = !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '';
-        header('HTTP/1.1 301 Moved Permanently');
-        header("Location: {$baseUrl}{$cleanTarget}{$qs}");
-        exit;
-    });
-}
+$router->registerRedirects($legacyRouteMap);
 
 // 8. Dispatch incoming HTTP request
 $router->dispatch();

@@ -202,14 +202,14 @@ class Inquiry extends Model {
         try {
             $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
             $mail->isSMTP();
-            $mail->Host = defined('SMTP_HOST') ? SMTP_HOST : (string)env('MAIL_HOST', 'smtp.gmail.com');
+            $mail->Host = defined('SMTP_HOST') ? SMTP_HOST : (string)env('SMTP_HOST', 'smtp.gmail.com');
             $mail->SMTPAuth = true;
-            $mail->Username = defined('SMTP_USERNAME') ? SMTP_USERNAME : (string)env('MAIL_USERNAME', '');
-            $mail->Password = defined('SMTP_PASSWORD') ? SMTP_PASSWORD : (string)env('MAIL_PASSWORD', '');
+            $mail->Username = defined('SMTP_USERNAME') ? SMTP_USERNAME : (string)env('SMTP_USERNAME', '');
+            $mail->Password = defined('SMTP_PASSWORD') ? SMTP_PASSWORD : (string)env('SMTP_PASSWORD', '');
             $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = defined('SMTP_PORT') ? SMTP_PORT : (int)env('MAIL_PORT', 587);
+            $mail->Port = defined('SMTP_PORT') ? SMTP_PORT : (int)env('SMTP_PORT', 587);
 
-            $fromEmail = defined('MAIL_FROM_EMAIL') ? MAIL_FROM_EMAIL : (string)env('MAIL_FROM_ADDRESS', 'noreply@zeppelinsuites.com');
+            $fromEmail = defined('MAIL_FROM_EMAIL') ? MAIL_FROM_EMAIL : (string)env('MAIL_FROM_EMAIL', 'noreply@zeppelinsuites.com');
             $fromName = defined('MAIL_FROM_NAME') ? MAIL_FROM_NAME : (string)env('MAIL_FROM_NAME', 'Zeppelin Suites');
 
             $mail->setFrom($fromEmail, $fromName);
