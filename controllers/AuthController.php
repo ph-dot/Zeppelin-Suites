@@ -163,14 +163,13 @@ class AuthController extends Controller {
     private function getDashboardUrl(string $role): string {
         $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
 
-        // During incremental migration, link to existing portal paths
         switch (Middleware::normalizeRole($role)) {
             case 'admin':
-                return "{$baseUrl}/adminPages/homeAdmin.php";
+                return "{$baseUrl}/admin/home";
             case 'unit owner':
-                return "{$baseUrl}/unitOwnerPages/overview.php";
+                return "{$baseUrl}/owner/overview";
             case 'tenant':
-                return "{$baseUrl}/tenantPages/homeTenant.php";
+                return "{$baseUrl}/tenant/home";
             default:
                 return "{$baseUrl}/login";
         }

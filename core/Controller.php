@@ -56,8 +56,9 @@ abstract class Controller {
     /**
      * Redirect the user to a different URL or application route.
      */
-    protected function redirect(string $url): void {
-        header("Location: {$url}");
+    protected function redirect(string $url, int $statusCode = 302): void {
+        http_response_code($statusCode);
+        header("Location: {$url}", true, $statusCode);
         exit;
     }
 
