@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Zeppelin Suites - MVC Tenant Sidebar Component
  * Reusable DRY sidebar for all tenant views.
  */
-$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 $sidebarActiveTab = $activeTab ?? $sidebarActiveTab ?? '';
 
 $navItems = [
@@ -76,7 +76,7 @@ $navItems = [
 <aside class="sidebar fixed left-0 top-0 h-full border-r border-slate-100/80 flex flex-col z-50 md:z-40 shadow-2xl md:shadow-none" id="sidebar">
   <div class="px-4 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 min-h-18.25">
     <a href="<?= htmlspecialchars($baseUrl) ?>/tenant/home" class="sidebar-logo shrink-0 flex items-center">
-      <img src="<?= htmlspecialchars($baseUrl) ?>/images/zeppelin-logo.png" alt="Zeppelin Suites" class="h-10 w-auto object-contain" onerror="this.outerHTML='<span class=\'font-bold text-slate-900 text-sm tracking-tight\'>ZEPPELIN SUITES</span>'">
+      <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/zeppelin-logo.png" alt="Zeppelin Suites" class="h-10 w-auto object-contain" onerror="this.outerHTML='<span class=\'font-bold text-slate-900 text-sm tracking-tight\'>ZEPPELIN SUITES</span>'">
     </a>
     <button onclick="toggleCollapse()" class="hidden md:flex btn-press p-1.5 rounded-lg hover:bg-slate-100 transition-colors active:scale-95 shrink-0 ml-1" title="Toggle Sidebar">
       <svg class="collapse-icon w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>

@@ -30,7 +30,7 @@ class ResidentController extends Controller {
         $isAjax = $this->getQuery('ajax') === '1';
 
         $residents = $this->residentModel->getAll($search, $role, $status);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         // Live AJAX search requests return only rendered table rows
         if ($isAjax) {
@@ -73,7 +73,7 @@ class ResidentController extends Controller {
      */
     public function store(): void {
         Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         if (!$this->isPost()) {
             $this->redirect("{$baseUrl}/admin/residents");
@@ -95,7 +95,7 @@ class ResidentController extends Controller {
      */
     public function update(): void {
         Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         if (!$this->isPost()) {
             $this->redirect("{$baseUrl}/admin/residents");
@@ -119,7 +119,7 @@ class ResidentController extends Controller {
      */
     public function toggleStatus(): void {
         Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         if (!$this->isPost()) {
             $this->redirect("{$baseUrl}/admin/residents");
@@ -144,7 +144,7 @@ class ResidentController extends Controller {
      */
     public function show(): void {
         $userSession = Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $userId = (int)($this->getQuery('id', 0) ?: $this->getQuery('user_id', 0));
         if ($userId <= 0) {
@@ -180,7 +180,7 @@ class ResidentController extends Controller {
      */
     public function profileAction(): void {
         Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $userId = (int)($this->getPost('user_id', 0) ?: $this->getQuery('id', 0));
         if ($userId <= 0) {

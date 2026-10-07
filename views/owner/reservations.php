@@ -44,7 +44,7 @@ if (!function_exists('format_timeline_datetime')) {
     }
 }
 
-$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 $reservations = $reservations ?? [];
 $totalCount = count($reservations);
 ?>

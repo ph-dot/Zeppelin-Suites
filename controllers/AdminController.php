@@ -266,7 +266,7 @@ class AdminController extends Controller {
             'generatedAt' => date('M j, Y g:i A'),
         ];
 
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $this->render('admin/analytics', [
             'pageTitle'           => 'Zeppelin Suites - Analytics',
@@ -297,7 +297,7 @@ class AdminController extends Controller {
         $userSession = Middleware::requireRole(['admin']);
         $homeStats = $this->analyticsModel->getHomeStats();
         $pendingCounts = $this->analyticsModel->getPendingCounts();
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $this->render('admin/home', [
             'pageTitle'           => 'Zeppelin Suites - Admin Home',
@@ -317,7 +317,7 @@ class AdminController extends Controller {
     public function pendingActions(): void {
         Middleware::requireRole(['admin']);
         $homeStats = $this->analyticsModel->getHomeStats();
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $this->render('admin/pending_actions', [
             'homeStats' => $homeStats,
@@ -334,7 +334,7 @@ class AdminController extends Controller {
         $admin = $userModel->findById((int)$userSession['user_id']);
 
         if (!$admin) {
-            $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+            $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
             $this->redirect("{$baseUrl}/admin/home");
             return;
         }
@@ -354,7 +354,7 @@ class AdminController extends Controller {
         $additionalPhone = !empty($admin['additional_contact']) ? $admin['additional_contact'] : '—';
         $additionalEmail = !empty($admin['additional_email']) ? $admin['additional_email'] : '—';
         $pendingCounts = $this->analyticsModel->getPendingCounts();
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $this->render('admin/account', [
             'pageTitle'           => 'Zeppelin Suites - Admin Account',

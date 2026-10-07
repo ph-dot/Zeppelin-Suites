@@ -608,20 +608,20 @@ class UnitOwner extends Model {
             return ['success' => false, 'message' => 'Only JPG, JPEG, PNG, and WEBP image files are allowed.'];
         }
 
-        $uploadDir = __DIR__ . '/../public/uploads/payment_qr/';
+        $uploadDir = dirname(__DIR__) . '/images/payment_qr/';
         if (!is_dir($uploadDir)) {
             @mkdir($uploadDir, 0775, true);
         }
 
         $newName = 'gcash_qr_' . $ownerId . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
         $targetPath = $uploadDir . $newName;
-        $dbPath = 'uploads/payment_qr/' . $newName;
+        $dbPath = 'images/payment_qr/' . $newName;
 
         if (move_uploaded_file($tmpName, $targetPath)) {
             // Remove old QR image file if it exists
             $oldRow = $this->fetchOne("SELECT gcash_QR FROM users_table WHERE user_id = ? LIMIT 1", [$ownerId]);
             if (!empty($oldRow['gcash_QR'])) {
-                $oldFile = __DIR__ . '/../public/' . ltrim($oldRow['gcash_QR'], '/');
+                $oldFile = dirname(__DIR__) . '/' . ltrim($oldRow['gcash_QR'], '/');
                 if (file_exists($oldFile) && is_file($oldFile)) {
                     @unlink($oldFile);
                 }
@@ -640,7 +640,7 @@ class UnitOwner extends Model {
     public function deleteGcashQr(int $ownerId): array {
         $oldRow = $this->fetchOne("SELECT gcash_QR FROM users_table WHERE user_id = ? LIMIT 1", [$ownerId]);
         if (!empty($oldRow['gcash_QR'])) {
-            $oldFile = __DIR__ . '/../public/' . ltrim($oldRow['gcash_QR'], '/');
+            $oldFile = dirname(__DIR__) . '/' . ltrim($oldRow['gcash_QR'], '/');
             if (file_exists($oldFile) && is_file($oldFile)) {
                 @unlink($oldFile);
             }

@@ -24,7 +24,7 @@ class InquiryController extends Controller {
      */
     public function index(): void {
         $userSession = Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $inquiries = $this->inquiryModel->getAllInquiries();
         $stats = $this->inquiryModel->getInquiryStats();
@@ -66,7 +66,7 @@ class InquiryController extends Controller {
      */
     public function replyForm(): void {
         $userSession = Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $inqId = (int)$this->getQuery('inq_id', 0);
         if ($inqId <= 0) {
@@ -100,7 +100,7 @@ class InquiryController extends Controller {
      */
     public function sendReply(): void {
         Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $inqId = (int)$this->getPost('inq_id', 0);
         $replyTo = trim((string)$this->getPost('reply_to', ''));

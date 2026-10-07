@@ -124,7 +124,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   <div class="max-w-[1180px] mx-auto px-5 py-7 md:py-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative">
     <div class="flex items-center gap-7">
       <div class="flex items-center justify-center">
-        <img src="<?= htmlspecialchars($baseUrl) ?>/images/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
+        <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/zeppelin-logo.png" alt="Zeppelin Suites" style="height:60px;" onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest\'>SUITES</span></span>'">
       </div>
 
       <div class="hidden sm:block w-px h-16 bg-slate-200"></div>

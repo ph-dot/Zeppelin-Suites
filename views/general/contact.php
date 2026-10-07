@@ -228,7 +228,7 @@ declare(strict_types=1);
         target="_blank" rel="noopener noreferrer"
         class="relative block w-full aspect-[4/3] bg-white/10 rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
         <div class="w-full h-full flex items-center justify-center text-center">
-          <img src="<?= htmlspecialchars($baseUrl) ?>/images/ZeppelinSuitesMap.png" 
+          <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/ZeppelinSuitesMap.png" 
             alt="Map showing Zeppelin Suites location in Angeles City"
             class="w-full h-full object-cover"
             onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-400 font-bold text-xs text-center px-6\'>MAP IMAGE NOT FOUND</div>'">

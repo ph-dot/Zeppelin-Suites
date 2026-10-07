@@ -50,7 +50,7 @@ declare(strict_types=1);
           everyday life extraordinary.</p>
       </div>
       <div class="bg-zinc-100 rounded-2xl overflow-hidden aspect-4/3 flex items-center justify-center">
-        <img src="<?= htmlspecialchars($baseUrl) ?>/images/zeppelin-suites-front.jpg" alt="Building" class="w-full h-full object-cover"
+        <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/zeppelin-suites-front.jpg" alt="Building" class="w-full h-full object-cover"
           onerror="this.outerHTML='<span class=\'text-zinc-400 font-bold text-lg\'>IMG</span>'">
       </div>
     </div>
@@ -103,7 +103,7 @@ declare(strict_types=1);
   <section class="px-6 md:px-16 lg:px-24 xl:px-32 py-20">
     <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-14 items-center">
       <div class="bg-zinc-100 rounded-2xl overflow-hidden aspect-4/3 flex items-center justify-center">
-        <img src="<?= htmlspecialchars($baseUrl) ?>/images/environment.jpg" alt="Amenities" class="w-full h-full object-cover"
+        <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/environment.jpg" alt="Amenities" class="w-full h-full object-cover"
           onerror="this.outerHTML='<span class=\'text-zinc-400 font-bold text-lg\'>IMG</span>'">
       </div>
       <div>

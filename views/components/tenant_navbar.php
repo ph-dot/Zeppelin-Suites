@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Zeppelin Suites - MVC Tenant Navbar Component
  * Reusable DRY top navigation bar and logout modal for tenant views.
  */
-$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 $tntName = $tenantName ?? $_SESSION['full_name'] ?? 'Tenant';
 $tntInitials = $tenantInitials ?? strtoupper(substr(trim($tntName ?: 'T'), 0, 1));
 

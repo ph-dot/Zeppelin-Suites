@@ -78,7 +78,7 @@ declare(strict_types=1);
       </div>
       <div class="flex flex-col gap-4">
         <div class="bg-zinc-100 rounded-2xl aspect-video flex items-center justify-center overflow-hidden">
-          <img src="<?= htmlspecialchars($baseUrl) ?>/images/zeppelin-suites-front.jpg" alt="Building exterior"
+          <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/zeppelin-suites-front.jpg" alt="Building exterior"
             class="w-full h-full object-cover rounded-2xl"
             onerror="this.parentElement.innerHTML='<span class=\'text-zinc-400 font-semibold\'>IMG</span>'">
         </div>
@@ -97,7 +97,7 @@ declare(strict_types=1);
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         <div class="group cursor-pointer flex flex-col h-full">
           <div class="bg-zinc-200 rounded-2xl w-full aspect-[4/3] mb-4 overflow-hidden relative">
-            <img src="<?= htmlspecialchars($baseUrl) ?>/images/studio-a.jpg" alt="Studio Type A"
+            <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/studio-a.jpg" alt="Studio Type A"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-zinc-200 text-zinc-400 font-bold text-xs\'>IMAGE NOT FOUND</div>'">
           </div>
@@ -115,7 +115,7 @@ declare(strict_types=1);
 
         <div class="group cursor-pointer flex flex-col h-full">
           <div class="bg-zinc-200 rounded-2xl w-full aspect-[4/3] mb-4 overflow-hidden relative">
-            <img src="<?= htmlspecialchars($baseUrl) ?>/images/studio_b.jpg" alt="Studio Type B"
+            <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/studio_b.jpg" alt="Studio Type B"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-zinc-200 text-zinc-400 font-bold text-xs\'>IMAGE NOT FOUND</div>'">
           </div>
@@ -133,7 +133,7 @@ declare(strict_types=1);
 
         <div class="group cursor-pointer flex flex-col h-full">
           <div class="bg-zinc-200 rounded-2xl w-full aspect-[4/3] mb-4 overflow-hidden relative">
-            <img src="<?= htmlspecialchars($baseUrl) ?>/images/one-bedroom-slider-2.jpg" alt="One Bedroom"
+            <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/one-bedroom-slider-2.jpg" alt="One Bedroom"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-zinc-200 text-zinc-400 font-bold text-xs\'>IMAGE NOT FOUND</div>'">
           </div>
@@ -151,7 +151,7 @@ declare(strict_types=1);
 
         <div class="group cursor-pointer flex flex-col h-full">
           <div class="bg-zinc-200 rounded-2xl w-full aspect-[4/3] mb-4 overflow-hidden relative">
-            <img src="<?= htmlspecialchars($baseUrl) ?>/images/two-bedroom.jpg" alt="Two Bedroom"
+            <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/two-bedroom.jpg" alt="Two Bedroom"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-zinc-200 text-zinc-400 font-bold text-xs\'>IMAGE NOT FOUND</div>'">
           </div>
@@ -229,7 +229,7 @@ declare(strict_types=1);
       </div>
 
       <div class="relative rounded-3xl overflow-hidden shadow-xl border border-zinc-200 aspect-[4/3]">
-        <img src="<?= htmlspecialchars($baseUrl) ?>/images/ZeppelinSuitesMap.png" alt="Map showing Zeppelin Suites location in Angeles City"
+        <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/ZeppelinSuitesMap.png" alt="Map showing Zeppelin Suites location in Angeles City"
           class="w-full h-full object-cover"
           onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-zinc-200 text-zinc-400 font-bold text-xs text-center px-6\'>MAP IMAGE NOT FOUND</div>'">
         <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent pointer-events-none"></div>
@@ -257,37 +257,37 @@ declare(strict_types=1);
     const amenitiesData = [
       {
         title: "Environment",
-        image: baseUrl + "/images/environment.jpg",
+        image: baseUrl + "/images/condo_photos/environment.jpg",
         items: ["24-hour concierge lobby", "Landscaped gardens", "Swimming pool with lounge area"]
       },
       {
         title: "Apartment Features",
-        image: baseUrl + "/images/apartment-features.jpg",
+        image: baseUrl + "/images/condo_photos/apartment-features.jpg",
         items: ["Private balconies", "Central air conditioning", "Premium finishes throughout"]
       },
       {
         title: "Convenience",
-        image: baseUrl + "/images/elevators.png",
+        image: baseUrl + "/images/condo_photos/elevators.png",
         items: ["High-speed elevators", "Smart security access", "Underground parking"]
       },
       {
         title: "Living & Dining",
-        image: baseUrl + "/images/living-and-dining.jpg",
+        image: baseUrl + "/images/condo_photos/living-and-dining.jpg",
         items: ["Spacious open-plan layouts", "Ceramic tiled flooring", "Large windows with city views"]
       },
       {
         title: "Kitchen",
-        image: baseUrl + "/images/kitchen.jpg",
+        image: baseUrl + "/images/condo_photos/kitchen.jpg",
         items: ["Stone countertops", "Modern cabinetry", "Stainless steel appliances"]
       },
       {
         title: "Bathroom",
-        image: baseUrl + "/images/bathroom.jpg",
+        image: baseUrl + "/images/condo_photos/bathroom.jpg",
         items: ["Luxury sanitary fittings", "Ceramic wall & floor tiles", "Rain shower system"]
       },
       {
         title: "Exclusive Services",
-        image: baseUrl + "/images/exclusive-services.jpg",
+        image: baseUrl + "/images/condo_photos/exclusive-services.jpg",
         items: ["Helicopter landing pad", "Airport transfer service", "Concierge & maid service"]
       }
     ];
@@ -369,10 +369,10 @@ declare(strict_types=1);
     window.addEventListener('DOMContentLoaded', () => {
       renderAmenities();
       const images = [
-        baseUrl + '/images/zeppelin-suites-slider-exterior-2.jpg',
-        baseUrl + '/images/zeppelin-suites-slider-pool-area.jpg',
-        baseUrl + '/images/zeppelin-suites-slider-interior.jpg',
-        baseUrl + '/images/zeppelin-suites-slider-lobby.jpg'
+        baseUrl + '/images/condo_photos/zeppelin-suites-slider-exterior-2.jpg',
+        baseUrl + '/images/condo_photos/zeppelin-suites-slider-pool-area.jpg',
+        baseUrl + '/images/condo_photos/zeppelin-suites-slider-interior.jpg',
+        baseUrl + '/images/condo_photos/zeppelin-suites-slider-lobby.jpg'
       ];
 
       let currentIndex = 0;

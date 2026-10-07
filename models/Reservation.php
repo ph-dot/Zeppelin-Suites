@@ -483,8 +483,11 @@ class Reservation extends Model {
         if (!empty($data['owner_gcash_qr'])) {
             $qrClean = ltrim((string)$data['owner_gcash_qr'], '/');
             $projectRoot = dirname(__DIR__);
-            $qrFullPath = $projectRoot . '/public/' . $qrClean;
+            $qrFullPath = $projectRoot . '/' . $qrClean;
             if (file_exists($qrFullPath)) {
+                $ownerHasQr = true;
+                $ownerQrPath = $qrClean;
+            } elseif (file_exists($projectRoot . '/public/' . $qrClean)) {
                 $ownerHasQr = true;
                 $ownerQrPath = $qrClean;
             }
@@ -697,7 +700,7 @@ class Reservation extends Model {
                 return ['success' => false, 'error' => 'File too large. Maximum size is 10MB.'];
             }
 
-            $uploadDir = dirname(__DIR__) . '/public/uploads/payment_proofs/';
+            $uploadDir = dirname(__DIR__) . '/images/payment_proofs/';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
@@ -709,7 +712,7 @@ class Reservation extends Model {
                 return ['success' => false, 'error' => 'Failed to upload payment proof.'];
             }
 
-            $dbFilePath = 'uploads/payment_proofs/' . $newFileName;
+            $dbFilePath = 'images/payment_proofs/' . $newFileName;
         } else {
             $dbFilePath = 'Pay In-House (During Lease Signing)';
             $paymentReference = 'In-House';
@@ -843,7 +846,7 @@ class Reservation extends Model {
             $this->db->commit();
 
             // Notify owner
-            $ownerNotificationsFile = dirname(__DIR__) . '/public/php_files/owner_notifications.php';
+            $ownerNotificationsFile = dirname(__DIR__) . '/config/owner_notifications.php';
             if (file_exists($ownerNotificationsFile)) {
                 require_once $ownerNotificationsFile;
                 if (function_exists('notifyOwnerOfNewReservation')) {

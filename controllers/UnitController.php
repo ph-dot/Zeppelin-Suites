@@ -23,7 +23,7 @@ class UnitController extends Controller {
      */
     public function index(): void {
         $userSession = Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $unitsByFloor = $this->unitModel->getAllGroupedByFloor();
         $ownerOptions = $this->unitModel->getOwnerOptions();
@@ -56,7 +56,7 @@ class UnitController extends Controller {
      */
     public function show(): void {
         $userSession = Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $unitId = (int)($this->getQuery('id', 0) ?: $this->getQuery('unit_id', 0));
         if ($unitId <= 0) {
@@ -127,7 +127,7 @@ class UnitController extends Controller {
      */
     public function store(): void {
         Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         if (!$this->isPost()) {
             $this->redirect("{$baseUrl}/admin/units");

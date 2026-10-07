@@ -9,7 +9,7 @@ declare(strict_types=1);
  * @var string $activePage Current active page identifier (home, tour, studio_a, studio_b, one_bed, two_bed, faq, about, contact)
  */
 $activePage = $activePage ?? '';
-$baseUrl = rtrim((string)($baseUrl ?? env('APP_URL', '/Zeppelin-Suites/public')), '/');
+$baseUrl = rtrim((string)($baseUrl ?? env('APP_URL', '/Zeppelin-Suites')), '/');
 
 $isUnit = in_array($activePage, ['studio_a', 'studio_b', 'one_bed', 'two_bed'], true);
 
@@ -27,7 +27,7 @@ $dropdownClass = function (bool $isActive): string {
 ?>
 <nav class="sticky top-0 w-full bg-white/90 backdrop-blur-md px-6 md:px-16 lg:px-24 xl:px-32 py-4 flex items-center justify-between z-50 border-b border-zinc-200/70 transition-all">
   <a href="<?= htmlspecialchars($baseUrl) ?>/" class="flex items-center gap-2 group">
-    <img src="<?= htmlspecialchars($baseUrl) ?>/images/zeppelin-logo.png" alt="Zeppelin Suites" class="h-12 w-auto object-contain transition-transform group-hover:scale-105"
+    <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/zeppelin-logo.png" alt="Zeppelin Suites" class="h-12 w-auto object-contain transition-transform group-hover:scale-105"
       onerror="this.outerHTML='<span class=\'font-bold text-xl tracking-tight text-zinc-900\'>ZEPPELIN<br><span class=\'text-xs font-normal tracking-widest text-amber-600\'>SUITES</span></span>'">
   </a>
 

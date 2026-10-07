@@ -84,7 +84,7 @@ if (!function_exists('calculate_lease_duration')) {
     }
 }
 
-$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 $res = $reservation ?? [];
 
 $formattedResId = str_pad((string)($res['reservation_id'] ?? 0), 3, '0', STR_PAD_LEFT);

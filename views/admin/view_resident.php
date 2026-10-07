@@ -37,7 +37,7 @@ if (!function_exists('status_badge')) {
     }
 }
 
-$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 $resident = $resident ?? [];
 $user_id = (int)($resident['user_id'] ?? 0);
 

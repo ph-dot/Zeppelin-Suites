@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Zeppelin Suites - Booking Calendar View
  * Pure MVC presentation template. Zero direct SQL or DB connections.
  */
-$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 ?>
 <!DOCTYPE html>
 <html lang="en">

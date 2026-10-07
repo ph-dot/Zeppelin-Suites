@@ -24,7 +24,7 @@ class GeneralController extends Controller {
      * Public landing / home page.
      */
     public function index(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $this->render('general/home', [
             'pageTitle'  => 'Zeppelin Suites — Luxury Living in Angeles City',
             'baseUrl'    => $baseUrl,
@@ -36,7 +36,7 @@ class GeneralController extends Controller {
      * About Us page.
      */
     public function about(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $this->render('general/about', [
             'pageTitle'  => 'Zeppelin Suites — About Us',
             'baseUrl'    => $baseUrl,
@@ -48,7 +48,7 @@ class GeneralController extends Controller {
      * FAQ page.
      */
     public function faq(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $this->render('general/faq', [
             'pageTitle'  => 'Zeppelin Suites — Frequently Asked Questions',
             'baseUrl'    => $baseUrl,
@@ -60,7 +60,7 @@ class GeneralController extends Controller {
      * Virtual 360 Tour page.
      */
     public function tour(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $this->render('general/tour', [
             'pageTitle'  => 'Zeppelin Suites — Virtual 360 Tour',
             'baseUrl'    => $baseUrl,
@@ -72,7 +72,7 @@ class GeneralController extends Controller {
      * Studio Type A unit details page.
      */
     public function studioTypeA(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $this->render('general/studio_type_a', [
             'pageTitle'  => 'Zeppelin Suites — Studio Type A',
             'baseUrl'    => $baseUrl,
@@ -84,7 +84,7 @@ class GeneralController extends Controller {
      * Studio Type B unit details page.
      */
     public function studioTypeB(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $this->render('general/studio_type_b', [
             'pageTitle'  => 'Zeppelin Suites — Studio Type B',
             'baseUrl'    => $baseUrl,
@@ -96,7 +96,7 @@ class GeneralController extends Controller {
      * One Bedroom unit details page.
      */
     public function oneBedroom(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $this->render('general/one_bedroom', [
             'pageTitle'  => 'Zeppelin Suites — One Bedroom Suite',
             'baseUrl'    => $baseUrl,
@@ -108,7 +108,7 @@ class GeneralController extends Controller {
      * Two Bedroom unit details page.
      */
     public function twoBedroom(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $this->render('general/two_bedroom', [
             'pageTitle'  => 'Zeppelin Suites — Two Bedroom Suite',
             'baseUrl'    => $baseUrl,
@@ -120,7 +120,7 @@ class GeneralController extends Controller {
      * Privacy Policy page.
      */
     public function privacyPolicy(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $this->render('general/privacy_policy', [
             'pageTitle'  => 'Zeppelin Suites — Privacy Policy',
             'baseUrl'    => $baseUrl,
@@ -132,7 +132,7 @@ class GeneralController extends Controller {
      * Terms of Service page.
      */
     public function termsOfService(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $this->render('general/terms_of_service', [
             'pageTitle'  => 'Zeppelin Suites — Terms of Service',
             'baseUrl'    => $baseUrl,
@@ -144,7 +144,7 @@ class GeneralController extends Controller {
      * Contact / Inquiry submission page.
      */
     public function contact(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $errorMessage = $this->getFlash('error_message');
 
         $this->render('general/contact', [
@@ -159,7 +159,7 @@ class GeneralController extends Controller {
      * Handle public inquiry form POST submission.
      */
     public function submitInquiry(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         if (!$this->isPost()) {
             $this->redirect("{$baseUrl}/contact");
@@ -180,7 +180,7 @@ class GeneralController extends Controller {
      * Inquiry submission confirmation page.
      */
     public function inquiryConfirmation(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $this->render('general/inquiry_confirmation', [
             'pageTitle'  => 'Inquiry Received — Zeppelin Suites',
             'baseUrl'    => $baseUrl,
@@ -192,7 +192,7 @@ class GeneralController extends Controller {
      * Client Condominium Reservation Form (loaded by secure token from inquiry email).
      */
     public function reservationForm(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $token = (string)$this->getQuery('token', '');
 
         if ($token === '') {
@@ -222,7 +222,7 @@ class GeneralController extends Controller {
      * Handle client reservation form POST submission.
      */
     public function submitReservation(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         if (!$this->isPost()) {
             $this->redirect("{$baseUrl}/");
@@ -243,7 +243,7 @@ class GeneralController extends Controller {
      * Reservation submission confirmation page.
      */
     public function reservationConfirmation(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $token = (string)$this->getQuery('token', '');
 
         $this->render('general/reservation_confirmation', [
@@ -258,7 +258,7 @@ class GeneralController extends Controller {
      * Client cancellation request page (loaded by cancellation token from email).
      */
     public function cancelReservation(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $token = (string)$this->getQuery('token', '');
 
         if ($token === '') {
@@ -285,7 +285,7 @@ class GeneralController extends Controller {
      * Handle client cancellation request POST submission.
      */
     public function submitCancellation(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         if (!$this->isPost()) {
             $this->redirect("{$baseUrl}/");
@@ -308,7 +308,7 @@ class GeneralController extends Controller {
      * Cancellation confirmation page.
      */
     public function cancellationConfirmation(): void {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $this->render('general/cancellation_confirmation', [
             'pageTitle'  => 'Cancellation Request Submitted — Zeppelin Suites',
             'baseUrl'    => $baseUrl,
@@ -391,7 +391,7 @@ class GeneralController extends Controller {
      */
     private function renderError(string $title, string $message, int $statusCode = 400): void {
         http_response_code($statusCode);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $this->render('general/error', [
             'pageTitle'    => "Error: {$title} — Zeppelin Suites",
             'errorTitle'   => $title,

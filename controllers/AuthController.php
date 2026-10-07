@@ -42,7 +42,7 @@ class AuthController extends Controller {
             }
         }
 
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $this->render('auth/login', [
             'pageTitle'    => 'Zeppelin Suites - Login',
@@ -60,7 +60,7 @@ class AuthController extends Controller {
             session_start();
         }
 
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $loginUrl = "{$baseUrl}/login";
 
         if (!$this->isPost()) {
@@ -153,7 +153,7 @@ class AuthController extends Controller {
         // Destroy the session storage
         session_destroy();
 
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $this->redirect("{$baseUrl}/login");
     }
 
@@ -161,7 +161,7 @@ class AuthController extends Controller {
      * Helper to compute dashboard URL for a user role.
      */
     private function getDashboardUrl(string $role): string {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         switch (Middleware::normalizeRole($role)) {
             case 'admin':

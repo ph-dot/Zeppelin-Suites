@@ -65,7 +65,7 @@ if (!function_exists('getFloorIconBg')) {
     }
 }
 
-$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 $unitsByFloor = $unitsByFloor ?? [];
 $ownerOptions = $ownerOptions ?? [];
 $totalUnitsCount = $totalUnitsCount ?? 0;

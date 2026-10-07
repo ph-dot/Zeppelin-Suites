@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Zeppelin Suites - Pending Actions Partial
  * Reused for initial home overview rendering and live 20s auto-refresh polling.
  */
-$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 $totalPendingActions = (int)($homeStats['total_pending'] ?? 0);
 $pendingInquiryCount = (int)($homeStats['pending_inquiries'] ?? 0);
 $pendingReservationCount = (int)($homeStats['pending_reservations'] ?? 0);

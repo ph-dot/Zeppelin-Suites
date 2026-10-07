@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Zeppelin Suites - MVC Admin Navbar Component
  * Reusable DRY top navigation bar and logout modal for all admin views.
  */
-$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 $adminName = $adminName ?? ($_SESSION['full_name'] ?? 'Admin User');
 $adminInitial = $adminInitial ?? ($_SESSION['initial'] ?? strtoupper(substr((string)$adminName, 0, 1)));
 

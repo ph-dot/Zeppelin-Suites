@@ -10,5 +10,5 @@ return [
     'SMTP_PORT'              => 587,
     'MAIL_FROM_EMAIL'        => 'your_email@gmail.com',
     'MAIL_FROM_NAME'         => 'Zeppelin Suites',
-    'OWNER_PORTAL_LOGIN_URL' => 'http://localhost/Zeppelin-Suites/public/generalViewPages/login.php'
+    'OWNER_PORTAL_LOGIN_URL' => 'http://localhost/Zeppelin-Suites/login'
 ];

@@ -68,7 +68,7 @@ if (!function_exists('getDurationText')) {
     }
 }
 
-$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 $unit = $unit ?? [];
 $unitId = (int)($unitId ?? $unit['unit_id'] ?? 0);
 $floorNumber = (int)($unit['floor_number'] ?: 1);

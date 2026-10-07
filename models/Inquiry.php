@@ -174,8 +174,8 @@ class Inquiry extends Model {
             strtolower((string)($inquiry['approval_status'] ?? '')) === 'approved' &&
             !empty($inquiry['reservation_token'])
         ) {
-            $baseUrl = rtrim((string)env('APP_URL', 'http://localhost/Zeppelin-Suites/public'), '/');
-            $reservationLink = "{$baseUrl}/generalViewPages/reservationform.php?token=" . urlencode((string)$inquiry['reservation_token']);
+            $baseUrl = rtrim((string)env('APP_URL', 'http://localhost/Zeppelin-Suites'), '/');
+            $reservationLink = "{$baseUrl}/reservation?token=" . urlencode((string)$inquiry['reservation_token']);
 
             if (strpos($emailBody, $reservationLink) === false) {
                 $emailBody .= "\n\nReservation Form Link:\n" . $reservationLink;
@@ -183,12 +183,12 @@ class Inquiry extends Model {
         }
 
         // Require email config and PHPMailer
-        $emailConfigFile = dirname(__DIR__) . '/public/php_files/email_config.php';
+        $emailConfigFile = dirname(__DIR__) . '/config/email_config.php';
         if (file_exists($emailConfigFile)) {
             require_once $emailConfigFile;
         }
 
-        $mailerDir = dirname(__DIR__) . '/public/phpmailer/src';
+        $mailerDir = dirname(__DIR__) . '/phpmailer/src';
         if (file_exists($mailerDir . '/PHPMailer.php')) {
             require_once $mailerDir . '/Exception.php';
             require_once $mailerDir . '/PHPMailer.php';

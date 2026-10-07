@@ -44,11 +44,11 @@ declare(strict_types=1);
       <div class="slider-wrap rounded-2xl overflow-hidden shadow-sm relative">
         <div class="slider-track" id="slider-sb">
           <div class="slide bg-zinc-100 aspect-video flex items-center justify-center">
-            <img src="<?= htmlspecialchars($baseUrl) ?>/images/studio_b.jpg" alt="Studio B" class="w-full h-full object-cover"
+            <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/studio_b.jpg" alt="Studio B" class="w-full h-full object-cover"
               onerror="this.parentElement.innerHTML='<span class=\'text-zinc-400 font-bold text-xl\'>ROOM IMG</span>'">
           </div>
           <div class="slide bg-zinc-200 aspect-video flex items-center justify-center">
-            <img src="<?= htmlspecialchars($baseUrl) ?>/images/studio_b_2.jpg" alt="Studio B Angle 2" class="w-full h-full object-cover"
+            <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/studio_b_2.jpg" alt="Studio B Angle 2" class="w-full h-full object-cover"
               onerror="this.parentElement.innerHTML='<span class=\'text-zinc-400 font-bold text-xl\'>ROOM IMG</span>'">
           </div>
         </div>

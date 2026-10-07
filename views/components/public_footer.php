@@ -7,7 +7,7 @@ declare(strict_types=1);
  *
  * @var string $baseUrl Base application URL
  */
-$baseUrl = rtrim((string)($baseUrl ?? env('APP_URL', '/Zeppelin-Suites/public')), '/');
+$baseUrl = rtrim((string)($baseUrl ?? env('APP_URL', '/Zeppelin-Suites')), '/');
 ?>
 <footer class="mt-16 md:mt-24 bg-zinc-950 text-zinc-300 py-16 md:py-20 px-6 md:px-8 lg:px-12 xl:px-20 border-t border-zinc-900">
   <div class="max-w-7xl mx-auto">

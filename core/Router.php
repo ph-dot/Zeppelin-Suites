@@ -69,7 +69,7 @@ class Router {
         } elseif (isset($_GET['r']) && trim($_GET['r']) !== '') {
             $path = '/' . trim($_GET['r'], '/');
         } else {
-            // Strip basePath (e.g. /Zeppelin-Suites/public) from path if present
+            // Strip basePath (e.g. /Zeppelin-Suites) from path if present
             if ($this->basePath !== '' && str_starts_with($path, $this->basePath)) {
                 $path = substr($path, strlen($this->basePath));
             }
@@ -201,7 +201,7 @@ class Router {
         echo "<div class='text-center p-8 bg-white rounded-2xl shadow-sm border border-slate-100 max-w-md w-full'>";
         echo "<h1 class='text-4xl font-bold text-slate-900 mb-2'>404</h1>";
         echo "<p class='text-slate-600 mb-6'>Page not found: <code class='bg-slate-100 px-2 py-1 rounded text-sm text-slate-800'>" . htmlspecialchars($path) . "</code></p>";
-        echo "<a href='" . htmlspecialchars(rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/')) . "/login' class='inline-block px-5 py-2.5 rounded-full bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors'>Return to Login</a>";
+        echo "<a href='" . htmlspecialchars(rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/')) . "/login' class='inline-block px-5 py-2.5 rounded-full bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors'>Return to Login</a>";
         echo "</div></body></html>";
         exit;
     }

@@ -23,7 +23,7 @@ class BookingCalendarController extends Controller {
      */
     public function index(): void {
         $userSession = Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $analyticsModel = new Analytics();
         $pendingCounts = $analyticsModel->getPendingCounts();

@@ -30,7 +30,7 @@ class ReservationController extends Controller {
         // Fetch all reservations with full relations
         $reservations = $this->reservationModel->getAllWithDetails();
 
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $this->render('admin/reservations', [
             'pageTitle'    => 'Zeppelin Suites Admin - Lease Management',
@@ -76,7 +76,7 @@ class ReservationController extends Controller {
      */
     public function show(): void {
         $userSession = Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $reservationId = (int)($this->getQuery('reservation_id', 0) ?: $this->getQuery('id', 0));
         if ($reservationId <= 0) {

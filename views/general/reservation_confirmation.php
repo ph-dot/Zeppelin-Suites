@@ -117,7 +117,7 @@ declare(strict_types=1);
       <div class="mb-6">
         <a href="<?= htmlspecialchars($baseUrl) ?>/">
           <img
-            src="<?= htmlspecialchars($baseUrl) ?>/images/zeppelin-logo.png"
+            src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/zeppelin-logo.png"
             alt="Zeppelin Suites"
             style="height:70px; margin:0 auto;"
             onerror="this.outerHTML='<div style=\'font-size:22px;font-weight:800;letter-spacing:0.04em;color:#111;\'>ZEPPELIN<br><span style=\'font-size:10px;font-weight:400;letter-spacing:0.25em;color:#6b7280;\'>SUITES</span></div>'"

@@ -79,7 +79,7 @@ class Middleware {
      * Determine dashboard redirect destination by role.
      */
     public static function getDashboardUrlForRole(string $role): string {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         
         switch (self::normalizeRole($role)) {
             case 'admin':
@@ -98,7 +98,7 @@ class Middleware {
      * Determine login URL based on environment.
      */
     public static function getLoginUrl(): string {
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         return "{$baseUrl}/login";
     }
 }

@@ -97,7 +97,7 @@ if (!function_exists('renderTicketCard')) {
             foreach ($savedPhotos as $photo) {
                 $photo = str_replace('\\/', '/', $photo);
                 $photo = trim($photo, " \t\n\r\0\x0B[]\"'");
-                if (strpos($photo, 'uploads/maintenance/') === 0) {
+                if (strpos($photo, 'images/maintenance/') === 0 || strpos($photo, 'uploads/maintenance/') === 0) {
                     $photoPaths[] = rtrim($baseUrl, '/') . '/' . ltrim($photo, '/');
                 }
             }

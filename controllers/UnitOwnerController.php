@@ -22,7 +22,7 @@ class UnitOwnerController extends Controller {
      */
     public function overview(): void {
         $userSession = Middleware::requireRole(['unit owner']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $ownerId = (int)$userSession['user_id'];
 
         $overview = $this->ownerModel->getOverviewData($ownerId);
@@ -48,7 +48,7 @@ class UnitOwnerController extends Controller {
      */
     public function units(): void {
         $userSession = Middleware::requireRole(['unit owner']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $ownerId = (int)$userSession['user_id'];
 
         $units = $this->ownerModel->getOwnerUnits($ownerId);
@@ -68,7 +68,7 @@ class UnitOwnerController extends Controller {
      */
     public function showUnit(): void {
         $userSession = Middleware::requireRole(['unit owner']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $ownerId = (int)$userSession['user_id'];
         $unitId = (int)($this->getQuery('id', 0) ?: $this->getQuery('unit_id', 0));
 
@@ -102,7 +102,7 @@ class UnitOwnerController extends Controller {
      */
     public function inquiries(): void {
         $userSession = Middleware::requireRole(['unit owner']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $ownerId = (int)$userSession['user_id'];
 
         $inquiries = $this->ownerModel->getOwnerInquiries($ownerId);
@@ -122,7 +122,7 @@ class UnitOwnerController extends Controller {
      */
     public function reservations(): void {
         $userSession = Middleware::requireRole(['unit owner']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $ownerId = (int)$userSession['user_id'];
 
         $reservations = $this->ownerModel->getOwnerReservations($ownerId);
@@ -142,7 +142,7 @@ class UnitOwnerController extends Controller {
      */
     public function showReservation(): void {
         $userSession = Middleware::requireRole(['unit owner']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $ownerId = (int)$userSession['user_id'];
         $resId = (int)($this->getQuery('reservation_id', 0) ?: $this->getQuery('id', 0));
 
@@ -172,7 +172,7 @@ class UnitOwnerController extends Controller {
      */
     public function calendar(): void {
         $userSession = Middleware::requireRole(['unit owner']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $this->render('owner/booking_calendar', [
             'pageTitle'    => 'Zeppelin Suites — Booking Calendar',
@@ -203,7 +203,7 @@ class UnitOwnerController extends Controller {
      */
     public function tenants(): void {
         $userSession = Middleware::requireRole(['unit owner']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $ownerId = (int)$userSession['user_id'];
 
         $tenants = $this->ownerModel->getOwnerTenants($ownerId);
@@ -223,7 +223,7 @@ class UnitOwnerController extends Controller {
      */
     public function maintenance(): void {
         $userSession = Middleware::requireRole(['unit owner']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $ownerId = (int)$userSession['user_id'];
 
         $maintData = $this->ownerModel->getOwnerMaintenance($ownerId);
@@ -252,7 +252,7 @@ class UnitOwnerController extends Controller {
      */
     public function account(): void {
         $userSession = Middleware::requireRole(['unit owner']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
         $ownerId = (int)$userSession['user_id'];
 
         $toast = null;

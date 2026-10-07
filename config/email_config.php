@@ -44,6 +44,6 @@ if (!defined('MAIL_FROM_NAME')) {
 
 // Used in owner notification emails as the link to log in and respond.
 if (!defined('OWNER_PORTAL_LOGIN_URL')) {
-    define('OWNER_PORTAL_LOGIN_URL', getenv('OWNER_PORTAL_LOGIN_URL') ?: ($localConfig['OWNER_PORTAL_LOGIN_URL'] ?? 'http://localhost/Zeppelin-Suites/public/generalViewPages/login.php'));
+    define('OWNER_PORTAL_LOGIN_URL', getenv('OWNER_PORTAL_LOGIN_URL') ?: ($localConfig['OWNER_PORTAL_LOGIN_URL'] ?? 'http://localhost/Zeppelin-Suites/login'));
 }
 ?>

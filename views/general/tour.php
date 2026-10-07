@@ -122,24 +122,24 @@ declare(strict_types=1);
 
     const tourData = {
       "amenities": [
-        { title: "Lobby", image: baseUrl + "/vrTourImages/lobby.png" },
-        { title: "Pool", image: baseUrl + "/vrTourImages/pool.png" },
-        { title: "Parking Lot", image: baseUrl + "/vrTourImages/parkingLot.png" }
+        { title: "Lobby", image: baseUrl + "/images/vrTourImages/lobby.png" },
+        { title: "Pool", image: baseUrl + "/images/vrTourImages/pool.png" },
+        { title: "Parking Lot", image: baseUrl + "/images/vrTourImages/parkingLot.png" }
       ],
       "studio-a": [
-        { title: "Whole Room", image: baseUrl + "/vrTourImages/studioTypeA.png" }
+        { title: "Whole Room", image: baseUrl + "/images/vrTourImages/studioTypeA.png" }
       ],
       "studio-b": [
-        { title: "Whole Room", image: baseUrl + "/vrTourImages/studioTypeA.png" }
+        { title: "Whole Room", image: baseUrl + "/images/vrTourImages/studioTypeA.png" }
       ],
       "one-bedroom": [
-        { title: "Bedroom", image: baseUrl + "/vrTourImages/oneBedroomBedroom_1.png" },
-        { title: "Living Room", image: baseUrl + "/vrTourImages/oneBedroomLivingRoom_3.png" }
+        { title: "Bedroom", image: baseUrl + "/images/vrTourImages/oneBedroomBedroom_1.png" },
+        { title: "Living Room", image: baseUrl + "/images/vrTourImages/oneBedroomLivingRoom_3.png" }
       ],
       "two-bedroom": [
-        { title: "Bedroom 1", image: baseUrl + "/vrTourImages/twoBedroomBedroom1.png" },
-        { title: "Bedroom 2", image: baseUrl + "/vrTourImages/twoBedroomBedroom2.png" },
-        { title: "Living Room", image: baseUrl + "/vrTourImages/twoBedroomLivingRoom.png" }
+        { title: "Bedroom 1", image: baseUrl + "/images/vrTourImages/twoBedroomBedroom1.png" },
+        { title: "Bedroom 2", image: baseUrl + "/images/vrTourImages/twoBedroomBedroom2.png" },
+        { title: "Living Room", image: baseUrl + "/images/vrTourImages/twoBedroomLivingRoom.png" }
       ]
     };
 
@@ -155,7 +155,7 @@ declare(strict_types=1);
         <img src="${item.image}" 
              alt="${item.title}" 
              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-             onerror="this.src='${baseUrl}/images/placeholder.jpg'; this.alt='Image not found'">
+             onerror="this.src='${baseUrl}/images/condo_photos/studio-a.jpg'; this.alt='Image not found'">
         <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent h-16"></div>
         <div class="absolute bottom-3 left-3 text-white text-xs font-medium tracking-wide">${item.title}</div>
       </div>

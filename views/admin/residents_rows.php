@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Zeppelin Suites - Resident Table Row Partial
  * Rendered during both initial page loads and AJAX live filter requests.
  */
-$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 $userId = (int)($resident['user_id'] ?? 0);
 $fullName = htmlspecialchars((string)($resident['full_name'] ?? ''), ENT_QUOTES, 'UTF-8');
 $email = htmlspecialchars((string)($resident['email'] ?? ''), ENT_QUOTES, 'UTF-8');

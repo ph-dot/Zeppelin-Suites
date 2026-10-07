@@ -23,7 +23,7 @@ class MaintenanceController extends Controller {
      */
     public function index(): void {
         $userSession = Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $grouped = $this->maintenanceModel->getGroupedTickets();
         $unitTypes = $this->maintenanceModel->getUnitTypeOptions();
@@ -94,7 +94,7 @@ class MaintenanceController extends Controller {
      */
     public function store(): void {
         $userSession = Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         if (!$this->isPost()) {
             $this->redirect("{$baseUrl}/admin/maintenance");

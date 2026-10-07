@@ -185,7 +185,7 @@ if (!function_exists('computeUnitAvailability')) {
     }
 }
 
-$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 $inquiries = $inquiries ?? [];
 ?>
 <!DOCTYPE html>

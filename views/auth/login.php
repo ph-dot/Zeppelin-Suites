@@ -20,7 +20,7 @@
 <!-- Main Section: Two-Column Login View -->
 <main class="flex flex-1 w-full min-h-[calc(100vh-80px)]">
     <!-- Left Hero Image Banner -->
-    <div class="hidden md:block w-1/2 min-h-full bg-cover bg-center bg-no-repeat relative" style="background-image: url('<?= htmlspecialchars($baseUrl) ?>/images/zeppelin-suites-slider-exterior-2.jpg');">
+    <div class="hidden md:block w-1/2 min-h-full bg-cover bg-center bg-no-repeat relative" style="background-image: url('<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/zeppelin-suites-slider-exterior-2.jpg');">
         <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex flex-col justify-end p-12 text-white">
             <span class="text-xs uppercase font-semibold tracking-widest text-emerald-400 mb-2">Welcome Home</span>
             <h2 class="text-3xl font-bold tracking-tight mb-2">Refined Living in the Heart of the City</h2>

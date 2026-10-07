@@ -322,8 +322,8 @@ class Tenant extends Model {
         // Process file uploads
         $photoPaths = [];
         if (!empty($files['maintenance_photos']['name'][0])) {
-            $uploadDir = dirname(__DIR__) . '/public/uploads/maintenance/';
-            $dbDir = 'uploads/maintenance/';
+            $uploadDir = dirname(__DIR__) . '/images/maintenance/';
+            $dbDir = 'images/maintenance/';
 
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0775, true);

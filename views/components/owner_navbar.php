@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Zeppelin Suites - MVC Unit Owner Navbar Component
  * Reusable DRY top navigation bar and logout modal for unit owner views.
  */
-$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+$baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
 $ownerName = $ownerName ?? $_SESSION['full_name'] ?? 'Unit Owner';
 $ownerInitial = $ownerInitial ?? strtoupper(substr(trim((string)$ownerName), 0, 1));

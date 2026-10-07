@@ -22,7 +22,7 @@ class TenantController extends Controller {
      */
     public function home(): void {
         $userSession = Middleware::requireRole(['tenant']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $tenantId = (int)$userSession['user_id'];
         $email = (string)($userSession['email'] ?? '');
@@ -49,7 +49,7 @@ class TenantController extends Controller {
      */
     public function account(): void {
         $userSession = Middleware::requireRole(['tenant']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $tenantId = (int)$userSession['user_id'];
         $toast = null;
@@ -95,7 +95,7 @@ class TenantController extends Controller {
      */
     public function maintenance(): void {
         $userSession = Middleware::requireRole(['tenant']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $tenantId = (int)$userSession['user_id'];
         $email = (string)($userSession['email'] ?? '');
@@ -127,7 +127,7 @@ class TenantController extends Controller {
      */
     public function storeMaintenance(): void {
         $userSession = Middleware::requireRole(['tenant']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites/public'), '/');
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         if (!$this->isPost()) {
             $this->redirect("{$baseUrl}/tenant/maintenance");

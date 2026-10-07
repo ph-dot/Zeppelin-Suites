@@ -44,7 +44,7 @@ declare(strict_types=1);
       <div class="slider-wrap rounded-2xl overflow-hidden shadow-sm">
         <div class="slider-track" id="slider-sa">
           <div class="slide bg-zinc-100 aspect-video flex items-center justify-center">
-            <img src="<?= htmlspecialchars($baseUrl) ?>/images/studio-a.jpg" alt="Studio A" class="w-full h-full object-cover"
+            <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/studio-a.jpg" alt="Studio A" class="w-full h-full object-cover"
               onerror="this.parentElement.innerHTML='<span class=\'text-zinc-400 font-bold text-xl\'>ROOM IMG</span>'">
           </div>
         </div>
