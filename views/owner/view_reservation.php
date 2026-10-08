@@ -267,26 +267,6 @@ $downpaymentAmount = (float) ($res['required_amount'] ?? 0) > 0
       height: calc(100vh - 65px);
       overflow-y: auto;
     }
-
-    .modal-backdrop {
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.25s ease, visibility 0.25s ease;
-    }
-
-    .modal-backdrop.open {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .modal-card {
-      transform: translateY(16px) scale(0.97);
-      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .modal-backdrop.open .modal-card {
-      transform: translateY(0) scale(1);
-    }
   </style>
 </head>
 
@@ -1207,272 +1187,150 @@ $downpaymentAmount = (float) ($res['required_amount'] ?? 0) > 0
         closePaymentConfirmModal('verifyPaymentModal');
       }
       if (action === 'reject') {
-        let shouldReloadOnOwnerStatusModalClose = false;
+        remarks = document.getElementById('rejectPaymentRemarks')?.value.trim() || '';
+        if (remarks === '') {
+          alert('Please enter a reason for rejecting the payment.');
+          return;
+        }
+        closePaymentConfirmModal('rejectPaymentModal');
+      }
 
-        function showOwnerReservationStatusModal(isSuccess, title, message, reloadOnClose = false) {
-          shouldReloadOnOwnerStatusModalClose = reloadOnClose;
-          const modal = document.getElementById('ownerReservationStatusModal');
-          const iconContainer = document.getElementById('ownerReservationStatusIcon');
-          const titleEl = document.getElementById('ownerReservationStatusTitle');
-          const msgEl = document.getElementById('ownerReservationStatusMessage');
-          const btn = document.getElementById('ownerReservationStatusBtn');
+      const formData = new FormData();
+      formData.append('reservation_id', currentReservationId);
+      formData.append('action', action);
+      formData.append('remarks', remarks);
 
-          if (titleEl) titleEl.textContent = title;
-          if (msgEl) msgEl.textContent = message;
-
-          if (iconContainer) {
-            if (isSuccess) {
-              iconContainer.className = 'w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100 shadow-xs';
-              iconContainer.innerHTML = '<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
-            } else {
-              iconContainer.className = 'w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 border border-rose-100 shadow-xs';
-              iconContainer.innerHTML = '<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>';
-            }
+      fetch(appBaseUrl + '/owner/reservations/verify-payment', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          alert(data.message);
+          if (data.success) {
+            window.location.reload();
           }
+        })
+        .catch(error => {
+          console.error(error);
+          alert('Something went wrong while updating payment status.');
+        });
+    }
 
-          if (btn) {
-            btn.textContent = isSuccess ? 'Continue' : 'Dismiss';
-          }
+    document.getElementById('btnVerifyPayment')?.addEventListener('click', () => openPaymentConfirmModal('verify'));
+    document.getElementById('btnRejectPayment')?.addEventListener('click', () => openPaymentConfirmModal('reject'));
 
-          if (modal) {
-            modal.classList.remove('hidden');
-            requestAnimationFrame(() => {
-              modal.classList.add('open');
-            });
-          }
-        }
+    // Document Tracking
+    let currentDocuments = [];
+    let documentsEditMode = false;
 
-        function closeOwnerReservationStatusModal() {
-          const modal = document.getElementById('ownerReservationStatusModal');
-          if (!modal || !modal.classList.contains('open')) return;
-          modal.classList.remove('open');
-          setTimeout(() => {
-            if (!modal.classList.contains('open')) {
-              modal.classList.add('hidden');
-            }
-            if (shouldReloadOnOwnerStatusModalClose) {
-              window.location.reload();
-            }
-          }, 250);
-        }
+    function escapeHtml(value) {
+      const div = document.createElement('div');
+      div.textContent = value ?? '';
+      return div.innerHTML;
+    }
 
-        function handleOwnerReservationStatusConfirm() {
-          closeOwnerReservationStatusModal();
-        }
+    function escapeHtmlAttr(value) {
+      return escapeHtml(value).replace(/"/g, '&quot;');
+    }
 
-        function handleOwnerReservationStatusModalBackdrop(e) {
-          if (e.target === document.getElementById('ownerReservationStatusModal')) {
-            closeOwnerReservationStatusModal();
-          }
-        }
+    function storageDisplayLabel(doc) {
+      if (doc.storage === 'dropbox') return 'Dropbox';
+      if (doc.storage === 'gdrive') return 'Google Drive';
+      if (doc.storage === 'other') return doc.storage_other_label || 'Other';
+      return '—';
+    }
 
-        function confirmPaymentAction(action) {
-          let remarks = '';
+    function updateRequirementSectionUI(paymentStatus, reservationStatus) {
+      const payment = (paymentStatus || '').toLowerCase();
+      const status = (reservationStatus || '').toLowerCase();
 
-          if (action === 'verify') {
-            remarks = document.getElementById('verifyPaymentRemarks')?.value.trim() || '';
-            closePaymentConfirmModal('verifyPaymentModal');
-          }
-          if (action === 'flag') {
-            remarks = document.getElementById('flagPaymentRemarks')?.value.trim() || '';
-            if (remarks === '') {
-              showOwnerReservationStatusModal(false, 'Missing Reason', 'Please enter a reason for flagging this payment.');
-              return;
-            }
-            closePaymentConfirmModal('flagPaymentModal');
-          }
-          if (action === 'reject') {
-            remarks = document.getElementById('rejectPaymentRemarks')?.value.trim() || '';
-            if (remarks === '') {
-              showOwnerReservationStatusModal(false, 'Missing Reason', 'Please enter a reason for rejecting the payment.');
-              return;
-            }
-            closePaymentConfirmModal('rejectPaymentModal');
-          }
+      const section = document.getElementById('requirementTrackingSection');
+      const display = document.getElementById('requirementDecisionDisplay');
+      const label = document.getElementById('requirementDecisionLabel');
+      const text = document.getElementById('requirementDecisionText');
+      const editBtn = document.getElementById('btnEditDocuments');
+      const saveBtn = document.getElementById('btnSaveDocuments');
 
-          const formData = new FormData();
-          formData.append('reservation_id', currentReservationId);
-          formData.append('action', action);
-          formData.append('remarks', remarks);
+      if (!section || !display || !label || !text || !editBtn || !saveBtn) return;
 
-          fetch(appBaseUrl + '/owner/reservations/verify-payment', {
-            method: 'POST',
-            body: formData
-          })
-            .then(response => response.json())
-            .then(data => {
-              if (data.success) {
-                let title = 'Payment Updated';
-                if (action === 'verify') title = 'Payment Verified';
-                else if (action === 'reject') title = 'Payment Rejected';
-                else if (action === 'flag') title = 'Payment Flagged';
-                showOwnerReservationStatusModal(true, title, data.message || 'Payment status updated successfully.', true);
-              } else {
-                showOwnerReservationStatusModal(false, 'Update Failed', data.message || 'Unable to update payment status.');
-              }
-            })
-            .catch(error => {
-              console.error(error);
-              showOwnerReservationStatusModal(false, 'Network Error', 'Something went wrong while updating payment status.');
-            });
-        }
+      display.className = 'hidden mb-5 rounded-xl border px-4 py-3';
+      section.classList.remove('hidden');
 
-        document.getElementById('btnVerifyPayment')?.addEventListener('click', () => openPaymentConfirmModal('verify'));
-        document.getElementById('btnRejectPayment')?.addEventListener('click', () => openPaymentConfirmModal('reject'));
+      if (status === 'requirements completed') {
+        documentsEditMode = false;
+        editBtn.classList.remove('hidden');
+        saveBtn.classList.add('hidden');
+        display.classList.remove('hidden');
+        display.classList.add('bg-emerald-50', 'border-emerald-200');
+        label.className = 'text-xs font-bold uppercase tracking-wide mb-1 text-emerald-700';
+        text.className = 'text-sm font-semibold text-emerald-800';
+        label.textContent = 'Requirements Completed';
+        text.textContent = 'All reservation documents have been completed. You may edit tracking if needed.';
+        return;
+      }
 
-        function openInHousePaymentModal() {
-          const box = document.getElementById('inHousePaymentRemarks');
-          if (box) box.value = '';
-          const m = document.getElementById('completeInHousePaymentModal');
-          m?.classList.remove('hidden');
-          m?.classList.add('flex');
-        }
+      if (status === 'reserved') {
+        documentsEditMode = false;
+        editBtn.classList.add('hidden');
+        saveBtn.classList.add('hidden');
+        display.classList.remove('hidden');
+        display.classList.add('bg-emerald-50', 'border-emerald-200');
+        label.className = 'text-xs font-bold uppercase tracking-wide mb-1 text-emerald-700';
+        text.className = 'text-sm font-semibold text-emerald-800';
+        label.textContent = 'Officially Booked';
+        text.textContent = 'This reservation is already officially booked.';
+        return;
+      }
 
-        function closeInHousePaymentModal() {
-          const m = document.getElementById('completeInHousePaymentModal');
-          m?.classList.add('hidden');
-          m?.classList.remove('flex');
-        }
+      documentsEditMode = true;
+      editBtn.classList.add('hidden');
+      saveBtn.classList.remove('hidden');
+      display.classList.add('hidden');
+    }
 
-        function submitInHousePaymentComplete() {
-          const remarks = document.getElementById('inHousePaymentRemarks')?.value.trim() || 'In-House payment collected & completed.';
-          closeInHousePaymentModal();
+    function loadDocuments(reservationId) {
+      const tbody = document.getElementById('documentsTableBody');
+      if (!tbody) return;
 
-          const formData = new FormData();
-          formData.append('reservation_id', currentReservationId);
-          formData.append('action', 'verify');
-          formData.append('remarks', remarks);
-
-          fetch(appBaseUrl + '/unitOwnerPages/ActionsUOP/verifyOwnerPayment.php', {
-            method: 'POST',
-            body: formData
-          })
-            .then(response => response.json())
-            .then(data => {
-              alert(data.message);
-              if (data.success) {
-                window.location.reload();
-              }
-            })
-            .catch(error => {
-              console.error(error);
-              alert('Something went wrong while completing in-house payment.');
-            });
-        }
-
-        document.getElementById('btnCompleteInHousePayment')?.addEventListener('click', openInHousePaymentModal);
-
-        // Document Tracking
-        let currentDocuments = [];
-        let documentsEditMode = false;
-
-        function escapeHtml(value) {
-          const div = document.createElement('div');
-          div.textContent = value ?? '';
-          return div.innerHTML;
-        }
-
-        function escapeHtmlAttr(value) {
-          return escapeHtml(value).replace(/"/g, '&quot;');
-        }
-
-        function storageDisplayLabel(doc) {
-          if (doc.storage === 'dropbox') return 'Dropbox';
-          if (doc.storage === 'gdrive') return 'Google Drive';
-          if (doc.storage === 'other') return doc.storage_other_label || 'Other';
-          return '—';
-        }
-
-        function updateRequirementSectionUI(paymentStatus, reservationStatus) {
-          const payment = (paymentStatus || '').toLowerCase();
-          const status = (reservationStatus || '').toLowerCase();
-
-          const section = document.getElementById('requirementTrackingSection');
-          const display = document.getElementById('requirementDecisionDisplay');
-          const label = document.getElementById('requirementDecisionLabel');
-          const text = document.getElementById('requirementDecisionText');
-          const editBtn = document.getElementById('btnEditDocuments');
-          const saveBtn = document.getElementById('btnSaveDocuments');
-
-          if (!section || !display || !label || !text || !editBtn || !saveBtn) return;
-
-          display.className = 'hidden mb-5 rounded-xl border px-4 py-3';
-          section.classList.remove('hidden');
-
-          if (status === 'requirements completed') {
-            documentsEditMode = false;
-            editBtn.classList.remove('hidden');
-            saveBtn.classList.add('hidden');
-            display.classList.remove('hidden');
-            display.classList.add('bg-emerald-50', 'border-emerald-200');
-            label.className = 'text-xs font-bold uppercase tracking-wide mb-1 text-emerald-700';
-            text.className = 'text-sm font-semibold text-emerald-800';
-            label.textContent = 'Requirements Completed';
-            text.textContent = 'All reservation documents have been completed. You may edit tracking if needed.';
+      fetch(appBaseUrl + '/owner/reservations/documents?reservation_id=' + encodeURIComponent(reservationId))
+        .then(response => response.json())
+        .then(data => {
+          if (!data.success) {
+            tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-xs text-red-500">' + escapeHtml(data.message || 'Failed to load documents.') + '</td></tr>';
             return;
           }
 
-          if (status === 'reserved') {
-            documentsEditMode = false;
-            editBtn.classList.add('hidden');
-            saveBtn.classList.add('hidden');
-            display.classList.remove('hidden');
-            display.classList.add('bg-emerald-50', 'border-emerald-200');
-            label.className = 'text-xs font-bold uppercase tracking-wide mb-1 text-emerald-700';
-            text.className = 'text-sm font-semibold text-emerald-800';
-            label.textContent = 'Officially Booked';
-            text.textContent = 'This reservation is already officially booked.';
-            return;
-          }
+          currentDocuments = data.documents || [];
+          renderDocumentsTable();
+        })
+        .catch(error => {
+          console.error(error);
+          tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-xs text-red-500">Something went wrong while loading documents.</td></tr>';
+        });
+    }
 
-          documentsEditMode = true;
-          editBtn.classList.add('hidden');
-          saveBtn.classList.remove('hidden');
-          display.classList.add('hidden');
-        }
+    function renderDocumentsTable() {
+      const tbody = document.getElementById('documentsTableBody');
+      if (!tbody) return;
 
-        function loadDocuments(reservationId) {
-          const tbody = document.getElementById('documentsTableBody');
-          if (!tbody) return;
+      if (!currentDocuments.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-xs text-slate-400">No documents found.</td></tr>';
+        return;
+      }
 
-          fetch(appBaseUrl + '/owner/reservations/documents?reservation_id=' + encodeURIComponent(reservationId))
-            .then(response => response.json())
-            .then(data => {
-              if (!data.success) {
-                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-xs text-red-500">' + escapeHtml(data.message || 'Failed to load documents.') + '</td></tr>';
-                return;
-              }
+      tbody.innerHTML = currentDocuments.map(doc => {
+        const hasLink = (doc.document_link && doc.document_link.trim().length > 0);
+        const statusBadge = hasLink
+          ? "<span class='doc-row-status inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200'>Complete</span>"
+          : "<span class='doc-row-status inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200'>Pending</span>";
 
-              currentDocuments = data.documents || [];
-              renderDocumentsTable();
-            })
-            .catch(error => {
-              console.error(error);
-              tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-xs text-red-500">Something went wrong while loading documents.</td></tr>';
-            });
-        }
+        if (!documentsEditMode) {
+          const linkCell = hasLink
+            ? `<a href="${escapeHtmlAttr(doc.document_link)}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-blue-600 hover:underline inline-flex items-center gap-1"><span>View Link</span><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>`
+            : "<span class='text-xs text-slate-400'>—</span>";
 
-        function renderDocumentsTable() {
-          const tbody = document.getElementById('documentsTableBody');
-          if (!tbody) return;
-
-          if (!currentDocuments.length) {
-            tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-6 text-center text-xs text-slate-400">No documents found.</td></tr>';
-            return;
-          }
-
-          tbody.innerHTML = currentDocuments.map(doc => {
-            const hasLink = (doc.document_link && doc.document_link.trim().length > 0);
-            const statusBadge = hasLink
-              ? "<span class='doc-row-status inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200'>Complete</span>"
-              : "<span class='doc-row-status inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200'>Pending</span>";
-
-            if (!documentsEditMode) {
-              const linkCell = hasLink
-                ? `<a href="${escapeHtmlAttr(doc.document_link)}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-blue-600 hover:underline inline-flex items-center gap-1"><span>View Link</span><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>`
-                : "<span class='text-xs text-slate-400'>—</span>";
-
-              return `
+          return `
           <tr class="hover:bg-slate-50/70 transition-colors">
             <td class="px-4 py-3.5 font-medium text-slate-800">${escapeHtml(doc.document_name)}</td>
             <td class="px-4 py-3.5 doc-status-cell">${statusBadge}</td>
@@ -1480,11 +1338,11 @@ $downpaymentAmount = (float) ($res['required_amount'] ?? 0) > 0
             <td class="px-4 py-3.5">${linkCell}</td>
           </tr>
         `;
-            }
+        }
 
-            const isOther = doc.storage === 'other';
+        const isOther = doc.storage === 'other';
 
-            return `
+        return `
         <tr data-document-id="${doc.document_id}" class="hover:bg-slate-50/70 transition-colors">
           <td class="px-4 py-3.5 font-medium text-slate-800">${escapeHtml(doc.document_name)}</td>
           <td class="px-4 py-3.5 doc-status-cell">
@@ -1505,326 +1363,288 @@ $downpaymentAmount = (float) ($res['required_amount'] ?? 0) > 0
           </td>
         </tr>
       `;
-          }).join('');
+      }).join('');
 
-          if (documentsEditMode) {
-            tbody.querySelectorAll('.doc-storage-input').forEach(select => {
-              select.addEventListener('change', function () {
-                const otherInput = this.closest('td').querySelector('.doc-storage-other-input');
-                if (!otherInput) return;
-                if (this.value === 'other') {
-                  otherInput.classList.remove('hidden');
-                } else {
-                  otherInput.classList.add('hidden');
-                  otherInput.value = '';
-                }
-              });
-            });
-
-            // Reactive update of Status badge based on link typing
-            tbody.querySelectorAll('.doc-link-input').forEach(input => {
-              const updateRowBadge = () => {
-                const row = input.closest('tr');
-                const statusCell = row?.querySelector('.doc-status-cell');
-                if (!statusCell) return;
-                const val = input.value.trim();
-                if (val.length > 0) {
-                  statusCell.innerHTML = "<span class='doc-row-status inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200'>Complete</span>";
-                } else {
-                  statusCell.innerHTML = "<span class='doc-row-status inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200'>Pending</span>";
-                }
-              };
-
-              input.addEventListener('input', updateRowBadge);
-              input.addEventListener('change', updateRowBadge);
-            });
-          }
-        }
-
-        document.getElementById('btnEditDocuments')?.addEventListener('click', function () {
-          documentsEditMode = true;
-          renderDocumentsTable();
-          document.getElementById('btnEditDocuments')?.classList.add('hidden');
-          document.getElementById('btnSaveDocuments')?.classList.remove('hidden');
+      if (documentsEditMode) {
+        tbody.querySelectorAll('.doc-storage-input').forEach(select => {
+          select.addEventListener('change', function () {
+            const otherInput = this.closest('td').querySelector('.doc-storage-other-input');
+            if (!otherInput) return;
+            if (this.value === 'other') {
+              otherInput.classList.remove('hidden');
+            } else {
+              otherInput.classList.add('hidden');
+              otherInput.value = '';
+            }
+          });
         });
 
-        function collectDocumentsPayload() {
-          const rows = document.querySelectorAll('#documentsTableBody tr[data-document-id]');
-          const payload = [];
-          rows.forEach(row => {
-            const linkVal = row.querySelector('.doc-link-input')?.value.trim() || '';
-            payload.push({
-              document_id: row.dataset.documentId,
-              status: (linkVal.length > 0) ? 'complete' : 'pending',
-              storage: row.querySelector('.doc-storage-input')?.value || '',
-              storage_other_label: row.querySelector('.doc-storage-other-input')?.value || '',
-              document_link: linkVal
-            });
-          });
-          return payload;
-        }
+        // Reactive update of Status badge based on link typing
+        tbody.querySelectorAll('.doc-link-input').forEach(input => {
+          const updateRowBadge = () => {
+            const row = input.closest('tr');
+            const statusCell = row?.querySelector('.doc-status-cell');
+            if (!statusCell) return;
+            const val = input.value.trim();
+            if (val.length > 0) {
+              statusCell.innerHTML = "<span class='doc-row-status inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200'>Complete</span>";
+            } else {
+              statusCell.innerHTML = "<span class='doc-row-status inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200'>Pending</span>";
+            }
+          };
 
-        function saveDocuments() {
-          const documents = collectDocumentsPayload();
-          if (!documents.length) {
-            showOwnerReservationStatusModal(false, 'No Documents', 'No documents to save.');
-            return;
+          input.addEventListener('input', updateRowBadge);
+          input.addEventListener('change', updateRowBadge);
+        });
+      }
+    }
+
+    document.getElementById('btnEditDocuments')?.addEventListener('click', function () {
+      documentsEditMode = true;
+      renderDocumentsTable();
+      document.getElementById('btnEditDocuments')?.classList.add('hidden');
+      document.getElementById('btnSaveDocuments')?.classList.remove('hidden');
+    });
+
+    function collectDocumentsPayload() {
+      const rows = document.querySelectorAll('#documentsTableBody tr[data-document-id]');
+      const payload = [];
+      rows.forEach(row => {
+        const linkVal = row.querySelector('.doc-link-input')?.value.trim() || '';
+        payload.push({
+          document_id: row.dataset.documentId,
+          status: (linkVal.length > 0) ? 'complete' : 'pending',
+          storage: row.querySelector('.doc-storage-input')?.value || '',
+          storage_other_label: row.querySelector('.doc-storage-other-input')?.value || '',
+          document_link: linkVal
+        });
+      });
+      return payload;
+    }
+
+    function saveDocuments() {
+      const documents = collectDocumentsPayload();
+      if (!documents.length) {
+        alert('No documents to save.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('reservation_id', currentReservationId);
+      formData.append('documents', JSON.stringify(documents));
+
+      fetch(appBaseUrl + '/owner/reservations/documents', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          alert(data.message);
+          if (data.success) {
+            window.location.reload();
           }
+        })
+        .catch(error => {
+          console.error(error);
+          alert('Something went wrong while saving document tracking.');
+        });
+    }
 
-          const formData = new FormData();
-          formData.append('reservation_id', currentReservationId);
-          formData.append('documents', JSON.stringify(documents));
+    document.getElementById('btnSaveDocuments')?.addEventListener('click', saveDocuments);
 
-          fetch(appBaseUrl + '/owner/reservations/documents', {
-            method: 'POST',
-            body: formData
-          })
-            .then(response => response.json())
-            .then(data => {
-              if (data.success) {
-                const title = data.all_completed ? 'Documents Completed' : 'Documents Updated';
-                const msg = data.message || (data.all_completed
-                  ? 'All reservation documents have been completed successfully. You may now mark this reservation as officially booked.'
-                  : 'Document tracking updated successfully.');
-                showOwnerReservationStatusModal(true, title, msg, true);
-              } else {
-                showOwnerReservationStatusModal(false, 'Update Failed', data.message || 'Unable to save document tracking.');
-              }
-            })
-            .catch(error => {
-              console.error(error);
-              showOwnerReservationStatusModal(false, 'Network Error', 'Something went wrong while saving document tracking.');
-            });
-        }
+    function openOwnerCancelRequestModal() {
+      const reasonBox = document.getElementById('ownerCancelReason');
+      const modal = document.getElementById('ownerCancelRequestModal');
+      if (reasonBox) reasonBox.value = '';
+      modal?.classList.remove('hidden');
+      modal?.classList.add('flex');
+    }
 
-        document.getElementById('btnSaveDocuments')?.addEventListener('click', saveDocuments);
+    function closeOwnerCancelRequestModal() {
+      const modal = document.getElementById('ownerCancelRequestModal');
+      modal?.classList.add('hidden');
+      modal?.classList.remove('flex');
+    }
 
-        function openOwnerCancelRequestModal() {
-          const reasonBox = document.getElementById('ownerCancelReason');
-          const modal = document.getElementById('ownerCancelRequestModal');
-          if (reasonBox) reasonBox.value = '';
-          modal?.classList.remove('hidden');
-          modal?.classList.add('flex');
-        }
+    function submitOwnerCancelRequest() {
+      const reason = document.getElementById('ownerCancelReason')?.value.trim();
+      if (!reason) {
+        alert('Cancellation reason is required.');
+        return;
+      }
 
-        function closeOwnerCancelRequestModal() {
-          const modal = document.getElementById('ownerCancelRequestModal');
-          modal?.classList.add('hidden');
-          modal?.classList.remove('flex');
-        }
+      const formData = new FormData();
+      formData.append('reservation_id', currentReservationId);
+      formData.append('reason', reason);
 
-        function submitOwnerCancelRequest() {
-          const reason = document.getElementById('ownerCancelReason')?.value.trim();
-          if (!reason) {
-            alert('Cancellation reason is required.');
-            return;
+      fetch(appBaseUrl + '/owner/reservations/request-cancellation', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          alert(data.message);
+          if (data.success) {
+            window.location.reload();
           }
+        })
+        .catch(error => {
+          console.error(error);
+          alert('Something went wrong while requesting cancellation.');
+        });
+    }
 
-          const formData = new FormData();
-          formData.append('reservation_id', currentReservationId);
-          formData.append('reason', reason);
+    function showDateChooser(show) {
+      const confirmedView = document.getElementById('confirmedDateView');
+      const selectView = document.getElementById('selectDateView');
+      if (show) {
+        if (confirmedView) confirmedView.classList.add('hidden');
+        if (selectView) selectView.classList.remove('hidden');
+      } else {
+        if (confirmedView) confirmedView.classList.remove('hidden');
+        if (selectView) selectView.classList.add('hidden');
+      }
+    }
 
-          fetch(appBaseUrl + '/owner/reservations/request-cancellation', {
-            method: 'POST',
-            body: formData
-          })
-            .then(response => response.json())
-            .then(data => {
-              alert(data.message);
-              if (data.success) {
-                window.location.reload();
-              }
-            })
-            .catch(error => {
-              console.error(error);
-              alert('Something went wrong while requesting cancellation.');
-            });
-        }
+    function onDateSelectChanged(val) {
+      const customInput = document.getElementById('customSigningDateInput');
+      if (!customInput) return;
+      if (val === 'custom') {
+        customInput.classList.remove('hidden');
+        customInput.focus();
+      } else {
+        customInput.classList.add('hidden');
+        customInput.value = val;
+      }
+    }
 
-        function showDateChooser(show) {
-          const confirmedView = document.getElementById('confirmedDateView');
-          const selectView = document.getElementById('selectDateView');
-          if (show) {
-            if (confirmedView) confirmedView.classList.add('hidden');
-            if (selectView) selectView.classList.remove('hidden');
-          } else {
-            if (confirmedView) confirmedView.classList.remove('hidden');
-            if (selectView) selectView.classList.add('hidden');
-          }
-        }
+    async function saveSimpleSigningDate() {
+      const select = document.getElementById('signingDateSelect');
+      const customInput = document.getElementById('customSigningDateInput');
+      let chosenDate = select ? select.value : '';
+      if (chosenDate === 'custom' || !select) {
+        chosenDate = customInput ? customInput.value : '';
+      }
 
-        function onDateSelectChanged(val) {
-          const customInput = document.getElementById('customSigningDateInput');
-          if (!customInput) return;
-          if (val === 'custom') {
-            customInput.classList.remove('hidden');
-            customInput.focus();
-          } else {
-            customInput.classList.add('hidden');
-            customInput.value = val;
-          }
-        }
+      if (!chosenDate) {
+        alert('Please select a signing date.');
+        return;
+      }
 
-        async function saveSimpleSigningDate() {
-          const select = document.getElementById('signingDateSelect');
-          const customInput = document.getElementById('customSigningDateInput');
-          let chosenDate = select ? select.value : '';
-          if (chosenDate === 'custom' || !select) {
-            chosenDate = customInput ? customInput.value : '';
-          }
+      const btn = document.getElementById('btnSaveSimpleDate');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+      }
 
-          if (!chosenDate) {
-            alert('Please select a signing date.');
-            return;
-          }
+      try {
+        const formData = new FormData();
+        formData.append('reservation_id', currentReservationId);
+        formData.append('confirmed_date', chosenDate);
 
-          const btn = document.getElementById('btnSaveSimpleDate');
+        const res = await fetch(appBaseUrl + '/owner/reservations/confirm-signing-date', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert(data.message || 'Failed to save date.');
           if (btn) {
-            btn.disabled = true;
-            btn.textContent = 'Saving...';
-          }
-
-          try {
-            const formData = new FormData();
-            formData.append('reservation_id', currentReservationId);
-            formData.append('confirmed_date', chosenDate);
-
-            const res = await fetch(appBaseUrl + '/owner/reservations/confirm-signing-date', {
-              method: 'POST',
-              body: formData
-            });
-            const data = await res.json();
-            if (data.success) {
-              window.location.reload();
-            } else {
-              alert(data.message || 'Failed to save date.');
-              if (btn) {
-                btn.disabled = false;
-                btn.textContent = 'Save Date';
-              }
-            }
-          } catch (err) {
-            console.error(err);
-            alert('Network error while saving signing date.');
-            if (btn) {
-              btn.disabled = false;
-              btn.textContent = 'Save Date';
-            }
-          }
-        }
-
-        function openSigningModal(action) {
-          const modal = document.getElementById('leaseSigningModal');
-          const actionInput = document.getElementById('signingActionInput');
-          const title = document.getElementById('signingModalTitle');
-          const desc = document.getElementById('signingModalDesc');
-          const btn = document.getElementById('btnConfirmSigning');
-
-          actionInput.value = action;
-
-          if (action === 'complete') {
-            title.textContent = 'Complete Lease Signing';
-            desc.textContent = 'Are you sure you want to mark this lease signing as completed?';
-            btn.textContent = 'Complete Signing';
-            btn.className = 'px-5 py-2 bg-[#0f172a] hover:bg-[#1e293b] text-white rounded-xl text-xs font-bold transition-all';
-          } else {
-            title.textContent = 'Reset Lease Signing Status';
-            desc.textContent = 'Are you sure you want to reset the lease signing status back to Pending Signing?';
-            btn.textContent = 'Reset Status';
-            btn.className = 'px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all';
-          }
-
-          modal.classList.remove('hidden');
-          modal.classList.add('flex');
-        }
-
-        function closeSigningModal() {
-          const modal = document.getElementById('leaseSigningModal');
-          if (modal) {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-          }
-        }
-
-        async function submitLeaseSigningAction() {
-          const action = document.getElementById('signingActionInput').value;
-          const reservationId = currentReservationId;
-          const btn = document.getElementById('btnConfirmSigning');
-
-          btn.disabled = true;
-          btn.textContent = 'Saving...';
-
-          try {
-            const formData = new FormData();
-            formData.append('reservation_id', reservationId);
-            formData.append('action', action);
-            formData.append('remarks', '');
-
-            const res = await fetch(appBaseUrl + '/owner/reservations/lease-signing', {
-              method: 'POST',
-              body: formData
-            });
-            const data = await res.json();
-            if (data.success) {
-              window.location.reload();
-            } else {
-              alert(data.message || 'Failed to update lease signing status.');
-              btn.disabled = false;
-              btn.textContent = 'Confirm';
-            }
-          } catch (err) {
-            console.error(err);
-            alert('Network error while updating lease signing.');
             btn.disabled = false;
-            btn.textContent = 'Confirm';
+            btn.textContent = 'Save Date';
           }
         }
+      } catch (err) {
+        console.error(err);
+        alert('Network error while saving signing date.');
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Save Date';
+        }
+      }
+    }
 
-        document.addEventListener('DOMContentLoaded', function () {
-          updateRequirementSectionUI(currentPaymentStatus, currentReservationStatus);
-          loadDocuments(currentReservationId);
+    function openSigningModal(action) {
+      const modal = document.getElementById('leaseSigningModal');
+      const actionInput = document.getElementById('signingActionInput');
+      const title = document.getElementById('signingModalTitle');
+      const desc = document.getElementById('signingModalDesc');
+      const btn = document.getElementById('btnConfirmSigning');
 
-          const hash = (window.location.hash || '').replace('#', '').toLowerCase();
-          if (['lease', 'payment', 'lease-signing', 'documents'].includes(hash)) {
-            switchReservationTab(hash);
-          } else {
-            switchReservationTab('lease');
-          }
-          document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-              const statusModal = document.getElementById('ownerReservationStatusModal');
-              if (statusModal && statusModal.classList.contains('open')) {
-                closeOwnerReservationStatusModal();
-              }
-            }
-          });
+      actionInput.value = action;
+
+      if (action === 'complete') {
+        title.textContent = 'Complete Lease Signing';
+        desc.textContent = 'Are you sure you want to mark this lease signing as completed?';
+        btn.textContent = 'Complete Signing';
+        btn.className = 'px-5 py-2 bg-[#0f172a] hover:bg-[#1e293b] text-white rounded-xl text-xs font-bold transition-all';
+      } else {
+        title.textContent = 'Reset Lease Signing Status';
+        desc.textContent = 'Are you sure you want to reset the lease signing status back to Pending Signing?';
+        btn.textContent = 'Reset Status';
+        btn.className = 'px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all';
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeSigningModal() {
+      const modal = document.getElementById('leaseSigningModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    async function submitLeaseSigningAction() {
+      const action = document.getElementById('signingActionInput').value;
+      const reservationId = currentReservationId;
+      const btn = document.getElementById('btnConfirmSigning');
+
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        const formData = new FormData();
+        formData.append('reservation_id', reservationId);
+        formData.append('action', action);
+        formData.append('remarks', '');
+
+        const res = await fetch(appBaseUrl + '/owner/reservations/lease-signing', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert(data.message || 'Failed to update lease signing status.');
+          btn.disabled = false;
+          btn.textContent = 'Confirm';
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Network error while updating lease signing.');
+        btn.disabled = false;
+        btn.textContent = 'Confirm';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      updateRequirementSectionUI(currentPaymentStatus, currentReservationStatus);
+      loadDocuments(currentReservationId);
+
+      const hash = (window.location.hash || '').replace('#', '').toLowerCase();
+      if (['lease', 'payment', 'lease-signing', 'documents'].includes(hash)) {
+        switchReservationTab(hash);
+      } else {
+        switchReservationTab('lease');
+      }
+    });
   </script>
-
-  <!-- STYLIZED OWNER RESERVATION STATUS NOTIFICATION MODAL -->
-  <div id="ownerReservationStatusModal"
-    class="modal-backdrop fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden"
-    onclick="handleOwnerReservationStatusModalBackdrop(event)">
-    <div
-      class="modal-card bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 sm:p-7 max-w-sm w-full text-center"
-      onclick="event.stopPropagation()">
-      <!-- Icon Container -->
-      <div id="ownerReservationStatusIcon"
-        class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 border transition-all">
-      </div>
-
-      <!-- Title -->
-      <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-1" id="ownerReservationStatusTitle">Notification</h3>
-
-      <!-- Message Body -->
-      <p class="text-xs text-slate-500 mb-6 leading-relaxed" id="ownerReservationStatusMessage"></p>
-
-      <!-- Action Button -->
-      <button type="button" id="ownerReservationStatusBtn" onclick="handleOwnerReservationStatusConfirm()"
-        class="btn-press w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-all shadow-sm active:scale-95">
-        Continue
-      </button>
-    </div>
-  </div>
 </body>
 
 </html>
