@@ -46,7 +46,7 @@ spl_autoload_register(function (string $className): void {
 });
 
 // 5. Initialize the Central MVC Router
-$appUrl = (string)env('APP_URL', '/Zeppelin-Suites');
+$appUrl = (string) env('APP_URL', '/Zeppelin-Suites');
 $basePath = parse_url($appUrl, PHP_URL_PATH) ?? '';
 $router = new Router($basePath);
 
@@ -133,6 +133,13 @@ $router->post('/admin/reservations/cancel', [ReservationController::class, 'canc
 $router->post('/admin/reservations/handover', [ReservationController::class, 'handover'], ['admin']);
 $router->post('/admin/reservations/confirm-signing-date', [ReservationController::class, 'confirmSigningDate'], ['admin']);
 $router->post('/admin/reservations/lease-signing', [ReservationController::class, 'updateLeaseSigning'], ['admin']);
+$router->post('/admin/reservations/payment', [ReservationController::class, 'updatePayment'], ['admin']);
+$router->get('/admin/reservations/documents', [ReservationController::class, 'getDocuments'], ['admin']);
+$router->post('/admin/reservations/documents', [ReservationController::class, 'updateDocuments'], ['admin']);
+$router->post('/admin/reservations/officially-booked', [ReservationController::class, 'markOfficiallyBooked'], ['admin']);
+$router->post('/admin/reservations/cancel', [ReservationController::class, 'cancelReservation'], ['admin']);
+
+// Legacy API aliases for reservation workflow
 $router->post('/adminPages/ActionsAP/completeLeaseSigning.php', [ReservationController::class, 'updateLeaseSigning'], ['admin']);
 $router->post('/ActionsAP/completeLeaseSigning.php', [ReservationController::class, 'updateLeaseSigning'], ['admin']);
 $router->post('/admin/reservations/update-payment', [ReservationController::class, 'updatePaymentStatus'], ['admin']);
@@ -147,6 +154,16 @@ $router->post('/ActionsAP/updateReservationDocuments.php', [ReservationControlle
 $router->post('/ActionsAP/markOfficiallyBooked.php', [ReservationController::class, 'markOfficiallyBooked'], ['admin']);
 $router->post('/ActionsAP/cancelReservation.php', [ReservationController::class, 'cancelReservation'], ['admin']);
 
+$router->post('/adminPages/ActionsAP/updatePaymentStatus.php', [ReservationController::class, 'updatePayment'], ['admin']);
+$router->post('/ActionsAP/updatePaymentStatus.php', [ReservationController::class, 'updatePayment'], ['admin']);
+$router->get('/adminPages/ActionsAP/getReservationDocuments.php', [ReservationController::class, 'getDocuments'], ['admin']);
+$router->get('/ActionsAP/getReservationDocuments.php', [ReservationController::class, 'getDocuments'], ['admin']);
+$router->post('/adminPages/ActionsAP/updateReservationDocuments.php', [ReservationController::class, 'updateDocuments'], ['admin']);
+$router->post('/ActionsAP/updateReservationDocuments.php', [ReservationController::class, 'updateDocuments'], ['admin']);
+$router->post('/adminPages/ActionsAP/markOfficiallyBooked.php', [ReservationController::class, 'markOfficiallyBooked'], ['admin']);
+$router->post('/ActionsAP/markOfficiallyBooked.php', [ReservationController::class, 'markOfficiallyBooked'], ['admin']);
+$router->post('/adminPages/ActionsAP/cancelReservation.php', [ReservationController::class, 'cancelReservation'], ['admin']);
+$router->post('/ActionsAP/cancelReservation.php', [ReservationController::class, 'cancelReservation'], ['admin']);
 
 $router->get('/admin/residents', [ResidentController::class, 'index'], ['admin']);
 $router->get('/admin/residents/view', [ResidentController::class, 'show'], ['admin']);
@@ -212,6 +229,12 @@ $router->post('/owner/reservations/verify-payment', [UnitOwnerController::class,
 $router->post('/unitOwnerPages/ActionsUOP/verifyOwnerPayment.php', [UnitOwnerController::class, 'updatePaymentStatus'], ['unit owner']);
 $router->post('/ActionsUOP/verifyOwnerPayment.php', [UnitOwnerController::class, 'updatePaymentStatus'], ['unit owner']);
 
+$router->post('/unitOwnerPages/ActionsUOP/verifyOwnerPayment.php', [ReservationController::class, 'updatePayment'], ['unit owner']);
+$router->post('/ActionsUOP/verifyOwnerPayment.php', [ReservationController::class, 'updatePayment'], ['unit owner']);
+$router->get('/unitOwnerPages/ActionsUOP/getOwnerReservationDocuments.php', [ReservationController::class, 'getDocuments'], ['unit owner']);
+$router->get('/ActionsUOP/getOwnerReservationDocuments.php', [ReservationController::class, 'getDocuments'], ['unit owner']);
+$router->post('/unitOwnerPages/ActionsUOP/updateOwnerReservationDocuments.php', [ReservationController::class, 'updateDocuments'], ['unit owner']);
+$router->post('/ActionsUOP/updateOwnerReservationDocuments.php', [ReservationController::class, 'updateDocuments'], ['unit owner']);
 $router->get('/owner/booking-calendar', [UnitOwnerController::class, 'calendar'], ['unit owner']);
 $router->get('/owner/booking-calendar/data', [UnitOwnerController::class, 'calendarData'], ['unit owner']);
 $router->post('/owner/booking-calendar/block', [UnitOwnerController::class, 'saveBlockedDate'], ['unit owner']);
@@ -228,75 +251,75 @@ $router->post('/owner/account', [UnitOwnerController::class, 'account'], ['unit 
 // 7. Legacy Infrastructure 301 Fallback Redirections (O(1) lookup in Router)
 $legacyRouteMap = [
     // Admin legacy paths
-    '/adminPages/analytics.php'       => '/admin/analytics',
-    '/admin/analytics.php'            => '/admin/analytics',
-    '/adminPages/homeAdmin.php'       => '/admin/home',
-    '/adminPages/account.php'         => '/admin/account',
-    '/adminPages/inquiry.php'         => '/admin/inquiries',
-    '/adminPages/replyform.php'       => '/admin/inquiries/reply',
-    '/adminPages/reservation.php'     => '/admin/reservations',
+    '/adminPages/analytics.php' => '/admin/analytics',
+    '/admin/analytics.php' => '/admin/analytics',
+    '/adminPages/homeAdmin.php' => '/admin/home',
+    '/adminPages/account.php' => '/admin/account',
+    '/adminPages/inquiry.php' => '/admin/inquiries',
+    '/adminPages/replyform.php' => '/admin/inquiries/reply',
+    '/adminPages/reservation.php' => '/admin/reservations',
     '/adminPages/viewReservation.php' => '/admin/reservations/view',
-    '/adminPages/residents.php'       => '/admin/residents',
-    '/adminPages/viewResident.php'    => '/admin/residents/view',
-    '/adminPages/units.php'           => '/admin/units',
-    '/adminPages/unitDetails.php'     => '/admin/units/view',
-    '/adminPages/maintenance.php'     => '/admin/maintenance',
+    '/adminPages/residents.php' => '/admin/residents',
+    '/adminPages/viewResident.php' => '/admin/residents/view',
+    '/adminPages/units.php' => '/admin/units',
+    '/adminPages/unitDetails.php' => '/admin/units/view',
+    '/adminPages/maintenance.php' => '/admin/maintenance',
     '/adminPages/bookingcalendar.php' => '/admin/booking-calendar',
 
     // Tenant legacy paths
-    '/tenantPages/homeTenant.php'        => '/tenant/home',
-    '/tenantPages/account.php'           => '/tenant/account',
+    '/tenantPages/homeTenant.php' => '/tenant/home',
+    '/tenantPages/account.php' => '/tenant/account',
     '/tenantPages/maintenanceTenant.php' => '/tenant/maintenance',
 
     // Unit Owner legacy paths
-    '/unitOwnerPages/overview.php'              => '/owner/overview',
-    '/unitOwnerPages/ownersUnit.php'            => '/owner/units',
-    '/unitOwnerPages/unitDetails.php'           => '/owner/units/view',
-    '/unitOwnerPages/ownersInquiries.php'       => '/owner/inquiries',
-    '/unitOwnerPages/ownersReservations.php'    => '/owner/reservations',
-    '/unitOwnerPages/ownersUnitReservations.php'=> '/owner/reservations',
+    '/unitOwnerPages/overview.php' => '/owner/overview',
+    '/unitOwnerPages/ownersUnit.php' => '/owner/units',
+    '/unitOwnerPages/unitDetails.php' => '/owner/units/view',
+    '/unitOwnerPages/ownersInquiries.php' => '/owner/inquiries',
+    '/unitOwnerPages/ownersReservations.php' => '/owner/reservations',
+    '/unitOwnerPages/ownersUnitReservations.php' => '/owner/reservations',
     '/unitOwnerPages/ownersViewReservation.php' => '/owner/reservations/view',
     '/unitOwnerPages/ownersBookingCalendar.php' => '/owner/booking-calendar',
-    '/unitOwnerPages/tenants.php'               => '/owner/tenants',
-    '/unitOwnerPages/ownersMaintenance.php'     => '/owner/maintenance',
-    '/unitOwnerPages/account.php'               => '/owner/account',
+    '/unitOwnerPages/tenants.php' => '/owner/tenants',
+    '/unitOwnerPages/ownersMaintenance.php' => '/owner/maintenance',
+    '/unitOwnerPages/account.php' => '/owner/account',
 
     // General / Public legacy paths
-    '/generalViewPages/index.html'               => '/',
-    '/generalViewPages/aboutUs.html'             => '/about',
-    '/generalViewPages/faq.html'                 => '/faq',
-    '/generalViewPages/tour.html'                => '/tour',
-    '/generalViewPages/studioTypeA.html'         => '/units/studio-type-a',
-    '/generalViewPages/studioTypeB.html'         => '/units/studio-type-b',
-    '/generalViewPages/oneBedroom.html'          => '/units/one-bedroom',
-    '/generalViewPages/twoBedroom.html'          => '/units/two-bedroom',
-    '/generalViewPages/privacy-policy.html'      => '/privacy-policy',
-    '/generalViewPages/terms-of-service.htm'     => '/terms-of-service',
-    '/generalViewPages/terms-of-service.html'    => '/terms-of-service',
-    '/generalViewPages/contact.php'              => '/contact',
+    '/generalViewPages/index.html' => '/',
+    '/generalViewPages/aboutUs.html' => '/about',
+    '/generalViewPages/faq.html' => '/faq',
+    '/generalViewPages/tour.html' => '/tour',
+    '/generalViewPages/studioTypeA.html' => '/units/studio-type-a',
+    '/generalViewPages/studioTypeB.html' => '/units/studio-type-b',
+    '/generalViewPages/oneBedroom.html' => '/units/one-bedroom',
+    '/generalViewPages/twoBedroom.html' => '/units/two-bedroom',
+    '/generalViewPages/privacy-policy.html' => '/privacy-policy',
+    '/generalViewPages/terms-of-service.htm' => '/terms-of-service',
+    '/generalViewPages/terms-of-service.html' => '/terms-of-service',
+    '/generalViewPages/contact.php' => '/contact',
     '/generalViewPages/inquiryConfirmation.html' => '/inquiry-confirmation',
-    '/generalViewPages/reservationform.php'      => '/reservation',
+    '/generalViewPages/reservationform.php' => '/reservation',
     '/generalViewPages/reservationConfirmation.html' => '/reservation-confirmation',
-    '/generalViewPages/cancelReservation.php'    => '/cancel-reservation',
-    '/generalViewPages/cancellationConfirmation.html'=> '/cancellation-confirmation',
-    '/generalViewPages/login.php'                => '/login',
+    '/generalViewPages/cancelReservation.php' => '/cancel-reservation',
+    '/generalViewPages/cancellationConfirmation.html' => '/cancellation-confirmation',
+    '/generalViewPages/login.php' => '/login',
 
     // /public/* legacy prefixed paths
-    '/public'                                   => '/',
-    '/public/'                                  => '/',
-    '/public/login'                             => '/login',
-    '/public/about'                             => '/about',
-    '/public/faq'                               => '/faq',
-    '/public/tour'                              => '/tour',
-    '/public/contact'                           => '/contact',
-    '/public/reservation'                       => '/reservation',
-    '/public/cancel-reservation'                => '/cancel-reservation',
-    '/public/generalViewPages/index.html'       => '/',
-    '/public/generalViewPages/aboutUs.html'     => '/about',
-    '/public/generalViewPages/faq.html'         => '/faq',
-    '/public/generalViewPages/tour.html'        => '/tour',
-    '/public/generalViewPages/login.php'        => '/login',
-    '/public/generalViewPages/contact.php'      => '/contact',
+    '/public' => '/',
+    '/public/' => '/',
+    '/public/login' => '/login',
+    '/public/about' => '/about',
+    '/public/faq' => '/faq',
+    '/public/tour' => '/tour',
+    '/public/contact' => '/contact',
+    '/public/reservation' => '/reservation',
+    '/public/cancel-reservation' => '/cancel-reservation',
+    '/public/generalViewPages/index.html' => '/',
+    '/public/generalViewPages/aboutUs.html' => '/about',
+    '/public/generalViewPages/faq.html' => '/faq',
+    '/public/generalViewPages/tour.html' => '/tour',
+    '/public/generalViewPages/login.php' => '/login',
+    '/public/generalViewPages/contact.php' => '/contact',
     '/public/generalViewPages/reservationform.php' => '/reservation',
     '/public/generalViewPages/cancelReservation.php' => '/cancel-reservation',
 ];

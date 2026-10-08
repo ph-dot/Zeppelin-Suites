@@ -823,7 +823,7 @@ class UnitOwner extends Model {
      */
     public function updateUnitSettings(int $ownerId, int $unitId, array $data): array {
         // 1. Verify that the unit belongs to this owner
-        $sql = "SELECT unit_id, unit_current_status, lease_rate, COALESCE(resellling_price, reselling_price, NULL) as reselling_price FROM units_table WHERE unit_id = ? AND unit_owner_id = ? LIMIT 1";
+        $sql = "SELECT unit_id, unit_current_status, stay_category, lease_rate, COALESCE(resellling_price, reselling_price, NULL) as reselling_price FROM units_table WHERE unit_id = ? AND unit_owner_id = ? LIMIT 1";
         $unit = $this->fetchOne($sql, [$unitId, $ownerId]);
         if (!$unit) {
             throw new RuntimeException('Unit not found or access denied.');
@@ -836,9 +836,12 @@ class UnitOwner extends Model {
         }
 
         // 3. Validate stay_category
-        $stayCategory = trim((string)($data['stay_category'] ?? 'Long term'));
+        $existingStay = !empty($unit['stay_category']) ? (string)$unit['stay_category'] : 'Long term';
+        $stayCategory = isset($data['stay_category']) && trim((string)$data['stay_category']) !== '' 
+            ? trim((string)$data['stay_category']) 
+            : $existingStay;
         if (!in_array($stayCategory, ['Long term', 'Short term'], true)) {
-            $stayCategory = 'Long term';
+            $stayCategory = $existingStay;
         }
 
         // 4. Validate lease_rate and reselling_price

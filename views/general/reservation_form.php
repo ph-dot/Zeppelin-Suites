@@ -269,23 +269,28 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
             <input type="hidden" id="selectedUnitId" name="selected_unit_id" value="<?= $selectedUnitId ?>">
 
             <!-- 1. UNIT DETAILS BOX -->
-            <div class="border border-slate-200 rounded-2xl p-6 sm:p-7 bg-white shadow-xs mb-8">
+            <div class="border border-slate-200 rounded-2xl p-5 sm:p-6 bg-white shadow-xs mb-8">
               <!-- Header Row: Unit Details on Left, Approved Units on Right -->
-              <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-5">
-                <h3 class="text-base sm:text-lg font-bold text-slate-900">Unit Details</h3>
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                  </svg>
+                  <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Unit Details</h3>
+                </div>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   <?= count($approvedUnitsList) ?> Approved <?= count($approvedUnitsList) === 1 ? 'Unit' : 'Units' ?>
                 </span>
               </div>
 
               <!-- Full-Width Unit Selection Dropdown (Cover Side to Side) -->
-              <div class="mb-6">
-                <label for="approvedUnitSelect" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              <div class="mb-5">
+                <label for="approvedUnitSelect" class="block text-xs font-semibold text-slate-600 mb-1.5">
                   Choose Unit:
                 </label>
                 <div class="relative w-full">
-                  <select id="approvedUnitSelect" onchange="handleUnitSelectionChange(this.value)" class="w-full text-xs sm:text-sm font-semibold text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white cursor-pointer shadow-xs transition-all appearance-none">
+                  <select id="approvedUnitSelect" onchange="handleUnitSelectionChange(this.value)" class="w-full text-xs font-semibold text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-xl py-2 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white cursor-pointer shadow-xs transition-all appearance-none">
                     <?php foreach ($approvedUnitsList as $au): ?>
                       <option value="<?= (int)$au['unit_id'] ?>" <?= ((int)$au['unit_id'] === $selectedUnitId) ? 'selected' : '' ?>>
                         <?= htmlspecialchars($au['dropdown_label'] ?? ($au['unit_number'] . ' - ' . $au['unit_type'])) ?>
@@ -299,58 +304,58 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
               </div>
 
               <!-- 3-Column Unit Details Grid -->
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-y-7 gap-x-8 sm:gap-x-12 pt-5 border-t border-slate-100">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-y-4 gap-x-6 sm:gap-x-10 pt-4 border-t border-slate-100">
                 <!-- Col 1 -->
-                <div class="space-y-6">
-                  <div class="space-y-1">
-                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Unit</p>
-                    <p class="text-sm sm:text-base font-bold text-slate-900 leading-snug" id="dispUnitNum"><?= $unitNum ?> - <?= $unitTypeUpper ?></p>
+                <div class="space-y-4">
+                  <div class="space-y-0.5">
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Unit</p>
+                    <p class="text-xs font-bold text-slate-900 leading-snug" id="dispUnitNum"><?= $unitNum ?> - <?= $unitTypeUpper ?></p>
                   </div>
-                  <div class="space-y-1">
-                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Furnishing</p>
-                    <p class="text-sm sm:text-base font-bold text-slate-900 leading-snug" id="dispFurnishing"><?= $furnishingVal ?></p>
+                  <div class="space-y-0.5">
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Furnishing</p>
+                    <p class="text-xs font-bold text-slate-900 leading-snug" id="dispFurnishing"><?= $furnishingVal ?></p>
                   </div>
-                  <div class="space-y-1">
-                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Unit owner</p>
-                    <p class="text-sm sm:text-base font-bold text-slate-900 leading-snug" id="dispOwnerName"><?= $ownerName ?></p>
+                  <div class="space-y-0.5">
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Unit owner</p>
+                    <p class="text-xs font-bold text-slate-900 leading-snug" id="dispOwnerName"><?= $ownerName ?></p>
                   </div>
                 </div>
 
                 <!-- Col 2 -->
-                <div class="space-y-6">
-                  <div class="space-y-1">
-                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Floor</p>
-                    <p class="text-sm sm:text-base font-bold text-slate-900 leading-snug" id="dispFloorNum"><?= $floorNum ?></p>
+                <div class="space-y-4">
+                  <div class="space-y-0.5">
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Floor</p>
+                    <p class="text-xs font-bold text-slate-900 leading-snug" id="dispFloorNum"><?= $floorNum ?></p>
                   </div>
-                  <div class="space-y-1">
-                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider" id="dispPriceLabel"><?= htmlspecialchars($price_label) ?></p>
-                    <p class="text-sm sm:text-base font-bold text-slate-900 font-mono tracking-tight leading-snug" id="dispPriceBasis">₱<?= number_format($price_basis, 0) ?> php</p>
+                  <div class="space-y-0.5">
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider" id="dispPriceLabel"><?= htmlspecialchars($price_label) ?></p>
+                    <p class="text-xs font-bold text-slate-900 font-mono tracking-tight leading-snug" id="dispPriceBasis">₱<?= number_format($price_basis, 0) ?> php</p>
                   </div>
-                  <div class="space-y-1">
-                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Email</p>
+                  <div class="space-y-0.5">
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Email</p>
                     <div id="dispOwnerEmailWrapper">
                       <?php if (!empty($ownerEmail)): ?>
-                        <a href="mailto:<?= htmlspecialchars($ownerEmail) ?>" class="text-sm sm:text-base font-bold text-slate-900 underline hover:text-blue-600 truncate block leading-snug" id="dispOwnerEmailLink"><?= htmlspecialchars($ownerEmail) ?></a>
+                        <a href="mailto:<?= htmlspecialchars($ownerEmail) ?>" class="text-xs font-bold text-slate-900 underline hover:text-blue-600 truncate block leading-snug" id="dispOwnerEmailLink"><?= htmlspecialchars($ownerEmail) ?></a>
                       <?php else: ?>
-                        <p class="text-sm sm:text-base font-bold text-slate-900 leading-snug" id="dispOwnerEmailText">—</p>
+                        <p class="text-xs font-bold text-slate-900 leading-snug" id="dispOwnerEmailText">—</p>
                       <?php endif; ?>
                     </div>
                   </div>
                 </div>
 
                 <!-- Col 3 -->
-                <div class="space-y-6">
-                  <div class="space-y-1">
-                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">SQM</p>
-                    <p class="text-sm sm:text-base font-bold text-slate-900 leading-snug" id="dispSqmVal"><?= $sqmVal ?></p>
+                <div class="space-y-4">
+                  <div class="space-y-0.5">
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">SQM</p>
+                    <p class="text-xs font-bold text-slate-900 leading-snug" id="dispSqmVal"><?= $sqmVal ?></p>
                   </div>
-                  <div class="space-y-1">
-                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Listing</p>
-                    <p class="text-sm sm:text-base font-bold text-slate-900 leading-snug" id="dispListingVal"><?= $listingVal ?></p>
+                  <div class="space-y-0.5">
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Listing</p>
+                    <p class="text-xs font-bold text-slate-900 leading-snug" id="dispListingVal"><?= $listingVal ?></p>
                   </div>
-                  <div class="space-y-1">
-                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Contact</p>
-                    <p class="text-sm sm:text-base font-bold text-slate-900 font-mono tracking-tight leading-snug" id="dispOwnerContact"><?= $ownerContact ?></p>
+                  <div class="space-y-0.5">
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Contact</p>
+                    <p class="text-xs font-bold text-slate-900 font-mono tracking-tight leading-snug" id="dispOwnerContact"><?= $ownerContact ?></p>
                   </div>
                 </div>
               </div>
@@ -465,28 +470,38 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                     <!-- Panel 1: GCash QR -->
                     <div id="panelGcash" class="flex flex-col sm:flex-row items-start gap-4">
                       <!-- QR Code Box -->
-                      <div class="w-32 h-32 border border-slate-200 rounded-xl p-2 bg-slate-50 flex items-center justify-center shrink-0 cursor-pointer hover:border-slate-400 transition-all text-center group relative overflow-hidden" onclick="openQRModal()">
+                      <div class="w-32 h-32 border border-slate-200 rounded-xl p-2 bg-slate-50 flex items-center justify-center shrink-0 transition-all text-center group relative overflow-hidden <?= $owner_has_qr ? 'cursor-pointer hover:border-slate-400' : 'cursor-not-allowed opacity-90' ?>" onclick="openQRModal()" id="qrCodeContainer">
                         <div id="qrImageWrap" class="<?= $owner_has_qr ? '' : 'hidden' ?> w-full h-full relative">
                           <img id="qrImgDisplay" src="<?= htmlspecialchars($baseUrl) ?>/<?= htmlspecialchars($owner_qr_path) ?>" alt="Owner GCash QR" class="w-full h-full object-contain rounded-lg">
                           <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold rounded-lg">
                             Click to Enlarge
                           </div>
                         </div>
-                        <div id="qrPlaceholderWrap" class="<?= $owner_has_qr ? 'hidden' : '' ?> space-y-1">
-                          <svg class="w-6 h-6 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                          <span class="text-[10px] font-bold text-slate-700 tracking-wide block leading-tight">GCASH QR<br>PLACEHOLDER</span>
+                        <div id="qrPlaceholderWrap" class="<?= $owner_has_qr ? 'hidden' : '' ?> space-y-1.5 p-1 text-center">
+                          <div class="w-8 h-8 mx-auto rounded-full bg-slate-200/90 flex items-center justify-center text-slate-500">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                          </div>
+                          <span class="text-[10px] font-bold text-slate-700 tracking-wide block leading-tight uppercase">QR CODE NOT<br>AVAILABLE</span>
+                          <span class="inline-block text-[9px] font-semibold text-slate-500 bg-slate-200/60 px-1.5 py-0.5 rounded">Not Uploaded</span>
                         </div>
                       </div>
 
                       <!-- Right text & file upload -->
-                      <div class="flex-1 space-y-2 text-xs text-slate-600">
-                        <p class="leading-relaxed">Use the GCash app to scan and pay directly to the unit owner's GCash account.</p>
-                        <p class="font-medium text-slate-500">Click QR code to view full size.</p>
+                      <div class="flex-1 space-y-2.5 text-xs text-slate-600">
+                        <p class="leading-relaxed" id="qrInstructionText"><?= $owner_has_qr ? "Use the GCash app to scan and pay directly to the unit owner's GCash account." : "GCash QR code is currently not available for this unit." ?></p>
+                        <p class="font-medium text-slate-500 text-[11px]" id="qrClickNote"><?= $owner_has_qr ? "Click QR code to view full size." : "The unit owner has not yet uploaded their GCash QR." ?></p>
                         
-                        <div>
-                          <label class="block text-xs font-bold text-slate-800 mb-1">Upload Proof of Payment <span class="text-red-500">*</span></label>
-                          <input type="file" id="proofUpload" name="payment_proof" accept=".jpg,.jpeg,.png,.webp" required class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[11px] file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer">
-                          <p class="text-[10px] text-slate-400 mt-1">Note: Only JPG, PNG, and WEBP files are accepted.</p>
+                        <!-- Upload Proof of Payment Option -->
+                        <div id="proofUploadWrapper" class="transition-all <?= $owner_has_qr ? '' : 'opacity-40 pointer-events-none select-none bg-slate-100/70 p-2.5 rounded-xl border border-dashed border-slate-300' ?>">
+                          <label class="block text-xs font-bold text-slate-800 mb-1" id="proofUploadLabel">Upload Proof of Payment <span class="text-red-500 <?= $owner_has_qr ? '' : 'hidden' ?>" id="proofReqStar">*</span></label>
+                          <input type="file" id="proofUpload" name="payment_proof" accept=".jpg,.jpeg,.png,.webp" <?= $owner_has_qr ? 'required' : 'disabled' ?> class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[11px] file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400">
+                          <p class="text-[10px] text-slate-400 mt-1" id="proofUploadNote">Note: Only JPG, PNG, and WEBP files are accepted.</p>
+                        </div>
+
+                        <!-- Banner shown when QR is not uploaded -->
+                        <div id="qrUnavailableBanner" class="<?= $owner_has_qr ? 'hidden' : '' ?> p-2.5 bg-amber-50 border border-amber-200/80 rounded-xl text-[11px] text-amber-800 flex items-start gap-2">
+                          <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                          <span><strong>Upload Disabled:</strong> GCash QR code has not been uploaded yet by the unit owner. Please switch to <button type="button" onclick="switchPaymentTab('In-House')" class="underline font-bold text-amber-900 hover:text-black">Pay In-House</button> to complete your reservation.</span>
                         </div>
                       </div>
                     </div>
@@ -821,9 +836,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     <div class="p-3 bg-slate-50 rounded-2xl flex items-center justify-center min-h-[220px]" id="qrModalContent">
       <img id="qrModalImg" src="<?= htmlspecialchars($baseUrl) ?>/<?= htmlspecialchars($owner_qr_path) ?>" alt="GCash QR" class="<?= $owner_has_qr ? '' : 'hidden' ?> max-h-[60vh] max-w-full object-contain rounded-xl shadow-sm">
       <div id="qrModalPlaceholder" class="<?= $owner_has_qr ? 'hidden' : '' ?> text-center py-6">
-        <svg class="w-12 h-12 mx-auto text-slate-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-        <p class="text-xs font-semibold text-slate-600">No GCash QR uploaded by this unit owner</p>
-        <p class="text-[11px] text-slate-400 mt-1">Please coordinate or pay in-house during lease signing</p>
+        <div class="w-12 h-12 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+        </div>
+        <p class="text-xs font-bold text-slate-700">QR Code Not Available</p>
+        <p class="text-[11px] text-slate-500 mt-1">This unit owner has not yet uploaded a GCash QR code.<br>Please select 'Pay In-House' to complete your reservation.</p>
       </div>
     </div>
     <p class="text-xs text-slate-500 mt-3">Scan with GCash or any supported e-wallet</p>
@@ -1203,6 +1220,96 @@ function handleFlexibleSigning(cb) {
 renderSigningCalendar();
 
 // ======= Payment tab switcher =======
+function currentUnitHasQr() {
+  if (Array.isArray(approvedUnitsData)) {
+    const unit = approvedUnitsData.find(u => parseInt(u.unit_id, 10) === currentUnitId);
+    if (unit) {
+      return Boolean(unit.owner_has_qr && unit.owner_qr_path);
+    }
+  }
+  return <?= $owner_has_qr ? 'true' : 'false' ?>;
+}
+
+function updateQrAndProofUI(hasQr, ownerName = '', qrPath = '') {
+  const qrImageWrap = document.getElementById('qrImageWrap');
+  const qrPlaceholderWrap = document.getElementById('qrPlaceholderWrap');
+  const qrImgDisplay = document.getElementById('qrImgDisplay');
+  const qrCodeContainer = document.getElementById('qrCodeContainer');
+  const qrInstructionText = document.getElementById('qrInstructionText');
+  const qrClickNote = document.getElementById('qrClickNote');
+  const proofUploadWrapper = document.getElementById('proofUploadWrapper');
+  const proofUpload = document.getElementById('proofUpload');
+  const proofReqStar = document.getElementById('proofReqStar');
+  const qrUnavailableBanner = document.getElementById('qrUnavailableBanner');
+  const qrModalTitle = document.getElementById('qrModalTitle');
+  const qrModalImg = document.getElementById('qrModalImg');
+  const qrModalPlaceholder = document.getElementById('qrModalPlaceholder');
+  const paymentMethodInput = document.getElementById('paymentMethodInput');
+
+  const qrSrc = hasQr ? (qrPath.startsWith('http') ? qrPath : `${baseUrlStr}/${qrPath}`) : '';
+
+  if (qrModalTitle && ownerName) {
+    qrModalTitle.textContent = `${ownerName}'s GCash QR`;
+  }
+
+  if (hasQr) {
+    if (qrImgDisplay) qrImgDisplay.src = qrSrc;
+    if (qrModalImg) {
+      qrModalImg.src = qrSrc;
+      qrModalImg.classList.remove('hidden');
+    }
+    if (qrModalPlaceholder) qrModalPlaceholder.classList.add('hidden');
+    if (qrImageWrap) qrImageWrap.classList.remove('hidden');
+    if (qrPlaceholderWrap) qrPlaceholderWrap.classList.add('hidden');
+    if (qrCodeContainer) {
+      qrCodeContainer.classList.remove('cursor-not-allowed', 'opacity-90');
+      qrCodeContainer.classList.add('cursor-pointer', 'hover:border-slate-400');
+    }
+    if (qrInstructionText) {
+      qrInstructionText.textContent = "Use the GCash app to scan and pay directly to the unit owner's GCash account.";
+    }
+    if (qrClickNote) {
+      qrClickNote.textContent = "Click QR code to view full size.";
+    }
+    if (proofUploadWrapper) {
+      proofUploadWrapper.className = 'transition-all';
+    }
+    if (proofUpload) {
+      proofUpload.disabled = false;
+      if (paymentMethodInput && paymentMethodInput.value === 'GCash QR') {
+        proofUpload.required = true;
+      }
+    }
+    if (proofReqStar) proofReqStar.classList.remove('hidden');
+    if (qrUnavailableBanner) qrUnavailableBanner.classList.add('hidden');
+  } else {
+    if (qrModalImg) qrModalImg.classList.add('hidden');
+    if (qrModalPlaceholder) qrModalPlaceholder.classList.remove('hidden');
+    if (qrImageWrap) qrImageWrap.classList.add('hidden');
+    if (qrPlaceholderWrap) qrPlaceholderWrap.classList.remove('hidden');
+    if (qrCodeContainer) {
+      qrCodeContainer.classList.add('cursor-not-allowed', 'opacity-90');
+      qrCodeContainer.classList.remove('cursor-pointer', 'hover:border-slate-400');
+    }
+    if (qrInstructionText) {
+      qrInstructionText.textContent = "GCash QR code is currently not available for this unit.";
+    }
+    if (qrClickNote) {
+      qrClickNote.textContent = "The unit owner has not yet uploaded their GCash QR.";
+    }
+    if (proofUploadWrapper) {
+      proofUploadWrapper.className = 'transition-all opacity-40 pointer-events-none select-none bg-slate-100/70 p-2.5 rounded-xl border border-dashed border-slate-300';
+    }
+    if (proofUpload) {
+      proofUpload.disabled = true;
+      proofUpload.required = false;
+      proofUpload.value = '';
+    }
+    if (proofReqStar) proofReqStar.classList.add('hidden');
+    if (qrUnavailableBanner) qrUnavailableBanner.classList.remove('hidden');
+  }
+}
+
 function switchPaymentTab(type) {
   const tabGcash = document.getElementById('tabGcash');
   const tabInHouse = document.getElementById('tabInHouse');
@@ -1212,13 +1319,20 @@ function switchPaymentTab(type) {
   const proofUpload = document.getElementById('proofUpload');
 
   paymentMethodInput.value = type;
+  const hasQr = currentUnitHasQr();
 
   if (type === 'GCash QR') {
     tabGcash.className = 'flex-1 py-2 px-3 text-xs font-bold transition-all bg-[#0f172a] text-white';
     tabInHouse.className = 'flex-1 py-2 px-3 text-xs font-bold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200';
     panelGcash.classList.remove('hidden');
     panelInHouse.classList.add('hidden');
-    proofUpload.required = true;
+    if (hasQr) {
+      proofUpload.required = true;
+      proofUpload.disabled = false;
+    } else {
+      proofUpload.required = false;
+      proofUpload.disabled = true;
+    }
   } else {
     tabGcash.className = 'flex-1 py-2 px-3 text-xs font-bold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200';
     tabInHouse.className = 'flex-1 py-2 px-3 text-xs font-bold transition-all bg-[#0f172a] text-white';
@@ -1288,9 +1402,9 @@ function handleUnitSelectionChange(unitIdStr) {
   const emailWrapper = document.getElementById('dispOwnerEmailWrapper');
   if (emailWrapper) {
     if (unit.owner_email && unit.owner_email.trim() !== '') {
-      emailWrapper.innerHTML = `<a href="mailto:${escapeHtml(unit.owner_email)}" class="font-bold text-slate-900 underline hover:text-blue-600 truncate block" id="dispOwnerEmailLink">${escapeHtml(unit.owner_email)}</a>`;
+      emailWrapper.innerHTML = `<a href="mailto:${escapeHtml(unit.owner_email)}" class="text-xs font-bold text-slate-900 underline hover:text-blue-600 truncate block leading-snug" id="dispOwnerEmailLink">${escapeHtml(unit.owner_email)}</a>`;
     } else {
-      emailWrapper.innerHTML = `<p class="font-bold text-slate-900" id="dispOwnerEmailText">—</p>`;
+      emailWrapper.innerHTML = `<p class="text-xs font-bold text-slate-900 leading-snug" id="dispOwnerEmailText">—</p>`;
     }
   }
 
@@ -1317,36 +1431,9 @@ function handleUnitSelectionChange(unitIdStr) {
 
   calculateBreakdown();
 
-  // 3. Update GCash QR Display & Modal
-  const qrImageWrap = document.getElementById('qrImageWrap');
-  const qrPlaceholderWrap = document.getElementById('qrPlaceholderWrap');
-  const qrImgDisplay = document.getElementById('qrImgDisplay');
-  const qrModalTitle = document.getElementById('qrModalTitle');
-  const qrModalImg = document.getElementById('qrModalImg');
-  const qrModalPlaceholder = document.getElementById('qrModalPlaceholder');
-
+  // 3. Update GCash QR Display & Proof Upload state
   const hasQr = Boolean(unit.owner_has_qr && unit.owner_qr_path);
-  const qrSrc = hasQr ? `${baseUrlStr}/${unit.owner_qr_path}` : '';
-
-  if (qrModalTitle) {
-    qrModalTitle.textContent = `${unit.owner_name || 'Owner'}'s GCash QR`;
-  }
-
-  if (hasQr) {
-    if (qrImgDisplay) qrImgDisplay.src = qrSrc;
-    if (qrModalImg) {
-      qrModalImg.src = qrSrc;
-      qrModalImg.classList.remove('hidden');
-    }
-    if (qrModalPlaceholder) qrModalPlaceholder.classList.add('hidden');
-    if (qrImageWrap) qrImageWrap.classList.remove('hidden');
-    if (qrPlaceholderWrap) qrPlaceholderWrap.classList.add('hidden');
-  } else {
-    if (qrModalImg) qrModalImg.classList.add('hidden');
-    if (qrModalPlaceholder) qrModalPlaceholder.classList.remove('hidden');
-    if (qrImageWrap) qrImageWrap.classList.add('hidden');
-    if (qrPlaceholderWrap) qrPlaceholderWrap.classList.remove('hidden');
-  }
+  updateQrAndProofUI(hasQr, unit.owner_name || 'Owner', unit.owner_qr_path || '');
 }
 
 function escapeHtml(str) {
@@ -1427,10 +1514,17 @@ function handleFormSubmit(e) {
 
   const paymentMethod = document.getElementById('paymentMethodInput').value;
   const proof = document.getElementById('proofUpload');
-  if (paymentMethod === 'GCash QR' && (!proof.files || proof.files.length === 0)) {
-    alert("Please upload your proof of payment for the GCash QR payment option.");
-    proof.focus();
-    return false;
+  if (paymentMethod === 'GCash QR') {
+    if (!currentUnitHasQr()) {
+      alert("GCash QR code is not available for this unit. Please select 'Pay In-House' to complete your reservation.");
+      switchPaymentTab('In-House');
+      return false;
+    }
+    if (!proof.files || proof.files.length === 0) {
+      alert("Please upload your proof of payment for the GCash QR payment option.");
+      proof.focus();
+      return false;
+    }
   }
 
   // Open confirmation modal

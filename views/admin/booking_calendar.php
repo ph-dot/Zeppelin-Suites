@@ -360,7 +360,7 @@ $baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
   <!-- Page Content -->
   <div class="main-scroll p-4 md:p-6">
     <!-- Page Title Bar -->
-    <div class="glass-header relative z-40 border border-slate-100/80 px-5 py-4 mb-5 rounded-2xl flex items-center justify-between">
+    <div class="glass-header relative z-30 border border-slate-100/80 px-5 py-4 mb-5 rounded-2xl flex items-center justify-between">
       <div>
         <h1 class="text-xl font-bold text-slate-900">Booking Calendar</h1>
         <p class="text-xs text-slate-400 mt-0.5">Click any empty date cell to block dates or hover for reservation details.</p>

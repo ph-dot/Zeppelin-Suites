@@ -11,17 +11,20 @@ require_once __DIR__ . '/../models/Analytics.php';
  * Handles reservation records, handover workflows, and tenant activation.
  * Pure MVC: strictly NO SQL queries in this controller.
  */
-class ReservationController extends Controller {
+class ReservationController extends Controller
+{
     private Reservation $reservationModel;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->reservationModel = new Reservation();
     }
 
     /**
      * Display the Lease & Reservation Management dashboard.
      */
-    public function index(): void {
+    public function index(): void
+    {
         $userSession = Middleware::requireRole(['admin']);
 
         // Synchronize expired leases
@@ -30,14 +33,14 @@ class ReservationController extends Controller {
         // Fetch all reservations with full relations
         $reservations = $this->reservationModel->getAllWithDetails();
 
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
+        $baseUrl = rtrim((string) env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $this->render('admin/reservations', [
-            'pageTitle'    => 'Zeppelin Suites Admin - Lease Management',
-            'activeTab'    => 'reservation',
-            'adminName'    => $userSession['full_name'],
+            'pageTitle' => 'Zeppelin Suites Admin - Lease Management',
+            'activeTab' => 'reservation',
+            'adminName' => $userSession['full_name'],
             'adminInitial' => $userSession['initial'],
-            'baseUrl'      => $baseUrl,
+            'baseUrl' => $baseUrl,
             'reservations' => $reservations,
         ]);
     }
@@ -45,7 +48,8 @@ class ReservationController extends Controller {
     /**
      * Process unit handover and tenant account activation (AJAX / POST).
      */
-    public function handover(): void {
+    public function handover(): void
+    {
         Middleware::requireRole(['admin']);
 
         if (!$this->isPost()) {
@@ -53,8 +57,8 @@ class ReservationController extends Controller {
             return;
         }
 
-        $reservationId = (int)$this->getPost('reservation_id', 0);
-        $password = trim((string)$this->getPost('password', ''));
+        $reservationId = (int) $this->getPost('reservation_id', 0);
+        $password = trim((string) $this->getPost('password', ''));
 
         if ($reservationId <= 0) {
             $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
@@ -74,11 +78,12 @@ class ReservationController extends Controller {
     /**
      * Display comprehensive reservation details page.
      */
-    public function show(): void {
+    public function show(): void
+    {
         $userSession = Middleware::requireRole(['admin']);
-        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
+        $baseUrl = rtrim((string) env('APP_URL', '/Zeppelin-Suites'), '/');
 
-        $reservationId = (int)($this->getQuery('reservation_id', 0) ?: $this->getQuery('id', 0));
+        $reservationId = (int) ($this->getQuery('reservation_id', 0) ?: $this->getQuery('id', 0));
         if ($reservationId <= 0) {
             $this->redirect("{$baseUrl}/admin/reservations");
             return;
@@ -94,14 +99,14 @@ class ReservationController extends Controller {
         $pendingCounts = $analyticsModel->getPendingCounts();
 
         $this->render('admin/view_reservation', [
-            'pageTitle'           => 'Zeppelin Suites - View Reservation #' . $reservationId,
-            'activeTab'           => 'reservation',
-            'adminName'           => $userSession['full_name'],
-            'adminInitial'        => $userSession['initial'],
-            'baseUrl'             => $baseUrl,
-            'res'                 => $reservation,
-            'reservation_id'      => $reservationId,
-            'pendingInquiries'    => $pendingCounts['pending_inquiries'],
+            'pageTitle' => 'Zeppelin Suites - View Reservation #' . $reservationId,
+            'activeTab' => 'reservation',
+            'adminName' => $userSession['full_name'],
+            'adminInitial' => $userSession['initial'],
+            'baseUrl' => $baseUrl,
+            'res' => $reservation,
+            'reservation_id' => $reservationId,
+            'pendingInquiries' => $pendingCounts['pending_inquiries'],
             'pendingReservations' => $pendingCounts['pending_reservations'],
         ]);
     }
@@ -109,10 +114,11 @@ class ReservationController extends Controller {
     /**
      * AJAX endpoint to confirm or set agreed lease signing date (Admin).
      */
-    public function confirmSigningDate(): void {
+    public function confirmSigningDate(): void
+    {
         Middleware::requireRole(['admin']);
         $this->json([
-            'success' => false, 
+            'success' => false,
             'message' => 'Only the unit owner is authorized to select and confirm the lease signing appointment date.'
         ], 403);
     }
@@ -120,7 +126,8 @@ class ReservationController extends Controller {
     /**
      * AJAX endpoint to complete or reset lease signing status (Admin).
      */
-    public function updateLeaseSigning(): void {
+    public function updateLeaseSigning(): void
+    {
         $userSession = Middleware::requireRole(['admin']);
 
         if (!$this->isPost()) {
@@ -128,9 +135,9 @@ class ReservationController extends Controller {
             return;
         }
 
-        $reservationId = (int)$this->getPost('reservation_id', 0);
-        $action = trim((string)$this->getPost('action', 'complete'));
-        $remarks = trim((string)$this->getPost('remarks', ''));
+        $reservationId = (int) $this->getPost('reservation_id', 0);
+        $action = trim((string) $this->getPost('action', 'complete'));
+        $remarks = trim((string) $this->getPost('remarks', ''));
 
         if ($reservationId <= 0) {
             $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
@@ -141,7 +148,7 @@ class ReservationController extends Controller {
             $reservationId,
             $action,
             $remarks,
-            (int)$userSession['user_id'],
+            (int) $userSession['user_id'],
             'admin'
         );
 
@@ -149,19 +156,20 @@ class ReservationController extends Controller {
     }
 
     /**
-     * AJAX endpoint to update payment status (Admin Override).
+     * AJAX endpoint to verify, flag, or reject reservation payment.
      */
-    public function updatePaymentStatus(): void {
-        $userSession = Middleware::requireRole(['admin']);
+    public function updatePayment(): void
+    {
+        $userSession = Middleware::requireRole(['admin', 'unit owner']);
 
         if (!$this->isPost()) {
             $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
             return;
         }
 
-        $reservationId = (int)$this->getPost('reservation_id', 0);
-        $action = trim((string)$this->getPost('action', 'verify'));
-        $remarks = trim((string)$this->getPost('remarks', ''));
+        $reservationId = (int) $this->getPost('reservation_id', 0);
+        $action = trim((string) $this->getPost('action', 'verify'));
+        $remarks = trim((string) $this->getPost('remarks', ''));
 
         if ($reservationId <= 0) {
             $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
@@ -172,8 +180,145 @@ class ReservationController extends Controller {
             $reservationId,
             $action,
             $remarks,
-            (int)$userSession['user_id'],
-            (string)$userSession['full_name']
+            (int) $userSession['user_id'],
+            (string) $userSession['role']
+        );
+
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to fetch reservation documents checklist.
+     */
+    public function getDocuments(): void
+    {
+        Middleware::requireRole(['admin', 'unit owner']);
+
+        $reservationId = (int) ($this->getQuery('reservation_id', 0) ?: $this->getPost('reservation_id', 0));
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
+            return;
+        }
+
+        $result = $this->reservationModel->getReservationDocuments($reservationId);
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to update reservation documents tracking.
+     */
+    public function updateDocuments(): void
+    {
+        $userSession = Middleware::requireRole(['admin', 'unit owner']);
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int) $this->getPost('reservation_id', 0);
+        $docsRaw = $this->getPost('documents');
+        $documents = is_array($docsRaw) ? $docsRaw : json_decode((string) $docsRaw, true);
+
+        if ($reservationId <= 0 || !is_array($documents)) {
+            $this->json(['success' => false, 'message' => 'Invalid request data.'], 400);
+            return;
+        }
+
+        $result = $this->reservationModel->updateReservationDocuments(
+            $reservationId,
+            $documents,
+            (int) $userSession['user_id'],
+            (string) $userSession['role']
+        );
+
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to mark reservation as officially booked.
+     */
+    public function markOfficiallyBooked(): void
+    {
+        $userSession = Middleware::requireRole(['admin']);
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int) $this->getPost('reservation_id', 0);
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
+            return;
+        }
+
+        $result = $this->reservationModel->markOfficiallyBooked(
+            $reservationId,
+            (int) $userSession['user_id'],
+            'admin'
+        );
+
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to cancel a reservation.
+     */
+    public function cancelReservation(): void
+    {
+        $userSession = Middleware::requireRole(['admin']);
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int) $this->getPost('reservation_id', 0);
+        $remarks = trim((string) $this->getPost('remarks', ''));
+
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
+            return;
+        }
+
+        $result = $this->reservationModel->cancelReservation(
+            $reservationId,
+            $remarks,
+            (int) $userSession['user_id'],
+            'admin'
+        );
+
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to update payment status (Admin Override).
+     */
+    public function updatePaymentStatus(): void
+    {
+        $userSession = Middleware::requireRole(['admin']);
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int) $this->getPost('reservation_id', 0);
+        $action = trim((string) $this->getPost('action', 'verify'));
+        $remarks = trim((string) $this->getPost('remarks', ''));
+
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
+            return;
+        }
+
+        $result = $this->reservationModel->updatePaymentStatus(
+            $reservationId,
+            $action,
+            $remarks,
+            (int) $userSession['user_id'],
+            (string) $userSession['full_name']
         );
 
         $this->json($result, $result['success'] ? 200 : 422);
@@ -182,10 +327,11 @@ class ReservationController extends Controller {
     /**
      * AJAX endpoint to fetch reservation documents (Admin).
      */
-    public function getDocuments(): void {
+    public function getDocuments(): void
+    {
         Middleware::requireRole(['admin']);
 
-        $reservationId = (int)($this->getQuery('reservation_id', 0) ?: $this->getQuery('id', 0));
+        $reservationId = (int) ($this->getQuery('reservation_id', 0) ?: $this->getQuery('id', 0));
         if ($reservationId <= 0) {
             $this->json(['success' => false, 'message' => 'Invalid reservation ID.', 'documents' => []], 400);
             return;
@@ -198,7 +344,8 @@ class ReservationController extends Controller {
     /**
      * AJAX endpoint to save reservation documents (Admin).
      */
-    public function saveDocuments(): void {
+    public function saveDocuments(): void
+    {
         $userSession = Middleware::requireRole(['admin']);
 
         if (!$this->isPost()) {
@@ -206,10 +353,10 @@ class ReservationController extends Controller {
             return;
         }
 
-        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $reservationId = (int) $this->getPost('reservation_id', 0);
         $rawDocs = $this->getPost('documents');
 
-        $documents = is_array($rawDocs) ? $rawDocs : json_decode((string)$rawDocs, true);
+        $documents = is_array($rawDocs) ? $rawDocs : json_decode((string) $rawDocs, true);
         if ($reservationId <= 0 || !is_array($documents)) {
             $this->json(['success' => false, 'message' => 'Invalid reservation ID or documents payload.'], 400);
             return;
@@ -218,7 +365,7 @@ class ReservationController extends Controller {
         $result = $this->reservationModel->saveDocuments(
             $reservationId,
             $documents,
-            (int)$userSession['user_id'],
+            (int) $userSession['user_id'],
             'admin'
         );
 
@@ -228,7 +375,8 @@ class ReservationController extends Controller {
     /**
      * AJAX endpoint to mark reservation as officially booked (Admin).
      */
-    public function markOfficiallyBooked(): void {
+    public function markOfficiallyBooked(): void
+    {
         $userSession = Middleware::requireRole(['admin']);
 
         if (!$this->isPost()) {
@@ -236,7 +384,7 @@ class ReservationController extends Controller {
             return;
         }
 
-        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $reservationId = (int) $this->getPost('reservation_id', 0);
         if ($reservationId <= 0) {
             $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
             return;
@@ -244,7 +392,7 @@ class ReservationController extends Controller {
 
         $result = $this->reservationModel->markOfficiallyBooked(
             $reservationId,
-            (int)$userSession['user_id'],
+            (int) $userSession['user_id'],
             'admin'
         );
 
@@ -254,7 +402,8 @@ class ReservationController extends Controller {
     /**
      * AJAX endpoint to cancel reservation (Admin).
      */
-    public function cancelReservation(): void {
+    public function cancelReservation(): void
+    {
         $userSession = Middleware::requireRole(['admin']);
 
         if (!$this->isPost()) {
@@ -262,8 +411,8 @@ class ReservationController extends Controller {
             return;
         }
 
-        $reservationId = (int)$this->getPost('reservation_id', 0);
-        $remarks = trim((string)($this->getPost('remarks') ?? 'Cancelled by admin.'));
+        $reservationId = (int) $this->getPost('reservation_id', 0);
+        $remarks = trim((string) ($this->getPost('remarks') ?? 'Cancelled by admin.'));
 
         if ($reservationId <= 0) {
             $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
@@ -273,7 +422,7 @@ class ReservationController extends Controller {
         $result = $this->reservationModel->cancelReservation(
             $reservationId,
             $remarks,
-            (int)$userSession['user_id'],
+            (int) $userSession['user_id'],
             'admin'
         );
 

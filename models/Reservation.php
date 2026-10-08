@@ -8,14 +8,16 @@ require_once __DIR__ . '/../core/Model.php';
  * Handles all database operations for reservation_table, reservation_documents, and unit occupancy sync.
  * Strictly NO direct HTML or presentation logic.
  */
-class Reservation extends Model {
+class Reservation extends Model
+{
 
     /**
      * Synchronize unit statuses whose lease has expired back to 'Ready for Occupancy'.
      *
      * @return int Number of affected units
      */
-    public function syncExpiredUnitStatuses(): int {
+    public function syncExpiredUnitStatuses(): int
+    {
         $sql = "
             UPDATE units_table u
             JOIN (
@@ -45,7 +47,8 @@ class Reservation extends Model {
      *
      * @return array
      */
-    public function getAllWithDetails(): array {
+    public function getAllWithDetails(): array
+    {
         $sql = "
             SELECT
                 r.reservation_id,
@@ -120,7 +123,8 @@ class Reservation extends Model {
     /**
      * Find a single reservation record by ID.
      */
-    public function findById(int $reservationId): ?array {
+    public function findById(int $reservationId): ?array
+    {
         $sql = "
             SELECT r.*, u.unit_number, u.unit_type, u.unit_current_status
             FROM reservation_table r
@@ -134,7 +138,8 @@ class Reservation extends Model {
     /**
      * Count reservations filtered by date range and optional unit type.
      */
-    public function countReservations(string $start, string $end, ?string $unitType = null, string $extraWhere = '', array $extraParams = []): int {
+    public function countReservations(string $start, string $end, ?string $unitType = null, string $extraWhere = '', array $extraParams = []): int
+    {
         $sql = "
             SELECT COUNT(*) AS total
             FROM reservation_table r
@@ -156,13 +161,14 @@ class Reservation extends Model {
         }
 
         $row = $this->fetchOne($sql, $params);
-        return (int)($row['total'] ?? 0);
+        return (int) ($row['total'] ?? 0);
     }
 
     /**
      * Get aggregate sales summary for a given time window.
      */
-    public function getSalesSummary(string $start, string $end, ?string $unitType = null): array {
+    public function getSalesSummary(string $start, string $end, ?string $unitType = null): array
+    {
         $dateExpr = "COALESCE(r.payment_verified_at, r.created_at)";
         $sql = "
             SELECT
@@ -186,18 +192,19 @@ class Reservation extends Model {
 
         $row = $this->fetchOne($sql, $params);
         return $row ?: [
-            'collected_sales'   => 0,
-            'contract_value'    => 0,
+            'collected_sales' => 0,
+            'contract_value' => 0,
             'paid_reservations' => 0,
-            'leasing_sales'     => 0,
-            'resale_sales'      => 0,
+            'leasing_sales' => 0,
+            'resale_sales' => 0,
         ];
     }
 
     /**
      * Get daily sales amounts array indexed by day of month.
      */
-    public function getDailySales(string $start, string $end, int $daysInMonth, ?string $unitType = null): array {
+    public function getDailySales(string $start, string $end, int $daysInMonth, ?string $unitType = null): array
+    {
         $counts = array_fill(1, $daysInMonth, 0.0);
         $dateExpr = "COALESCE(r.payment_verified_at, r.created_at)";
         $sql = "
@@ -219,9 +226,9 @@ class Reservation extends Model {
 
         $rows = $this->fetchAll($sql, $params);
         foreach ($rows as $row) {
-            $day = (int)$row['day_num'];
+            $day = (int) $row['day_num'];
             if ($day >= 1 && $day <= $daysInMonth) {
-                $counts[$day] = (float)$row['total'];
+                $counts[$day] = (float) $row['total'];
             }
         }
 
@@ -231,7 +238,8 @@ class Reservation extends Model {
     /**
      * Get top revenue generating units for the given window.
      */
-    public function getTopRevenueUnits(string $start, string $end, ?string $unitType = null, int $limit = 8): array {
+    public function getTopRevenueUnits(string $start, string $end, ?string $unitType = null, int $limit = 8): array
+    {
         $sql = "
             SELECT
                 u.unit_number,
@@ -254,7 +262,7 @@ class Reservation extends Model {
         $sql .= "
             GROUP BY u.unit_id, u.unit_number, u.unit_type, owner.full_name, u.unit_current_status
             ORDER BY revenue DESC, u.unit_number ASC
-            LIMIT " . (int)$limit;
+            LIMIT " . (int) $limit;
 
         return $this->fetchAll($sql, $params);
     }
@@ -266,7 +274,8 @@ class Reservation extends Model {
      * @param string|null $customPassword
      * @return array Result array ['success' => bool, 'message' => string, 'tenant' => ?array]
      */
-    public function handover(int $reservationId, ?string $customPassword = null): array {
+    public function handover(int $reservationId, ?string $customPassword = null): array
+    {
         $this->beginTransaction();
 
         try {
@@ -296,10 +305,10 @@ class Reservation extends Model {
                 throw new RuntimeException("Reservation record #{$reservationId} not found.");
             }
 
-            $unitId = (int)$res['unit_id'];
-            $clientName = trim((string)($res['client_name'] ?? ''));
-            $clientEmail = trim((string)($res['client_email'] ?? ''));
-            $clientContact = trim((string)($res['client_contact'] ?? ''));
+            $unitId = (int) $res['unit_id'];
+            $clientName = trim((string) ($res['client_name'] ?? ''));
+            $clientEmail = trim((string) ($res['client_email'] ?? ''));
+            $clientContact = trim((string) ($res['client_contact'] ?? ''));
 
             if ($clientEmail === '') {
                 throw new RuntimeException("Client email is missing in the reservation record.");
@@ -320,7 +329,7 @@ class Reservation extends Model {
 
             // 4. Update inquiry status if linked
             if (!empty($res['inq_id'])) {
-                $this->execute("UPDATE inquiry_table SET status = 'officially booked' WHERE inq_id = ?", [(int)$res['inq_id']]);
+                $this->execute("UPDATE inquiry_table SET status = 'officially booked' WHERE inq_id = ?", [(int) $res['inq_id']]);
             }
 
             // 5. Check if user already exists in users_table by email
@@ -330,8 +339,8 @@ class Reservation extends Model {
             $tenantUserId = 0;
 
             if ($existingUser) {
-                $tenantUserId = (int)$existingUser['user_id'];
-                $currentRole = strtolower((string)$existingUser['user_role']);
+                $tenantUserId = (int) $existingUser['user_id'];
+                $currentRole = strtolower((string) $existingUser['user_role']);
                 $newRole = ($currentRole === 'admin') ? $existingUser['user_role'] : 'tenant';
 
                 $updateUserSql = "
@@ -350,7 +359,7 @@ class Reservation extends Model {
                     VALUES (?, ?, ?, ?, 'tenant', 'Active', NOW())
                 ";
                 $this->execute($insertUserSql, [$clientName, $clientEmail, $hashedPassword, $clientContact]);
-                $tenantUserId = (int)$this->lastInsertId();
+                $tenantUserId = (int) $this->lastInsertId();
             }
 
             $this->commit();
@@ -368,12 +377,12 @@ class Reservation extends Model {
                 'success' => true,
                 'message' => "Unit handover completed! Tenant account has been activated and login credentials (Email: {$clientEmail}, Password: {$defaultPassword}) have been sent to {$clientEmail}.",
                 'email_sent' => $emailSent,
-                'tenant'  => [
-                    'user_id'  => $tenantUserId,
-                    'name'     => $clientName,
-                    'email'    => $clientEmail,
-                    'role'     => 'tenant',
-                    'status'   => 'Active',
+                'tenant' => [
+                    'user_id' => $tenantUserId,
+                    'name' => $clientName,
+                    'email' => $clientEmail,
+                    'role' => 'tenant',
+                    'status' => 'Active',
                     'password' => $defaultPassword,
                 ]
             ];
@@ -382,7 +391,7 @@ class Reservation extends Model {
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
-                'tenant'  => null,
+                'tenant' => null,
             ];
         }
     }
@@ -390,7 +399,8 @@ class Reservation extends Model {
     /**
      * Get full details for a reservation record by ID with joined units, owners, signers, etc.
      */
-    public function getDetailsById(int $reservationId): ?array {
+    public function getDetailsById(int $reservationId): ?array
+    {
         $sql = "
             SELECT
                 r.*,
@@ -444,7 +454,8 @@ class Reservation extends Model {
     /**
      * Load all reservation form data and precomputations for a given reservation token.
      */
-    public function getReservationFormData(string $token): array {
+    public function getReservationFormData(string $token): array
+    {
         if (trim($token) === '') {
             return ['status' => 'error', 'message' => 'Invalid reservation link.'];
         }
@@ -474,14 +485,14 @@ class Reservation extends Model {
         // 2. Check if already submitted
         $alreadySubmitted = $this->fetchOne(
             "SELECT reservation_id FROM reservation_table WHERE inq_id = ? LIMIT 1",
-            [(int)$inquiry['inq_id']]
+            [(int) $inquiry['inq_id']]
         );
 
         if ($alreadySubmitted) {
             return [
                 'status' => 'already_submitted',
-                'token'  => $token,
-                'inq_id' => (int)$inquiry['inq_id']
+                'token' => $token,
+                'inq_id' => (int) $inquiry['inq_id']
             ];
         }
 
@@ -489,7 +500,7 @@ class Reservation extends Model {
             return ['status' => 'error', 'message' => 'This inquiry is not approved for reservation.'];
         }
 
-        if (!empty($inquiry['reservation_token_expires_at']) && strtotime((string)$inquiry['reservation_token_expires_at']) < time()) {
+        if (!empty($inquiry['reservation_token_expires_at']) && strtotime((string) $inquiry['reservation_token_expires_at']) < time()) {
             return ['status' => 'error', 'message' => 'This reservation link has expired.'];
         }
 
@@ -522,7 +533,7 @@ class Reservation extends Model {
             WHERE r.inq_id = ? AND r.request_status = 'approved'
             ORDER BY u.unit_number ASC
         ";
-        $rawUnits = $this->fetchAll($approvedUnitsSql, [(int)$inquiry['inq_id']]);
+        $rawUnits = $this->fetchAll($approvedUnitsSql, [(int) $inquiry['inq_id']]);
 
         // Fallback if no owner_approval_requests row exists but approved_unit_id is set
         if (empty($rawUnits) && !empty($inquiry['approved_unit_id'])) {
@@ -553,7 +564,7 @@ class Reservation extends Model {
                 WHERE u.unit_id = ?
                 LIMIT 1
             ";
-            $fb = $this->fetchOne($fallbackSql, [(int)$inquiry['inq_id'], (int)$inquiry['approved_unit_id']]);
+            $fb = $this->fetchOne($fallbackSql, [(int) $inquiry['inq_id'], (int) $inquiry['approved_unit_id']]);
             if ($fb) {
                 $rawUnits = [$fb];
             }
@@ -563,7 +574,7 @@ class Reservation extends Model {
             return ['status' => 'error', 'message' => 'No approved units found for this inquiry.'];
         }
 
-        $inqTypeLower = strtolower(trim((string)$inquiry['inquiry_type']));
+        $inqTypeLower = strtolower(trim((string) $inquiry['inquiry_type']));
         $isLease = (
             $inqTypeLower === 'lease inquiry' ||
             $inqTypeLower === 'unit reservation' ||
@@ -575,12 +586,12 @@ class Reservation extends Model {
         $processedUnits = [];
 
         foreach ($rawUnits as $u) {
-            $uid = (int)$u['unit_id'];
+            $uid = (int) $u['unit_id'];
             if ($isLease) {
-                $priceBasis = (float)($u['lease_rate'] ?? 0);
+                $priceBasis = (float) ($u['lease_rate'] ?? 0);
                 $priceLabel = "Monthly Lease Rate";
             } else {
-                $priceBasis = (float)(!empty($u['reselling_price']) ? $u['reselling_price'] : ($u['lease_rate'] ?? 0));
+                $priceBasis = (float) (!empty($u['reselling_price']) ? $u['reselling_price'] : ($u['lease_rate'] ?? 0));
                 $priceLabel = "Selling Price";
             }
 
@@ -588,7 +599,7 @@ class Reservation extends Model {
             $ownerHasQr = false;
             $ownerQrPath = '';
             if (!empty($u['owner_gcash_qr'])) {
-                $qrClean = ltrim((string)$u['owner_gcash_qr'], '/');
+                $qrClean = ltrim((string) $u['owner_gcash_qr'], '/');
                 if (file_exists($projectRoot . '/' . $qrClean) || file_exists($projectRoot . '/public/' . $qrClean)) {
                     $ownerHasQr = true;
                     $ownerQrPath = $qrClean;
@@ -596,40 +607,40 @@ class Reservation extends Model {
             }
 
             $processedUnits[$uid] = [
-                'unit_id'                => $uid,
-                'unit_number'            => (string)$u['unit_number'],
-                'unit_type'              => (string)$u['unit_type'],
-                'floor_number'           => (string)($u['floor_number'] ?? '1'),
-                'sqm'                    => (string)($u['sqm'] ?? '37'),
-                'furnishing'             => 'Fully Furnished.',
-                'listing_type'           => (string)($u['listing_type'] ?? ($isLease ? 'For Lease' : 'Resale')),
-                'stay_category'          => (string)($u['stay_category'] ?? 'Long term'),
-                'unit_current_status'    => (string)($u['unit_current_status'] ?? 'Ready for Occupancy'),
-                'lease_rate'             => (float)($u['lease_rate'] ?? 0),
-                'reselling_price'        => !empty($u['reselling_price']) ? (float)$u['reselling_price'] : null,
-                'owner_name'             => (string)($u['owner_name'] ?? 'Assigned Owner'),
-                'owner_email'            => (string)($u['owner_email'] ?? ''),
-                'owner_contact'          => (string)($u['owner_contact'] ?? '—'),
-                'owner_has_qr'           => $ownerHasQr,
-                'owner_qr_path'          => $ownerQrPath,
-                'price_basis'            => $priceBasis,
-                'price_basis_formatted'  => number_format($priceBasis, 2),
-                'price_label'            => $priceLabel,
-                'downpayment_35'         => number_format($priceBasis * 0.35, 2),
-                'downpayment_35_raw'     => round($priceBasis * 0.35, 2),
-                'downpayment_50'         => number_format($priceBasis * 0.50, 2),
-                'downpayment_50_raw'     => round($priceBasis * 0.50, 2),
-                'downpayment_75'         => number_format($priceBasis * 0.75, 2),
-                'downpayment_75_raw'     => round($priceBasis * 0.75, 2),
-                'dropdown_label'         => (string)$u['unit_number'] . ' (' . (string)$u['unit_type'] . ') - ₱' . number_format($priceBasis, 0) . ' (' . (string)($u['owner_name'] ?? 'Owner') . ')',
+                'unit_id' => $uid,
+                'unit_number' => (string) $u['unit_number'],
+                'unit_type' => (string) $u['unit_type'],
+                'floor_number' => (string) ($u['floor_number'] ?? '1'),
+                'sqm' => (string) ($u['sqm'] ?? '37'),
+                'furnishing' => 'Fully Furnished.',
+                'listing_type' => (string) ($u['listing_type'] ?? ($isLease ? 'For Lease' : 'Resale')),
+                'stay_category' => (string) ($u['stay_category'] ?? 'Long term'),
+                'unit_current_status' => (string) ($u['unit_current_status'] ?? 'Ready for Occupancy'),
+                'lease_rate' => (float) ($u['lease_rate'] ?? 0),
+                'reselling_price' => !empty($u['reselling_price']) ? (float) $u['reselling_price'] : null,
+                'owner_name' => (string) ($u['owner_name'] ?? 'Assigned Owner'),
+                'owner_email' => (string) ($u['owner_email'] ?? ''),
+                'owner_contact' => (string) ($u['owner_contact'] ?? '—'),
+                'owner_has_qr' => $ownerHasQr,
+                'owner_qr_path' => $ownerQrPath,
+                'price_basis' => $priceBasis,
+                'price_basis_formatted' => number_format($priceBasis, 2),
+                'price_label' => $priceLabel,
+                'downpayment_35' => number_format($priceBasis * 0.35, 2),
+                'downpayment_35_raw' => round($priceBasis * 0.35, 2),
+                'downpayment_50' => number_format($priceBasis * 0.50, 2),
+                'downpayment_50_raw' => round($priceBasis * 0.50, 2),
+                'downpayment_75' => number_format($priceBasis * 0.75, 2),
+                'downpayment_75_raw' => round($priceBasis * 0.75, 2),
+                'dropdown_label' => (string) $u['unit_number'] . ' (' . (string) $u['unit_type'] . ') - ₱' . number_format($priceBasis, 0) . ' (' . (string) ($u['owner_name'] ?? 'Owner') . ')',
             ];
         }
 
         // Determine currently selected unit
-        $selectedUnitId = !empty($inquiry['approved_unit_id']) && isset($processedUnits[(int)$inquiry['approved_unit_id']])
-            ? (int)$inquiry['approved_unit_id']
-            : (int)array_key_first($processedUnits);
-        
+        $selectedUnitId = !empty($inquiry['approved_unit_id']) && isset($processedUnits[(int) $inquiry['approved_unit_id']])
+            ? (int) $inquiry['approved_unit_id']
+            : (int) array_key_first($processedUnits);
+
         $selectedUnit = $processedUnits[$selectedUnitId];
 
         // Status metadata
@@ -643,12 +654,12 @@ class Reservation extends Model {
             $reservationType = "Unit Purchase";
         }
 
-        $rawDuration = (string)($inquiry['lease_duration'] ?? '1 year');
+        $rawDuration = (string) ($inquiry['lease_duration'] ?? '1 year');
         if (stripos($rawDuration, 'longer') !== false || stripos($rawDuration, '3 year') !== false) {
             $inquiry['lease_duration'] = '1 year';
             $leaseMonths = 12;
         } else {
-            $leaseMonths = (int)preg_replace('/[^0-9]/', '', $rawDuration);
+            $leaseMonths = (int) preg_replace('/[^0-9]/', '', $rawDuration);
             if ($leaseMonths <= 0) {
                 $leaseMonths = 12;
             } elseif (stripos($rawDuration, 'year') !== false) {
@@ -657,7 +668,7 @@ class Reservation extends Model {
         }
 
         $tokenExpiresAt = !empty($inquiry['reservation_token_expires_at'])
-            ? (string)$inquiry['reservation_token_expires_at']
+            ? (string) $inquiry['reservation_token_expires_at']
             : date('Y-m-d H:i:s', strtotime('+30 days'));
         $maxSigningDate = date('Y-m-d', strtotime($tokenExpiresAt));
 
@@ -679,68 +690,69 @@ class Reservation extends Model {
               AND reservation_status NOT IN ('cancelled', 'rejected')
               AND move_in_date IS NOT NULL
               AND {$blockedTypeFilter}
-        ", [(int)$selectedUnit['unit_id']]);
+        ", [(int) $selectedUnit['unit_id']]);
 
         foreach ($blockedRows as $row) {
             $blockedRanges[] = [
                 'start' => $row['move_in_date'],
-                'end'   => $row['move_out_date']
+                'end' => $row['move_out_date']
             ];
         }
 
         return [
-            'status'           => 'ok',
-            'data'             => $data,
-            'client_name'      => (string)($inquiry['sender_name'] ?? ''),
-            'client_email'     => (string)($inquiry['sender_email'] ?? ''),
-            'client_contact'   => (string)($inquiry['sender_contact'] ?? ''),
-            'approved_units'   => array_values($processedUnits),
-            'owner_has_qr'     => $selectedUnit['owner_has_qr'],
-            'owner_qr_path'    => $selectedUnit['owner_qr_path'],
-            'is_lease'         => $isLease,
-            'price_basis'      => $selectedUnit['price_basis'],
-            'price_label'      => $selectedUnit['price_label'],
+            'status' => 'ok',
+            'data' => $data,
+            'client_name' => (string) ($inquiry['sender_name'] ?? ''),
+            'client_email' => (string) ($inquiry['sender_email'] ?? ''),
+            'client_contact' => (string) ($inquiry['sender_contact'] ?? ''),
+            'approved_units' => array_values($processedUnits),
+            'owner_has_qr' => $selectedUnit['owner_has_qr'],
+            'owner_qr_path' => $selectedUnit['owner_qr_path'],
+            'is_lease' => $isLease,
+            'price_basis' => $selectedUnit['price_basis'],
+            'price_label' => $selectedUnit['price_label'],
             'transaction_type' => $transactionType,
-            'resident_type'    => $residentType,
+            'resident_type' => $residentType,
             'reservation_type' => $reservationType,
-            'lease_months'     => $leaseMonths,
+            'lease_months' => $leaseMonths,
             'max_signing_date' => $maxSigningDate,
-            'blocked_ranges'   => $blockedRanges,
-            'token'            => $token,
+            'blocked_ranges' => $blockedRanges,
+            'token' => $token,
         ];
     }
 
     /**
      * Process public reservation form submission with file upload, validation, and database storage.
      */
-    public function submitPublicReservation(array $post, array $files): array {
-        $token = trim((string)($post['reservation_token'] ?? ''));
-        $paymentPercentage = (float)($post['payment_percentage'] ?? 0);
-        $paymentReference = trim((string)($post['payment_reference'] ?? ''));
-        $declaredAmount = (float)($post['declared_amount'] ?? 0);
-        $moveInDate = trim((string)($post['move_in_date'] ?? ''));
-        $moveOutDate = trim((string)($post['move_out_date'] ?? ''));
-        $leaseDuration = trim((string)($post['lease_duration'] ?? ''));
+    public function submitPublicReservation(array $post, array $files): array
+    {
+        $token = trim((string) ($post['reservation_token'] ?? ''));
+        $paymentPercentage = (float) ($post['payment_percentage'] ?? 0);
+        $paymentReference = trim((string) ($post['payment_reference'] ?? ''));
+        $declaredAmount = (float) ($post['declared_amount'] ?? 0);
+        $moveInDate = trim((string) ($post['move_in_date'] ?? ''));
+        $moveOutDate = trim((string) ($post['move_out_date'] ?? ''));
+        $leaseDuration = trim((string) ($post['lease_duration'] ?? ''));
         if (stripos($leaseDuration, 'longer') !== false || stripos($leaseDuration, '3 year') !== false) {
             $leaseDuration = '1 year';
         }
 
-        $paymentMethod = trim((string)($post['payment_method'] ?? 'GCash QR'));
+        $paymentMethod = trim((string) ($post['payment_method'] ?? 'GCash QR'));
         if (!in_array($paymentMethod, ['GCash QR', 'In-House'], true)) {
             $paymentMethod = 'GCash QR';
         }
 
-        $clientSex = trim((string)($post['client_sex'] ?? ''));
-        $clientAge = !empty($post['client_age']) ? (int)$post['client_age'] : null;
-        $clientNationality = trim((string)($post['client_nationality'] ?? ''));
+        $clientSex = trim((string) ($post['client_sex'] ?? ''));
+        $clientAge = !empty($post['client_age']) ? (int) $post['client_age'] : null;
+        $clientNationality = trim((string) ($post['client_nationality'] ?? ''));
 
-        $leaseSigningDate = !empty($post['lease_signing_date']) ? trim((string)$post['lease_signing_date']) : null;
-        $isFlexibleSigning = !empty($post['is_flexible_signing']) && (string)$post['is_flexible_signing'] === '1' ? 1 : 0;
+        $leaseSigningDate = !empty($post['lease_signing_date']) ? trim((string) $post['lease_signing_date']) : null;
+        $isFlexibleSigning = !empty($post['is_flexible_signing']) && (string) $post['is_flexible_signing'] === '1' ? 1 : 0;
         if ($isFlexibleSigning) {
             $leaseSigningDate = null;
         }
 
-        $clientRemarks = trim((string)($post['remarks'] ?? ''));
+        $clientRemarks = trim((string) ($post['remarks'] ?? ''));
         if (mb_strlen($clientRemarks) > 500) {
             $clientRemarks = mb_substr($clientRemarks, 0, 500);
         }
@@ -763,7 +775,7 @@ class Reservation extends Model {
         }
 
         $data = $formDetails['data'];
-        $isLease = (bool)($formDetails['is_lease'] ?? true);
+        $isLease = (bool) ($formDetails['is_lease'] ?? true);
         $priceBasis = $formDetails['price_basis'];
         $transactionType = $formDetails['transaction_type'];
         $residentType = $formDetails['resident_type'];
@@ -777,7 +789,7 @@ class Reservation extends Model {
             return ['success' => false, 'error' => "Move-in date must be at least 3 days from today ({$minMoveIn}) for contract execution and building admin clearance."];
         }
         if ($isLease && empty($post['is_flexible_signing']) && !empty($post['lease_signing_date']) && $moveInDate) {
-            $rawDates = array_map('trim', explode(',', (string)$post['lease_signing_date']));
+            $rawDates = array_map('trim', explode(',', (string) $post['lease_signing_date']));
             foreach ($rawDates as $sDate) {
                 if ($sDate !== '' && $sDate > $moveInDate) {
                     return ['success' => false, 'error' => "Lease signing date ({$sDate}) cannot be scheduled after your move-in date ({$moveInDate})."];
@@ -790,7 +802,7 @@ class Reservation extends Model {
 
             $minResaleSigning = date('Y-m-d', strtotime('+3 days'));
             if (empty($post['is_flexible_signing']) && !empty($post['lease_signing_date'])) {
-                $rawDates = array_map('trim', explode(',', (string)$post['lease_signing_date']));
+                $rawDates = array_map('trim', explode(',', (string) $post['lease_signing_date']));
                 foreach ($rawDates as $sDate) {
                     if ($sDate !== '' && $sDate < $minResaleSigning) {
                         return ['success' => false, 'error' => "Contract signing date ({$sDate}) must be at least 3 days from today ({$minResaleSigning}) to allow for document preparation."];
@@ -800,12 +812,12 @@ class Reservation extends Model {
         }
 
         // If client dynamically selected a specific approved unit from the dropdown:
-        $selectedUnitId = (int)($post['selected_unit_id'] ?? $post['unit_id'] ?? 0);
+        $selectedUnitId = (int) ($post['selected_unit_id'] ?? $post['unit_id'] ?? 0);
         if ($selectedUnitId > 0 && !empty($formDetails['approved_units'])) {
             foreach ($formDetails['approved_units'] as $au) {
-                if ((int)$au['unit_id'] === $selectedUnitId) {
+                if ((int) $au['unit_id'] === $selectedUnitId) {
                     $data = array_merge($data, $au);
-                    $priceBasis = (float)$au['price_basis'];
+                    $priceBasis = (float) $au['price_basis'];
                     break;
                 }
             }
@@ -828,15 +840,27 @@ class Reservation extends Model {
         $dbFilePath = null;
         $uploadedFsPath = null;
         if ($paymentMethod === 'GCash QR') {
+            $targetUnitId = (int) ($data['unit_id'] ?? 0);
+            $ownerCheck = $this->fetchOne("
+                SELECT uo.gcash_qr_image 
+                FROM units_table u 
+                LEFT JOIN unit_owners uo ON u.unit_owner_id = uo.user_id 
+                WHERE u.unit_id = ? 
+                LIMIT 1
+            ", [$targetUnitId]);
+            if (empty($ownerCheck['gcash_qr_image'])) {
+                return ['success' => false, 'error' => 'GCash QR code is not available for this unit. Please select Pay In-House.'];
+            }
+
             if (!isset($files['payment_proof']) || $files['payment_proof']['error'] !== UPLOAD_ERR_OK) {
                 return ['success' => false, 'error' => 'Proof of payment upload is required for GCash QR payments.'];
             }
 
             $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
             $fileName = $files['payment_proof']['name'];
-            $fileTmp  = $files['payment_proof']['tmp_name'];
+            $fileTmp = $files['payment_proof']['tmp_name'];
             $fileSize = $files['payment_proof']['size'];
-            $fileExt  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
             if (!in_array($fileExt, $allowedExtensions, true)) {
                 return ['success' => false, 'error' => 'Invalid file type. Only JPG, PNG, and WEBP files are accepted.'];
@@ -869,7 +893,7 @@ class Reservation extends Model {
 
             // Lock unit
             $stmt = $this->db->prepare("SELECT unit_current_status FROM units_table WHERE unit_id = ? FOR UPDATE");
-            $stmt->execute([(int)$data['unit_id']]);
+            $stmt->execute([(int) $data['unit_id']]);
             $lockedUnit = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$lockedUnit || $lockedUnit['unit_current_status'] === 'Under maintenance') {
@@ -889,7 +913,7 @@ class Reservation extends Model {
                       AND COALESCE(move_out_date, move_in_date) >= ?
                     FOR UPDATE
                 ");
-                $overlapStmt->execute([(int)$data['unit_id'], $moveOutDate, $moveInDate]);
+                $overlapStmt->execute([(int) $data['unit_id'], $moveOutDate, $moveInDate]);
                 if ($overlapStmt->fetch()) {
                     throw new RuntimeException("Those move-in/move-out dates overlap with an existing reservation on this unit.");
                 }
@@ -901,7 +925,7 @@ class Reservation extends Model {
 
             // Check duplicate reservation
             $checkStmt = $this->db->prepare("SELECT reservation_id FROM reservation_table WHERE inq_id = ? LIMIT 1");
-            $checkStmt->execute([(int)$data['inq_id']]);
+            $checkStmt->execute([(int) $data['inq_id']]);
             if ($checkStmt->fetch()) {
                 throw new RuntimeException("Reservation already submitted.");
             }
@@ -944,8 +968,8 @@ class Reservation extends Model {
 
             $stmt = $this->db->prepare($insertSql);
             $stmt->execute([
-                (int)$data['inq_id'],
-                (int)$data['unit_id'],
+                (int) $data['inq_id'],
+                (int) $data['unit_id'],
                 $data['sender_name'],
                 $data['sender_email'],
                 $data['sender_contact'],
@@ -971,27 +995,27 @@ class Reservation extends Model {
                 $clientRemarks
             ]);
 
-            $reservationId = (int)$this->db->lastInsertId();
+            $reservationId = (int) $this->db->lastInsertId();
 
             // Update inquiry approved unit to the chosen unit
             $stmt = $this->db->prepare("UPDATE inquiry_table SET approved_unit_id = ? WHERE inq_id = ?");
-            $stmt->execute([(int)$data['unit_id'], (int)$data['inq_id']]);
+            $stmt->execute([(int) $data['unit_id'], (int) $data['inq_id']]);
 
             // Update lease duration if provided
             if ($isLease && $leaseDuration !== '') {
                 $stmt = $this->db->prepare("UPDATE inquiry_table SET lease_duration = ? WHERE inq_id = ?");
-                $stmt->execute([$leaseDuration, (int)$data['inq_id']]);
+                $stmt->execute([$leaseDuration, (int) $data['inq_id']]);
             }
 
             // Update unit status to 'On Hold' for resale
             if (!$isLease) {
                 $stmt = $this->db->prepare("UPDATE units_table SET unit_current_status = 'On Hold' WHERE unit_id = ?");
-                $stmt->execute([(int)$data['unit_id']]);
+                $stmt->execute([(int) $data['unit_id']]);
             }
 
             // Update inquiry status
             $stmt = $this->db->prepare("UPDATE inquiry_table SET status = 'reservation submitted' WHERE inq_id = ?");
-            $stmt->execute([(int)$data['inq_id']]);
+            $stmt->execute([(int) $data['inq_id']]);
 
             $this->db->commit();
 
@@ -1000,12 +1024,12 @@ class Reservation extends Model {
             if (file_exists($ownerNotificationsFile)) {
                 require_once $ownerNotificationsFile;
                 if (function_exists('notifyOwnerOfNewReservation')) {
-                    $appointmentDate = !empty($moveInDate) ? (string)$moveInDate : (!empty($leaseSigningDate) ? (string)$leaseSigningDate : null);
+                    $appointmentDate = !empty($moveInDate) ? (string) $moveInDate : (!empty($leaseSigningDate) ? (string) $leaseSigningDate : null);
                     notifyOwnerOfNewReservation(
-                        (string)($data['owner_email'] ?? ''),
-                        (string)($data['owner_name'] ?? 'Unit Owner'),
-                        (string)($data['unit_number'] ?? ''),
-                        (string)($data['sender_name'] ?? 'A client'),
+                        (string) ($data['owner_email'] ?? ''),
+                        (string) ($data['owner_name'] ?? 'Unit Owner'),
+                        (string) ($data['unit_number'] ?? ''),
+                        (string) ($data['sender_name'] ?? 'A client'),
                         $appointmentDate
                     );
                 }
@@ -1026,7 +1050,8 @@ class Reservation extends Model {
     /**
      * Retrieve a reservation eligible for client cancellation using token.
      */
-    public function getReservationForClientCancellation(string $token): array {
+    public function getReservationForClientCancellation(string $token): array
+    {
         if (trim($token) === '') {
             return ['status' => 'error', 'message' => 'Invalid cancellation link.'];
         }
@@ -1053,7 +1078,7 @@ class Reservation extends Model {
             return ['status' => 'error', 'message' => 'Invalid or expired cancellation link.'];
         }
 
-        if (!empty($res['client_cancel_token_expires_at']) && strtotime((string)$res['client_cancel_token_expires_at']) < time()) {
+        if (!empty($res['client_cancel_token_expires_at']) && strtotime((string) $res['client_cancel_token_expires_at']) < time()) {
             return ['status' => 'error', 'message' => 'This cancellation link has expired.'];
         }
 
@@ -1061,7 +1086,7 @@ class Reservation extends Model {
             return ['status' => 'error', 'message' => 'Cancellation request is only available after payment verification.'];
         }
 
-        if (in_array(strtolower((string)$res['reservation_status']), ['cancelled', 'rejected', 'reserved'], true)) {
+        if (in_array(strtolower((string) $res['reservation_status']), ['cancelled', 'rejected', 'reserved'], true)) {
             return ['status' => 'error', 'message' => 'Cancellation request is no longer available for this reservation.'];
         }
 
@@ -1075,7 +1100,8 @@ class Reservation extends Model {
     /**
      * Submit client cancellation request.
      */
-    public function submitClientCancellationRequest(string $token, string $reason): array {
+    public function submitClientCancellationRequest(string $token, string $reason): array
+    {
         $token = trim($token);
         $reason = trim($reason);
 
@@ -1107,7 +1133,7 @@ class Reservation extends Model {
                 throw new RuntimeException("Invalid cancellation token.");
             }
 
-            if (!empty($res['client_cancel_token_expires_at']) && strtotime((string)$res['client_cancel_token_expires_at']) < time()) {
+            if (!empty($res['client_cancel_token_expires_at']) && strtotime((string) $res['client_cancel_token_expires_at']) < time()) {
                 throw new RuntimeException("This cancellation link has expired.");
             }
 
@@ -1115,7 +1141,7 @@ class Reservation extends Model {
                 throw new RuntimeException("Cancellation request is only available after payment verification.");
             }
 
-            if (in_array(strtolower((string)$res['reservation_status']), ['cancelled', 'rejected', 'reserved'], true)) {
+            if (in_array(strtolower((string) $res['reservation_status']), ['cancelled', 'rejected', 'reserved'], true)) {
                 throw new RuntimeException("Cancellation request is no longer available for this reservation.");
             }
 
@@ -1140,7 +1166,7 @@ class Reservation extends Model {
             ";
 
             $stmt = $this->db->prepare($updateSql);
-            $stmt->execute([$reason, (int)$res['reservation_id']]);
+            $stmt->execute([$reason, (int) $res['reservation_id']]);
 
             $this->db->commit();
             return ['success' => true];
@@ -1155,7 +1181,8 @@ class Reservation extends Model {
     /**
      * Confirm / set the agreed lease signing appointment date.
      */
-    public function confirmSigningDate(int $reservationId, string $date, int $userId, string $role): array {
+    public function confirmSigningDate(int $reservationId, string $date, int $userId, string $role): array
+    {
         $res = $this->findById($reservationId);
         if (!$res) {
             return ['success' => false, 'message' => 'Reservation record not found.'];
@@ -1186,8 +1213,8 @@ class Reservation extends Model {
         }
 
         return [
-            'success'        => true,
-            'message'        => 'Lease signing date successfully confirmed.',
+            'success' => true,
+            'message' => 'Lease signing date successfully confirmed.',
             'confirmed_date' => $cleanDate,
             'formatted_date' => date('l, F j, Y', $ts),
         ];
@@ -1196,25 +1223,27 @@ class Reservation extends Model {
     /**
      * Check if payment, lease signing, and all documents are completed. If so, automatically mark as Officially Booked.
      */
-    public function checkAndPromoteToOfficiallyBooked(int $reservationId, int $userId, string $userRole): bool {
+    public function checkAndPromoteToOfficiallyBooked(int $reservationId, int $userId, string $userRole): bool
+    {
         $res = $this->getDetailsById($reservationId);
-        if (!$res) return false;
+        if (!$res)
+            return false;
 
-        $statusLower = strtolower((string)($res['reservation_status'] ?? ''));
+        $statusLower = strtolower((string) ($res['reservation_status'] ?? ''));
         if (in_array($statusLower, ['reserved', 'handover', 'moved in', 'active', 'cancelled', 'rejected'], true)) {
             return false;
         }
 
-        $isPaymentVerified = strtolower((string)($res['payment_status'] ?? '')) === 'verified';
-        $isSigningComplete = strtolower((string)($res['lease_signing_status'] ?? '')) === 'completed';
+        $isPaymentVerified = strtolower((string) ($res['payment_status'] ?? '')) === 'verified';
+        $isSigningComplete = strtolower((string) ($res['lease_signing_status'] ?? '')) === 'completed';
 
         $counts = $this->fetchOne(
             "SELECT COUNT(*) AS total, SUM(CASE WHEN status = 'complete' THEN 1 ELSE 0 END) AS completed 
              FROM reservation_documents WHERE reservation_id = ?",
             [$reservationId]
         );
-        $total = (int)($counts['total'] ?? 0);
-        $completed = (int)($counts['completed'] ?? 0);
+        $total = (int) ($counts['total'] ?? 0);
+        $completed = (int) ($counts['completed'] ?? 0);
         $allDocsComplete = ($total > 0 && $completed === $total);
 
         if ($isPaymentVerified && $isSigningComplete && $allDocsComplete) {
@@ -1232,7 +1261,7 @@ class Reservation extends Model {
             if (!empty($res['unit_id'])) {
                 $this->execute(
                     "UPDATE units_table SET unit_current_status = 'Reserved' WHERE unit_id = ?",
-                    [(int)$res['unit_id']]
+                    [(int) $res['unit_id']]
                 );
             }
             return true;
@@ -1244,7 +1273,8 @@ class Reservation extends Model {
     /**
      * Mark lease signing as completed or reset status to pending.
      */
-    public function updateLeaseSigningStatus(int $reservationId, string $action, string $remarks, int $userId, string $role): array {
+    public function updateLeaseSigningStatus(int $reservationId, string $action, string $remarks, int $userId, string $role): array
+    {
         $res = $this->findById($reservationId);
         if (!$res) {
             return ['success' => false, 'message' => 'Reservation record not found.'];
@@ -1285,9 +1315,9 @@ class Reservation extends Model {
         }
 
         return [
-            'success'   => true,
-            'message'   => $action === 'complete' ? 'Lease signing marked as completed successfully.' : 'Lease signing status reset to pending.',
-            'status'    => $status,
+            'success' => true,
+            'message' => $action === 'complete' ? 'Lease signing marked as completed successfully.' : 'Lease signing status reset to pending.',
+            'status' => $status,
             'signed_at' => $now,
         ];
     }
@@ -1295,7 +1325,8 @@ class Reservation extends Model {
     /**
      * Admin override: Verify (complete) or reject reservation payment.
      */
-    public function updatePaymentStatus(int $reservationId, string $action, string $remarks, int $adminId, string $adminName): array {
+    public function updatePaymentStatus(int $reservationId, string $action, string $remarks, int $adminId, string $adminName): array
+    {
         $res = $this->findById($reservationId);
         if (!$res) {
             return ['success' => false, 'message' => 'Reservation record not found.'];
@@ -1328,17 +1359,17 @@ class Reservation extends Model {
             $this->checkAndPromoteToOfficiallyBooked($reservationId, $adminId, 'admin');
 
             return [
-                'success'        => true,
-                'message'        => 'Payment marked as complete and verified successfully.',
+                'success' => true,
+                'message' => 'Payment marked as complete and verified successfully.',
                 'payment_status' => 'verified',
-                'verified_at'    => $now,
+                'verified_at' => $now,
             ];
         }
 
         // Reject / Not Received
-        $inquiryType = strtolower(trim((string)($res['inquiry_type'] ?? '')));
-        $releasedStatus = ($inquiryType === 'resale inquiry' || strpos($inquiryType, 'resale') !== false) 
-            ? 'Resale' 
+        $inquiryType = strtolower(trim((string) ($res['inquiry_type'] ?? '')));
+        $releasedStatus = ($inquiryType === 'resale inquiry' || strpos($inquiryType, 'resale') !== false)
+            ? 'Resale'
             : 'Ready for Occupancy';
 
         $sql = "
@@ -1358,22 +1389,23 @@ class Reservation extends Model {
         if (!empty($res['unit_id'])) {
             $this->execute("UPDATE units_table SET unit_current_status = ? WHERE unit_id = ?", [
                 $releasedStatus,
-                (int)$res['unit_id']
+                (int) $res['unit_id']
             ]);
         }
 
         return [
-            'success'        => true,
-            'message'        => 'Payment marked as not received. Reservation has been rejected and the unit is released.',
+            'success' => true,
+            'message' => 'Payment marked as not received. Reservation has been rejected and the unit is released.',
             'payment_status' => 'rejected',
-            'rejected_at'    => $now,
+            'rejected_at' => $now,
         ];
     }
 
     /**
      * Retrieve document tracking items for a reservation, initializing defaults if needed.
      */
-    public function getDocuments(int $reservationId): array {
+    public function getDocuments(int $reservationId): array
+    {
         if ($reservationId <= 0) {
             return ['success' => false, 'message' => 'Invalid reservation ID.', 'documents' => [], 'all_completed' => false];
         }
@@ -1413,8 +1445,8 @@ class Reservation extends Model {
         }
 
         return [
-            'success'       => true,
-            'documents'     => $existing,
+            'success' => true,
+            'documents' => $existing,
             'all_completed' => $allCompleted,
         ];
     }
@@ -1422,7 +1454,8 @@ class Reservation extends Model {
     /**
      * Save/update document tracking items for a reservation.
      */
-    public function saveDocuments(int $reservationId, array $documents, int $userId, string $userRole): array {
+    public function saveDocuments(int $reservationId, array $documents, int $userId, string $userRole): array
+    {
         if ($reservationId <= 0 || empty($documents)) {
             return ['success' => false, 'message' => 'Invalid reservation ID or empty documents list.'];
         }
@@ -1430,12 +1463,13 @@ class Reservation extends Model {
         $now = date('Y-m-d H:i:s');
 
         foreach ($documents as $doc) {
-            $docId = (int)($doc['document_id'] ?? 0);
-            if ($docId <= 0) continue;
+            $docId = (int) ($doc['document_id'] ?? 0);
+            if ($docId <= 0)
+                continue;
 
             $storage = in_array($doc['storage'] ?? '', ['dropbox', 'gdrive', 'other'], true) ? $doc['storage'] : null;
-            $storageOther = !empty($doc['storage_other_label']) ? trim((string)$doc['storage_other_label']) : null;
-            $docLink = !empty($doc['document_link']) ? trim((string)$doc['document_link']) : null;
+            $storageOther = !empty($doc['storage_other_label']) ? trim((string) $doc['storage_other_label']) : null;
+            $docLink = !empty($doc['document_link']) ? trim((string) $doc['document_link']) : null;
 
             // Automatically determine status: complete if link provided, pending if empty
             $status = (!empty($docLink)) ? 'complete' : 'pending';
@@ -1460,8 +1494,8 @@ class Reservation extends Model {
             [$reservationId]
         );
 
-        $total = (int)($counts['total'] ?? 0);
-        $completed = (int)($counts['completed'] ?? 0);
+        $total = (int) ($counts['total'] ?? 0);
+        $completed = (int) ($counts['completed'] ?? 0);
         $allComplete = ($total > 0 && $completed === $total);
 
         if ($allComplete) {
@@ -1500,8 +1534,8 @@ class Reservation extends Model {
         }
 
         return [
-            'success'       => true,
-            'message'       => $allComplete ? 'All documents completed successfully!' : 'Document tracking updated successfully!',
+            'success' => true,
+            'message' => $allComplete ? 'All documents completed successfully!' : 'Document tracking updated successfully!',
             'all_completed' => $allComplete,
         ];
     }
@@ -1509,7 +1543,8 @@ class Reservation extends Model {
     /**
      * Mark reservation as officially booked (Admin).
      */
-    public function markOfficiallyBooked(int $reservationId, int $userId, string $userRole): array {
+    public function markOfficiallyBooked(int $reservationId, int $userId, string $userRole): array
+    {
         $res = $this->getDetailsById($reservationId);
         if (!$res) {
             return ['success' => false, 'message' => 'Reservation not found.'];
@@ -1530,7 +1565,7 @@ class Reservation extends Model {
         if (!empty($res['unit_id'])) {
             $this->execute(
                 "UPDATE units_table SET unit_current_status = 'Reserved' WHERE unit_id = ?",
-                [(int)$res['unit_id']]
+                [(int) $res['unit_id']]
             );
         }
 
@@ -1540,15 +1575,16 @@ class Reservation extends Model {
     /**
      * Cancel a reservation and release the unit back to availability (Admin).
      */
-    public function cancelReservation(int $reservationId, string $remarks, int $userId, string $userRole): array {
+    public function cancelReservation(int $reservationId, string $remarks, int $userId, string $userRole): array
+    {
         $res = $this->getDetailsById($reservationId);
         if (!$res) {
             return ['success' => false, 'message' => 'Reservation not found.'];
         }
 
-        $inquiryType = strtolower(trim((string)($res['inquiry_type'] ?? '')));
-        $releasedStatus = ($inquiryType === 'resale inquiry' || strpos($inquiryType, 'resale') !== false) 
-            ? 'Resale' 
+        $inquiryType = strtolower(trim((string) ($res['inquiry_type'] ?? '')));
+        $releasedStatus = ($inquiryType === 'resale inquiry' || strpos($inquiryType, 'resale') !== false)
+            ? 'Resale'
             : 'Ready for Occupancy';
 
         $now = date('Y-m-d H:i:s');
@@ -1568,7 +1604,7 @@ class Reservation extends Model {
         if (!empty($res['unit_id'])) {
             $this->execute(
                 "UPDATE units_table SET unit_current_status = ? WHERE unit_id = ?",
-                [$releasedStatus, (int)$res['unit_id']]
+                [$releasedStatus, (int) $res['unit_id']]
             );
         }
 
