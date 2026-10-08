@@ -22,32 +22,74 @@ declare(strict_types=1);
  * @var string $activePage
  */
 
-// Format unit numbers and values
-$unitNum = !empty($data['unit_number']) ? htmlspecialchars((string)$data['unit_number']) : '—';
-$unitTypeUpper = !empty($data['unit_type']) ? strtoupper(htmlspecialchars((string)$data['unit_type'])) : 'STUDIO TYPE';
-$floorNum = !empty($data['floor_number']) ? htmlspecialchars((string)$data['floor_number']) : '1';
-$sqmVal = !empty($data['sqm']) ? htmlspecialchars((string)$data['sqm']) : '37';
-$furnishingVal = !empty($data['furnishing']) ? htmlspecialchars((string)$data['furnishing']) : 'Fully Furnished.';
-$listingVal = !empty($data['listing_type']) ? htmlspecialchars((string)$data['listing_type']) : 'For Lease';
-$ownerName = !empty($data['owner_name']) ? htmlspecialchars((string)$data['owner_name']) : 'No owner assigned';
-$ownerEmail = !empty($data['owner_email']) ? htmlspecialchars((string)$data['owner_email']) : '';
-$ownerContact = !empty($data['owner_contact']) ? htmlspecialchars((string)$data['owner_contact']) : '—';
+// Format unit numbers and values safely from controller payload
+$selectedUnitData = !empty($data['data']) && is_array($data['data']) ? $data['data'] : (isset($data['unit']) && is_array($data['unit']) ? $data['unit'] : (is_array($data) ? $data : []));
+$is_lease = isset($is_lease) 
+    ? (bool)$is_lease 
+    : (!empty($data['is_lease']) 
+        ? (bool)$data['is_lease'] 
+        : (strpos(strtolower((string)($selectedUnitData['listing_type'] ?? '')), 'resale') === false && strpos(strtolower((string)($selectedUnitData['inquiry_type'] ?? '')), 'resale') === false));
+$approvedUnitsList = !empty($approved_units) ? $approved_units : (!empty($data['approved_units']) ? $data['approved_units'] : []);
+$selectedUnitId = (int)($selectedUnitData['unit_id'] ?? ($selectedUnitData['approved_unit_id'] ?? 0));
+
+if (empty($approvedUnitsList)) {
+    $approvedUnitsList[] = [
+        'unit_id' => $selectedUnitId,
+        'unit_number' => (string)($selectedUnitData['unit_number'] ?? '—'),
+        'unit_type' => (string)($selectedUnitData['unit_type'] ?? 'Studio Type'),
+        'floor_number' => (string)($selectedUnitData['floor_number'] ?? '1'),
+        'sqm' => (string)($selectedUnitData['sqm'] ?? '37'),
+        'furnishing' => (string)($selectedUnitData['furnishing'] ?? 'Fully Furnished'),
+        'listing_type' => (string)($selectedUnitData['listing_type'] ?? 'For Lease'),
+        'owner_name' => (string)($selectedUnitData['owner_name'] ?? 'Unit Owner'),
+        'owner_email' => (string)($selectedUnitData['owner_email'] ?? ''),
+        'owner_contact' => (string)($selectedUnitData['owner_contact'] ?? '—'),
+        'price_basis' => (float)$price_basis,
+        'price_label' => (string)$price_label,
+        'formatted_price_basis' => '₱' . number_format((float)$price_basis, 2),
+        'dp_amount_35' => number_format((float)$price_basis * 0.35, 2),
+        'dp_amount_50' => number_format((float)$price_basis * 0.50, 2),
+        'dp_amount_75' => number_format((float)$price_basis * 0.75, 2),
+        'owner_has_qr' => (bool)$owner_has_qr,
+        'owner_qr_path' => (string)$owner_qr_path,
+        'dropdown_label' => ($selectedUnitData['unit_number'] ?? 'Unit') . ' (' . ($selectedUnitData['unit_type'] ?? 'Unit') . ') - ₱' . number_format((float)$price_basis, 0) . ' (' . ($selectedUnitData['owner_name'] ?? 'Owner') . ')',
+    ];
+}
+
+$unitNum = !empty($selectedUnitData['unit_number']) ? htmlspecialchars((string)$selectedUnitData['unit_number']) : '—';
+$unitTypeUpper = !empty($selectedUnitData['unit_type']) ? strtoupper(htmlspecialchars((string)$selectedUnitData['unit_type'])) : 'STUDIO TYPE';
+$floorNum = !empty($selectedUnitData['floor_number']) ? htmlspecialchars((string)$selectedUnitData['floor_number']) : '1';
+$sqmVal = !empty($selectedUnitData['sqm']) ? htmlspecialchars((string)$selectedUnitData['sqm']) : '37';
+$furnishingVal = !empty($selectedUnitData['furnishing']) ? htmlspecialchars((string)$selectedUnitData['furnishing']) : 'Fully Furnished.';
+$listingVal = !empty($selectedUnitData['listing_type']) ? htmlspecialchars((string)$selectedUnitData['listing_type']) : 'For Lease';
+$ownerName = !empty($selectedUnitData['owner_name']) ? htmlspecialchars((string)$selectedUnitData['owner_name']) : 'No owner assigned';
+$ownerEmail = !empty($selectedUnitData['owner_email']) ? htmlspecialchars((string)$selectedUnitData['owner_email']) : '';
+$ownerContact = !empty($selectedUnitData['owner_contact']) ? htmlspecialchars((string)$selectedUnitData['owner_contact']) : '—';
+
+// Format client information
+$clientName = !empty($selectedUnitData['sender_name']) ? (string)$selectedUnitData['sender_name'] : (!empty($client_name) ? (string)$client_name : (string)($data['client_name'] ?? ''));
+$clientEmail = !empty($selectedUnitData['sender_email']) ? (string)$selectedUnitData['sender_email'] : (!empty($client_email) ? (string)$client_email : (string)($data['client_email'] ?? ''));
+$clientContact = !empty($selectedUnitData['sender_contact']) ? (string)$selectedUnitData['sender_contact'] : (!empty($client_contact) ? (string)$client_contact : (string)($data['client_contact'] ?? ''));
 
 // Format lease duration display
-$inqLeaseDuration = !empty($data['lease_duration']) ? htmlspecialchars((string)$data['lease_duration']) : '1 year';
-$inqPreferredMoveIn = !empty($data['preferred_move_in_time']) ? htmlspecialchars((string)$data['preferred_move_in_time']) : 'Immediately';
+$inqLeaseDuration = !empty($selectedUnitData['lease_duration']) ? htmlspecialchars((string)$selectedUnitData['lease_duration']) : '1 year';
+if (stripos($inqLeaseDuration, 'longer') !== false || stripos($inqLeaseDuration, '3 year') !== false) {
+    $inqLeaseDuration = '1 year';
+}
+$inqPreferredMoveIn = !empty($selectedUnitData['preferred_move_in_time']) ? htmlspecialchars((string)$selectedUnitData['preferred_move_in_time']) : 'Immediately';
 
-// Expiry date for date limits
+// Expiry date for date limits and move-in lead time (3-day buffer)
 $maxSigningDate = !empty($max_signing_date) ? $max_signing_date : date('Y-m-d', strtotime('+30 days'));
-$move_in_min = date('Y-m-d');
+$move_in_min = date('Y-m-d', strtotime('+3 days'));
 $move_in_max = $maxSigningDate;
+$signing_min = !$is_lease ? date('Y-m-d', strtotime('+3 days')) : date('Y-m-d');
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?= htmlspecialchars($pageTitle ?? 'Zeppelin Suites — Condominium Reservation') ?></title>
+<title><?= htmlspecialchars($pageTitle ?? ($is_lease ? 'Zeppelin Suites — Unit Lease Reservation' : 'Zeppelin Suites — Unit Resale Reservation')) ?></title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
@@ -131,7 +173,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
       <div>
         <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-slate-950">
-          Condominium Reservation
+          <?= $is_lease ? 'Unit Lease Reservation' : 'Unit Resale Reservation' ?>
         </h1>
         <p class="mt-2 text-base md:text-lg text-slate-600">
           Reserve your preferred unit for 30 days.
@@ -212,7 +254,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
         <!-- Form Card Header -->
         <div class="form-card-header px-7 py-6 text-white">
-          <h2 class="text-xl sm:text-2xl font-bold tracking-tight">Unit Reservation form</h2>
+          <h2 class="text-xl sm:text-2xl font-bold tracking-tight" id="formCardTitle"><?= $is_lease ? 'Unit Lease Reservation Form' : 'Unit Resale Reservation Form' ?></h2>
           <p class="text-slate-300 text-xs sm:text-sm mt-1">Zeppelin Suites — Please fill in all required fields</p>
         </div>
 
@@ -224,73 +266,103 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
             <input type="hidden" id="moveOutDate" name="move_out_date">
             <input type="hidden" id="declaredAmountInput" name="declared_amount" value="<?= (float)$price_basis * 0.35 ?>">
             <input type="hidden" name="payment_reference" value="N/A">
+            <input type="hidden" id="selectedUnitId" name="selected_unit_id" value="<?= $selectedUnitId ?>">
 
             <!-- 1. UNIT DETAILS BOX -->
-            <div class="border border-slate-200 rounded-xl p-4 sm:p-5 bg-white mb-6">
-              <h3 class="text-sm sm:text-base font-bold text-slate-900 pb-2.5 border-b border-slate-100 mb-4">Unit Details</h3>
-              
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-y-4 gap-x-6 text-xs sm:text-sm">
+            <div class="border border-slate-200 rounded-2xl p-6 sm:p-7 bg-white shadow-xs mb-8">
+              <!-- Header Row: Unit Details on Left, Approved Units on Right -->
+              <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-5">
+                <h3 class="text-base sm:text-lg font-bold text-slate-900">Unit Details</h3>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <?= count($approvedUnitsList) ?> Approved <?= count($approvedUnitsList) === 1 ? 'Unit' : 'Units' ?>
+                </span>
+              </div>
+
+              <!-- Full-Width Unit Selection Dropdown (Cover Side to Side) -->
+              <div class="mb-6">
+                <label for="approvedUnitSelect" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                  Choose Unit:
+                </label>
+                <div class="relative w-full">
+                  <select id="approvedUnitSelect" onchange="handleUnitSelectionChange(this.value)" class="w-full text-xs sm:text-sm font-semibold text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded-xl py-2.5 pl-3.5 pr-10 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white cursor-pointer shadow-xs transition-all appearance-none">
+                    <?php foreach ($approvedUnitsList as $au): ?>
+                      <option value="<?= (int)$au['unit_id'] ?>" <?= ((int)$au['unit_id'] === $selectedUnitId) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($au['dropdown_label'] ?? ($au['unit_number'] . ' - ' . $au['unit_type'])) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                  <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3-Column Unit Details Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-y-7 gap-x-8 sm:gap-x-12 pt-5 border-t border-slate-100">
                 <!-- Col 1 -->
-                <div class="space-y-4">
-                  <div>
-                    <p class="text-slate-400 text-xs mb-0.5">Unit</p>
-                    <p class="font-bold text-slate-900"><?= $unitNum ?> - <?= $unitTypeUpper ?></p>
+                <div class="space-y-6">
+                  <div class="space-y-1">
+                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Unit</p>
+                    <p class="text-sm sm:text-base font-bold text-slate-900 leading-snug" id="dispUnitNum"><?= $unitNum ?> - <?= $unitTypeUpper ?></p>
                   </div>
-                  <div>
-                    <p class="text-slate-400 text-xs mb-0.5">Furnishing</p>
-                    <p class="font-bold text-slate-900"><?= $furnishingVal ?></p>
+                  <div class="space-y-1">
+                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Furnishing</p>
+                    <p class="text-sm sm:text-base font-bold text-slate-900 leading-snug" id="dispFurnishing"><?= $furnishingVal ?></p>
                   </div>
-                  <div>
-                    <p class="text-slate-400 text-xs mb-0.5">Unit owner</p>
-                    <p class="font-bold text-slate-900"><?= $ownerName ?></p>
+                  <div class="space-y-1">
+                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Unit owner</p>
+                    <p class="text-sm sm:text-base font-bold text-slate-900 leading-snug" id="dispOwnerName"><?= $ownerName ?></p>
                   </div>
                 </div>
 
                 <!-- Col 2 -->
-                <div class="space-y-4">
-                  <div>
-                    <p class="text-slate-400 text-xs mb-0.5">Floor</p>
-                    <p class="font-bold text-slate-900"><?= $floorNum ?></p>
+                <div class="space-y-6">
+                  <div class="space-y-1">
+                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Floor</p>
+                    <p class="text-sm sm:text-base font-bold text-slate-900 leading-snug" id="dispFloorNum"><?= $floorNum ?></p>
                   </div>
-                  <div>
-                    <p class="text-slate-400 text-xs mb-0.5"><?= htmlspecialchars($price_label) ?></p>
-                    <p class="font-bold text-slate-900 font-mono">₱<?= number_format($price_basis, 0) ?> php</p>
+                  <div class="space-y-1">
+                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider" id="dispPriceLabel"><?= htmlspecialchars($price_label) ?></p>
+                    <p class="text-sm sm:text-base font-bold text-slate-900 font-mono tracking-tight leading-snug" id="dispPriceBasis">₱<?= number_format($price_basis, 0) ?> php</p>
                   </div>
-                  <div>
-                    <p class="text-slate-400 text-xs mb-0.5">Email</p>
-                    <?php if (!empty($ownerEmail)): ?>
-                      <a href="mailto:<?= htmlspecialchars($ownerEmail) ?>" class="font-bold text-slate-900 underline hover:text-blue-600 truncate block"><?= htmlspecialchars($ownerEmail) ?></a>
-                    <?php else: ?>
-                      <p class="font-bold text-slate-900">—</p>
-                    <?php endif; ?>
+                  <div class="space-y-1">
+                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Email</p>
+                    <div id="dispOwnerEmailWrapper">
+                      <?php if (!empty($ownerEmail)): ?>
+                        <a href="mailto:<?= htmlspecialchars($ownerEmail) ?>" class="text-sm sm:text-base font-bold text-slate-900 underline hover:text-blue-600 truncate block leading-snug" id="dispOwnerEmailLink"><?= htmlspecialchars($ownerEmail) ?></a>
+                      <?php else: ?>
+                        <p class="text-sm sm:text-base font-bold text-slate-900 leading-snug" id="dispOwnerEmailText">—</p>
+                      <?php endif; ?>
+                    </div>
                   </div>
                 </div>
 
                 <!-- Col 3 -->
-                <div class="space-y-4">
-                  <div>
-                    <p class="text-slate-400 text-xs mb-0.5">SQM</p>
-                    <p class="font-bold text-slate-900"><?= $sqmVal ?></p>
+                <div class="space-y-6">
+                  <div class="space-y-1">
+                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">SQM</p>
+                    <p class="text-sm sm:text-base font-bold text-slate-900 leading-snug" id="dispSqmVal"><?= $sqmVal ?></p>
                   </div>
-                  <div>
-                    <p class="text-slate-400 text-xs mb-0.5">Listing</p>
-                    <p class="font-bold text-slate-900"><?= $listingVal ?></p>
+                  <div class="space-y-1">
+                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Listing</p>
+                    <p class="text-sm sm:text-base font-bold text-slate-900 leading-snug" id="dispListingVal"><?= $listingVal ?></p>
                   </div>
-                  <div>
-                    <p class="text-slate-400 text-xs mb-0.5">Contact</p>
-                    <p class="font-bold text-slate-900 font-mono"><?= $ownerContact ?></p>
+                  <div class="space-y-1">
+                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Contact</p>
+                    <p class="text-sm sm:text-base font-bold text-slate-900 font-mono tracking-tight leading-snug" id="dispOwnerContact"><?= $ownerContact ?></p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- 2. FILL OUT YOUR INFORMATION -->
+            <!-- 2. CLIENT INFORMATION -->
             <div class="mb-6">
               <div class="flex items-center gap-2 mb-3">
                 <svg class="w-4 h-4 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide">FILL OUT YOUR INFORMATION</h3>
+                <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide">CLIENT INFORMATION</h3>
               </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -298,15 +370,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                 <div class="space-y-3.5">
                   <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Full Name</label>
-                    <input type="text" name="client_name" value="<?= htmlspecialchars((string)($data['sender_name'] ?? '')) ?>" placeholder="John Doe" readonly class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none">
+                    <input type="text" name="client_name" value="<?= htmlspecialchars($clientName) ?>" placeholder="John Doe" readonly class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:outline-none">
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Email</label>
-                    <input type="email" name="client_email" value="<?= htmlspecialchars((string)($data['sender_email'] ?? '')) ?>" placeholder="johndoe@gmail.com" readonly class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none">
+                    <input type="email" name="client_email" value="<?= htmlspecialchars($clientEmail) ?>" placeholder="johndoe@gmail.com" readonly class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:outline-none">
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Phone Number</label>
-                    <input type="tel" name="client_contact" value="<?= htmlspecialchars((string)($data['sender_contact'] ?? '')) ?>" placeholder="1234 123 1234" readonly class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 font-mono focus:outline-none">
+                    <input type="tel" name="client_contact" value="<?= htmlspecialchars($clientContact) ?>" placeholder="1234 123 1234" readonly class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 font-mono focus:outline-none">
                   </div>
                 </div>
 
@@ -332,8 +404,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
               </div>
             </div>
 
+            <?php if ($is_lease): ?>
             <!-- 3. LEASE TERM DETAILS -->
-            <div class="mb-6">
+            <div id="leaseTermDetailsSection" class="mb-6">
               <div class="flex items-center gap-2 mb-3">
                 <svg class="w-4 h-4 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -354,7 +427,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                 <div>
                   <label class="block text-xs font-semibold text-slate-600 mb-1">Move-in Date <span class="text-red-500">*</span></label>
                   <input type="date" id="moveInDate" name="move_in_date" min="<?= $move_in_min ?>" max="<?= $move_in_max ?>" required class="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-slate-900" onchange="handleMoveInChange(this.value)">
-                  <p class="text-[10px] text-slate-400 mt-1">Available up to 30 days from reservation issuance.</p>
+                  <p class="text-[10px] text-slate-400 mt-1">Requires a 3-day lead time for contract execution and building admin clearance.</p>
                 </div>
                 <div>
                   <label class="block text-xs font-semibold text-slate-600 mb-1">Move-out Date</label>
@@ -362,6 +435,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                 </div>
               </div>
             </div>
+            <?php endif; ?>
 
             <!-- 4. PAYMENT SECTION -->
             <div class="mt-8 mb-6 pt-6 border-t border-slate-100">
@@ -373,7 +447,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                     <svg class="w-4 h-4 text-slate-900 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                     </svg>
-                    <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide">PAYMENT</h3>
+                    <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide">DOWN PAYMENT</h3>
                   </div>
 
                   <!-- Payment Options Tabs -->
@@ -392,17 +466,16 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                     <div id="panelGcash" class="flex flex-col sm:flex-row items-start gap-4">
                       <!-- QR Code Box -->
                       <div class="w-32 h-32 border border-slate-200 rounded-xl p-2 bg-slate-50 flex items-center justify-center shrink-0 cursor-pointer hover:border-slate-400 transition-all text-center group relative overflow-hidden" onclick="openQRModal()">
-                        <?php if ($owner_has_qr): ?>
-                          <img src="<?= htmlspecialchars($baseUrl) ?>/<?= htmlspecialchars($owner_qr_path) ?>" alt="Owner GCash QR" class="w-full h-full object-contain rounded-lg">
+                        <div id="qrImageWrap" class="<?= $owner_has_qr ? '' : 'hidden' ?> w-full h-full relative">
+                          <img id="qrImgDisplay" src="<?= htmlspecialchars($baseUrl) ?>/<?= htmlspecialchars($owner_qr_path) ?>" alt="Owner GCash QR" class="w-full h-full object-contain rounded-lg">
                           <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold rounded-lg">
                             Click to Enlarge
                           </div>
-                        <?php else: ?>
-                          <div class="space-y-1">
-                            <svg class="w-6 h-6 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                            <span class="text-[10px] font-bold text-slate-700 tracking-wide block leading-tight">GCASH QR<br>PLACEHOLDER</span>
-                          </div>
-                        <?php endif; ?>
+                        </div>
+                        <div id="qrPlaceholderWrap" class="<?= $owner_has_qr ? 'hidden' : '' ?> space-y-1">
+                          <svg class="w-6 h-6 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                          <span class="text-[10px] font-bold text-slate-700 tracking-wide block leading-tight">GCASH QR<br>PLACEHOLDER</span>
+                        </div>
                       </div>
 
                       <!-- Right text & file upload -->
@@ -424,10 +497,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                         <svg class="w-4 h-4 text-slate-800 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                         </svg>
-                        <h4 class="text-xs font-bold uppercase">Pay In-House During Lease Signing</h4>
+                        <h4 class="text-xs font-bold uppercase">Pay In-House During <?= $is_lease ? 'Lease' : 'Contract' ?> Signing</h4>
                       </div>
                       <p class="text-xs text-slate-700 leading-relaxed">
-                        Please prepare the payment amount (cash or manager's check). Payment will be settled in person during your scheduled lease signing appointment.
+                        Please prepare the payment amount (cash or manager's check). Payment will be settled in person during your scheduled <?= $is_lease ? 'lease' : 'contract' ?> signing appointment.
                       </p>
                       <p class="text-[11px] text-slate-500 italic">No online proof of payment is required for in-house payment.</p>
                     </div>
@@ -438,8 +511,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                 <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/80 space-y-2.5">
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">PAYMENT BREAKDOWN</p>
                   <div>
-                    <p class="text-[10px] text-slate-500 mb-0.5"><?= htmlspecialchars($price_label) ?></p>
-                    <p class="text-base font-bold text-slate-900 font-mono">₱<?= number_format($price_basis, 2) ?></p>
+                    <p class="text-[10px] text-slate-500 mb-0.5" id="breakdownPriceLabel"><?= htmlspecialchars($price_label) ?></p>
+                    <p class="text-base font-bold text-slate-900 font-mono" id="breakdownPriceVal">₱<?= number_format($price_basis, 2) ?></p>
                   </div>
                   <div>
                     <p class="text-[10px] font-semibold text-slate-600 mb-1">Down Payment Option</p>
@@ -466,9 +539,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                     <svg class="w-4 h-4 text-slate-900 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide">LEASE SIGNING DATE</h3>
+                    <h3 class="font-bold text-slate-900 text-sm uppercase tracking-wide"><?= $is_lease ? 'LEASE SIGNING DATE' : 'CONTRACT SIGNING DATE' ?></h3>
                   </div>
-                  <p class="text-xs text-slate-500 mt-1">Select one or multiple dates you are available for lease signing.</p>
+                  <p class="text-xs text-slate-500 mt-1" id="signingDateNote">
+                    <?= $is_lease 
+                      ? 'Select one or multiple dates you are available for lease signing (must be on or before your move-in date).' 
+                      : 'Select one or multiple dates you are available for contract signing (requires a 3-day buffer for document preparation).' ?>
+                  </p>
                 </div>
                 <label class="inline-flex items-center gap-2 cursor-pointer select-none bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors">
                   <input type="checkbox" id="imFlexible" name="is_flexible_signing" value="1" class="w-4 h-4 rounded text-slate-900 accent-slate-900" onchange="handleFlexibleSigning(this)">
@@ -553,15 +630,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
                 <span>I agree to the <a href="<?= htmlspecialchars($baseUrl) ?>/terms-of-service" target="_blank" class="font-semibold text-slate-900 underline">Terms and Conditions</a> and <a href="<?= htmlspecialchars($baseUrl) ?>/privacy-policy" target="_blank" class="font-semibold text-slate-900 underline">Privacy Policy</a> of Zeppelin Suites. I confirm that all information provided is accurate and complete.</span>
               </label>
 
-              <div class="flex items-center justify-between pt-2">
-                <p class="text-xs text-slate-400">
-                  Inquiry ID:
-                  <span class="font-bold text-slate-700 font-mono">
-                    #<?= htmlspecialchars((string)$data['inq_id']) ?>
-                  </span>
-                </p>
-                <button type="submit" id="btnSubmitReservation" class="btn-press px-6 py-2.5 bg-[#0f172a] hover:bg-[#1e293b] text-white text-xs font-bold uppercase tracking-wider rounded-lg flex items-center gap-2 transition-all shadow-md">
-                  <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/></svg>
+              <div class="flex items-center justify-end pt-2">
+                <button type="submit" id="btnSubmitReservation" class="btn-press px-7 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold uppercase tracking-wider rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap">
                   SUBMIT RESERVATION
                 </button>
               </div>
@@ -734,23 +804,27 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     </p>
     <div class="flex justify-end gap-2.5 pt-2">
       <button type="button" onclick="closeConfirmModal()" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700">Go Back</button>
-      <button type="button" onclick="proceedSubmit()" class="px-5 py-2 bg-[#0f172a] hover:bg-[#1e293b] text-white rounded-lg text-xs font-bold">Yes, Submit</button>
+      <button type="button" onclick="proceedSubmit()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors shadow-sm">Submit</button>
     </div>
   </div>
 </div>
 
 <!-- QR Enlarged Lightbox Modal -->
-<?php if ($owner_has_qr): ?>
 <div id="qrModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm px-4" onclick="closeQRModal()">
   <div class="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl border border-slate-100 text-center" onclick="event.stopPropagation()">
     <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-      <h3 class="text-sm font-bold text-slate-900"><?= $ownerName ?>'s GCash QR</h3>
+      <h3 class="text-sm font-bold text-slate-900" id="qrModalTitle"><?= $ownerName ?>'s GCash QR</h3>
       <button type="button" onclick="closeQRModal()" class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="p-3 bg-slate-50 rounded-2xl flex items-center justify-center">
-      <img src="<?= htmlspecialchars($baseUrl) ?>/<?= htmlspecialchars($owner_qr_path) ?>" alt="GCash QR" class="max-h-[60vh] max-w-full object-contain rounded-xl shadow-sm">
+    <div class="p-3 bg-slate-50 rounded-2xl flex items-center justify-center min-h-[220px]" id="qrModalContent">
+      <img id="qrModalImg" src="<?= htmlspecialchars($baseUrl) ?>/<?= htmlspecialchars($owner_qr_path) ?>" alt="GCash QR" class="<?= $owner_has_qr ? '' : 'hidden' ?> max-h-[60vh] max-w-full object-contain rounded-xl shadow-sm">
+      <div id="qrModalPlaceholder" class="<?= $owner_has_qr ? 'hidden' : '' ?> text-center py-6">
+        <svg class="w-12 h-12 mx-auto text-slate-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+        <p class="text-xs font-semibold text-slate-600">No GCash QR uploaded by this unit owner</p>
+        <p class="text-[11px] text-slate-400 mt-1">Please coordinate or pay in-house during lease signing</p>
+      </div>
     </div>
     <p class="text-xs text-slate-500 mt-3">Scan with GCash or any supported e-wallet</p>
     <div class="pt-3 flex justify-end">
@@ -758,7 +832,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     </div>
   </div>
 </div>
-<?php endif; ?>
 
 <!-- 5. JAVASCRIPT -->
 <script>
@@ -845,16 +918,24 @@ function updateStatus() {
 setInterval(updateStatus, 1000);
 updateStatus();
 
-// ======= Move-out date calculation =======
-const priceBasis = <?= (float)$price_basis ?>;
+// ======= Dynamic Units and Move-out date calculation =======
+const approvedUnitsData = <?= json_encode($approvedUnitsList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+const baseUrlStr = <?= json_encode($baseUrl) ?>;
+const isLease = <?= json_encode((bool)$is_lease) ?>;
+let currentPriceBasis = <?= (float)$price_basis ?>;
+let currentUnitId = <?= $selectedUnitId ?>;
 const leaseDurationStr = <?= json_encode($inqLeaseDuration) ?>;
 
 function parseDurationToMonths(str) {
   if (!str) return 12;
   const s = str.toLowerCase();
+  if (s.includes('longer') || s.includes('not sure')) {
+    return 12;
+  }
   if (s.includes('year')) {
     const match = s.match(/(\d+)/);
-    return match ? parseInt(match[1], 10) * 12 : 12;
+    const yrs = match ? parseInt(match[1], 10) : 1;
+    return yrs >= 3 ? 12 : yrs * 12;
   }
   if (s.includes('month')) {
     const match = s.match(/(\d+)/);
@@ -888,14 +969,50 @@ function formatDisplayDate(dateStr) {
 function handleMoveInChange(moveInVal) {
   const months = parseDurationToMonths(leaseDurationStr);
   const moveOutVal = addMonthsToDate(moveInVal, months);
-  document.getElementById('moveOutDate').value = moveOutVal;
-  document.getElementById('moveOutDateDisplay').value = moveOutVal ? formatDisplayDate(moveOutVal) : '';
+  const moveOutInput = document.getElementById('moveOutDate');
+  const moveOutDisplay = document.getElementById('moveOutDateDisplay');
+  if (moveOutInput) moveOutInput.value = moveOutVal;
+  if (moveOutDisplay) moveOutDisplay.value = moveOutVal ? formatDisplayDate(moveOutVal) : '';
+
+  updateSigningCalendarLimit(moveInVal);
 }
 
 // ======= Multi-Date Lease Signing Calendar =======
-const minSigningDate = '<?= date('Y-m-d') ?>';
-const maxSigningDate = '<?= $maxSigningDate ?>';
+const minSigningDate = '<?= $signing_min ?>';
+const absoluteMaxSigningDate = '<?= $maxSigningDate ?>';
 const selectedSigningDates = new Set();
+
+function getEffectiveMaxSigningDate() {
+  const moveInInput = document.getElementById('moveInDate');
+  if (isLease && moveInInput && moveInInput.value && moveInInput.value.trim() !== '') {
+    return moveInInput.value < absoluteMaxSigningDate ? moveInInput.value : absoluteMaxSigningDate;
+  }
+  return absoluteMaxSigningDate;
+}
+
+function updateSigningCalendarLimit(moveInVal) {
+  const effectiveMax = getEffectiveMaxSigningDate();
+  let pruned = false;
+  selectedSigningDates.forEach(dateStr => {
+    if (dateStr > effectiveMax) {
+      selectedSigningDates.delete(dateStr);
+      pruned = true;
+    }
+  });
+  if (pruned) {
+    syncSigningInput();
+  }
+
+  // Ensure calendar view does not stay on a month beyond effective max
+  const [maxYear, maxMonth] = effectiveMax.split('-').map(Number);
+  const maxMonth0 = maxMonth - 1;
+  if (calCurrentYear > maxYear || (calCurrentYear === maxYear && calCurrentMonth > maxMonth0)) {
+    calCurrentYear = maxYear;
+    calCurrentMonth = maxMonth0;
+  }
+
+  renderSigningCalendar();
+}
 
 const [startCalYear, startCalMonth] = '<?= date('Y-m') ?>'.split('-').map(Number);
 let calCurrentYear = startCalYear;
@@ -918,11 +1035,13 @@ function renderSigningCalendar() {
     monthYearLabel.textContent = `${calMonthNames[calCurrentMonth]} ${calCurrentYear}`;
   }
 
+  const effectiveMaxSigningDate = getEffectiveMaxSigningDate();
+
   const firstDayIndex = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
   const totalDays = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
 
   const [minY, minM] = minSigningDate.split('-').map(Number);
-  const [maxY, maxM] = maxSigningDate.split('-').map(Number);
+  const [maxY, maxM] = effectiveMaxSigningDate.split('-').map(Number);
 
   const prevMonthYear = calCurrentMonth === 0 ? calCurrentYear - 1 : calCurrentYear;
   const prevMonthNum = calCurrentMonth === 0 ? 12 : calCurrentMonth;
@@ -949,12 +1068,13 @@ function renderSigningCalendar() {
     const dateStr = `${calCurrentYear}-${monthStr}-${dayStr}`;
 
     const isBeforeMin = dateStr < minSigningDate;
-    const isAfterMax = dateStr > maxSigningDate;
+    const isAfterMax = dateStr > effectiveMaxSigningDate;
     const isOutOfRange = isBeforeMin || isAfterMax;
     const isSelected = selectedSigningDates.has(dateStr);
 
     if (isOutOfRange) {
-      html += `<span class="py-1 text-slate-300 cursor-not-allowed select-none text-[11px]">${d}</span>`;
+      const tooltip = isAfterMax ? 'Signing appointment must be on or before move-in date' : 'Date unavailable';
+      html += `<span class="py-1 text-slate-300 cursor-not-allowed select-none text-[11px]" title="${tooltip}">${d}</span>`;
     } else if (isSelected) {
       html += `<button type="button" onclick="toggleSigningDate('${dateStr}')" class="py-1 bg-[#0f172a] text-white font-bold rounded-lg shadow-xs hover:bg-slate-800 transition-colors text-[11px]" title="Click to remove">${d}</button>`;
     } else {
@@ -980,6 +1100,19 @@ function navSigningCal(direction) {
 
 function toggleSigningDate(dateStr) {
   if (document.getElementById('imFlexible').checked) return;
+
+  if (dateStr < minSigningDate) {
+    alert("Signing date must be at least 3 days from today (" + minSigningDate + ") to allow for document preparation.");
+    return;
+  }
+
+  const effectiveMax = getEffectiveMaxSigningDate();
+  if (dateStr > effectiveMax) {
+    const moveInInput = document.getElementById('moveInDate');
+    const moveInMsg = (moveInInput && moveInInput.value) ? `your move-in date (${moveInInput.value})` : effectiveMax;
+    alert(`Lease signing date must be scheduled on or before ${moveInMsg}.`);
+    return;
+  }
 
   if (selectedSigningDates.has(dateStr)) {
     selectedSigningDates.delete(dateStr);
@@ -1100,15 +1233,130 @@ function switchPaymentTab(type) {
 function calculateBreakdown() {
   const dpSelect = document.getElementById('dpOption');
   const pct = parseFloat(dpSelect.value);
-  const reqAmount = priceBasis * pct;
+  const reqAmount = currentPriceBasis * pct;
 
   const formatted = '₱' + reqAmount.toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
 
-  document.getElementById('dpAmount').textContent = formatted;
-  document.getElementById('declaredAmountInput').value = reqAmount;
+  const dpAmountEl = document.getElementById('dpAmount');
+  if (dpAmountEl) dpAmountEl.textContent = formatted;
+  const declaredInput = document.getElementById('declaredAmountInput');
+  if (declaredInput) declaredInput.value = reqAmount;
+}
+
+// ======= Dynamic Unit Selection Handler =======
+function handleUnitSelectionChange(unitIdStr) {
+  const unitId = parseInt(unitIdStr, 10);
+  if (!unitId || !Array.isArray(approvedUnitsData)) return;
+
+  const unit = approvedUnitsData.find(u => parseInt(u.unit_id, 10) === unitId);
+  if (!unit) return;
+
+  currentUnitId = unitId;
+  currentPriceBasis = parseFloat(unit.price_basis) || 0;
+
+  // Sync hidden input
+  const hiddenUnitInput = document.getElementById('selectedUnitId');
+  if (hiddenUnitInput) hiddenUnitInput.value = unitId;
+
+  // 1. Update Unit Details First Panel
+  const dispUnitNum = document.getElementById('dispUnitNum');
+  if (dispUnitNum) {
+    const typeUpper = (unit.unit_type || 'STUDIO TYPE').toUpperCase();
+    dispUnitNum.textContent = `${unit.unit_number || '—'} - ${typeUpper}`;
+  }
+
+  const dispFurnishing = document.getElementById('dispFurnishing');
+  if (dispFurnishing) dispFurnishing.textContent = unit.furnishing || 'Fully Furnished';
+
+  const dispOwnerName = document.getElementById('dispOwnerName');
+  if (dispOwnerName) dispOwnerName.textContent = unit.owner_name || 'No owner assigned';
+
+  const dispFloorNum = document.getElementById('dispFloorNum');
+  if (dispFloorNum) dispFloorNum.textContent = unit.floor_number || '1';
+
+  const dispPriceLabel = document.getElementById('dispPriceLabel');
+  if (dispPriceLabel) dispPriceLabel.textContent = unit.price_label || 'Monthly Rate';
+
+  const dispPriceBasis = document.getElementById('dispPriceBasis');
+  if (dispPriceBasis) {
+    dispPriceBasis.textContent = `₱${Math.round(currentPriceBasis).toLocaleString('en-US')} php`;
+  }
+
+  const emailWrapper = document.getElementById('dispOwnerEmailWrapper');
+  if (emailWrapper) {
+    if (unit.owner_email && unit.owner_email.trim() !== '') {
+      emailWrapper.innerHTML = `<a href="mailto:${escapeHtml(unit.owner_email)}" class="font-bold text-slate-900 underline hover:text-blue-600 truncate block" id="dispOwnerEmailLink">${escapeHtml(unit.owner_email)}</a>`;
+    } else {
+      emailWrapper.innerHTML = `<p class="font-bold text-slate-900" id="dispOwnerEmailText">—</p>`;
+    }
+  }
+
+  const dispSqmVal = document.getElementById('dispSqmVal');
+  if (dispSqmVal) dispSqmVal.textContent = unit.sqm || '37';
+
+  const dispListingVal = document.getElementById('dispListingVal');
+  if (dispListingVal) dispListingVal.textContent = unit.listing_type || 'For Lease';
+
+  const dispOwnerContact = document.getElementById('dispOwnerContact');
+  if (dispOwnerContact) dispOwnerContact.textContent = unit.owner_contact || '—';
+
+  // 2. Update Payment Breakdown Box
+  const breakdownPriceLabel = document.getElementById('breakdownPriceLabel');
+  if (breakdownPriceLabel) breakdownPriceLabel.textContent = unit.price_label || 'Monthly Rate';
+
+  const breakdownPriceVal = document.getElementById('breakdownPriceVal');
+  if (breakdownPriceVal) {
+    breakdownPriceVal.textContent = '₱' + currentPriceBasis.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  calculateBreakdown();
+
+  // 3. Update GCash QR Display & Modal
+  const qrImageWrap = document.getElementById('qrImageWrap');
+  const qrPlaceholderWrap = document.getElementById('qrPlaceholderWrap');
+  const qrImgDisplay = document.getElementById('qrImgDisplay');
+  const qrModalTitle = document.getElementById('qrModalTitle');
+  const qrModalImg = document.getElementById('qrModalImg');
+  const qrModalPlaceholder = document.getElementById('qrModalPlaceholder');
+
+  const hasQr = Boolean(unit.owner_has_qr && unit.owner_qr_path);
+  const qrSrc = hasQr ? `${baseUrlStr}/${unit.owner_qr_path}` : '';
+
+  if (qrModalTitle) {
+    qrModalTitle.textContent = `${unit.owner_name || 'Owner'}'s GCash QR`;
+  }
+
+  if (hasQr) {
+    if (qrImgDisplay) qrImgDisplay.src = qrSrc;
+    if (qrModalImg) {
+      qrModalImg.src = qrSrc;
+      qrModalImg.classList.remove('hidden');
+    }
+    if (qrModalPlaceholder) qrModalPlaceholder.classList.add('hidden');
+    if (qrImageWrap) qrImageWrap.classList.remove('hidden');
+    if (qrPlaceholderWrap) qrPlaceholderWrap.classList.add('hidden');
+  } else {
+    if (qrModalImg) qrModalImg.classList.add('hidden');
+    if (qrModalPlaceholder) qrModalPlaceholder.classList.remove('hidden');
+    if (qrImageWrap) qrImageWrap.classList.add('hidden');
+    if (qrPlaceholderWrap) qrPlaceholderWrap.classList.remove('hidden');
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // ======= Remarks live counter =======
@@ -1144,10 +1392,37 @@ function handleFormSubmit(e) {
   }
 
   const moveIn = document.getElementById('moveInDate');
-  if (!moveIn.value) {
+  const minMoveIn = '<?= $move_in_min ?>';
+  if (isLease && (!moveIn || !moveIn.value)) {
     alert("Please select your Move-in Date.");
+    if (moveIn) moveIn.focus();
+    return false;
+  }
+  if (isLease && moveIn && moveIn.value < minMoveIn) {
+    alert("Move-in date must be at least 3 days from today (" + minMoveIn + ") to allow for contract execution and building administration clearance.");
     moveIn.focus();
     return false;
+  }
+
+  // Validate that signing appointment is not scheduled after move-in date
+  if (isLease && moveIn && moveIn.value && !document.getElementById('imFlexible').checked) {
+    const effectiveMax = getEffectiveMaxSigningDate();
+    for (const sDate of selectedSigningDates) {
+      if (sDate > effectiveMax) {
+        alert("Your lease signing appointment (" + sDate + ") cannot be scheduled after your move-in date (" + moveIn.value + "). Please select signing dates on or before your move-in date.");
+        return false;
+      }
+    }
+  }
+
+  // Validate that resale contract signing is at least 3 days in advance
+  if (!isLease && !document.getElementById('imFlexible').checked) {
+    for (const sDate of selectedSigningDates) {
+      if (sDate < minSigningDate) {
+        alert("Contract signing date (" + sDate + ") must be at least 3 days from today (" + minSigningDate + ") to allow for document preparation.");
+        return false;
+      }
+    }
   }
 
   const paymentMethod = document.getElementById('paymentMethodInput').value;

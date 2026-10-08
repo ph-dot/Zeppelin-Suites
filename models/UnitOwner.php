@@ -83,6 +83,7 @@ class UnitOwner extends Model {
                 u.sqm,
                 u.floor_number,
                 u.lease_rate,
+                COALESCE(u.resellling_price, u.reselling_price, NULL) AS reselling_price,
                 u.listing_type,
                 u.stay_category,
                 u.unit_current_status,
@@ -185,6 +186,9 @@ class UnitOwner extends Model {
                 u.floor_number,
                 u.unit_type,
                 u.lease_rate,
+                u.sqm,
+                u.listing_type,
+                COALESCE(u.resellling_price, u.reselling_price, NULL) AS reselling_price,
                 u.unit_current_status,
                 (SELECT res.move_in_date 
                  FROM reservation_table res 
@@ -259,6 +263,7 @@ class UnitOwner extends Model {
                 cancelled_user.full_name AS cancelled_by_name,
                 cancel_requester.full_name AS cancellation_requested_by_name,
                 signer.full_name AS lease_signed_by_name,
+                confirmer.full_name AS confirmed_signing_by_name,
                 inq.lease_duration AS inq_lease_duration
             FROM reservation_table r
             INNER JOIN units_table u ON r.unit_id = u.unit_id
@@ -269,6 +274,7 @@ class UnitOwner extends Model {
             LEFT JOIN users_table cancel_requester ON r.cancellation_requested_by = cancel_requester.user_id
             LEFT JOIN users_table client_user ON r.client_email = client_user.email
             LEFT JOIN users_table signer ON r.lease_signed_by = signer.user_id
+            LEFT JOIN users_table confirmer ON r.confirmed_signing_by = confirmer.user_id
             LEFT JOIN inquiry_table inq ON r.inq_id = inq.inq_id
             WHERE r.reservation_id = ? AND u.unit_owner_id = ?
             LIMIT 1
@@ -737,46 +743,32 @@ class UnitOwner extends Model {
             $unitId = (int)$request['unit_id'];
 
             if ($action === 'approve') {
-                // Check if inquiry was already approved by another owner
-                $checkInqSql = "SELECT approval_status FROM inquiry_table WHERE inq_id = ? FOR UPDATE";
-                $inquiry = $this->fetchOne($checkInqSql, [$inqId]);
-
-                if ($inquiry && strtolower((string)$inquiry['approval_status']) === 'approved') {
-                    $this->execute(
-                        "UPDATE owner_approval_requests SET request_status = 'expired', responded_at = NOW() WHERE request_id = ?",
-                        [$requestId]
-                    );
-                    $this->db->commit();
-                    return ['success' => false, 'message' => 'Another unit owner already approved this inquiry first.'];
-                }
-
-                // 1. Approve this request
+                // 1. Approve this owner's request (no FCFS: do not expire other owners, do not block)
                 $this->execute(
                     "UPDATE owner_approval_requests SET request_status = 'approved', owner_remarks = ?, responded_at = NOW() WHERE request_id = ?",
                     [$remarks, $requestId]
                 );
 
-                // 2. Expire other pending requests for the same inquiry
-                $this->execute(
-                    "UPDATE owner_approval_requests SET request_status = 'expired', responded_at = NOW() WHERE inq_id = ? AND request_id != ? AND request_status = 'pending'",
-                    [$inqId, $requestId]
-                );
+                // 2. Fetch current inquiry state
+                $checkInqSql = "SELECT approval_status, reservation_token FROM inquiry_table WHERE inq_id = ? FOR UPDATE";
+                $inquiry = $this->fetchOne($checkInqSql, [$inqId]);
 
-                // 3. Generate reservation token and update inquiry
-                $reservationToken = bin2hex(random_bytes(32));
-                $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
+                // If inquiry is not marked approved, set approval_status to approved without assigning a specific unit
+                if (!$inquiry || strtolower((string)($inquiry['approval_status'] ?? '')) !== 'approved') {
+                    $reservationToken = !empty($inquiry['reservation_token']) ? $inquiry['reservation_token'] : bin2hex(random_bytes(32));
+                    $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
 
-                $updateInqSql = "
-                    UPDATE inquiry_table
-                    SET approval_status = 'approved',
-                        approved_unit_id = ?,
-                        owner_remarks = ?,
-                        reservation_token = ?,
-                        reservation_token_expires_at = ?,
-                        approval_approved_at = NOW()
-                    WHERE inq_id = ?
-                ";
-                $this->execute($updateInqSql, [$unitId, $remarks, $reservationToken, $expiresAt, $inqId]);
+                    $updateInqSql = "
+                        UPDATE inquiry_table
+                        SET approval_status = 'approved',
+                            owner_remarks = ?,
+                            reservation_token = ?,
+                            reservation_token_expires_at = ?,
+                            approval_approved_at = NOW()
+                        WHERE inq_id = ?
+                    ";
+                    $this->execute($updateInqSql, [$remarks, $reservationToken, $expiresAt, $inqId]);
+                }
 
                 $this->db->commit();
 
@@ -790,14 +782,19 @@ class UnitOwner extends Model {
                     [$remarks, $requestId]
                 );
 
-                // 2. Check if all owner requests for this inquiry are now decided/no pending left
-                $pendingRow = $this->fetchOne(
-                    "SELECT COUNT(*) AS pending_count FROM owner_approval_requests WHERE inq_id = ? AND request_status = 'pending'",
+                // 2. Check pending and approved count for this inquiry
+                $countsRow = $this->fetchOne(
+                    "SELECT 
+                        SUM(CASE WHEN request_status = 'pending' THEN 1 ELSE 0 END) AS pending_count,
+                        SUM(CASE WHEN request_status = 'approved' THEN 1 ELSE 0 END) AS approved_count
+                     FROM owner_approval_requests WHERE inq_id = ?",
                     [$inqId]
                 );
-                $pendingCount = (int)($pendingRow['pending_count'] ?? 0);
+                $pendingCount = (int)($countsRow['pending_count'] ?? 0);
+                $approvedCount = (int)($countsRow['approved_count'] ?? 0);
 
-                if ($pendingCount === 0) {
+                // If all owners responded and none approved, mark inquiry as declined
+                if ($pendingCount === 0 && $approvedCount === 0) {
                     $this->execute(
                         "UPDATE inquiry_table SET status = 'declined', approval_status = 'declined', owner_remarks = ? WHERE inq_id = ? AND approval_status != 'approved'",
                         [$remarks, $inqId]
@@ -819,5 +816,174 @@ class UnitOwner extends Model {
             error_log('respondApprovalRequest error: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Database error occurred while processing approval: ' . $e->getMessage()];
         }
+    }
+
+    /**
+     * Update unit settings (listing mode, stay category, lease rate, reselling price) for an owned unit.
+     */
+    public function updateUnitSettings(int $ownerId, int $unitId, array $data): array {
+        // 1. Verify that the unit belongs to this owner
+        $sql = "SELECT unit_id, unit_current_status, lease_rate, COALESCE(resellling_price, reselling_price, NULL) as reselling_price FROM units_table WHERE unit_id = ? AND unit_owner_id = ? LIMIT 1";
+        $unit = $this->fetchOne($sql, [$unitId, $ownerId]);
+        if (!$unit) {
+            throw new RuntimeException('Unit not found or access denied.');
+        }
+
+        // 2. Validate listing_type
+        $listingType = trim((string)($data['listing_type'] ?? 'For Lease'));
+        if (!in_array($listingType, ['For Lease', 'Resale'], true)) {
+            $listingType = 'For Lease';
+        }
+
+        // 3. Validate stay_category
+        $stayCategory = trim((string)($data['stay_category'] ?? 'Long term'));
+        if (!in_array($stayCategory, ['Long term', 'Short term'], true)) {
+            $stayCategory = 'Long term';
+        }
+
+        // 4. Validate lease_rate and reselling_price
+        $leaseRate = isset($data['lease_rate']) && is_numeric($data['lease_rate'])
+            ? round((float)$data['lease_rate'], 2)
+            : (float)($unit['lease_rate'] ?? 0);
+        if ($leaseRate < 0) $leaseRate = 0.0;
+
+        $rawResale = $data['resellling_price'] ?? $data['reselling_price'] ?? null;
+        $resellingPrice = ($rawResale !== null && is_numeric($rawResale))
+            ? round((float)$rawResale, 2)
+            : ($unit['reselling_price'] !== null ? (float)$unit['reselling_price'] : null);
+        if ($resellingPrice !== null && $resellingPrice < 0) $resellingPrice = 0.0;
+
+        // 5. Update unit_current_status based on listing_type if not currently occupied/under maintenance
+        $currentStatus = (string)($unit['unit_current_status'] ?? 'Ready for Occupancy');
+        $newStatus = $currentStatus;
+        if (!in_array(strtolower($currentStatus), ['occupied', 'under maintenance'], true)) {
+            if ($listingType === 'Resale') {
+                $newStatus = 'Resale';
+            } elseif ($listingType === 'For Lease' && strtolower($currentStatus) === 'resale') {
+                $newStatus = 'Ready for Occupancy';
+            }
+        }
+
+        // 6. Update both resellling_price and reselling_price columns for database compatibility
+        $updateSql = "
+            UPDATE units_table 
+            SET listing_type = ?,
+                stay_category = ?,
+                lease_rate = ?,
+                resellling_price = ?,
+                reselling_price = ?,
+                unit_current_status = ?
+            WHERE unit_id = ? AND unit_owner_id = ?
+        ";
+        $this->execute($updateSql, [
+            $listingType,
+            $stayCategory,
+            $leaseRate,
+            $resellingPrice,
+            $resellingPrice,
+            $newStatus,
+            $unitId,
+            $ownerId
+        ]);
+
+        return [
+            'unit_id'                    => $unitId,
+            'listing_type'               => $listingType,
+            'stay_category'              => $stayCategory,
+            'lease_rate'                 => $leaseRate,
+            'lease_rate_formatted'       => '₱' . number_format($leaseRate, 2),
+            'reselling_price'            => $resellingPrice,
+            'reselling_price_formatted'  => $resellingPrice !== null ? '₱' . number_format($resellingPrice, 2) : '—',
+            'resellling_price_formatted' => $resellingPrice !== null ? '₱' . number_format($resellingPrice, 2) : '—',
+            'unit_current_status'        => $newStatus,
+        ];
+    }
+
+    /**
+     * Confirm / choose agreed lease signing date for this owner's unit.
+     */
+    public function confirmSigningDate(int $ownerId, int $reservationId, string $date): array {
+        $res = $this->getReservationDetails($ownerId, $reservationId);
+        if (!$res) {
+            return ['success' => false, 'message' => 'Reservation not found or unauthorized.'];
+        }
+
+        $cleanDate = trim($date);
+        $ts = strtotime($cleanDate);
+        if (!$ts || date('Y-m-d', $ts) !== $cleanDate) {
+            return ['success' => false, 'message' => 'Please provide a valid date in YYYY-MM-DD format.'];
+        }
+
+        if (!empty($res['move_in_date']) && $res['move_in_date'] !== '0000-00-00') {
+            if ($cleanDate > $res['move_in_date']) {
+                return ['success' => false, 'message' => "Lease signing date cannot be scheduled after the Move-in Date ({$res['move_in_date']})."];
+            }
+        }
+
+        $sql = "
+            UPDATE reservation_table
+            SET confirmed_signing_date = ?,
+                confirmed_signing_by = ?,
+                confirmed_signing_at = NOW()
+            WHERE reservation_id = ?
+        ";
+        $success = $this->execute($sql, [$cleanDate, $ownerId, $reservationId]);
+        if (!$success) {
+            return ['success' => false, 'message' => 'Database error while saving confirmed signing date.'];
+        }
+
+        return [
+            'success'        => true,
+            'message'        => 'Lease signing appointment confirmed successfully.',
+            'confirmed_date' => $cleanDate,
+            'formatted_date' => date('l, F j, Y', $ts),
+        ];
+    }
+
+    /**
+     * Complete or reset lease signing status for this owner's unit.
+     */
+    public function updateLeaseSigningStatus(int $ownerId, int $reservationId, string $action, string $remarks): array {
+        $res = $this->getReservationDetails($ownerId, $reservationId);
+        if (!$res) {
+            return ['success' => false, 'message' => 'Reservation not found or unauthorized.'];
+        }
+
+        $now = date('Y-m-d H:i:s');
+        if ($action === 'complete') {
+            $status = 'Completed';
+            $sql = "
+                UPDATE reservation_table
+                SET lease_signing_status = ?,
+                    lease_signed_at = ?,
+                    lease_signed_by = ?,
+                    lease_signing_remarks = ?
+                WHERE reservation_id = ?
+            ";
+            $params = [$status, $now, $ownerId, $remarks, $reservationId];
+        } else {
+            $status = 'Pending Signing';
+            $sql = "
+                UPDATE reservation_table
+                SET lease_signing_status = ?,
+                    lease_signed_at = NULL,
+                    lease_signed_by = NULL,
+                    lease_signing_remarks = ?
+                WHERE reservation_id = ?
+            ";
+            $params = [$status, $remarks, $reservationId];
+        }
+
+        $success = $this->execute($sql, $params);
+        if (!$success) {
+            return ['success' => false, 'message' => 'Failed to update lease signing status in database.'];
+        }
+
+        return [
+            'success'   => true,
+            'message'   => $action === 'complete' ? 'Lease signing marked as completed successfully.' : 'Lease signing status reset to pending.',
+            'status'    => $status,
+            'signed_at' => $now,
+        ];
     }
 }

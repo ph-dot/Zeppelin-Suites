@@ -193,5 +193,23 @@ class InquiryController extends Controller {
         $result = $this->inquiryModel->cancelApprovalRequest($inqId, $requestId);
         $this->json($result);
     }
+
+    /**
+     * Assign a specific approved unit to an inquiry via AJAX POST.
+     */
+    public function assignUnit(): void {
+        Middleware::requireRole(['admin']);
+
+        $inqId = (int)$this->getPost('inq_id', 0);
+        $unitId = (int)$this->getPost('unit_id', 0);
+
+        if ($inqId <= 0 || $unitId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid inquiry or unit selection.'], 400);
+            return;
+        }
+
+        $result = $this->inquiryModel->assignApprovedUnit($inqId, $unitId);
+        $this->json($result);
+    }
 }
 

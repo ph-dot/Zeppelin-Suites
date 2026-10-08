@@ -256,6 +256,7 @@ $statusMap = [
                       data-status="<?= e($status) ?>"
                       data-approval-status="<?= e($approval_status) ?>"
                       data-approved-unit="<?= e($approved_unit_number) ?>"
+                      data-approved-unit-id="<?= e($row['approved_unit_id'] ?? '') ?>"
                       data-approved-at="<?= e($approval_approved_at) ?>"
                       data-owner-remarks="<?= e($row['owner_remarks'] ?? '') ?>"
                       data-requests="<?= e($requestsJson) ?>"
@@ -389,11 +390,6 @@ $statusMap = [
           <span id="approvalStatusBadge" class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 shrink-0">Not Requested</span>
         </div>
 
-        <div id="sentRequestsBox" class="hidden bg-white border border-slate-100 rounded-2xl p-3 space-y-1.5">
-          <p class="text-xs text-slate-400 uppercase tracking-wide font-semibold">Sent To</p>
-          <div id="sentRequestsList" class="space-y-1.5"></div>
-        </div>
-
         <div id="availableUnitsBox" class="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-3">
           <div class="flex items-center justify-between gap-3">
             <div>
@@ -425,8 +421,8 @@ $statusMap = [
                 <svg class="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               </div>
               <div>
-                <p class="text-sm font-semibold text-amber-800">Waiting for Approval</p>
-                <p class="text-xs text-amber-700 mt-0.5">The first owner who approves will get the reservation. You can still send the request to other available owners, or cancel a pending request below, while you wait.</p>
+                <p class="text-sm font-semibold text-amber-800">Waiting for Owner Response</p>
+                <p class="text-xs text-amber-700 mt-0.5">Approval requests have been sent to unit owners. Their decisions (approved/declined) will be displayed in the list below as they respond.</p>
               </div>
             </div>
           </div>
@@ -438,7 +434,7 @@ $statusMap = [
               </div>
               <div>
                 <p class="text-sm font-semibold text-emerald-800">Reservation Approved</p>
-                <p class="text-xs text-emerald-700 mt-0.5" id="approvedUnitText">Assigned unit: —</p>
+                <p class="text-xs text-emerald-700 mt-0.5" id="approvedUnitText">Approved by unit owner(s)</p>
                 <p class="text-xs text-emerald-900 mt-1 font-medium hidden" id="approvedOwnerRemarksRow">
                   <span class="text-emerald-700 font-semibold">Remarks:</span> <span class="italic font-normal text-emerald-950" id="approvedOwnerRemarksText">—</span>
                 </p>
@@ -456,6 +452,18 @@ $statusMap = [
                 <p class="text-xs text-red-700 mt-0.5">All unit owners declined or the request was closed.</p>
               </div>
             </div>
+          </div>
+
+          <!-- Unit Owner Responses List (Always shown whenever requests exist) -->
+          <div id="sentRequestsBox" class="hidden bg-white border border-slate-200/80 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div>
+                <p class="text-xs text-slate-400 uppercase tracking-wider font-bold">Unit Owner Responses</p>
+                <p class="text-[11px] text-slate-500 mt-0.5" id="sentRequestsSubText">Unit owners who received the reservation request</p>
+              </div>
+              <span id="sentRequestsBadgeCount" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700">0 owners</span>
+            </div>
+            <div id="sentRequestsList" class="space-y-2"></div>
           </div>
         </div>
       </div>
@@ -644,6 +652,7 @@ function openModal(row) {
 
   const approvalStatus = row.dataset.approvalStatus || 'not_requested';
   const approvedUnit = row.dataset.approvedUnit || '';
+  const approvedUnitId = row.dataset.approvedUnitId || '';
   const approvedAt = row.dataset.approvedAt || '';
   const pendingCount = parseInt(row.dataset.pendingCount || '0', 10);
 
@@ -654,32 +663,36 @@ function openModal(row) {
     sentRequests = [];
   }
 
-  renderSentRequests(sentRequests);
   currentSentRequests = sentRequests;
+  renderSentRequests(sentRequests);
 
-  const declinedCount = sentRequests.filter(r => r.request_status === 'declined').length;
+  const declinedCount = sentRequests.filter(r => (r.request_status || '').toLowerCase() === 'declined').length;
+  const approvedCount = sentRequests.filter(r => (r.request_status || '').toLowerCase() === 'approved').length;
 
-  if (approvalStatus === 'approved') {
+  if (approvalStatus === 'approved' || approvedCount > 0) {
     document.getElementById('approvalStatusText').textContent = 'Owner approved';
     document.getElementById('approvalSubText').textContent = approvedAt ? 'Approved on ' + approvedAt : 'A unit owner approved this reservation request.';
     const badge = document.getElementById('approvalStatusBadge');
     badge.textContent = 'Approved';
     badge.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0';
 
-    document.getElementById('sentRequestsBox').classList.add('hidden');
+    // Keep sentRequestsBox visible so all unit owners who received the request are shown
     document.getElementById('availableUnitsBox').classList.add('hidden');
     document.getElementById('checkUnitsBtn').classList.add('hidden');
     document.getElementById('sendApprovalBtn').classList.add('hidden');
     document.getElementById('approvedApprovalBox').classList.remove('hidden');
 
-    document.getElementById('approvedUnitText').textContent = 'Assigned unit: ' + approvedUnit + (approvedAt ? ' • ' + approvedAt : '');
+    const approvalSubtitle = approvedCount > 0
+      ? `${approvedCount} unit owner${approvedCount > 1 ? 's' : ''} approved${approvedAt ? ' • ' + approvedAt : ''}`
+      : (approvedAt ? 'Approved on ' + approvedAt : 'Approved by unit owner(s)');
+    document.getElementById('approvedUnitText').textContent = approvalSubtitle;
     if (row.dataset.ownerRemarks) {
       document.getElementById('approvedOwnerRemarksText').textContent = row.dataset.ownerRemarks;
       document.getElementById('approvedOwnerRemarksRow').classList.remove('hidden');
     } else {
       document.getElementById('approvedOwnerRemarksRow').classList.add('hidden');
     }
-  } else if (approvalStatus === 'requested' && pendingCount > 0) {
+  } else if (approvalStatus === 'requested' || pendingCount > 0) {
     document.getElementById('approvalStatusText').textContent = 'Waiting for owner approval';
     document.getElementById('approvalSubText').textContent = declinedCount > 0
       ? `${declinedCount} owner(s) declined - still waiting on ${pendingCount} more.`
@@ -710,7 +723,6 @@ function openModal(row) {
   document.getElementById('approvalSection').style.display = hideGeneral ? 'none' : '';
   document.getElementById('moveInTimeSection').style.display = showLeaseDetails ? '' : 'none';
   document.getElementById('leaseDurationSection').style.display = showLeaseDetails ? '' : 'none';
-
   const modal = document.getElementById('modalBackdrop');
   modal.classList.remove('hidden');
   requestAnimationFrame(() => modal.classList.add('open'));
@@ -719,44 +731,95 @@ function openModal(row) {
 function renderSentRequests(requests) {
   const box = document.getElementById('sentRequestsBox');
   const list = document.getElementById('sentRequestsList');
+  const badgeCount = document.getElementById('sentRequestsBadgeCount');
+  const subText = document.getElementById('sentRequestsSubText');
   if (!requests || requests.length === 0) {
     box.classList.add('hidden');
     list.innerHTML = '';
     return;
   }
 
-  const statusStyles = {
-    pending:  ['Pending',  'bg-amber-50 text-amber-700 border-amber-200'],
-    approved: ['Approved', 'bg-emerald-50 text-emerald-700 border-emerald-200'],
-    declined: ['Declined', 'bg-red-50 text-red-700 border-red-200'],
-    expired:  ['Expired',  'bg-slate-100 text-slate-500 border-slate-200']
-  };
+  const approvedList = requests.filter(r => (r.request_status || '').toLowerCase() === 'approved');
+  const declinedList = requests.filter(r => (r.request_status || '').toLowerCase() === 'declined');
+  const pendingList = requests.filter(r => (r.request_status || '').toLowerCase() === 'pending');
+
+  if (badgeCount) {
+    badgeCount.textContent = `${requests.length} owner${requests.length > 1 ? 's' : ''}`;
+  }
+
+  if (subText) {
+    const parts = [];
+    if (approvedList.length > 0) parts.push(`<span class="font-semibold text-emerald-700">${approvedList.length} Approved</span>`);
+    if (declinedList.length > 0) parts.push(`<span class="font-semibold text-red-600">${declinedList.length} Declined</span>`);
+    if (pendingList.length > 0) parts.push(`<span class="font-semibold text-amber-600">${pendingList.length} Pending</span>`);
+    subText.innerHTML = parts.join(' · ') || 'Unit owners who received the reservation request';
+  }
 
   list.innerHTML = requests.map(r => {
     const statusKey = (r.request_status || 'pending').toLowerCase();
-    const [label, cls] = statusStyles[statusKey] || [r.request_status, 'bg-slate-100 text-slate-500 border-slate-200'];
+    const isApproved = (statusKey === 'approved');
+    const isDeclined = (statusKey === 'declined');
+    const isPending = (statusKey === 'pending');
 
-    const cancelBtn = (statusKey === 'pending' && r.request_id)
-      ? `<button type="button" onclick="cancelSentRequest(${r.request_id})" class="btn-press text-[10px] font-semibold text-slate-500 border border-slate-200 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 px-2 py-0.5 rounded-full active:scale-95 transition-all">Cancel</button>`
+    let badgeHtml = '';
+    if (isApproved) {
+      badgeHtml = `<span class="inline-flex items-center gap-1 font-semibold text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+        Approved
+      </span>`;
+    } else if (isDeclined) {
+      badgeHtml = `<span class="inline-flex items-center gap-1 font-semibold text-xs px-2.5 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">
+        <svg class="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        Declined
+      </span>`;
+    } else if (isPending) {
+      badgeHtml = `<span class="inline-flex items-center gap-1 font-semibold text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+        <svg class="w-3 h-3 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Pending
+      </span>`;
+    } else {
+      badgeHtml = `<span class="font-semibold text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">${escapeHtml(r.request_status)}</span>`;
+    }
+
+    const cancelBtn = (isPending && r.request_id)
+      ? `<button type="button" onclick="cancelSentRequest(${r.request_id})" class="btn-press text-[10px] font-semibold text-slate-500 border border-slate-200 bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 px-2.5 py-0.5 rounded-full active:scale-95 transition-all">Cancel</button>`
       : '';
 
+    const timeInfo = r.responded_at_display
+      ? `<span class="text-[11px] text-slate-400 font-mono">Responded: ${escapeHtml(r.responded_at_display)}</span>`
+      : (r.requested_at_display ? `<span class="text-[11px] text-slate-400 font-mono">Sent: ${escapeHtml(r.requested_at_display)}</span>` : '');
+
+    const unitInfo = r.unit_type
+      ? `${escapeHtml(r.unit_number)} (${escapeHtml(r.unit_type)})`
+      : escapeHtml(r.unit_number);
+
     const remarksHtml = r.owner_remarks
-      ? `<p class="text-[11px] text-slate-600 italic mt-0.5"><span class="font-medium text-slate-500 not-italic">Remarks:</span> "${escapeHtml(r.owner_remarks)}"</p>`
+      ? `<div class="mt-1.5 text-xs text-slate-600 italic bg-slate-50/80 rounded-lg px-2.5 py-1 border border-slate-100">
+           <span class="font-medium text-slate-500 not-italic">Remarks:</span> "${escapeHtml(r.owner_remarks)}"
+         </div>`
       : '';
 
     return `
-      <div class="flex items-start justify-between gap-3 text-xs py-1.5 border-b border-slate-100/70 last:border-0">
-        <div>
-          <span class="text-slate-800 font-semibold">${escapeHtml(r.unit_number)} — ${escapeHtml(r.owner_name)}</span>
-          ${remarksHtml}
+      <div class="bg-white border border-slate-100 rounded-xl p-3 shadow-2xs transition-all">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-sm font-bold text-slate-900">${unitInfo}</span>
+              <span class="text-xs text-slate-300">•</span>
+              <span class="text-xs font-semibold text-slate-600">${escapeHtml(r.owner_name)}</span>
+            </div>
+            ${timeInfo ? `<div class="mt-0.5">${timeInfo}</div>` : ''}
+            ${remarksHtml}
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            ${badgeHtml}
+            ${cancelBtn}
+          </div>
         </div>
-        <span class="flex items-center gap-1.5 shrink-0">
-          <span class="font-semibold px-2 py-0.5 rounded-full border ${cls}">${label}</span>
-          ${cancelBtn}
-        </span>
       </div>
     `;
   }).join('');
+
   box.classList.remove('hidden');
 }
 

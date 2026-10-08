@@ -66,7 +66,10 @@ class Inquiry extends Model {
                 r.owner_remarks,
                 r.requested_at,
                 r.responded_at,
+                DATE_FORMAT(r.requested_at, '%b %d, %Y %h:%i %p') AS requested_at_display,
+                DATE_FORMAT(r.responded_at, '%b %d, %Y %h:%i %p') AS responded_at_display,
                 u.unit_number,
+                u.unit_type,
                 owner.full_name AS owner_name
             FROM owner_approval_requests r
             LEFT JOIN units_table u ON r.unit_id = u.unit_id
@@ -82,13 +85,17 @@ class Inquiry extends Model {
                 $requestsByInquiry[$inqId] = [];
             }
             $requestsByInquiry[$inqId][] = [
-                'request_id'     => (int)$req['request_id'],
-                'unit_number'    => $req['unit_number'] ?? 'Unknown unit',
-                'owner_name'     => $req['owner_name'] ?? 'Unknown owner',
-                'request_status' => (string)($req['request_status'] ?? ''),
-                'owner_remarks'  => (string)($req['owner_remarks'] ?? ''),
-                'requested_at'   => (string)($req['requested_at'] ?? ''),
-                'responded_at'   => (string)($req['responded_at'] ?? ''),
+                'request_id'           => (int)$req['request_id'],
+                'unit_id'              => (int)$req['unit_id'],
+                'unit_number'          => $req['unit_number'] ?? 'Unknown unit',
+                'unit_type'            => $req['unit_type'] ?? '',
+                'owner_name'           => $req['owner_name'] ?? 'Unknown owner',
+                'request_status'       => (string)($req['request_status'] ?? ''),
+                'owner_remarks'        => (string)($req['owner_remarks'] ?? ''),
+                'requested_at'         => (string)($req['requested_at'] ?? ''),
+                'responded_at'         => (string)($req['responded_at'] ?? ''),
+                'requested_at_display' => (string)($req['requested_at_display'] ?? ''),
+                'responded_at_display' => (string)($req['responded_at_display'] ?? ''),
             ];
         }
 
@@ -134,6 +141,8 @@ class Inquiry extends Model {
                 u.unit_number AS approved_unit_number,
                 u.unit_type AS approved_unit_type,
                 u.lease_rate AS approved_lease_rate,
+                u.sqm AS approved_sqm,
+                u.floor_number AS approved_floor_number,
                 owner.full_name AS approved_owner_name
             FROM inquiry_table i
             LEFT JOIN units_table u ON i.approved_unit_id = u.unit_id
@@ -146,7 +155,59 @@ class Inquiry extends Model {
             LIMIT 1
         ";
 
-        return $this->fetchOne($sql, [$inqId]);
+        $row = $this->fetchOne($sql, [$inqId]);
+        if (!$row) return null;
+
+        // Fetch all approved units for this inquiry
+        $approvedSql = "
+            SELECT 
+                r.request_id,
+                r.unit_id,
+                r.unit_owner_id,
+                r.owner_remarks,
+                DATE_FORMAT(r.responded_at, '%b %d, %Y %h:%i %p') AS responded_at_display,
+                u.unit_number,
+                u.unit_type,
+                u.lease_rate,
+                u.sqm,
+                u.floor_number,
+                owner.full_name AS owner_name,
+                owner.email AS owner_email,
+                owner.contact AS owner_contact
+            FROM owner_approval_requests r
+            INNER JOIN units_table u ON r.unit_id = u.unit_id
+            LEFT JOIN users_table owner ON r.unit_owner_id = owner.user_id
+            WHERE r.inq_id = ? AND r.request_status = 'approved'
+            ORDER BY r.responded_at ASC, u.unit_number ASC
+        ";
+        $approvedUnits = $this->fetchAll($approvedSql, [$inqId]);
+        $row['approved_units'] = $approvedUnits;
+
+        // Ensure reservation token exists if any owner has approved
+        $hasApproved = count($approvedUnits) > 0 || strtolower((string)($row['approval_status'] ?? '')) === 'approved';
+        if ($hasApproved && empty($row['reservation_token'])) {
+            $newToken = bin2hex(random_bytes(32));
+            $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
+            $this->execute(
+                "UPDATE inquiry_table SET approval_status = 'approved', reservation_token = ?, reservation_token_expires_at = ? WHERE inq_id = ?",
+                [$newToken, $expiresAt, $inqId]
+            );
+            $row['reservation_token'] = $newToken;
+            $row['approval_status'] = 'approved';
+        }
+
+        // If approved_unit_number wasn't joined via approved_unit_id, populate from the first approved unit
+        if (empty($row['approved_unit_number']) && count($approvedUnits) > 0) {
+            $first = $approvedUnits[0];
+            $row['approved_unit_number'] = $first['unit_number'];
+            $row['approved_unit_type']   = $first['unit_type'];
+            $row['approved_lease_rate']  = $first['lease_rate'];
+            $row['approved_sqm']         = $first['sqm'];
+            $row['approved_floor_number']= $first['floor_number'];
+            $row['approved_owner_name']  = $first['owner_name'];
+        }
+
+        return $row;
     }
 
     /**
@@ -169,16 +230,17 @@ class Inquiry extends Model {
             return ['success' => false, 'error' => 'Inquiry not found.'];
         }
 
-        // Auto-append reservation token link if approved
+        // Auto-append reservation token link if approved and not already included
         if (
             strtolower((string)($inquiry['approval_status'] ?? '')) === 'approved' &&
             !empty($inquiry['reservation_token'])
         ) {
+            $token = (string)$inquiry['reservation_token'];
             $baseUrl = rtrim((string)env('APP_URL', 'http://localhost/Zeppelin-Suites'), '/');
-            $reservationLink = "{$baseUrl}/reservation?token=" . urlencode((string)$inquiry['reservation_token']);
+            $reservationLink = "{$baseUrl}/reservation?token=" . urlencode($token);
 
-            if (strpos($emailBody, $reservationLink) === false) {
-                $emailBody .= "\n\nReservation Form Link:\n" . $reservationLink;
+            if (strpos($emailBody, $token) === false) {
+                $emailBody .= "\n\nPlease proceed to finalize your reservation at the link below:\n" . $reservationLink;
             }
         }
 
@@ -232,7 +294,7 @@ class Inquiry extends Model {
             $mail->Host = defined('SMTP_HOST') ? SMTP_HOST : (string)env('SMTP_HOST', 'smtp.gmail.com');
             $mail->SMTPAuth = true;
             $mail->Username = $username;
-            $mail->Password = $password;
+            $mail->Password = str_replace(' ', '', (string)$password);
             $port = defined('SMTP_PORT') ? (int)SMTP_PORT : (int)env('SMTP_PORT', 587);
             $mail->Port = $port;
             $mail->SMTPSecure = ($port === 465)
@@ -678,7 +740,10 @@ class Inquiry extends Model {
                     r.owner_remarks,
                     r.requested_at,
                     r.responded_at,
+                    DATE_FORMAT(r.requested_at, '%b %d, %Y %h:%i %p') AS requested_at_display,
+                    DATE_FORMAT(r.responded_at, '%b %d, %Y %h:%i %p') AS responded_at_display,
                     u.unit_number,
+                    u.unit_type,
                     owner.full_name AS owner_name
                 FROM owner_approval_requests r
                 LEFT JOIN units_table u ON r.unit_id = u.unit_id
@@ -788,6 +853,69 @@ class Inquiry extends Model {
     }
 
     /**
+     * Assign a specific approved unit to an inquiry for reservation.
+     */
+    public function assignApprovedUnit(int $inqId, int $unitId): array {
+        if ($inqId <= 0 || $unitId <= 0) {
+            return ['success' => false, 'message' => 'Invalid parameters.'];
+        }
+
+        $this->db->beginTransaction();
+
+        try {
+            // Check that this unit has an approved request for this inquiry
+            $checkSql = "
+                SELECT r.request_id, r.request_status, r.owner_remarks, u.unit_number, u.unit_type, u.lease_rate
+                FROM owner_approval_requests r
+                LEFT JOIN units_table u ON r.unit_id = u.unit_id
+                WHERE r.inq_id = ? AND r.unit_id = ? AND r.request_status = 'approved'
+                LIMIT 1
+            ";
+            $req = $this->fetchOne($checkSql, [$inqId, $unitId]);
+            if (!$req) {
+                $this->db->rollBack();
+                return ['success' => false, 'message' => 'The selected unit has not been approved by its owner.'];
+            }
+
+            // Fetch current inquiry token if already present
+            $inq = $this->fetchOne("SELECT reservation_token, approval_approved_at FROM inquiry_table WHERE inq_id = ?", [$inqId]);
+            $token = !empty($inq['reservation_token']) ? $inq['reservation_token'] : bin2hex(random_bytes(32));
+            $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
+
+            $updateSql = "
+                UPDATE inquiry_table
+                SET approval_status = 'approved',
+                    approved_unit_id = ?,
+                    owner_remarks = ?,
+                    reservation_token = ?,
+                    reservation_token_expires_at = ?,
+                    approval_approved_at = COALESCE(approval_approved_at, NOW())
+                WHERE inq_id = ?
+            ";
+            $this->execute($updateSql, [$unitId, $req['owner_remarks'] ?? '', $token, $expiresAt, $inqId]);
+
+            $this->db->commit();
+
+            $approvedAtRow = $this->fetchOne("SELECT DATE_FORMAT(approval_approved_at, '%b %d, %Y %h:%i %p') AS approved_at_display FROM inquiry_table WHERE inq_id = ?", [$inqId]);
+
+            return [
+                'success'              => true,
+                'message'              => 'Unit ' . ($req['unit_number'] ?? '') . ' assigned successfully.',
+                'approved_unit'        => $req['unit_number'] ?? '',
+                'approved_unit_id'     => $unitId,
+                'approved_at'          => $approvedAtRow['approved_at_display'] ?? date('M d, Y h:i A'),
+                'owner_remarks'        => $req['owner_remarks'] ?? '',
+                'approval_status'      => 'approved',
+            ];
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            return ['success' => false, 'message' => 'Error assigning unit: ' . $e->getMessage()];
+        }
+    }
+
+    /**
      * Create a new public visitor inquiry submitted from the contact form.
      */
     public function createPublicInquiry(array $data): array {
@@ -798,6 +926,9 @@ class Inquiry extends Model {
         $preferredUnit = !empty($data['Preferred_unit_id']) ? trim((string)$data['Preferred_unit_id']) : null;
         $preferredMoveIn = !empty($data['preferred_move_in_time']) ? trim((string)$data['preferred_move_in_time']) : null;
         $leaseDuration = !empty($data['lease_duration']) ? trim((string)$data['lease_duration']) : null;
+        if ($leaseDuration !== null && (stripos($leaseDuration, 'longer') !== false || stripos($leaseDuration, '3 year') !== false)) {
+            $leaseDuration = '1 year';
+        }
         $message = trim((string)($data['Message'] ?? $data['message'] ?? ''));
 
         if ($senderName === '' || $senderEmail === '' || $senderContact === '' || $inquiryType === '') {

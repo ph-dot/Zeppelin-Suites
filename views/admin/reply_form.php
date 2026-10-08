@@ -31,6 +31,57 @@ $message = (string)($inquiry['message'] ?? '—');
 $status = strtolower((string)($inquiry['status'] ?? 'pending'));
 $approval_status = strtolower((string)($inquiry['approval_status'] ?? 'not_requested'));
 
+$approved_units = $inquiry['approved_units'] ?? [];
+$approved_count = count($approved_units);
+
+$formatContact = function(array $unit): string {
+    $parts = [];
+    if (!empty($unit['owner_contact'])) {
+        $parts[] = trim((string)$unit['owner_contact']);
+    }
+    if (!empty($unit['owner_email'])) {
+        $parts[] = trim((string)$unit['owner_email']);
+    }
+    return !empty($parts) ? implode(' • ', $parts) : 'Contact via management';
+};
+
+$formatRate = function($val): string {
+    if ($val === null || $val === '' || (float)$val <= 0) return 'To be confirmed';
+    return replyPeso($val);
+};
+
+$formatFloor = function($floorNum, ?string $unitNumber = null): string {
+    $num = (int)$floorNum;
+    if ($num <= 0 && $unitNumber) {
+        if (preg_match('/[A-Za-z]?(\d)/', $unitNumber, $m)) {
+            $num = (int)$m[1];
+        }
+    }
+    if ($num <= 0) return 'Standard Floor';
+    $titles = [
+        1 => '1st Floor',
+        2 => '2nd Floor',
+        3 => '3rd Floor',
+        4 => '4th Floor',
+        5 => '5th Floor',
+        6 => '6th Floor',
+        7 => '7th Floor',
+        8 => '8th Floor',
+        9 => '9th Floor',
+        10 => '10th Floor (Penthouse)'
+    ];
+    return $titles[$num] ?? "Floor {$num}";
+};
+
+$formatSqm = function($sqm): string {
+    $val = (float)$sqm;
+    if ($val <= 0) return 'Standard Area';
+    return number_format($val, 2) . ' SQM';
+};
+
+$reservation_token = (string)($inquiry['reservation_token'] ?? '');
+$reservation_link = $reservation_token ? "{$baseUrl}/reservation?token=" . urlencode($reservation_token) : "{$baseUrl}/reservation";
+
 $approved_unit_number = (string)($inquiry['approved_unit_number'] ?? '');
 $approved_unit_type = (string)($inquiry['approved_unit_type'] ?? '');
 $approved_owner_name = (string)($inquiry['approved_owner_name'] ?? '');
@@ -39,9 +90,17 @@ $approved_at = (string)($inquiry['approved_at_display'] ?? '');
 
 $avatar = strtoupper(substr(trim($sender_name), 0, 1)) ?: '?';
 
-$unit_display = $approval_status === 'approved'
-    ? ($approved_unit_number ? "Unit {$approved_unit_number} ({$approved_unit_type})" : 'Approved Unit')
-    : ($preferred_unit ?: '—');
+if ($approved_count > 1) {
+    $unit_nums = array_map(fn($u) => 'Unit ' . ($u['unit_number'] ?? ''), $approved_units);
+    $unit_display = implode(', ', $unit_nums) . " ({$approved_count} Approved Units)";
+} elseif ($approved_count === 1) {
+    $single = $approved_units[0];
+    $unit_display = "Unit {$single['unit_number']} ({$single['unit_type']})";
+} elseif ($approved_unit_number) {
+    $unit_display = "Unit {$approved_unit_number} ({$approved_unit_type})";
+} else {
+    $unit_display = ($preferred_unit ?: '—');
+}
 
 $owner_display = $approved_owner_name ?: 'Pending Assignment';
 $rate_display = $approved_rate !== null ? replyPeso($approved_rate) : 'To be confirmed';
@@ -57,11 +116,29 @@ $reply_subject = "Update on your inquiry with Zeppelin Suites - " . ($sender_nam
 $email_body = "Dear " . ($sender_name ?: 'Client') . ",\n\n";
 $email_body .= "Thank you for contacting Zeppelin Suites. We have received your inquiry regarding our properties.\n\n";
 
-if ($approval_status === 'approved') {
-    $email_body .= "Great news! Your request for " . ($unit_display ?: 'the selected unit') . " has been approved by the unit owner.\n\n";
-    $email_body .= "Unit Summary:\n";
-    $email_body .= "• Unit: " . $unit_display . "\n";
-    $email_body .= "• Monthly Rate: " . $rate_display . "\n";
+if ($approval_status === 'approved' && $approved_count > 1) {
+    $email_body .= "Great news! The following units have been approved by their owners and match your inquiry:\n\n";
+    $email_body .= "Available Units:\n";
+    foreach ($approved_units as $idx => $u) {
+        $optNum = $idx + 1;
+        $uNum = $u['unit_number'] ?? 'Unit';
+        $uType = $u['unit_type'] ?? '';
+        $uTitle = "Unit {$uNum}" . ($uType ? " ({$uType})" : '');
+        $uRate = $formatRate($u['lease_rate'] ?? null);
+        $uFloor = $formatFloor($u['floor_number'] ?? null, $uNum);
+        $uSqm = $formatSqm($u['sqm'] ?? null);
+        $uOwner = !empty($u['owner_name']) ? $u['owner_name'] : 'Assigned Owner';
+        $uContact = $formatContact($u);
+
+        $email_body .= "Option {$optNum}: {$uTitle}\n";
+        $email_body .= "• Floor: {$uFloor}\n";
+        $email_body .= "• Floor Area: {$uSqm}\n";
+        $email_body .= "• Owner: {$uOwner}\n";
+        $email_body .= "• Owner Contact: {$uContact}\n";
+        $email_body .= "• Monthly Rate: {$uRate}\n\n";
+    }
+
+    $email_body .= "Inquiry Details:\n";
     if ($preferred_move_in_time && $preferred_move_in_time !== '—') {
         $email_body .= "• Move-in Date: " . $preferred_move_in_time . "\n";
     }
@@ -69,10 +146,48 @@ if ($approval_status === 'approved') {
         $email_body .= "• Lease Term: " . $lease_duration . "\n";
     }
     $email_body .= "\n";
-    if (!empty($inquiry['reservation_token'])) {
-        $email_body .= "Please proceed to finalize your reservation at the link below:\n";
-        $email_body .= "{$baseUrl}/reservation?token=" . urlencode((string)$inquiry['reservation_token']) . "\n\n";
+
+    $email_body .= "These are all the available units that match your inquiry. If you want to reserve, the link is open. Please proceed to finalize your reservation at the link below:\n";
+    $email_body .= "{$reservation_link}\n\n";
+} elseif ($approval_status === 'approved' || $approved_count === 1) {
+    $single = !empty($approved_units) ? $approved_units[0] : [
+        'unit_number' => $approved_unit_number,
+        'unit_type' => $approved_unit_type,
+        'lease_rate' => $approved_rate,
+        'sqm' => $inquiry['approved_sqm'] ?? null,
+        'floor_number' => $inquiry['approved_floor_number'] ?? null,
+        'owner_name' => $approved_owner_name,
+        'owner_contact' => '',
+        'owner_email' => '',
+    ];
+
+    $uNum = $single['unit_number'] ?? ($approved_unit_number ?: 'Unit');
+    $uType = $single['unit_type'] ?? ($approved_unit_type ?: '');
+    $uTitle = "Unit {$uNum}" . ($uType ? " ({$uType})" : '');
+    $uRate = $formatRate($single['lease_rate'] ?? $approved_rate);
+    $uFloor = $formatFloor($single['floor_number'] ?? ($inquiry['approved_floor_number'] ?? null), $uNum);
+    $uSqm = $formatSqm($single['sqm'] ?? ($inquiry['approved_sqm'] ?? null));
+    $uOwner = !empty($single['owner_name']) ? $single['owner_name'] : ($approved_owner_name ?: 'Unit Owner');
+    $uContact = $formatContact($single);
+
+    $email_body .= "Great news! Your request for {$uTitle} has been approved by the unit owner.\n\n";
+    $email_body .= "Unit Summary:\n";
+    $email_body .= "• Unit: {$uTitle}\n";
+    $email_body .= "• Floor: {$uFloor}\n";
+    $email_body .= "• Floor Area: {$uSqm}\n";
+    $email_body .= "• Owner: {$uOwner}\n";
+    $email_body .= "• Owner Contact: {$uContact}\n";
+    $email_body .= "• Monthly Rate: {$uRate}\n";
+    if ($preferred_move_in_time && $preferred_move_in_time !== '—') {
+        $email_body .= "• Move-in Date: " . $preferred_move_in_time . "\n";
     }
+    if ($lease_duration && $lease_duration !== '—') {
+        $email_body .= "• Lease Term: " . $lease_duration . "\n";
+    }
+    $email_body .= "\n";
+
+    $email_body .= "This is the available unit that matches your inquiry. If you want to reserve, the link is open. Please proceed to finalize your reservation at the link below:\n";
+    $email_body .= "{$reservation_link}\n\n";
 } else {
     $email_body .= "We are currently reviewing your request for " . ($unit_display ?: 'our suites') . " and our team is actively coordinating availability.\n\n";
 }
@@ -182,7 +297,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
             <p class="font-bold text-slate-800 mt-1"><?= e($inquiry_type) ?></p>
           </div>
           <div>
-            <span class="text-slate-400 uppercase font-semibold">Assigned Unit</span>
+            <span class="text-slate-400 uppercase font-semibold">Unit Preference</span>
             <p class="font-bold text-slate-800 mt-1"><?= e($unit_display) ?></p>
           </div>
           <div>
@@ -190,6 +305,44 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
             <p class="font-bold text-slate-800 mt-1"><?= e($lease_display) ?></p>
           </div>
         </div>
+
+        <?php if (!empty($approved_units)): ?>
+          <div class="pt-3 border-t border-slate-100">
+            <div class="flex items-center justify-between mb-2.5">
+              <span class="text-xs text-slate-400 uppercase font-semibold">
+                <?= count($approved_units) > 1 ? 'Approved Units Matching Inquiry (' . count($approved_units) . ')' : 'Approved Unit Details' ?>
+              </span>
+              <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                <?= count($approved_units) > 1 ? count($approved_units) . ' Owners Approved' : 'Owner Approved' ?>
+              </span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 <?= count($approved_units) > 2 ? 'lg:grid-cols-3' : '' ?> gap-3">
+              <?php foreach ($approved_units as $unit): 
+                $cStr = $formatContact($unit);
+              ?>
+                <div class="bg-emerald-50/40 border border-emerald-200/80 rounded-xl p-3.5 space-y-1.5 shadow-2xs">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-bold text-slate-900 truncate">
+                      Unit <?= e($unit['unit_number']) ?> (<?= e($unit['unit_type']) ?>)
+                    </span>
+                    <span class="text-xs font-bold text-emerald-700 shrink-0">
+                      <?= $formatRate($unit['lease_rate']) ?>/mo
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-1.5 text-[11px] text-slate-600 font-medium">
+                    <span class="px-2 py-0.5 rounded-md bg-white border border-emerald-100"><?= e($formatFloor($unit['floor_number'] ?? null, $unit['unit_number'])) ?></span>
+                    <span class="px-2 py-0.5 rounded-md bg-white border border-emerald-100"><?= e($formatSqm($unit['sqm'] ?? null)) ?></span>
+                  </div>
+                  <p class="text-xs text-slate-600"><span class="font-medium text-slate-400">Owner:</span> <?= e($unit['owner_name'] ?: 'Unit Owner') ?></p>
+                  <p class="text-[11px] text-slate-500 font-mono"><span class="font-medium text-slate-400 font-sans">Contact:</span> <?= e($cStr) ?></p>
+                  <?php if (!empty($unit['owner_remarks'])): ?>
+                    <p class="text-[11px] text-slate-600 italic bg-white/80 rounded px-2 py-0.5 border border-emerald-100 mt-1">"<?= e($unit['owner_remarks']) ?>"</p>
+                  <?php endif; ?>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          </div>
+        <?php endif; ?>
 
         <div>
           <span class="text-xs text-slate-400 uppercase font-semibold">Client Inquiry Message</span>
@@ -219,7 +372,7 @@ unset($_SESSION['success_message'], $_SESSION['error_message']);
               <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Message Content</label>
               <button type="button" onclick="copyReplyText()" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors">Copy message text</button>
             </div>
-            <textarea id="emailBody" name="email_body" rows="12" required class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 leading-relaxed bg-slate-50 focus:outline-none focus:border-slate-900 focus:bg-white transition-colors"><?= e($email_body) ?></textarea>
+            <textarea id="emailBody" name="email_body" rows="15" required class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 leading-relaxed bg-slate-50 focus:outline-none focus:border-slate-900 focus:bg-white transition-colors font-sans"><?= e($email_body) ?></textarea>
           </div>
         </div>
 

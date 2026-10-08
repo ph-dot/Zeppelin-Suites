@@ -112,6 +112,7 @@ $router->post('/admin/inquiries/reply', [InquiryController::class, 'sendReply'],
 $router->get('/admin/inquiries/check-units', [InquiryController::class, 'checkUnits'], ['admin']);
 $router->post('/admin/inquiries/send-approval', [InquiryController::class, 'sendApproval'], ['admin']);
 $router->post('/admin/inquiries/cancel-approval', [InquiryController::class, 'cancelApproval'], ['admin']);
+$router->post('/admin/inquiries/assign-unit', [InquiryController::class, 'assignUnit'], ['admin']);
 
 // Legacy API aliases for inquiry unit approval
 $router->get('/ActionsAP/checkAvailableUnits.php', [InquiryController::class, 'checkUnits'], ['admin']);
@@ -124,6 +125,10 @@ $router->post('/adminPages/ActionsAP/cancelApprovalRequest.php', [InquiryControl
 $router->get('/admin/reservations', [ReservationController::class, 'index'], ['admin']);
 $router->get('/admin/reservations/view', [ReservationController::class, 'show'], ['admin']);
 $router->post('/admin/reservations/handover', [ReservationController::class, 'handover'], ['admin']);
+$router->post('/admin/reservations/confirm-signing-date', [ReservationController::class, 'confirmSigningDate'], ['admin']);
+$router->post('/admin/reservations/lease-signing', [ReservationController::class, 'updateLeaseSigning'], ['admin']);
+$router->post('/adminPages/ActionsAP/completeLeaseSigning.php', [ReservationController::class, 'updateLeaseSigning'], ['admin']);
+$router->post('/ActionsAP/completeLeaseSigning.php', [ReservationController::class, 'updateLeaseSigning'], ['admin']);
 
 $router->get('/admin/residents', [ResidentController::class, 'index'], ['admin']);
 $router->get('/admin/residents/view', [ResidentController::class, 'show'], ['admin']);
@@ -163,12 +168,19 @@ $router->get('/owner', [UnitOwnerController::class, 'overview'], ['unit owner'])
 $router->get('/owner/overview', [UnitOwnerController::class, 'overview'], ['unit owner']);
 $router->get('/owner/units', [UnitOwnerController::class, 'units'], ['unit owner']);
 $router->get('/owner/units/view', [UnitOwnerController::class, 'showUnit'], ['unit owner']);
+$router->post('/owner/units/update', [UnitOwnerController::class, 'updateUnit'], ['unit owner']);
+$router->post('/unitOwnerPages/ActionsUOP/updateUnitDetails.php', [UnitOwnerController::class, 'updateUnit'], ['unit owner']);
+$router->post('/ActionsUOP/updateUnitDetails.php', [UnitOwnerController::class, 'updateUnit'], ['unit owner']);
 $router->get('/owner/inquiries', [UnitOwnerController::class, 'inquiries'], ['unit owner']);
 $router->post('/owner/inquiries/respond', [UnitOwnerController::class, 'respondApproval'], ['unit owner']);
 $router->post('/unitOwnerPages/ActionsUOP/respondApprovalRequest.php', [UnitOwnerController::class, 'respondApproval'], ['unit owner']);
 $router->post('/ActionsUOP/respondApprovalRequest.php', [UnitOwnerController::class, 'respondApproval'], ['unit owner']);
 $router->get('/owner/reservations', [UnitOwnerController::class, 'reservations'], ['unit owner']);
 $router->get('/owner/reservations/view', [UnitOwnerController::class, 'showReservation'], ['unit owner']);
+$router->post('/owner/reservations/confirm-signing-date', [UnitOwnerController::class, 'confirmSigningDate'], ['unit owner']);
+$router->post('/owner/reservations/lease-signing', [UnitOwnerController::class, 'updateLeaseSigning'], ['unit owner']);
+$router->post('/unitOwnerPages/ActionsUOP/completeOwnerLeaseSigning.php', [UnitOwnerController::class, 'updateLeaseSigning'], ['unit owner']);
+$router->post('/ActionsUOP/completeOwnerLeaseSigning.php', [UnitOwnerController::class, 'updateLeaseSigning'], ['unit owner']);
 $router->get('/owner/booking-calendar', [UnitOwnerController::class, 'calendar'], ['unit owner']);
 $router->get('/owner/booking-calendar/data', [UnitOwnerController::class, 'calendarData'], ['unit owner']);
 $router->get('/owner/tenants', [UnitOwnerController::class, 'tenants'], ['unit owner']);

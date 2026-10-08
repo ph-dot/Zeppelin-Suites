@@ -842,7 +842,7 @@ async function handleUnitUpdate(e) {
 
   try {
     const formData = new FormData(form);
-    const response = await fetch('<?= htmlspecialchars($baseUrl) ?>/unitOwnerPages/ActionsUOP/updateUnitDetails.php', {
+    const response = await fetch('<?= htmlspecialchars($baseUrl) ?>/owner/units/update', {
       method: 'POST',
       body: formData
     });

@@ -156,21 +156,50 @@ $ownerNameDisplay = !empty($res['owner_name']) ? $res['owner_name'] : $ownerName
 $ownerEmailDisplay = !empty($res['owner_email']) ? $res['owner_email'] : '—';
 $ownerPhoneDisplay = !empty($res['owner_contact']) ? $res['owner_contact'] : '—';
 
-$isFlexibleSigning = !empty($res['is_flexible_signing']) && $res['is_flexible_signing'] == 1;
-$signingDateDisplay = 'Not Specified';
-if ($isFlexibleSigning) {
-    $signingDateDisplay = 'Flexible';
-} elseif (!empty($res['lease_signing_date']) && $res['lease_signing_date'] !== '0000-00-00') {
+$isFlexibleSigning = !empty($res['is_flexible_signing']) && (int)$res['is_flexible_signing'] === 1;
+$confirmedSigningDate = !empty($res['confirmed_signing_date']) && $res['confirmed_signing_date'] !== '0000-00-00'
+    ? (string)$res['confirmed_signing_date']
+    : null;
+
+// Parse applicant's candidate/preferred dates
+$preferredDatesList = [];
+if (!empty($res['lease_signing_date']) && $res['lease_signing_date'] !== '0000-00-00') {
     $rawDates = explode(',', (string)$res['lease_signing_date']);
-    $formattedList = [];
     foreach ($rawDates as $rawD) {
         $trimmed = trim($rawD);
         if (!empty($trimmed) && $trimmed !== '0000-00-00') {
             $ts = strtotime($trimmed);
-            $formattedList[] = $ts ? date('F j, Y', $ts) : htmlspecialchars($trimmed);
+            if ($ts) {
+                $preferredDatesList[] = [
+                    'date'      => date('Y-m-d', $ts),
+                    'day_name'  => date('D', $ts),
+                    'day_full'  => date('l', $ts),
+                    'month_day' => date('M j', $ts),
+                    'year'      => date('Y', $ts),
+                    'full_text' => date('F j, Y', $ts),
+                ];
+            }
         }
     }
-    $signingDateDisplay = !empty($formattedList) ? implode(' / ', $formattedList) : htmlspecialchars((string)$res['lease_signing_date']);
+}
+
+$hasConfirmedSchedule = !empty($confirmedSigningDate);
+$confirmedDateTs = $hasConfirmedSchedule ? strtotime($confirmedSigningDate) : null;
+$confirmedDateDisplay = $confirmedDateTs ? date('F j, Y', $confirmedDateTs) : null;
+$confirmedDateDayName = $confirmedDateTs ? date('l', $confirmedDateTs) : null;
+
+if ($hasConfirmedSchedule) {
+    $signingDateDisplay = $confirmedDateDisplay;
+} elseif ($isFlexibleSigning) {
+    $signingDateDisplay = 'Flexible (Pending Schedule)';
+} elseif (!empty($preferredDatesList)) {
+    if (count($preferredDatesList) === 1) {
+        $signingDateDisplay = $preferredDatesList[0]['full_text'];
+    } else {
+        $signingDateDisplay = count($preferredDatesList) . ' Proposed Dates (Pending Selection)';
+    }
+} else {
+    $signingDateDisplay = 'Not Specified';
 }
 
 $signingStatus = !empty($res['lease_signing_status']) ? $res['lease_signing_status'] : 'Pending Signing';
@@ -668,6 +697,11 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
                     <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                     Signing Completed
                   </span>
+                <?php elseif ($hasConfirmedSchedule): ?>
+                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    Date Confirmed
+                  </span>
                 <?php else: ?>
                   <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
                     <span class="w-2 h-2 rounded-full bg-amber-500"></span>
@@ -679,24 +713,86 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
 
             <!-- Schedule & Details -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+              
+              <!-- Left Box: Chosen Lease Signing Date -->
               <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-5 space-y-4">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Chosen Lease Signing Date</p>
-                <div>
-                  <h3 class="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight"><?= clean($signingDateDisplay) ?></h3>
-                  <p class="text-xs text-slate-500 mt-1"><?= $isFlexibleSigning ? 'Can be scheduled anytime before move-in.' : 'Confirmed signing date selected during reservation.' ?></p>
+                <div class="flex items-center justify-between">
+                  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Chosen Lease Signing Date</p>
+                  <?php if ($hasConfirmedSchedule): ?>
+                    <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                      Confirmed
+                    </span>
+                  <?php endif; ?>
                 </div>
-                <div class="pt-3 border-t border-slate-200/70 grid grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <span class="text-slate-400 block mb-0.5">Move-in Date:</span>
-                    <span class="font-bold text-slate-900"><?= clean($moveInDisplay) ?></span>
+
+                <!-- Confirmed View -->
+                <div id="confirmedDateView" class="<?= $hasConfirmedSchedule ? '' : 'hidden' ?>">
+                  <div class="flex items-baseline gap-2 flex-wrap">
+                    <h3 class="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight">
+                      <?= clean($confirmedDateDisplay) ?>
+                    </h3>
+                    <button type="button" onclick="showDateChooser(true)" class="text-xs font-semibold text-blue-600 hover:underline">
+                      Change
+                    </button>
                   </div>
-                  <div>
-                    <span class="text-slate-400 block mb-0.5">Payment Method:</span>
-                    <span class="font-bold text-slate-900"><?= clean($paymentMethod) ?></span>
+                  <p class="text-xs text-slate-500 mt-1">Confirmed signing date with tenant.</p>
+                </div>
+
+                <!-- Select Date View (if not confirmed or changing) -->
+                <div id="selectDateView" class="<?= $hasConfirmedSchedule ? 'hidden' : '' ?> space-y-2.5">
+                  <label class="block text-xs font-medium text-slate-600">
+                    <?= !empty($preferredDatesList) && count($preferredDatesList) > 1 ? "Select signing date from tenant's options:" : "Choose lease signing date:" ?>
+                  </label>
+
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <?php if (!empty($preferredDatesList)): ?>
+                      <select id="signingDateSelect" onchange="onDateSelectChanged(this.value)" class="text-xs sm:text-sm font-semibold bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900">
+                        <?php foreach ($preferredDatesList as $p): ?>
+                          <option value="<?= $p['date'] ?>" <?= ($p['date'] === ($confirmedSigningDate ?? '')) ? 'selected' : '' ?>>
+                            <?= $p['full_text'] ?> (<?= $p['day_name'] ?>)
+                          </option>
+                        <?php endforeach; ?>
+                        <option value="custom">Other date...</option>
+                      </select>
+                    <?php endif; ?>
+
+                    <input
+                      type="date"
+                      id="customSigningDateInput"
+                      min="<?= date('Y-m-d') ?>"
+                      <?= !empty($res['move_in_date']) && $res['move_in_date'] !== '0000-00-00' ? 'max="' . htmlspecialchars($res['move_in_date']) . '"' : '' ?>
+                      value="<?= htmlspecialchars($confirmedSigningDate ?? ($preferredDatesList[0]['date'] ?? '')) ?>"
+                      class="<?= !empty($preferredDatesList) ? 'hidden ' : '' ?>text-xs sm:text-sm font-semibold bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                    >
+
+                    <button
+                      type="button"
+                      id="btnSaveSimpleDate"
+                      onclick="saveSimpleSigningDate()"
+                      class="btn-press px-4 py-2 bg-[#0f172a] hover:bg-[#1e293b] active:scale-95 text-white text-xs font-bold rounded-xl transition-all shrink-0"
+                    >
+                      Save Date
+                    </button>
+
+                    <?php if ($hasConfirmedSchedule): ?>
+                      <button type="button" onclick="showDateChooser(false)" class="text-xs text-slate-400 hover:text-slate-600 px-1">
+                        Cancel
+                      </button>
+                    <?php endif; ?>
                   </div>
+
+                  <p class="text-[11px] text-slate-400">
+                    <?= $isFlexibleSigning ? 'Tenant requested flexible signing before move-in.' : 'Must be scheduled on or before move-in date.' ?>
+                  </p>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200/70 text-xs">
+                  <span class="text-slate-400 block mb-0.5">Move-in Date:</span>
+                  <span class="font-bold text-slate-900"><?= clean($moveInDisplay) ?></span>
                 </div>
               </div>
 
+              <!-- Right Box: Signer & Unit Details -->
               <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-5 space-y-4">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Signer &amp; Unit Details</p>
                 <div class="space-y-2.5 text-xs sm:text-sm">
@@ -714,6 +810,7 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
                   </div>
                 </div>
               </div>
+
             </div>
 
             <!-- Signing Action Bar -->
@@ -730,7 +827,7 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
                     </p>
                   </div>
                 </div>
-                <button type="button" onclick="openSigningModal('reset')" class="btn-press text-xs font-semibold text-slate-500 hover:text-slate-800 bg-white border border-slate-200 rounded-xl px-4 py-2 hover:bg-slate-50 shadow-2xs transition-all">
+                <button type="button" onclick="openSigningModal('reset')" class="btn-press text-xs font-semibold text-slate-500 hover:text-slate-800 bg-white border border-slate-200 rounded-xl px-4 py-2 hover:bg-slate-50 shadow-2xs transition-all shrink-0">
                   Reset Status
                 </button>
               </div>
@@ -742,7 +839,7 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
                     Once the lease contract agreement has been formally signed, click below to mark the signing appointment as complete.
                   </p>
                 </div>
-                <button type="button" onclick="openSigningModal('complete')" class="btn-press px-5 py-2.5 bg-[#0f172a] hover:bg-[#1e293b] active:scale-95 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md flex items-center gap-2 transition-all">
+                <button type="button" onclick="openSigningModal('complete')" class="btn-press px-5 py-2.5 bg-[#0f172a] hover:bg-[#1e293b] active:scale-95 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md flex items-center gap-2 transition-all shrink-0">
                   <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                   Complete Lease Signing
                 </button>
@@ -1384,6 +1481,78 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
     });
   }
 
+  function showDateChooser(show) {
+    const confirmedView = document.getElementById('confirmedDateView');
+    const selectView = document.getElementById('selectDateView');
+    if (show) {
+      if (confirmedView) confirmedView.classList.add('hidden');
+      if (selectView) selectView.classList.remove('hidden');
+    } else {
+      if (confirmedView) confirmedView.classList.remove('hidden');
+      if (selectView) selectView.classList.add('hidden');
+    }
+  }
+
+  function onDateSelectChanged(val) {
+    const customInput = document.getElementById('customSigningDateInput');
+    if (!customInput) return;
+    if (val === 'custom') {
+      customInput.classList.remove('hidden');
+      customInput.focus();
+    } else {
+      customInput.classList.add('hidden');
+      customInput.value = val;
+    }
+  }
+
+  async function saveSimpleSigningDate() {
+    const select = document.getElementById('signingDateSelect');
+    const customInput = document.getElementById('customSigningDateInput');
+    let chosenDate = select ? select.value : '';
+    if (chosenDate === 'custom' || !select) {
+      chosenDate = customInput ? customInput.value : '';
+    }
+
+    if (!chosenDate) {
+      alert('Please select a signing date.');
+      return;
+    }
+
+    const btn = document.getElementById('btnSaveSimpleDate');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('reservation_id', currentReservationId);
+      formData.append('confirmed_date', chosenDate);
+
+      const res = await fetch(appBaseUrl + '/owner/reservations/confirm-signing-date', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.reload();
+      } else {
+        alert(data.message || 'Failed to save date.');
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Save Date';
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error while saving signing date.');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Save Date';
+      }
+    }
+  }
+
   function openSigningModal(action) {
     const modal = document.getElementById('leaseSigningModal');
     const actionInput = document.getElementById('signingActionInput');
@@ -1434,7 +1603,7 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
       formData.append('action', action);
       formData.append('remarks', remarks);
 
-      const res = await fetch(appBaseUrl + '/unitOwnerPages/ActionsUOP/completeOwnerLeaseSigning.php', {
+      const res = await fetch(appBaseUrl + '/owner/reservations/lease-signing', {
         method: 'POST',
         body: formData
       });

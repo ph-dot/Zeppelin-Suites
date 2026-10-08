@@ -300,12 +300,17 @@ tailwind.config = {
                         }
 
                         $hasTenant = (!empty($row['tenant_name']) && $row['tenant_name'] !== 'No Tenant');
-                        $price_value = peso($row['lease_rate'] ?? 0, true);
 
                         $listing_type = strtolower(trim($row['listing_type'] ?? 'for lease'));
-                        if ($listing_type === 'resale' || $status_lower === 'resale') {
+                        $isResale = ($listing_type === 'resale' || $status_lower === 'resale');
+                        if ($isResale) {
+                            $resaleVal = !empty($row['reselling_price']) && (float)$row['reselling_price'] > 0 
+                                ? (float)$row['reselling_price'] 
+                                : (float)($row['lease_rate'] ?? 0);
+                            $price_value = peso($resaleVal, false);
                             $listing_badge_html = '<span class="inline-block text-xs font-semibold px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200">Resale</span>';
                         } else {
+                            $price_value = peso($row['lease_rate'] ?? 0, true);
                             $listing_badge_html = '<span class="inline-block text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200">For Lease</span>';
                         }
                     ?>

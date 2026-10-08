@@ -193,7 +193,6 @@ declare(strict_types=1);
                 <option value="6 months">6 months</option>
                 <option value="1 year">1 year</option>
                 <option value="2 years">2 years</option>
-                <option value="Longer than 2 years">Longer than 2 years</option>
                 <option value="Not sure yet">Not sure yet</option>
               </select>
               <div class="pointer-events-none absolute inset-y-0 right-4 flex items-center">
@@ -364,11 +363,14 @@ declare(strict_types=1);
         } else if (selected === "Buy / Purchase a Unit (Resale)") {
           unitPreferenceContainer.style.display = "block";
           unitPreferenceSelect.disabled = false;
-          preferredMoveInContainer.style.display = "block";
-          preferredMoveInSelect.disabled = false;
+          preferredMoveInContainer.style.display = "none";
+          preferredMoveInSelect.disabled = true;
+          preferredMoveInSelect.value = "";
+          preferredMoveInSelect.classList.remove("border-rose-500");
           leaseDurationContainer.style.display = "none";
           leaseDurationSelect.disabled = true;
           leaseDurationSelect.value = "";
+          leaseDurationSelect.classList.remove("border-rose-500");
         } else {
           unitPreferenceContainer.style.display = "none";
           unitPreferenceSelect.disabled = true;

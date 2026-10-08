@@ -105,4 +105,47 @@ class ReservationController extends Controller {
             'pendingReservations' => $pendingCounts['pending_reservations'],
         ]);
     }
+
+    /**
+     * AJAX endpoint to confirm or set agreed lease signing date (Admin).
+     */
+    public function confirmSigningDate(): void {
+        Middleware::requireRole(['admin']);
+        $this->json([
+            'success' => false, 
+            'message' => 'Only the unit owner is authorized to select and confirm the lease signing appointment date.'
+        ], 403);
+    }
+
+    /**
+     * AJAX endpoint to complete or reset lease signing status (Admin).
+     */
+    public function updateLeaseSigning(): void {
+        $userSession = Middleware::requireRole(['admin']);
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $action = trim((string)$this->getPost('action', 'complete'));
+        $remarks = trim((string)$this->getPost('remarks', ''));
+
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
+            return;
+        }
+
+        $result = $this->reservationModel->updateLeaseSigningStatus(
+            $reservationId,
+            $action,
+            $remarks,
+            (int)$userSession['user_id'],
+            'admin'
+        );
+
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
 }
+

@@ -256,7 +256,10 @@ class UnitOwnerController extends Controller {
         $ownerId = (int)$userSession['user_id'];
 
         $toast = null;
-        $activeSubTab = $this->getQuery('tab', 'profile');
+        $activeSubTab = (string)$this->getQuery('tab', 'profile');
+        if (!in_array($activeSubTab, ['profile', 'payment'], true)) {
+            $activeSubTab = 'profile';
+        }
 
         if ($this->isPost()) {
             $action = (string)$this->getPost('action', '');
@@ -341,4 +344,87 @@ class UnitOwnerController extends Controller {
 
         $this->redirect("{$baseUrl}/owner/inquiries");
     }
+
+    /**
+     * AJAX update of owned unit settings (listing mode, stay category, lease rate, reselling price).
+     */
+    public function updateUnit(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $ownerId = (int)$userSession['user_id'];
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Method not allowed.'], 405);
+            return;
+        }
+
+        $unitId = (int)$this->getPost('unit_id', 0);
+        if ($unitId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid unit ID.'], 400);
+            return;
+        }
+
+        try {
+            $result = $this->ownerModel->updateUnitSettings($ownerId, $unitId, $_POST);
+            $this->json([
+                'success' => true,
+                'message' => 'Unit settings updated successfully!',
+                'data'    => $result,
+            ]);
+        } catch (\Throwable $e) {
+            $this->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * AJAX endpoint to confirm or set agreed lease signing date (Unit Owner).
+     */
+    public function confirmSigningDate(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $ownerId = (int)$userSession['user_id'];
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $date = trim((string)$this->getPost('confirmed_date', ''));
+
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
+            return;
+        }
+
+        $result = $this->ownerModel->confirmSigningDate($ownerId, $reservationId, $date);
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to complete or reset lease signing status (Unit Owner).
+     */
+    public function updateLeaseSigning(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $ownerId = (int)$userSession['user_id'];
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $action = trim((string)$this->getPost('action', 'complete'));
+        $remarks = trim((string)$this->getPost('remarks', ''));
+
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
+            return;
+        }
+
+        $result = $this->ownerModel->updateLeaseSigningStatus($ownerId, $reservationId, $action, $remarks);
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
 }
+

@@ -34,7 +34,7 @@ if (!empty($owner['date_of_birth'])) {
 
 $additionalPhone = !empty($owner['additional_contact']) ? $owner['additional_contact'] : '—';
 $additionalEmail = !empty($owner['additional_email']) ? $owner['additional_email'] : '—';
-$profileTab = $activeSubTab ?? 'profile';
+$profileTab = in_array($activeSubTab ?? 'profile', ['profile', 'payment'], true) ? ($activeSubTab ?? 'profile') : 'profile';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -127,7 +127,7 @@ tailwind.config = {
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 class="text-xl font-bold text-slate-900">My Account</h1>
-          <p class="text-xs text-slate-400 mt-0.5">Manage your personal information, owned units, and maintenance records.</p>
+          <p class="text-xs text-slate-400 mt-0.5">Manage your personal information and payment settings.</p>
         </div>
         <button type="button" onclick="openEditModal()" class="btn-press flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-sm active:scale-95">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -187,14 +187,6 @@ tailwind.config = {
           <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8">
             <div class="flex items-center gap-6 border-b border-slate-100 pb-3">
               <button type="button" id="tabBtn-profile" onclick="setProfileTab('profile', this)" class="profile-tab <?= $profileTab === 'profile' ? 'active' : '' ?> text-sm font-semibold pb-3 whitespace-nowrap">Profile</button>
-              <button type="button" id="tabBtn-units" onclick="setProfileTab('units', this)" class="profile-tab <?= $profileTab === 'units' ? 'active' : '' ?> text-sm font-semibold pb-3 flex items-center gap-2 whitespace-nowrap">
-                Owned Units
-                <span class="text-[11px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full"><?= $unitsCount ?></span>
-              </button>
-              <button type="button" id="tabBtn-request" onclick="setProfileTab('request', this)" class="profile-tab <?= $profileTab === 'request' ? 'active' : '' ?> text-sm font-semibold pb-3 flex items-center gap-2 whitespace-nowrap">
-                Maintenance
-                <span class="text-[11px] font-bold <?= $pendingRequests > 0 ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-700' ?> px-2 py-0.5 rounded-full"><?= $requestsCount ?></span>
-              </button>
               <button type="button" id="tabBtn-payment" onclick="setProfileTab('payment', this)" class="profile-tab <?= $profileTab === 'payment' ? 'active' : '' ?> text-sm font-semibold pb-3 flex items-center gap-2 whitespace-nowrap">
                 Payment QR
                 <?php if (!empty($owner['gcash_QR'])): ?>
@@ -230,110 +222,7 @@ tailwind.config = {
               </dl>
             </div>
 
-            <!-- TAB 2: Owned Units -->
-            <div id="tab-units" class="pt-6 <?= $profileTab === 'units' ? '' : 'hidden' ?>">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-sm font-bold text-slate-900">Owned Units</h3>
-                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-mono"><?= $unitsCount ?> <?= $unitsCount === 1 ? 'Unit' : 'Units' ?></span>
-              </div>
-              <?php if (empty($units)): ?>
-                <div class="p-8 text-center border border-dashed border-slate-200 rounded-2xl">
-                  <p class="text-sm text-slate-500">No units currently registered under your account.</p>
-                </div>
-              <?php else: ?>
-                <div class="rounded-2xl border border-slate-100 overflow-hidden">
-                  <table class="w-full text-sm">
-                    <thead>
-                      <tr class="bg-slate-50/60 border-b border-slate-100 text-slate-400 text-xs font-semibold uppercase tracking-wide text-left">
-                        <th class="px-4 py-3">Unit Number</th>
-                        <th class="px-4 py-3">Type</th>
-                        <th class="px-4 py-3">Floor</th>
-                        <th class="px-4 py-3">Current Tenant</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-50">
-                      <?php foreach ($units as $u): ?>
-                        <tr class="cursor-pointer hover:bg-slate-100/70 transition-colors group"
-                            tabindex="0"
-                            role="link"
-                            title="Click to view details for Unit <?= e($u['unit_number']) ?>"
-                            onclick="window.location.href='<?= htmlspecialchars($baseUrl) ?>/owner/units/view?id=<?= (int)($u['unit_id'] ?? 0) ?>'">
-                          <td class="px-4 py-3.5 font-semibold text-slate-900 group-hover:text-blue-600 transition-colors" style="font-family:'DM Mono',monospace">Unit <?= e($u['unit_number']) ?></td>
-                          <td class="px-4 py-3.5 text-slate-600 font-medium"><?= e($u['unit_type'] ?: 'Standard') ?></td>
-                          <td class="px-4 py-3.5 text-slate-500" style="font-family:'DM Mono',monospace"><?= e($u['floor_number'] ?: '—') ?></td>
-                          <td class="px-4 py-3.5 text-slate-800">
-                            <?php if (!empty($u['current_tenant_name'])): ?>
-                              <span class="font-semibold text-slate-900"><?= e($u['current_tenant_name']) ?></span>
-                            <?php else: ?>
-                              <span class="text-xs text-slate-400 italic">None</span>
-                            <?php endif; ?>
-                          </td>
-                        </tr>
-                      <?php endforeach; ?>
-                    </tbody>
-                  </table>
-                </div>
-              <?php endif; ?>
-            </div>
-
-            <!-- TAB 3: Maintenance Requests -->
-            <div id="tab-request" class="pt-6 <?= $profileTab === 'request' ? '' : 'hidden' ?>">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-sm font-bold text-slate-900">Maintenance Requests</h3>
-                <span class="text-xs font-semibold px-2.5 py-1 rounded-full <?= $pendingRequests > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700' ?> font-mono">
-                  <?= $requestsCount ?> <?= $requestsCount === 1 ? 'Request' : 'Requests' ?>
-                </span>
-              </div>
-              <?php if (empty($maintenance)): ?>
-                <div class="p-8 text-center border border-dashed border-slate-200 rounded-2xl">
-                  <p class="text-sm text-slate-500">No maintenance requests found for your units.</p>
-                </div>
-              <?php else: ?>
-                <div class="overflow-x-auto rounded-2xl border border-slate-100">
-                  <table class="w-full text-sm">
-                    <thead>
-                      <tr class="bg-slate-50/60 border-b border-slate-100 text-slate-400 text-xs font-semibold uppercase tracking-wide text-left">
-                        <th class="px-4 py-3">Unit Number</th>
-                        <th class="px-4 py-3">Issue</th>
-                        <th class="px-4 py-3">Priority</th>
-                        <th class="px-4 py-3">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-50">
-                      <?php foreach ($maintenance as $m): ?>
-                        <?php
-                          $mStatus = strtolower($m['status'] ?? 'pending');
-                          $mStatusClass = match($mStatus) {
-                              'completed', 'resolved' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                              'in progress' => 'bg-blue-50 text-blue-700 border-blue-200',
-                              'cancelled' => 'bg-slate-100 text-slate-500 border-slate-200',
-                              default => 'bg-amber-50 text-amber-700 border-amber-200'
-                          };
-                          $mPriority = strtolower($m['priority'] ?? 'medium');
-                          $mPriorityClass = match($mPriority) {
-                              'urgent', 'high' => 'bg-red-50 text-red-700 border-red-200',
-                              'low' => 'bg-slate-100 text-slate-600 border-slate-200',
-                              default => 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                          };
-                        ?>
-                        <tr class="cursor-pointer hover:bg-slate-100/70 transition-colors group"
-                            tabindex="0"
-                            role="link"
-                            title="Click to view maintenance"
-                            onclick="window.location.href='<?= htmlspecialchars($baseUrl) ?>/owner/maintenance'">
-                          <td class="px-4 py-3.5 font-semibold text-slate-900 group-hover:text-blue-600 transition-colors" style="font-family:'DM Mono',monospace"><?= e($m['unit_number'] ? 'Unit ' . $m['unit_number'] : 'General') ?></td>
-                          <td class="px-4 py-3.5 font-medium text-slate-800"><?= e($m['issue_title'] ?? 'Maintenance Request') ?></td>
-                          <td class="px-4 py-3.5"><span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border <?= $mPriorityClass ?>"><?= e(ucfirst($mPriority)) ?></span></td>
-                          <td class="px-4 py-3.5"><span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border <?= $mStatusClass ?>"><?= e(ucfirst($mStatus)) ?></span></td>
-                        </tr>
-                      <?php endforeach; ?>
-                    </tbody>
-                  </table>
-                </div>
-              <?php endif; ?>
-            </div>
-
-            <!-- TAB 4: GCash / Payment QR Code -->
+            <!-- TAB 2: GCash / Payment QR Code -->
             <div id="tab-payment" class="pt-6 <?= $profileTab === 'payment' ? '' : 'hidden' ?> space-y-6">
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
@@ -535,7 +424,7 @@ tailwind.config = {
   function setProfileTab(tab, btn) {
     document.querySelectorAll('.profile-tab').forEach(el => el.classList.remove('active'));
     if (btn) btn.classList.add('active');
-    ['profile','units','request','payment'].forEach(t => {
+    ['profile','payment'].forEach(t => {
       const el = document.getElementById('tab-' + t);
       if (el) el.classList.toggle('hidden', t !== tab);
     });

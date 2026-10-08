@@ -211,8 +211,11 @@ class GeneralController extends Controller {
             return;
         }
 
+        $isLease = (bool)($res['is_lease'] ?? true);
+        $pageTitle = $isLease ? 'Zeppelin Suites — Unit Lease Reservation' : 'Zeppelin Suites — Unit Resale Reservation';
+
         $this->render('general/reservation_form', array_merge($res, [
-            'pageTitle'  => 'Zeppelin Suites — Condominium Reservation',
+            'pageTitle'  => $pageTitle,
             'baseUrl'    => $baseUrl,
             'activePage' => 'reservation',
         ]));

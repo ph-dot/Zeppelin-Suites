@@ -178,21 +178,50 @@ $ownerNameDisplay = !empty($res['owner_name']) ? $res['owner_name'] : 'John Doe'
 $ownerEmailDisplay = !empty($res['owner_email']) ? $res['owner_email'] : 'johndoe@gmail.com';
 $ownerPhoneDisplay = !empty($res['owner_contact']) ? $res['owner_contact'] : '0912 345 7890';
 
-$isFlexibleSigning = !empty($res['is_flexible_signing']) && $res['is_flexible_signing'] == 1;
-$signingDateDisplay = 'Not Specified';
-if ($isFlexibleSigning) {
-    $signingDateDisplay = 'Flexible';
-} elseif (!empty($res['lease_signing_date']) && $res['lease_signing_date'] !== '0000-00-00') {
-    $rawDates = explode(',', $res['lease_signing_date']);
-    $formattedList = [];
+$isFlexibleSigning = !empty($res['is_flexible_signing']) && (int)$res['is_flexible_signing'] === 1;
+$confirmedSigningDate = !empty($res['confirmed_signing_date']) && $res['confirmed_signing_date'] !== '0000-00-00'
+    ? (string)$res['confirmed_signing_date']
+    : null;
+
+// Parse applicant's candidate/preferred dates
+$preferredDatesList = [];
+if (!empty($res['lease_signing_date']) && $res['lease_signing_date'] !== '0000-00-00') {
+    $rawDates = explode(',', (string)$res['lease_signing_date']);
     foreach ($rawDates as $rawD) {
         $trimmed = trim($rawD);
         if (!empty($trimmed) && $trimmed !== '0000-00-00') {
             $ts = strtotime($trimmed);
-            $formattedList[] = $ts ? date('F j, Y', $ts) : htmlspecialchars($trimmed);
+            if ($ts) {
+                $preferredDatesList[] = [
+                    'date'      => date('Y-m-d', $ts),
+                    'day_name'  => date('D', $ts),
+                    'day_full'  => date('l', $ts),
+                    'month_day' => date('M j', $ts),
+                    'year'      => date('Y', $ts),
+                    'full_text' => date('F j, Y', $ts),
+                ];
+            }
         }
     }
-    $signingDateDisplay = !empty($formattedList) ? implode(' / ', $formattedList) : htmlspecialchars($res['lease_signing_date']);
+}
+
+$hasConfirmedSchedule = !empty($confirmedSigningDate);
+$confirmedDateTs = $hasConfirmedSchedule ? strtotime($confirmedSigningDate) : null;
+$confirmedDateDisplay = $confirmedDateTs ? date('F j, Y', $confirmedDateTs) : null;
+$confirmedDateDayName = $confirmedDateTs ? date('l', $confirmedDateTs) : null;
+
+if ($hasConfirmedSchedule) {
+    $signingDateDisplay = $confirmedDateDisplay;
+} elseif ($isFlexibleSigning) {
+    $signingDateDisplay = 'Flexible (Pending Schedule)';
+} elseif (!empty($preferredDatesList)) {
+    if (count($preferredDatesList) === 1) {
+        $signingDateDisplay = $preferredDatesList[0]['full_text'];
+    } else {
+        $signingDateDisplay = count($preferredDatesList) . ' Proposed Dates (Pending Selection)';
+    }
+} else {
+    $signingDateDisplay = 'Not Specified';
 }
 
 $signingStatus = !empty($res['lease_signing_status']) ? $res['lease_signing_status'] : 'Pending Signing';
@@ -800,8 +829,8 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
                 </svg>
               </div>
               <div>
-                <h2 class="text-sm font-bold text-slate-900">Lease Signing</h2>
-                <p class="text-xs text-slate-400">Contract execution schedule and completion status</p>
+                <h2 class="text-sm font-bold text-slate-900">Lease Contract Signing</h2>
+                <p class="text-xs text-slate-400">Appointment schedule, tenant preferences, and contract execution</p>
               </div>
             </div>
 
@@ -811,42 +840,108 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                   Signing Completed
                 </span>
+              <?php elseif ($hasConfirmedSchedule): ?>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                  Schedule Confirmed
+                </span>
               <?php else: ?>
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                   <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                  Pending Signing
+                  Date Pending Confirmation
                 </span>
               <?php endif; ?>
             </div>
           </div>
 
-          <!-- Schedule & Signer Card -->
-          <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 sm:p-6 mb-6">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Scheduled Signing Date</p>
-                <div class="flex items-center gap-3 mt-1.5 flex-wrap">
-                  <h3 class="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight"><?= e($signingDateDisplay) ?></h3>
-                  <?php if ($isFlexibleSigning): ?>
-                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">Before move-in</span>
-                  <?php elseif (!empty($res['lease_signing_date']) && $res['lease_signing_date'] !== '0000-00-00'): ?>
-                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-200">Fixed Date</span>
-                  <?php endif; ?>
-                </div>
+          <!-- Schedule & Details Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+            
+            <!-- Left Box: Chosen Lease Signing Date (Read-Only for Admin) -->
+            <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-5 space-y-4">
+              <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Chosen Lease Signing Date</p>
+                <?php if ($hasConfirmedSchedule): ?>
+                  <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                    Confirmed
+                  </span>
+                <?php else: ?>
+                  <span class="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                    Pending Owner Confirmation
+                  </span>
+                <?php endif; ?>
               </div>
 
-              <div class="text-left sm:text-right border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200/60">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Contract Signer</p>
-                <p class="text-sm font-bold text-slate-900 mt-1"><?= e($res['client_name']) ?></p>
+              <?php if ($hasConfirmedSchedule): ?>
+                <!-- Confirmed View -->
+                <div>
+                  <h3 class="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight">
+                    <?= e($confirmedDateDisplay) ?>
+                  </h3>
+                  <p class="text-xs text-slate-500 mt-1">
+                    Confirmed lease signing appointment with tenant.
+                    <?php if (!empty($res['confirmed_signing_by_name'])): ?>
+                      <span class="text-slate-400 block mt-0.5">Confirmed by <strong><?= e($res['confirmed_signing_by_name']) ?></strong><?php if (!empty($res['confirmed_signing_at'])): ?> on <?= date('M j, Y g:i A', strtotime($res['confirmed_signing_at'])) ?><?php endif; ?></span>
+                    <?php endif; ?>
+                  </p>
+                </div>
+              <?php else: ?>
+                <!-- Pending Owner Confirmation View -->
+                <div class="space-y-2">
+                  <h3 class="text-sm sm:text-base font-bold text-slate-800">
+                    Awaiting Unit Owner Confirmation
+                  </h3>
+                  <p class="text-xs text-slate-500 leading-relaxed">
+                    The unit owner has not yet confirmed the final signing appointment date.
+                  </p>
+                  <?php if (!empty($preferredDatesList)): ?>
+                    <div class="pt-1.5 text-xs text-slate-600">
+                      <span class="text-slate-400 font-medium block mb-1">Applicant's preferred dates:</span>
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <?php foreach ($preferredDatesList as $p): ?>
+                          <span class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-slate-700 font-semibold text-xs shadow-2xs">
+                            <?= $p['month_day'] ?> (<?= $p['day_name'] ?>)
+                          </span>
+                        <?php endforeach; ?>
+                      </div>
+                    </div>
+                  <?php elseif ($isFlexibleSigning): ?>
+                    <p class="text-xs text-slate-500 italic">Tenant requested flexible schedule before move-in.</p>
+                  <?php endif; ?>
+                </div>
+              <?php endif; ?>
+
+              <div class="pt-3 border-t border-slate-200/70 text-xs">
+                <span class="text-slate-400 block mb-0.5">Move-in Date:</span>
+                <span class="font-bold text-slate-900"><?= e($moveInDisplay) ?></span>
               </div>
             </div>
 
-            <?php if ($isInHousePayment): ?>
-              <div class="mt-4 pt-3.5 border-t border-slate-200/70 flex items-center gap-2.5 text-xs text-amber-800 bg-amber-50/80 border border-amber-200/80 rounded-xl px-4 py-2.5">
-                <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                <span>In-House Payment: Collect <strong><?= peso($res['required_amount'] ?: ($res['price_basis'] * $res['payment_percentage'])) ?></strong> downpayment upon contract signing.</span>
+            <!-- Right Box: Signer & Unit Details -->
+            <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-5 space-y-4">
+              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Signer &amp; Unit Details</p>
+              <div class="space-y-2.5 text-xs sm:text-sm">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-slate-400 font-medium">Tenant / Applicant:</span>
+                  <span class="font-bold text-slate-900 text-right"><?= e($res['client_name']) ?></span>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-slate-400 font-medium">Contact Number:</span>
+                  <span class="font-bold text-slate-900 font-mono text-right"><?= e($res['client_contact'] ?: ($res['client_user_contact'] ?? '—')) ?></span>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-slate-400 font-medium">Assigned Unit:</span>
+                  <span class="font-bold text-slate-900 text-right"><?= e($unitSpecificationText) ?></span>
+                </div>
+                <?php if ($isInHousePayment): ?>
+                  <div class="pt-2 text-xs text-amber-800 bg-amber-50/80 border border-amber-200/80 rounded-lg p-2.5 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <span>In-House Payment: Collect <strong><?= peso($res['required_amount'] ?: ($res['price_basis'] * $res['payment_percentage'])) ?></strong> upon signing.</span>
+                  </div>
+                <?php endif; ?>
               </div>
-            <?php endif; ?>
+            </div>
+
           </div>
 
           <!-- Signing Status & Action Banner -->
@@ -1756,6 +1851,7 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
     }
   }
 
+
   async function submitLeaseSigningAction() {
     const action = document.getElementById('signingActionInput').value;
     const remarks = document.getElementById('signingRemarksInput').value;
@@ -1771,7 +1867,7 @@ $isInHousePayment = strtolower($paymentMethod) === 'in-house';
       formData.append('action', action);
       formData.append('remarks', remarks);
 
-      const res = await fetch('<?= htmlspecialchars($baseUrl) ?>/adminPages/ActionsAP/completeLeaseSigning.php', {
+      const res = await fetch('<?= htmlspecialchars($baseUrl) ?>/admin/reservations/lease-signing', {
         method: 'POST',
         body: formData
       });

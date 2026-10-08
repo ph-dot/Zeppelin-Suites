@@ -83,13 +83,17 @@ function notifyOwnerOfApprovalRequest(string $ownerEmail, string $ownerName, str
 /**
  * Notify a unit owner that their unit has just been reserved by a tenant/buyer.
  */
-function notifyOwnerOfNewReservation(string $ownerEmail, string $ownerName, string $unitNumber, string $clientName, string $moveInDate): bool
+function notifyOwnerOfNewReservation(string $ownerEmail, string $ownerName, string $unitNumber, string $clientName, ?string $moveInDate = null): bool
 {
     $subject = "Zeppelin Suites - Unit {$unitNumber} Has Been Reserved";
 
+    $dateLine = !empty($moveInDate) && $moveInDate !== 'N/A'
+        ? "Requested move-in / appointment date: {$moveInDate}\n\n"
+        : "";
+
     $body = "Hi {$ownerName},\n\n"
         . "Your unit ({$unitNumber}) has just been reserved by {$clientName}.\n"
-        . "Requested move-in / appointment date: {$moveInDate}\n\n"
+        . ($dateLine !== '' ? $dateLine : "\n")
         . "The payment proof has been submitted and is pending review by our admin team. "
         . "You can check the reservation details anytime in your unit owner portal:\n"
         . OWNER_PORTAL_LOGIN_URL . "\n\n"

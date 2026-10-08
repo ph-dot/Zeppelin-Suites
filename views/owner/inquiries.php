@@ -307,6 +307,11 @@ $inquiries = $inquiries ?? [];
                       $row['lease_duration'] ?? ''
                   );
                   $requestCode = 'REQ-' . str_pad((string)$row['request_id'], 3, '0', STR_PAD_LEFT);
+                  $resalePriceRaw = !empty($row['reselling_price']) && (float)$row['reselling_price'] > 0 
+                      ? (float)$row['reselling_price'] 
+                      : (float)($row['lease_rate'] ?? 0);
+                  $resalePriceFormatted = peso($resalePriceRaw);
+                  $sqmFormatted = !empty($row['sqm']) ? number_format((float)$row['sqm'], 2) . ' SQM' : '';
               ?>
                 <tr class="group cursor-pointer transition-colors hover:bg-slate-50/70 approval-row"
                     tabindex="0"
@@ -323,6 +328,9 @@ $inquiries = $inquiries ?? [];
                     data-unit-type="<?= clean($row['unit_type']) ?>"
                     data-unit-status="<?= clean($row['unit_current_status'] ?? 'Ready for Occupancy') ?>"
                     data-fee="<?= clean(peso($row['lease_rate'] ?? 0)) ?>"
+                    data-resale-price="<?= clean($resalePriceFormatted) ?>"
+                    data-listing-type="<?= clean($row['listing_type'] ?? '') ?>"
+                    data-sqm="<?= clean($sqmFormatted) ?>"
                     data-lease="<?= clean($row['lease_duration'] ?: '—') ?>"
                     data-move-in="<?= clean($row['preferred_move_in_time'] ?: '—') ?>"
                     data-message="<?= clean($row['message']) ?>"
@@ -406,7 +414,7 @@ $inquiries = $inquiries ?? [];
     <!-- Modal Content: Scrollable Area -->
     <div class="p-6 space-y-5 overflow-y-auto flex-1">
       <div class="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-5 space-y-4 shadow-2xs">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">inquirer name</p>
             <p class="text-sm font-bold text-slate-900 leading-snug break-words" id="mResName">—</p>
@@ -419,9 +427,6 @@ $inquiries = $inquiries ?? [];
             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">contact number</p>
             <p class="text-sm font-medium text-slate-800 font-mono leading-snug" id="mResContact">—</p>
           </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
           <div>
             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">inquiry type</p>
             <p class="text-sm font-semibold text-slate-800 leading-snug" id="mResType">—</p>
@@ -448,7 +453,7 @@ $inquiries = $inquiries ?? [];
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
-              <span>Unit Available:</span>
+              <span id="mResUnitLabel">Unit:</span>
               <span class="text-slate-400 font-medium text-[11px]" id="mResFloorDisplay">Floor —</span>
             </label>
             <div class="h-10 px-3.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 flex items-center shadow-2xs font-mono">
@@ -458,8 +463,8 @@ $inquiries = $inquiries ?? [];
 
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
-              <span>Lease Rate</span>
-              <span class="text-slate-400 font-normal text-[11px]">Monthly</span>
+              <span id="mResFeeLabel">Lease Rate</span>
+              <span class="text-slate-400 font-normal text-[11px]" id="mResFeePeriod">Monthly</span>
             </label>
             <div class="h-10 px-3.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 flex items-center shadow-2xs font-mono" id="mResFee">
               —
@@ -495,7 +500,7 @@ $inquiries = $inquiries ?? [];
           </div>
         </div>
 
-        <div class="p-3.5 bg-slate-50/90 border border-slate-200/80 rounded-xl flex flex-wrap items-center justify-between gap-2 shadow-2xs">
+        <div id="mResAvailBanner" class="p-3.5 bg-slate-50/90 border border-slate-200/80 rounded-xl flex flex-wrap items-center justify-between gap-2 shadow-2xs">
           <div class="flex items-center gap-2.5">
             <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
               <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -648,11 +653,35 @@ $inquiries = $inquiries ?? [];
     if (unitDisp) unitDisp.textContent = unitNumber !== '—' ? `Unit ${unitNumber}` : 'Unit —';
     
     const floorDisp = document.getElementById('mResFloorDisplay');
-    if (floorDisp) floorDisp.textContent = floorNumber;
+    const sqmDisplay = row.dataset.sqm ? ` • ${row.dataset.sqm}` : '';
+    if (floorDisp) floorDisp.textContent = `${floorNumber}${sqmDisplay}`;
 
     const unitTypeEl = document.getElementById('mResUnitType');
     if (unitTypeEl) unitTypeEl.textContent = unitType;
     
+    const inqType = (row.dataset.type || '').toLowerCase().trim();
+    const listingType = (row.dataset.listingType || '').toLowerCase().trim();
+    const unitStatusLower = (unitStatus || '').toLowerCase().trim();
+    const isResale = inqType.includes('resale') || inqType.includes('buy') || inqType.includes('purchase') || listingType.includes('resale') || unitStatusLower.includes('resale');
+    const isLeaseOrReservation = (inqType.includes('reservation') || inqType.includes('lease')) && !isResale;
+
+    const unitLabel = document.getElementById('mResUnitLabel');
+    if (unitLabel) unitLabel.textContent = 'Unit:';
+
+    const feeLabel = document.getElementById('mResFeeLabel');
+    const feePeriod = document.getElementById('mResFeePeriod');
+    const feeEl = document.getElementById('mResFee');
+
+    if (isResale) {
+      if (feeLabel) feeLabel.textContent = 'Resale Price';
+      if (feePeriod) feePeriod.textContent = 'Selling Price';
+      if (feeEl) feeEl.textContent = row.dataset.resalePrice || row.dataset.fee || '—';
+    } else {
+      if (feeLabel) feeLabel.textContent = 'Lease Rate';
+      if (feePeriod) feePeriod.textContent = 'Monthly';
+      if (feeEl) feeEl.textContent = row.dataset.fee || '—';
+    }
+
     const isOccupied = row.dataset.isOccupied === '1';
     const occupiedDisplay = row.dataset.occupiedDisplay || '';
     const occupiedDuration = row.dataset.occupiedDuration || '';
@@ -660,7 +689,7 @@ $inquiries = $inquiries ?? [];
 
     const statusText = document.getElementById('mResUnitStatusText');
     if (statusText) {
-      if (isOccupied && occupiedUntil) {
+      if (isOccupied && occupiedUntil && !isResale) {
         statusText.textContent = `Occupied (until ${occupiedUntil})`;
       } else {
         statusText.textContent = unitStatus;
@@ -682,23 +711,36 @@ $inquiries = $inquiries ?? [];
     const occupiedDurEl = document.getElementById('mResOccupiedDuration');
     const occupiedUntilBadge = document.getElementById('mResOccupiedUntilBadge');
     const availHeaderLabel = document.getElementById('mResAvailHeaderLabel');
+    const availBanner = document.getElementById('mResAvailBanner');
 
-    if (occupiedBanner) {
-      if (isOccupied && occupiedDisplay) {
-        occupiedBanner.classList.remove('hidden');
-        if (occupiedDurEl) occupiedDurEl.textContent = occupiedDisplay;
-        if (occupiedUntilBadge) {
-          occupiedUntilBadge.textContent = occupiedUntil ? `Until ${occupiedUntil}` : (occupiedDuration ? `Lease: ${occupiedDuration}` : 'Occupied');
+    if (isResale) {
+      if (occupiedBanner) occupiedBanner.classList.add('hidden');
+      if (availBanner) availBanner.classList.add('hidden');
+    } else {
+      if (occupiedBanner) {
+        if (isOccupied && occupiedDisplay) {
+          occupiedBanner.classList.remove('hidden');
+          if (occupiedDurEl) occupiedDurEl.textContent = occupiedDisplay;
+          if (occupiedUntilBadge) {
+            occupiedUntilBadge.textContent = occupiedUntil ? `Until ${occupiedUntil}` : (occupiedDuration ? `Lease: ${occupiedDuration}` : 'Occupied');
+          }
+          if (availHeaderLabel) availHeaderLabel.textContent = 'Next Availability:';
+        } else {
+          occupiedBanner.classList.add('hidden');
+          if (availHeaderLabel) availHeaderLabel.textContent = 'Unit Availability:';
         }
-        if (availHeaderLabel) availHeaderLabel.textContent = 'Next Availability:';
-      } else {
-        occupiedBanner.classList.add('hidden');
-        if (availHeaderLabel) availHeaderLabel.textContent = 'Unit Availability:';
+      }
+
+      if (availBanner) {
+        if (row.dataset.availDisplay && row.dataset.availDisplay !== '—') {
+          availBanner.classList.remove('hidden');
+        } else {
+          availBanner.classList.add('hidden');
+        }
       }
     }
 
     document.getElementById('mResType').textContent = row.dataset.type || '—';
-    document.getElementById('mResFee').textContent = row.dataset.fee || '—';
     document.getElementById('mResMoveIn').textContent = row.dataset.moveIn || '—';
     document.getElementById('mResLease').textContent = row.dataset.lease || '—';
     document.getElementById('mResMessage').textContent = row.dataset.message || '—';
@@ -708,10 +750,6 @@ $inquiries = $inquiries ?? [];
 
     const availLabelEl = document.getElementById('mResAvailDurationLabel');
     if (availLabelEl) availLabelEl.textContent = row.dataset.availLabel || '—';
-
-    const inqType = (row.dataset.type || '').toLowerCase().trim();
-    const isResale = inqType.includes('resale');
-    const isLeaseOrReservation = (inqType.includes('reservation') || inqType.includes('lease')) && !isResale;
 
     const moveInRow = document.getElementById('mResMoveInRow');
     const leaseRow = document.getElementById('mResLeaseRow');
