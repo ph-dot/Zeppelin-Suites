@@ -18,49 +18,11 @@ if (!function_exists('peso')) {
     }
 }
 
-if (!function_exists('percent_text')) {
-    function percent_text($value): string {
-        if ($value === null || $value === '') return '—';
-        $number = (float)$value;
-        if ($number <= 1) $number *= 100;
-        return rtrim(rtrim(number_format($number, 2), '0'), '.') . '%';
-    }
-}
-
-if (!function_exists('format_date_only')) {
-    function format_date_only($value): string {
-        if (empty($value) || $value === '0000-00-00') return '—';
-        $time = strtotime((string)$value);
-        return $time ? date('M d, Y', $time) : '—';
-    }
-}
-
 if (!function_exists('format_datetime_text')) {
     function format_datetime_text($value): string {
         if (empty($value) || $value === '0000-00-00 00:00:00') return '—';
         $time = strtotime((string)$value);
         return $time ? date('M d, Y h:i A', $time) : '—';
-    }
-}
-
-if (!function_exists('status_badge')) {
-    function status_badge($value): string {
-        $text = trim((string)($value ?? ''));
-        $status = strtolower($text);
-
-        if (in_array($status, ['verified', 'reserved', 'requirements completed', 'complete'], true)) {
-            return "<span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200'>" . clean(ucwords($text)) . "</span>";
-        }
-        if (in_array($status, ['pending review', 'submitted', 'under review', 'requirements pending', 'requested', 'flagged for review', 'pending'], true)) {
-            return "<span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200'>" . clean(ucwords($text)) . "</span>";
-        }
-        if (in_array($status, ['rejected', 'cancelled', 'declined'], true)) {
-            return "<span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200'>" . clean(ucwords($text)) . "</span>";
-        }
-        if ($status === 'approved') {
-            return "<span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200'>" . clean(ucwords($text)) . "</span>";
-        }
-        return "<span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200'>" . clean($text !== '' ? ucwords($text) : '—') . "</span>";
     }
 }
 
@@ -88,14 +50,6 @@ $baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 $res = $reservation ?? [];
 
 $formattedResId = str_pad((string)($res['reservation_id'] ?? 0), 3, '0', STR_PAD_LEFT);
-$formattedInqId = !empty($res['inq_id']) ? str_pad((string)$res['inq_id'], 3, '0', STR_PAD_LEFT) : '—';
-$cancellationRequestedBy = $res['cancellation_requested_by_name'] ?? 'Unit Owner';
-
-$unitParts = array_filter([
-    $res['unit_type'] ?? '',
-    !empty($res['unit_number']) ? 'Unit ' . $res['unit_number'] : ''
-]);
-$unitDisplay = trim(implode(' ', $unitParts)) ?: 'Unit not assigned';
 
 $proofUrl = '';
 if (!empty($res['payment_proof'])) {
@@ -111,17 +65,11 @@ $canRequestCancellation = !in_array($resStatusLower, ['cancelled', 'rejected', '
     && $cancellationStatusLower !== 'requested' 
     && $cancellationStatusLower !== 'approved';
 
-$clientAge = !empty($res['client_age']) ? (string)$res['client_age'] : '';
-if (empty($clientAge) && !empty($res['client_dob']) && $res['client_dob'] !== '0000-00-00') {
-    try {
-        $d1 = new DateTime((string)$res['client_dob']);
-        $today = new DateTime('today');
-        $clientAge = (string)$d1->diff($today)->y;
-    } catch (Throwable $e) {
-        $clientAge = '—';
-    }
-}
-if (empty($clientAge)) $clientAge = '—';
+// Determine Transaction Type (Resale vs Lease)
+$transactionType = (string)($res['transaction_type'] ?? '');
+$isResale = (strcasecmp($transactionType, 'Unit Resale') === 0)
+    || (!empty($res['inquiry_type']) && stripos((string)$res['inquiry_type'], 'resale') !== false)
+    || (!empty($res['listing_type']) && stripos((string)$res['listing_type'], 'resell') !== false);
 
 $clientSex = !empty($res['client_sex']) ? $res['client_sex'] : (!empty($res['gender']) ? $res['gender'] : '—');
 $clientNationality = !empty($res['client_nationality']) ? $res['client_nationality'] : (!empty($res['nationality']) ? $res['nationality'] : 'Filipino');
@@ -134,8 +82,12 @@ $unitSqmDisplay = $unitSqm > 0 ? number_format($unitSqm, 2) . ' SQM' : '—';
 $unitSpecificationText = $unitNumberClean . ' - ' . $unitTypeClean;
 
 $floorDisplay = !empty($res['floor_number']) ? (string)$res['floor_number'] : '1';
-$listingDisplay = !empty($res['listing_type']) ? (strtolower((string)$res['listing_type']) === 'for lease' ? 'for Lease' : $res['listing_type']) : 'for Lease';
+$listingDisplay = !empty($res['listing_type']) 
+    ? (strtolower((string)$res['listing_type']) === 'for lease' ? 'For Lease' : (stripos((string)$res['listing_type'], 'resell') !== false ? 'For Reselling' : $res['listing_type']))
+    : ($isResale ? 'For Reselling' : 'For Lease');
+
 $leaseRateDisplay = peso($res['lease_rate'] ?? $res['price_basis'] ?? 0) . ' /mo';
+$resalePriceDisplay = peso($res['reselling_price'] ?? $res['price_basis'] ?? 0);
 $leaseTermDuration = !empty($res['stay_category']) ? $res['stay_category'] : (!empty($res['inq_lease_duration']) ? $res['inq_lease_duration'] : 'Long Term');
 
 $moveInDisplay = !empty($res['move_in_date']) && $res['move_in_date'] !== '0000-00-00'
@@ -186,26 +138,14 @@ if (!empty($res['lease_signing_date']) && $res['lease_signing_date'] !== '0000-0
 $hasConfirmedSchedule = !empty($confirmedSigningDate);
 $confirmedDateTs = $hasConfirmedSchedule ? strtotime($confirmedSigningDate) : null;
 $confirmedDateDisplay = $confirmedDateTs ? date('F j, Y', $confirmedDateTs) : null;
-$confirmedDateDayName = $confirmedDateTs ? date('l', $confirmedDateTs) : null;
-
-if ($hasConfirmedSchedule) {
-    $signingDateDisplay = $confirmedDateDisplay;
-} elseif ($isFlexibleSigning) {
-    $signingDateDisplay = 'Flexible (Pending Schedule)';
-} elseif (!empty($preferredDatesList)) {
-    if (count($preferredDatesList) === 1) {
-        $signingDateDisplay = $preferredDatesList[0]['full_text'];
-    } else {
-        $signingDateDisplay = count($preferredDatesList) . ' Proposed Dates (Pending Selection)';
-    }
-} else {
-    $signingDateDisplay = 'Not Specified';
-}
 
 $signingStatus = !empty($res['lease_signing_status']) ? $res['lease_signing_status'] : 'Pending Signing';
 $isSigningCompleted = strtolower((string)$signingStatus) === 'completed';
 $paymentMethod = !empty($res['payment_method']) ? $res['payment_method'] : 'GCash QR';
 $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
+$downpaymentAmount = (float)($res['required_amount'] ?? 0) > 0 
+    ? (float)$res['required_amount'] 
+    : ((float)($res['price_basis'] ?? 0) * (float)($res['payment_percentage'] ?? 0.10));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -229,36 +169,22 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
 </script>
 <style>
 * { font-family: 'DM Sans', sans-serif; }
-.sidebar { width:256px; transition:width 0.3s cubic-bezier(0.4,0,0.2,1),transform 0.3s cubic-bezier(0.4,0,0.2,1); background:rgba(255,255,255,0.92); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+.sidebar { width:256px; background:rgba(255,255,255,0.92); }
 .sidebar.collapsed { width:68px; }
-@media (max-width:767px) { .sidebar { transform:translateX(-100%); position:fixed; z-index:50; height:100vh; width:256px !important; } .sidebar.open { transform:translateX(0); } }
-.main-wrapper { margin-left:256px; transition:margin-left 0.3s cubic-bezier(0.4,0,0.2,1); }
+@media (max-width:767px) { .sidebar { position:fixed; z-index:50; height:100vh; width:256px !important; } }
+.main-wrapper { margin-left:256px; }
 .main-wrapper.sidebar-collapsed { margin-left:68px; }
 @media (max-width:767px) { .main-wrapper { margin-left:0 !important; } }
-.overlay { display:none; pointer-events:none; }
-.overlay.show { display:block; pointer-events:auto; }
-.sidebar-logo { transition:opacity 0.2s ease,width 0.2s ease; }
-.sidebar.collapsed .sidebar-logo { opacity:0; width:0; overflow:hidden; pointer-events:none; }
-.sidebar-link { position:relative; transition:all 0.18s ease; white-space:nowrap; overflow:hidden; }
+.overlay { display:none; }
+.overlay.show { display:block; }
+.sidebar.collapsed .nav-label,.sidebar.collapsed .nav-badge,.sidebar.collapsed .notice-section { display:none; }
+.sidebar.collapsed .sidebar-link { justify-content:center; padding-left:0; padding-right:0; }
+.sidebar.collapsed .collapse-icon { transform:rotate(180deg); }
 .sidebar-link.active { background:#0f172a; color:#fff; }
 .sidebar-link.active .nav-icon { color:#60a5fa; }
 .sidebar-link:not(.active):hover { background:#eff6ff; color:#1d4ed8; }
 .sidebar-link:not(.active):hover .nav-icon { color:#3b82f6; }
-.sidebar.collapsed .nav-label,.sidebar.collapsed .nav-badge,.sidebar.collapsed .notice-section { display:none; }
-.sidebar.collapsed .sidebar-link { justify-content:center; padding-left:0; padding-right:0; }
-.sidebar.collapsed .collapse-icon { transform:rotate(180deg); }
-.sidebar.collapsed .sidebar-link:hover::after { content:attr(data-tooltip); position:absolute; left:calc(100% + 10px); top:50%; transform:translateY(-50%); background:#0f172a; color:#fff; font-size:12px; padding:5px 10px; border-radius:8px; white-space:nowrap; z-index:999; box-shadow:0 4px 16px rgba(0,0,0,0.18); pointer-events:none; }
-.collapse-icon { transition:transform 0.3s ease; }
-.profile-dropdown { opacity:0; visibility:hidden; transform:translateY(-6px); transition:all 0.2s cubic-bezier(0.4,0,0.2,1); }
-.profile-dropdown:not(.hidden) { opacity:1; visibility:visible; transform:translateY(0); }
-::-webkit-scrollbar { width:5px; height:5px; }
-::-webkit-scrollbar-track { background:#f1f5f9; }
-::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
-::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
-.btn-press { transition:all 0.15s ease; }
-.btn-press:active { transform:scale(0.96); }
-.zep-input:focus { outline:none; border-color:#0f172a; box-shadow:0 0 0 3px rgba(15,23,42,0.07); }
-.glass-header { background:rgba(255,255,255,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+.zep-input:focus { outline:none; border-color:#0f172a; }
 .main-scroll { height:calc(100vh - 65px); overflow-y:auto; }
 </style>
 </head>
@@ -330,9 +256,30 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
             <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1 font-mono">REQ-<?= clean($formattedResId) ?></h2>
           </div>
           <div>
-            <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <?= clean(ucwords($res['reservation_status'] ?? 'In progress')) ?>
+            <?php
+              $pStatus = strtolower(trim((string)($res['payment_status'] ?? '')));
+              $rStatus = strtolower(trim((string)($res['reservation_status'] ?? 'submitted')));
+              if (in_array($rStatus, ['reserved', 'requirements completed', 'officially booked', 'active', 'handover', 'moved in'], true)) {
+                  $displayResStatus = 'Reserved';
+                  $resBadgeClass = 'bg-emerald-100 text-emerald-700';
+                  $dotClass = 'bg-emerald-500';
+              } elseif ($pStatus === 'verified' || in_array($rStatus, ['pending', 'requirements pending', 'in progress', 'under review', 'pending review'], true)) {
+                  $displayResStatus = 'Pending';
+                  $resBadgeClass = 'bg-amber-100 text-amber-700';
+                  $dotClass = 'bg-amber-500';
+              } elseif (in_array($rStatus, ['rejected', 'cancelled'], true)) {
+                  $displayResStatus = ucwords($rStatus);
+                  $resBadgeClass = 'bg-red-100 text-red-700';
+                  $dotClass = 'bg-red-500';
+              } else {
+                  $displayResStatus = 'Submitted';
+                  $resBadgeClass = 'bg-amber-100 text-amber-700';
+                  $dotClass = 'bg-amber-500';
+              }
+            ?>
+            <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold <?= $resBadgeClass ?>">
+              <span class="w-2 h-2 rounded-full <?= $dotClass ?>"></span>
+              <?= clean($displayResStatus) ?>
             </span>
           </div>
         </div>
@@ -349,34 +296,34 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
               type="button" 
               onclick="switchReservationTab('lease')" 
               id="tabBtn-lease" 
-              class="tab-nav-btn pb-3 text-sm font-bold text-slate-900 border-b-2 border-slate-900 transition-all shrink-0">
-              Lease
+              class="tab-nav-btn pb-3 text-sm font-bold text-slate-900 border-b-2 border-slate-900 shrink-0">
+              <?= $isResale ? 'Resale' : 'Lease' ?>
             </button>
             <button 
               type="button" 
               onclick="switchReservationTab('payment')" 
               id="tabBtn-payment" 
-              class="tab-nav-btn pb-3 text-sm font-medium text-slate-400 hover:text-slate-800 border-b-2 border-transparent transition-all shrink-0">
+              class="tab-nav-btn pb-3 text-sm font-medium text-slate-400 hover:text-slate-800 border-b-2 border-transparent shrink-0">
               Payment
             </button>
             <button 
               type="button" 
               onclick="switchReservationTab('lease-signing')" 
               id="tabBtn-lease-signing" 
-              class="tab-nav-btn pb-3 text-sm font-medium text-slate-400 hover:text-slate-800 border-b-2 border-transparent transition-all shrink-0">
-              Lease Signing
+              class="tab-nav-btn pb-3 text-sm font-medium text-slate-400 hover:text-slate-800 border-b-2 border-transparent shrink-0">
+              <?= $isResale ? 'Contract Signing' : 'Lease Signing' ?>
             </button>
             <button 
               type="button" 
               onclick="switchReservationTab('documents')" 
               id="tabBtn-documents" 
-              class="tab-nav-btn pb-3 text-sm font-medium text-slate-400 hover:text-slate-800 border-b-2 border-transparent transition-all shrink-0">
+              class="tab-nav-btn pb-3 text-sm font-medium text-slate-400 hover:text-slate-800 border-b-2 border-transparent shrink-0">
               Documents
             </button>
           </div>
         </div>
 
-        <!-- TAB 1: LEASE -->
+        <!-- TAB 1: LEASE / RESALE -->
         <div id="tabContent-lease" class="tab-panel space-y-6">
           <!-- Client Information Section -->
           <div>
@@ -392,7 +339,7 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-y-4 sm:gap-y-5 gap-x-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-4 sm:gap-y-5 gap-x-6">
               <div>
                 <p class="text-xs font-normal text-slate-400">Full Name</p>
                 <p class="text-sm font-bold text-slate-900 mt-1"><?= clean($res['client_name']) ?></p>
@@ -413,10 +360,6 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
                 <p class="text-sm font-bold text-slate-900 mt-1"><?= clean($clientSex) ?></p>
               </div>
               <div>
-                <p class="text-xs font-normal text-slate-400">Age</p>
-                <p class="text-sm font-bold text-slate-900 mt-1"><?= clean($clientAge) ?></p>
-              </div>
-              <div>
                 <p class="text-xs font-normal text-slate-400">Nationality</p>
                 <p class="text-sm font-bold text-slate-900 mt-1"><?= clean($clientNationality) ?></p>
               </div>
@@ -425,7 +368,7 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
 
           <div class="border-t border-slate-100 my-6"></div>
 
-          <!-- Unit and Lease specification Section -->
+          <!-- Unit and Lease/Resale specification Section -->
           <div>
             <div class="flex items-center gap-3 mb-5">
               <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
@@ -434,8 +377,8 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
                 </svg>
               </div>
               <div>
-                <h2 class="text-sm font-bold text-slate-900">Unit and Lease specification</h2>
-                <p class="text-xs text-slate-400">Assigned unit details and lease specifications</p>
+                <h2 class="text-sm font-bold text-slate-900"><?= $isResale ? 'Unit and Resale specification' : 'Unit and Lease specification' ?></h2>
+                <p class="text-xs text-slate-400"><?= $isResale ? 'Assigned unit details and resale specifications' : 'Assigned unit details and lease specifications' ?></p>
               </div>
             </div>
 
@@ -476,20 +419,32 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
                 <p class="text-xs font-normal text-slate-400">Listing</p>
                 <p class="text-sm font-bold text-slate-900 mt-1"><?= clean($listingDisplay) ?></p>
               </div>
-              <div>
-                <p class="text-xs font-normal text-slate-400">Lease Rate</p>
-                <p class="text-sm font-bold text-slate-900 mt-1 font-mono"><?= clean($leaseRateDisplay) ?></p>
-              </div>
-              <div>
-                <p class="text-xs font-normal text-slate-400">Lease term duration</p>
-                <p class="text-sm font-bold text-slate-900 mt-1"><?= clean($leaseTermDuration) ?></p>
-              </div>
+              <?php if ($isResale): ?>
+                <div>
+                  <p class="text-xs font-normal text-slate-400">Resale Price</p>
+                  <p class="text-sm font-bold text-slate-900 mt-1 font-mono"><?= clean($resalePriceDisplay) ?></p>
+                </div>
+                <div>
+                  <p class="text-xs font-normal text-slate-400">Furnishing</p>
+                  <p class="text-sm font-bold text-slate-900 mt-1"><?= clean($clientFurnishing) ?></p>
+                </div>
+              <?php else: ?>
+                <div>
+                  <p class="text-xs font-normal text-slate-400">Lease Rate</p>
+                  <p class="text-sm font-bold text-slate-900 mt-1 font-mono"><?= clean($leaseRateDisplay) ?></p>
+                </div>
+                <div>
+                  <p class="text-xs font-normal text-slate-400">Lease term duration</p>
+                  <p class="text-sm font-bold text-slate-900 mt-1"><?= clean($leaseTermDuration) ?></p>
+                </div>
+              <?php endif; ?>
             </div>
           </div>
 
+          <?php if (!$isResale): ?>
           <div class="border-t border-slate-100 my-6"></div>
 
-          <!-- Lease commencement and Expiration Section -->
+          <!-- Schedule Section (Lease Commencement and Expiration) -->
           <div>
             <h3 class="text-sm font-bold text-slate-900 mb-3">Lease commencement and Expiration</h3>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-y-4 sm:gap-y-5 gap-x-6">
@@ -518,6 +473,7 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
               </div>
             </div>
           </div>
+          <?php endif; ?>
         </div>
 
         <!-- TAB 2: PAYMENT -->
@@ -535,36 +491,27 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
                   <p class="text-xs text-slate-500">Applicant downpayment details and owner verification status</p>
                 </div>
               </div>
-
-              <?php if ($isInHousePayment): ?>
-                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-50 text-amber-800 rounded-xl text-xs font-bold border border-amber-200">
-                  Pay In-House (At Lease Signing)
-                </span>
-              <?php elseif (!empty($proofUrl)): ?>
-                <a href="<?= clean($proofUrl) ?>" target="_blank" rel="noopener noreferrer" class="btn-press inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-50 border border-blue-200 rounded-xl text-xs font-bold text-blue-700 hover:bg-blue-100 transition-all shadow-sm">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                  View Uploaded Proof
-                </a>
-              <?php else: ?>
-                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-400 rounded-xl text-xs font-medium border border-slate-200">
-                  No Proof Uploaded
-                </span>
-              <?php endif; ?>
             </div>
 
             <!-- Proof & Status Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <?php if ($isInHousePayment): ?>
-                <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-4 flex flex-col justify-between">
+                <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex flex-col justify-between">
                   <div>
                     <div class="flex items-center justify-between gap-2 mb-2">
-                      <span class="text-xs font-semibold text-amber-700 uppercase tracking-wide">Payment Method</span>
-                      <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300/80">Pay In-House</span>
+                      <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Payment Method</span>
+                      <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">In-House Down Payment</span>
                     </div>
-                    <h4 class="text-xs font-bold text-slate-900 uppercase">In-House Settlement Notice</h4>
-                    <p class="text-xs text-slate-700 mt-2 leading-relaxed">
-                      The applicant selected <strong>Pay In-House</strong>. No electronic proof upload was required. The downpayment (<strong><?= peso($res['required_amount'] ?: ($res['price_basis'] * $res['payment_percentage'])) ?></strong>) will be collected directly in cash or manager's check during lease signing.
+                    <div class="mt-2">
+                      <p class="text-xs text-slate-500">Downpayment Required</p>
+                      <p class="text-base font-bold text-slate-900 font-mono mt-0.5"><?= peso($downpaymentAmount) ?></p>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-2 leading-relaxed">
+                      The applicant selected <strong>Pay In-House</strong>. No electronic proof upload is required. The down payment is to be settled directly in cash or check.
                     </p>
+                  </div>
+                  <div class="mt-4 pt-3 border-t border-slate-200/60 text-xs text-slate-500">
+                    Settlement Method: <span class="font-semibold text-slate-700">Cash / Check (Direct)</span>
                   </div>
                 </div>
               <?php else: ?>
@@ -574,21 +521,18 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
                       <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Uploaded Proof of Payment</span>
                       <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200"><?= clean($paymentMethod) ?></span>
                     </div>
-                    <div class="mt-2 flex items-center gap-2">
-                      <?php if (!empty($proofUrl)): ?>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-100/80 text-emerald-800 border border-emerald-200">
-                          Proof Attached
-                        </span>
-                      <?php else: ?>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-400 border border-slate-200">
-                          No Proof Uploaded
-                        </span>
-                      <?php endif; ?>
+                    <div class="mt-2">
+                      <p class="text-xs text-slate-500">Downpayment Required</p>
+                      <p class="text-base font-bold text-slate-900 font-mono mt-0.5"><?= peso($downpaymentAmount) ?></p>
                     </div>
+                    <p class="text-xs text-slate-600 mt-2 leading-relaxed">
+                      Check your personal GCash account to verify receipt of this down payment before confirming.
+                    </p>
                   </div>
-                  <div class="mt-4 pt-3 border-t border-slate-200/60">
+                  <div class="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between gap-2">
                     <?php if (!empty($proofUrl)): ?>
                       <a href="<?= clean($proofUrl) ?>" target="_blank" rel="noopener noreferrer" class="btn-press inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                         View Uploaded Proof
                       </a>
                     <?php else: ?>
@@ -602,21 +546,37 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
                 <div>
                   <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Payment Verification Status</p>
                   <div class="mt-2 flex items-center gap-2 flex-wrap">
-                    <?= status_badge($res['payment_status'] ?? 'Pending Review') ?>
-                    <?php if (!empty($res['payment_verified_at'])): ?>
-                      <span class="text-xs text-slate-500 font-mono">(Verified: <?= clean(format_datetime_text($res['payment_verified_at'])) ?>)</span>
-                    <?php elseif (!empty($res['payment_rejected_at'])): ?>
-                      <span class="text-xs text-slate-500 font-mono">(Rejected: <?= clean(format_datetime_text($res['payment_rejected_at'])) ?>)</span>
+                    <?php if ($paymentStatusLower === 'verified'): ?>
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
+                        Payment Complete
+                      </span>
+                      <?php if (!empty($res['payment_verified_at'])): ?>
+                        <span class="text-xs text-slate-500 font-mono">(Verified: <?= clean(format_datetime_text($res['payment_verified_at'])) ?>)</span>
+                      <?php endif; ?>
+                    <?php elseif ($paymentStatusLower === 'rejected'): ?>
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>
+                        Payment Not Received
+                      </span>
+                      <?php if (!empty($res['payment_rejected_at'])): ?>
+                        <span class="text-xs text-slate-500 font-mono">(Rejected: <?= clean(format_datetime_text($res['payment_rejected_at'])) ?>)</span>
+                      <?php endif; ?>
+                    <?php else: ?>
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
+                        Payment Incomplete
+                      </span>
                     <?php endif; ?>
                   </div>
                 </div>
                 <div class="mt-4 pt-3 border-t border-slate-200/60 text-xs text-slate-500">
                   <?php if ($paymentStatusLower === 'verified'): ?>
-                    <span class="text-emerald-700 font-semibold">✓ Verified &amp; Confirmed</span>
+                    <span class="text-emerald-700 font-semibold">✓ Payment complete and confirmed in your account</span>
                   <?php elseif ($paymentStatusLower === 'rejected'): ?>
-                    <span class="text-red-700 font-semibold">✕ Payment Rejected</span>
+                    <span class="text-red-700 font-semibold">✕ Payment not received — unit released</span>
                   <?php else: ?>
-                    <span class="text-amber-700 font-semibold">● Awaiting your verification</span>
+                    <span class="text-amber-700 font-semibold">● <?= $isInHousePayment ? 'Payment incomplete — awaiting in-house settlement' : 'Payment incomplete — awaiting receipt in your GCash account' ?></span>
                   <?php endif; ?>
                 </div>
               </div>
@@ -627,46 +587,38 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
               <div class="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 flex items-start gap-3">
                 <svg class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <div>
-                  <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">Payment Verified by You</p>
-                  <p class="text-sm font-medium text-emerald-900 mt-0.5">You have verified this downpayment in your account. Requirement tracking is active in the Documents tab.</p>
-                </div>
-              </div>
-            <?php elseif ($isInHousePayment): ?>
-              <div class="mt-5 flex items-center justify-between flex-wrap gap-4 p-5 rounded-xl bg-slate-50 border border-slate-200">
-                <div>
-                  <h4 class="text-sm font-bold text-slate-900">In-House Downpayment Settlement</h4>
-                  <p class="text-xs text-slate-500 mt-0.5">
-                    Downpayment (<strong><?= peso($res['required_amount'] ?: ($res['price_basis'] * $res['payment_percentage'])) ?></strong>) to be collected in cash or check.
+                  <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">Payment Complete</p>
+                  <p class="text-sm font-medium text-emerald-900 mt-0.5">
+                    <?= $isInHousePayment 
+                      ? 'You have marked the in-house down payment of ' . peso($downpaymentAmount) . ' as received. Requirement tracking is active in the Documents tab.' 
+                      : 'You have verified receipt of the GCash down payment of ' . peso($downpaymentAmount) . ' in your account. Requirement tracking is active in the Documents tab.' ?>
                   </p>
                 </div>
-                <button 
-                  type="button" 
-                  id="btnCompleteInHousePayment"
-                  class="btn-press px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                  Payment Completed
-                </button>
+              </div>
+            <?php elseif ($paymentStatusLower === 'rejected'): ?>
+              <div class="mt-5 rounded-xl border border-red-200 bg-red-50 px-5 py-4 flex items-start gap-3">
+                <svg class="w-5 h-5 text-red-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                <div>
+                  <p class="text-xs font-bold uppercase tracking-wider text-red-700">Payment Not Received / Rejected</p>
+                  <p class="text-sm font-medium text-red-900 mt-0.5">This reservation was closed because payment was not received. The unit has been released back to availability.</p>
+                  <?php if (!empty($res['admin_payment_remarks'])): ?>
+                    <p class="text-xs text-red-800 mt-1 italic">Remarks: <?= clean($res['admin_payment_remarks']) ?></p>
+                  <?php endif; ?>
+                </div>
               </div>
             <?php else: ?>
               <div class="mt-5 flex flex-col sm:flex-row gap-3">
                 <button 
                   type="button" 
                   id="btnVerifyPayment"
-                  class="btn-press flex-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                  Payment Received — Verify
-                </button>
-                <button 
-                  type="button" 
-                  id="btnFlagPayment"
-                  class="btn-press flex-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                  Amount Unclear — Flag
+                  class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-sm flex items-center justify-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                  Payment Received — Complete
                 </button>
                 <button 
                   type="button" 
                   id="btnRejectPayment"
-                  class="btn-press flex-1 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
+                  class="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-sm flex items-center justify-center gap-2">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                   Not Received / Reject
                 </button>
@@ -896,12 +848,6 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
               </table>
             </div>
 
-            <div class="mt-5 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
-              <p class="text-xs text-blue-700 leading-relaxed">
-                Only the admin can mark this reservation as officially booked, once all documents are complete.
-              </p>
-            </div>
-
             <button
               type="button"
               id="btnSaveDocuments"
@@ -939,103 +885,58 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
   </div>
 </div>
 
-<!-- PAYMENT VERIFICATION MODAL -->
+<!-- PAYMENT COMPLETION MODAL -->
 <div id="verifyPaymentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
   <div class="bg-white rounded-3xl border border-slate-100 shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
     <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
       <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-        Confirm Payment Verification
+        Confirm Payment Completion
       </h3>
       <button type="button" onclick="closePaymentConfirmModal('verifyPaymentModal')" class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600">✕</button>
     </div>
-    <div class="p-6 space-y-4">
+    <div class="p-6">
       <p class="text-sm text-slate-600 leading-relaxed">
-        Are you sure you want to verify this payment? Confirm that you have reviewed the uploaded payment proof and verified receipt in your account.
+        <?php if ($isInHousePayment): ?>
+          Confirm that you have collected and received the in-house down payment of <strong><?= peso($downpaymentAmount) ?></strong> from the applicant in cash or check.
+        <?php else: ?>
+          Confirm that you have checked your personal GCash account and verified receipt of the down payment of <strong><?= peso($downpaymentAmount) ?></strong>.
+        <?php endif; ?>
       </p>
-      <div>
-        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Remarks (Optional)</label>
-        <textarea id="verifyPaymentRemarks" rows="2" placeholder="e.g. Received via GCash, amounts match." class="zep-input w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm"></textarea>
-      </div>
     </div>
     <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
       <button type="button" onclick="closePaymentConfirmModal('verifyPaymentModal')" class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200/60 rounded-xl">Cancel</button>
-      <button type="button" onclick="confirmPaymentAction('verify')" class="btn-press px-5 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm">Confirm &amp; Verify</button>
+      <button type="button" onclick="confirmPaymentAction('verify')" class="btn-press px-5 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm">Confirm &amp; Complete</button>
     </div>
   </div>
 </div>
 
-<!-- PAYMENT FLAG MODAL -->
-<div id="flagPaymentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-  <div class="bg-white rounded-3xl border border-slate-100 shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-    <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-      <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-        Flag Payment for Review
-      </h3>
-      <button type="button" onclick="closePaymentConfirmModal('flagPaymentModal')" class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600">✕</button>
-    </div>
-    <div class="p-6 space-y-4">
-      <p class="text-sm text-slate-600 leading-relaxed">
-        Flag this payment if the transaction amount is short, unclear, or if you need clarification from the client before verifying.
-      </p>
-      <div>
-        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Note to Tenant <span class="text-red-500">*</span></label>
-        <textarea id="flagPaymentRemarks" rows="3" placeholder="e.g. Sent amount is short of required downpayment." class="zep-input w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" required></textarea>
-      </div>
-    </div>
-    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
-      <button type="button" onclick="closePaymentConfirmModal('flagPaymentModal')" class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200/60 rounded-xl">Cancel</button>
-      <button type="button" onclick="confirmPaymentAction('flag')" class="btn-press px-5 py-2.5 text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-xl shadow-sm">Flag Payment</button>
-    </div>
-  </div>
-</div>
-
-<!-- PAYMENT REJECT MODAL -->
+<!-- PAYMENT NOT RECEIVED / REJECT MODAL -->
 <div id="rejectPaymentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
   <div class="bg-white rounded-3xl border border-slate-100 shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
     <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
       <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-        Reject Payment
+        Payment Not Received / Reject
       </h3>
       <button type="button" onclick="closePaymentConfirmModal('rejectPaymentModal')" class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600">✕</button>
     </div>
     <div class="p-6 space-y-4">
       <p class="text-sm text-slate-600 leading-relaxed">
-        Are you sure you want to reject this payment? This will close the reservation and notify the client that their payment was not received.
+        <?php if ($isInHousePayment): ?>
+          Are you sure the in-house down payment was not settled? This will close the reservation and release the unit back to availability so other clients can inquire.
+        <?php else: ?>
+          Are you sure this GCash payment was not received in your account? This will close the reservation and release the unit back to availability.
+        <?php endif; ?>
       </p>
       <div>
         <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Reason for Rejection <span class="text-red-500">*</span></label>
-        <textarea id="rejectPaymentRemarks" rows="3" placeholder="e.g. Reference number invalid and no payment was received." class="zep-input w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" required></textarea>
+        <textarea id="rejectPaymentRemarks" rows="3" placeholder="<?= $isInHousePayment ? 'e.g. Client did not settle payment within the reservation window.' : 'e.g. Reference number invalid and no payment was received in GCash.' ?>" class="zep-input w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" required></textarea>
       </div>
     </div>
     <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
       <button type="button" onclick="closePaymentConfirmModal('rejectPaymentModal')" class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200/60 rounded-xl">Cancel</button>
       <button type="button" onclick="confirmPaymentAction('reject')" class="btn-press px-5 py-2.5 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-sm">Confirm Rejection</button>
-    </div>
-  </div>
-</div>
-
-<!-- Complete In-House Payment Modal -->
-<div id="completeInHousePaymentModal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/50 backdrop-blur-xs px-4">
-  <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100">
-    <div class="bg-emerald-600 px-6 py-4 flex items-center justify-between">
-      <h3 class="text-base font-bold text-white flex items-center gap-2">Complete In-House Payment</h3>
-      <button type="button" onclick="closeInHousePaymentModal()" class="text-emerald-100 hover:text-white">✕</button>
-    </div>
-    <div class="p-6 space-y-4">
-      <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
-        Are you sure you want to mark this in-house payment as completed? Confirm that you have received the required downpayment of <strong><?= peso($res['required_amount'] ?: ($res['price_basis'] * $res['payment_percentage'])) ?></strong>.
-      </p>
-      <div>
-        <label class="block text-xs font-semibold text-slate-700 mb-1">Remarks (optional)</label>
-        <textarea id="inHousePaymentRemarks" rows="2" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 resize-none focus:outline-none focus:border-slate-900"></textarea>
-      </div>
-    </div>
-    <div class="flex items-center justify-end gap-2.5 px-6 py-4 border-t border-slate-100 bg-slate-50">
-      <button type="button" onclick="closeInHousePaymentModal()" class="px-4 py-2 border border-slate-200 hover:bg-slate-100 rounded-xl text-xs font-semibold text-slate-700">Cancel</button>
-      <button type="button" id="btnConfirmInHousePayment" onclick="submitInHousePaymentComplete()" class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm">Confirm &amp; Complete</button>
     </div>
   </div>
 </div>
@@ -1051,10 +952,6 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
       Are you sure you want to mark this lease signing as completed?
     </p>
     <input type="hidden" id="signingActionInput" value="complete">
-    <div>
-      <label class="block text-xs font-semibold text-slate-700 mb-1">Remarks / Signing Notes (optional)</label>
-      <textarea id="signingRemarksInput" rows="3" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 resize-none focus:outline-none focus:border-slate-900"></textarea>
-    </div>
     <div class="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
       <button type="button" onclick="closeSigningModal()" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-semibold text-slate-700">Cancel</button>
       <button type="button" id="btnConfirmSigning" onclick="submitLeaseSigningAction()" class="px-5 py-2 bg-[#0f172a] hover:bg-[#1e293b] text-white rounded-xl text-xs font-bold transition-all">Confirm</button>
@@ -1078,10 +975,10 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
       if (!btn || !panel) return;
 
       if (t === tabName) {
-        btn.className = 'tab-nav-btn pb-3 text-sm font-bold text-slate-900 border-b-2 border-slate-900 transition-all shrink-0';
+        btn.className = 'tab-nav-btn pb-3 text-sm font-bold text-slate-900 border-b-2 border-slate-900 shrink-0';
         panel.classList.remove('hidden');
       } else {
-        btn.className = 'tab-nav-btn pb-3 text-sm font-medium text-slate-400 hover:text-slate-800 border-b-2 border-transparent transition-all shrink-0';
+        btn.className = 'tab-nav-btn pb-3 text-sm font-medium text-slate-400 hover:text-slate-800 border-b-2 border-transparent shrink-0';
         panel.classList.add('hidden');
       }
     });
@@ -1102,16 +999,7 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
 
   function openPaymentConfirmModal(action) {
     if (action === 'verify') {
-      const box = document.getElementById('verifyPaymentRemarks');
-      if (box) box.value = '';
       const m = document.getElementById('verifyPaymentModal');
-      m?.classList.remove('hidden');
-      m?.classList.add('flex');
-    }
-    if (action === 'flag') {
-      const box = document.getElementById('flagPaymentRemarks');
-      if (box) box.value = '';
-      const m = document.getElementById('flagPaymentModal');
       m?.classList.remove('hidden');
       m?.classList.add('flex');
     }
@@ -1135,16 +1023,7 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
   function confirmPaymentAction(action) {
     let remarks = '';
     if (action === 'verify') {
-      remarks = document.getElementById('verifyPaymentRemarks')?.value.trim() || '';
       closePaymentConfirmModal('verifyPaymentModal');
-    }
-    if (action === 'flag') {
-      remarks = document.getElementById('flagPaymentRemarks')?.value.trim() || '';
-      if (remarks === '') {
-        alert('Please enter a note/reason for flagging this payment.');
-        return;
-      }
-      closePaymentConfirmModal('flagPaymentModal');
     }
     if (action === 'reject') {
       remarks = document.getElementById('rejectPaymentRemarks')?.value.trim() || '';
@@ -1160,7 +1039,7 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
     formData.append('action', action);
     formData.append('remarks', remarks);
 
-    fetch(appBaseUrl + '/unitOwnerPages/ActionsUOP/verifyOwnerPayment.php', {
+    fetch(appBaseUrl + '/owner/reservations/verify-payment', {
       method: 'POST',
       body: formData
     })
@@ -1178,50 +1057,7 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
   }
 
   document.getElementById('btnVerifyPayment')?.addEventListener('click', () => openPaymentConfirmModal('verify'));
-  document.getElementById('btnFlagPayment')?.addEventListener('click', () => openPaymentConfirmModal('flag'));
   document.getElementById('btnRejectPayment')?.addEventListener('click', () => openPaymentConfirmModal('reject'));
-
-  function openInHousePaymentModal() {
-    const box = document.getElementById('inHousePaymentRemarks');
-    if (box) box.value = '';
-    const m = document.getElementById('completeInHousePaymentModal');
-    m?.classList.remove('hidden');
-    m?.classList.add('flex');
-  }
-
-  function closeInHousePaymentModal() {
-    const m = document.getElementById('completeInHousePaymentModal');
-    m?.classList.add('hidden');
-    m?.classList.remove('flex');
-  }
-
-  function submitInHousePaymentComplete() {
-    const remarks = document.getElementById('inHousePaymentRemarks')?.value.trim() || 'In-House payment collected & completed.';
-    closeInHousePaymentModal();
-
-    const formData = new FormData();
-    formData.append('reservation_id', currentReservationId);
-    formData.append('action', 'verify');
-    formData.append('remarks', remarks);
-
-    fetch(appBaseUrl + '/unitOwnerPages/ActionsUOP/verifyOwnerPayment.php', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      alert(data.message);
-      if (data.success) {
-        window.location.reload();
-      }
-    })
-    .catch(error => {
-      console.error(error);
-      alert('Something went wrong while completing in-house payment.');
-    });
-  }
-
-  document.getElementById('btnCompleteInHousePayment')?.addEventListener('click', openInHousePaymentModal);
 
   // Document Tracking
   let currentDocuments = [];
@@ -1296,7 +1132,7 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
     const tbody = document.getElementById('documentsTableBody');
     if (!tbody) return;
 
-    fetch(appBaseUrl + '/unitOwnerPages/ActionsUOP/getOwnerReservationDocuments.php?reservation_id=' + encodeURIComponent(reservationId))
+    fetch(appBaseUrl + '/owner/reservations/documents?reservation_id=' + encodeURIComponent(reservationId))
       .then(response => response.json())
       .then(data => {
         if (!data.success) {
@@ -1323,19 +1159,20 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
     }
 
     tbody.innerHTML = currentDocuments.map(doc => {
-      if (!documentsEditMode) {
-        const statusBadge = doc.status === 'complete'
-          ? "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200'>Complete</span>"
-          : "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200'>Pending</span>";
+      const hasLink = (doc.document_link && doc.document_link.trim().length > 0);
+      const statusBadge = hasLink
+        ? "<span class='doc-row-status inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200'>Complete</span>"
+        : "<span class='doc-row-status inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200'>Pending</span>";
 
-        const linkCell = doc.document_link
+      if (!documentsEditMode) {
+        const linkCell = hasLink
           ? `<a href="${escapeHtmlAttr(doc.document_link)}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-blue-600 hover:underline inline-flex items-center gap-1"><span>View Link</span><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>`
           : "<span class='text-xs text-slate-400'>—</span>";
 
         return `
           <tr class="hover:bg-slate-50/70 transition-colors">
             <td class="px-4 py-3.5 font-medium text-slate-800">${escapeHtml(doc.document_name)}</td>
-            <td class="px-4 py-3.5">${statusBadge}</td>
+            <td class="px-4 py-3.5 doc-status-cell">${statusBadge}</td>
             <td class="px-4 py-3.5 text-slate-600">${escapeHtml(storageDisplayLabel(doc))}</td>
             <td class="px-4 py-3.5">${linkCell}</td>
           </tr>
@@ -1347,18 +1184,14 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
       return `
         <tr data-document-id="${doc.document_id}" class="hover:bg-slate-50/70 transition-colors">
           <td class="px-4 py-3.5 font-medium text-slate-800">${escapeHtml(doc.document_name)}</td>
-          <td class="px-4 py-3.5">
-            <select class="doc-status-input text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white font-medium text-slate-700 focus:border-slate-900 focus:outline-none">
-              <option value="pending" ${doc.status !== 'complete' ? 'selected' : ''}>Pending</option>
-              <option value="complete" ${doc.status === 'complete' ? 'selected' : ''}>Complete</option>
-            </select>
+          <td class="px-4 py-3.5 doc-status-cell">
+            ${statusBadge}
           </td>
           <td class="px-4 py-3.5">
             <div class="flex flex-col gap-1.5">
               <select class="doc-storage-input text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white font-medium text-slate-700 focus:border-slate-900 focus:outline-none">
-                <option value="" ${!doc.storage ? 'selected' : ''}>Select storage</option>
+                <option value="gdrive" ${(!doc.storage || doc.storage === 'gdrive') ? 'selected' : ''}>Google Drive</option>
                 <option value="dropbox" ${doc.storage === 'dropbox' ? 'selected' : ''}>Dropbox</option>
-                <option value="gdrive" ${doc.storage === 'gdrive' ? 'selected' : ''}>Google Drive</option>
                 <option value="other" ${isOther ? 'selected' : ''}>Other</option>
               </select>
               <input type="text" class="doc-storage-other-input text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white ${isOther ? '' : 'hidden'}" placeholder="Storage name" value="${escapeHtmlAttr(doc.storage_other_label || '')}">
@@ -1384,6 +1217,24 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
           }
         });
       });
+
+      // Reactive update of Status badge based on link typing
+      tbody.querySelectorAll('.doc-link-input').forEach(input => {
+        const updateRowBadge = () => {
+          const row = input.closest('tr');
+          const statusCell = row?.querySelector('.doc-status-cell');
+          if (!statusCell) return;
+          const val = input.value.trim();
+          if (val.length > 0) {
+            statusCell.innerHTML = "<span class='doc-row-status inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200'>Complete</span>";
+          } else {
+            statusCell.innerHTML = "<span class='doc-row-status inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200'>Pending</span>";
+          }
+        };
+
+        input.addEventListener('input', updateRowBadge);
+        input.addEventListener('change', updateRowBadge);
+      });
     }
   }
 
@@ -1398,12 +1249,13 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
     const rows = document.querySelectorAll('#documentsTableBody tr[data-document-id]');
     const payload = [];
     rows.forEach(row => {
+      const linkVal = row.querySelector('.doc-link-input')?.value.trim() || '';
       payload.push({
         document_id: row.dataset.documentId,
-        status: row.querySelector('.doc-status-input')?.value || 'pending',
+        status: (linkVal.length > 0) ? 'complete' : 'pending',
         storage: row.querySelector('.doc-storage-input')?.value || '',
         storage_other_label: row.querySelector('.doc-storage-other-input')?.value || '',
-        document_link: row.querySelector('.doc-link-input')?.value || ''
+        document_link: linkVal
       });
     });
     return payload;
@@ -1420,7 +1272,7 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
     formData.append('reservation_id', currentReservationId);
     formData.append('documents', JSON.stringify(documents));
 
-    fetch(appBaseUrl + '/unitOwnerPages/ActionsUOP/updateOwnerReservationDocuments.php', {
+    fetch(appBaseUrl + '/owner/reservations/documents', {
       method: 'POST',
       body: formData
     })
@@ -1464,7 +1316,7 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
     formData.append('reservation_id', currentReservationId);
     formData.append('reason', reason);
 
-    fetch(appBaseUrl + '/unitOwnerPages/ActionsUOP/requestCancellation.php', {
+    fetch(appBaseUrl + '/owner/reservations/request-cancellation', {
       method: 'POST',
       body: formData
     })
@@ -1559,10 +1411,8 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
     const title = document.getElementById('signingModalTitle');
     const desc = document.getElementById('signingModalDesc');
     const btn = document.getElementById('btnConfirmSigning');
-    const remarks = document.getElementById('signingRemarksInput');
 
     actionInput.value = action;
-    remarks.value = '';
 
     if (action === 'complete') {
       title.textContent = 'Complete Lease Signing';
@@ -1590,7 +1440,6 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
 
   async function submitLeaseSigningAction() {
     const action = document.getElementById('signingActionInput').value;
-    const remarks = document.getElementById('signingRemarksInput').value;
     const reservationId = currentReservationId;
     const btn = document.getElementById('btnConfirmSigning');
 
@@ -1601,7 +1450,7 @@ $isInHousePayment = strtolower((string)$paymentMethod) === 'in-house';
       const formData = new FormData();
       formData.append('reservation_id', reservationId);
       formData.append('action', action);
-      formData.append('remarks', remarks);
+      formData.append('remarks', '');
 
       const res = await fetch(appBaseUrl + '/owner/reservations/lease-signing', {
         method: 'POST',

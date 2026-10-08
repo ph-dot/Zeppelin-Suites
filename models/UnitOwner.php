@@ -979,6 +979,11 @@ class UnitOwner extends Model {
             return ['success' => false, 'message' => 'Failed to update lease signing status in database.'];
         }
 
+        if ($action === 'complete') {
+            require_once __DIR__ . '/Reservation.php';
+            (new Reservation())->checkAndPromoteToOfficiallyBooked($reservationId, $ownerId, 'unit owner');
+        }
+
         return [
             'success'   => true,
             'message'   => $action === 'complete' ? 'Lease signing marked as completed successfully.' : 'Lease signing status reset to pending.',
@@ -986,4 +991,142 @@ class UnitOwner extends Model {
             'signed_at' => $now,
         ];
     }
+
+    /**
+     * Verify (complete) or reject payment for this owner's reservation.
+     */
+    public function updatePaymentStatus(int $ownerId, int $reservationId, string $action, string $remarks): array {
+        $res = $this->getReservationDetails($ownerId, $reservationId);
+        if (!$res) {
+            return ['success' => false, 'message' => 'Reservation not found or unauthorized.'];
+        }
+
+        $action = strtolower(trim($action));
+        if (!in_array($action, ['verify', 'reject'], true)) {
+            return ['success' => false, 'message' => 'Invalid payment action.'];
+        }
+
+        $now = date('Y-m-d H:i:s');
+
+        if ($action === 'verify') {
+            $sql = "
+                UPDATE reservation_table
+                SET payment_status = 'verified',
+                    payment_verified_at = ?,
+                    admin_payment_remarks = ?,
+                    reservation_status = CASE 
+                        WHEN LOWER(reservation_status) = 'submitted' THEN 'pending' 
+                        ELSE reservation_status 
+                    END
+                WHERE reservation_id = ?
+            ";
+            $success = $this->execute($sql, [$now, $remarks, $reservationId]);
+            if (!$success) {
+                return ['success' => false, 'message' => 'Database error while marking payment as complete.'];
+            }
+
+            require_once __DIR__ . '/Reservation.php';
+            (new Reservation())->checkAndPromoteToOfficiallyBooked($reservationId, $ownerId, 'unit owner');
+
+            return [
+                'success'        => true,
+                'message'        => 'Payment marked as complete and verified successfully.',
+                'payment_status' => 'verified',
+                'verified_at'    => $now,
+            ];
+        }
+
+        // Reject / Not Received
+        $inquiryType = strtolower(trim((string)($res['inquiry_type'] ?? '')));
+        $releasedStatus = ($inquiryType === 'resale inquiry' || strpos($inquiryType, 'resale') !== false) 
+            ? 'Resale' 
+            : 'Ready for Occupancy';
+
+        $sql = "
+            UPDATE reservation_table
+            SET payment_status = 'rejected',
+                reservation_status = 'rejected',
+                payment_rejected_at = ?,
+                admin_payment_remarks = ?
+            WHERE reservation_id = ?
+        ";
+        $success = $this->execute($sql, [$now, $remarks, $reservationId]);
+        if (!$success) {
+            return ['success' => false, 'message' => 'Database error while rejecting payment.'];
+        }
+
+        // Release the unit back
+        if (!empty($res['unit_id'])) {
+            $this->execute("UPDATE units_table SET unit_current_status = ? WHERE unit_id = ?", [
+                $releasedStatus,
+                (int)$res['unit_id']
+            ]);
+        }
+
+        return [
+            'success'        => true,
+            'message'        => 'Payment marked as not received. Reservation has been rejected and the unit is released.',
+            'payment_status' => 'rejected',
+            'rejected_at'    => $now,
+        ];
+    }
+
+    /**
+     * Retrieve documents for a reservation owned by this unit owner.
+     */
+    public function getDocuments(int $ownerId, int $reservationId): array {
+        $res = $this->getReservationDetails($ownerId, $reservationId);
+        if (!$res) {
+            return ['success' => false, 'message' => 'Reservation not found or unauthorized.', 'documents' => [], 'all_completed' => false];
+        }
+
+        require_once __DIR__ . '/Reservation.php';
+        $reservationModel = new Reservation();
+        return $reservationModel->getDocuments($reservationId);
+    }
+
+    /**
+     * Save documents for a reservation owned by this unit owner.
+     */
+    public function saveDocuments(int $ownerId, int $reservationId, array $documents): array {
+        $res = $this->getReservationDetails($ownerId, $reservationId);
+        if (!$res) {
+            return ['success' => false, 'message' => 'Reservation not found or unauthorized.'];
+        }
+
+        require_once __DIR__ . '/Reservation.php';
+        $reservationModel = new Reservation();
+        return $reservationModel->saveDocuments($reservationId, $documents, $ownerId, 'unit owner');
+    }
+
+    /**
+     * Submit a cancellation request to admin (Unit Owner).
+     */
+    public function requestCancellation(int $ownerId, int $reservationId, string $reason): array {
+        $res = $this->getReservationDetails($ownerId, $reservationId);
+        if (!$res) {
+            return ['success' => false, 'message' => 'Reservation not found or unauthorized.'];
+        }
+
+        $now = date('Y-m-d H:i:s');
+
+        $success = $this->execute(
+            "UPDATE reservation_table 
+             SET cancellation_status = 'requested',
+                 cancellation_reason = ?,
+                 cancellation_requested_by = ?,
+                 cancellation_requested_by_role = 'unit owner',
+                 cancellation_requested_at = ?
+             WHERE reservation_id = ?",
+            [$reason, $ownerId, $now, $reservationId]
+        );
+
+        if (!$success) {
+            return ['success' => false, 'message' => 'Database error while submitting cancellation request.'];
+        }
+
+        return ['success' => true, 'message' => 'Cancellation request submitted to admin successfully.'];
+    }
 }
+
+

@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../core/Middleware.php';
 require_once __DIR__ . '/../models/UnitOwner.php';
+require_once __DIR__ . '/../models/BookingCalendar.php';
 
 /**
  * Zeppelin Suites - Unit Owner Controller
@@ -196,6 +197,58 @@ class UnitOwnerController extends Controller {
         } catch (Throwable $e) {
             $this->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * AJAX POST endpoint for Owner to block unit dates.
+     */
+    public function saveBlockedDate(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Method not allowed.'], 405);
+            return;
+        }
+
+        $unitId = (int)$this->getPost('unit_id', 0);
+        $startDate = (string)$this->getPost('start_date', '');
+        $endDate = (string)$this->getPost('end_date', '');
+        $blockType = (string)$this->getPost('block_type', 'Not Available');
+        $remarks = (string)$this->getPost('remarks', '');
+        $ownerId = (int)$userSession['user_id'];
+
+        $calendarModel = new BookingCalendar();
+        $result = $calendarModel->saveBlockedDate(
+            $unitId,
+            $startDate,
+            $endDate,
+            $blockType,
+            $remarks,
+            $ownerId,
+            'owner'
+        );
+
+        $status = $result['success'] ? 200 : 422;
+        $this->json($result, $status);
+    }
+
+    /**
+     * AJAX POST endpoint for Owner to unblock unit dates.
+     */
+    public function deleteBlockedDate(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Method not allowed.'], 405);
+            return;
+        }
+
+        $blockId = (int)$this->getPost('block_id', 0);
+        $calendarModel = new BookingCalendar();
+        $result = $calendarModel->deleteBlockedDate($blockId);
+
+        $status = $result['success'] ? 200 : 422;
+        $this->json($result, $status);
     }
 
     /**
@@ -426,5 +479,97 @@ class UnitOwnerController extends Controller {
         $result = $this->ownerModel->updateLeaseSigningStatus($ownerId, $reservationId, $action, $remarks);
         $this->json($result, $result['success'] ? 200 : 422);
     }
+
+    /**
+     * AJAX endpoint to mark payment complete or not received / reject (Unit Owner).
+     */
+    public function updatePaymentStatus(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $ownerId = (int)$userSession['user_id'];
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $action = trim((string)$this->getPost('action', 'verify'));
+        $remarks = trim((string)$this->getPost('remarks', ''));
+
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
+            return;
+        }
+
+        $result = $this->ownerModel->updatePaymentStatus($ownerId, $reservationId, $action, $remarks);
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to fetch reservation documents (Unit Owner).
+     */
+    public function getDocuments(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $ownerId = (int)$userSession['user_id'];
+
+        $reservationId = (int)($this->getQuery('reservation_id', 0) ?: $this->getQuery('id', 0));
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.', 'documents' => []], 400);
+            return;
+        }
+
+        $result = $this->ownerModel->getDocuments($ownerId, $reservationId);
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to save reservation documents (Unit Owner).
+     */
+    public function saveDocuments(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $ownerId = (int)$userSession['user_id'];
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $rawDocs = $this->getPost('documents');
+
+        $documents = is_array($rawDocs) ? $rawDocs : json_decode((string)$rawDocs, true);
+        if ($reservationId <= 0 || !is_array($documents)) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID or documents payload.'], 400);
+            return;
+        }
+
+        $result = $this->ownerModel->saveDocuments($ownerId, $reservationId, $documents);
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to request cancellation for a reservation (Unit Owner).
+     */
+    public function requestCancellation(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $ownerId = (int)$userSession['user_id'];
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $reason = trim((string)($this->getPost('reason') ?? $this->getPost('cancellation_reason') ?? ''));
+
+        if ($reservationId <= 0 || $reason === '') {
+            $this->json(['success' => false, 'message' => 'Reservation ID and cancellation reason are required.'], 400);
+            return;
+        }
+
+        $result = $this->ownerModel->requestCancellation($ownerId, $reservationId, $reason);
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
 }
+
 

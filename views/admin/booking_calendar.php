@@ -531,11 +531,11 @@ $baseUrl = $baseUrl ?? rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
       <div class="grid grid-cols-2 gap-3">
         <div class="space-y-1.5">
           <label class="text-xs font-semibold text-slate-700 block">Start Date <span class="text-red-400">*</span></label>
-          <input id="block_startDate" name="start_date" type="date" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" required>
+          <input id="block_startDate" name="start_date" type="date" min="<?= date('Y-m-d') ?>" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" required>
         </div>
         <div class="space-y-1.5">
           <label class="text-xs font-semibold text-slate-700 block">End Date <span class="text-red-400">*</span></label>
-          <input id="block_endDate" name="end_date" type="date" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" required>
+          <input id="block_endDate" name="end_date" type="date" min="<?= date('Y-m-d') ?>" class="zep-input w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" required>
         </div>
       </div>
 
@@ -1136,9 +1136,14 @@ function openBlockDatesModal(unitType, room, unitId, dateStr) {
   errNotice.classList.add("hidden");
   document.getElementById("block_remarks").value = "";
 
-  const baseDate = dateStr || toLocalISODate(new Date());
+  const today = toLocalISODate(new Date());
+  startInput.min = today;
+  endInput.min = today;
+
+  const baseDate = (dateStr && dateStr >= today) ? dateStr : today;
   startInput.value = baseDate;
   endInput.value = baseDate;
+  endInput.min = baseDate;
 
   if (unitType && room) {
     typeDisplay.textContent = unitType;
@@ -1342,6 +1347,17 @@ function formatDisplayDate(str) {
 }
 
 (async function init() {
+  const startInput = document.getElementById("block_startDate");
+  const endInput = document.getElementById("block_endDate");
+  if (startInput && endInput) {
+    startInput.addEventListener("change", function() {
+      endInput.min = this.value;
+      if (endInput.value && endInput.value < this.value) {
+        endInput.value = this.value;
+      }
+    });
+  }
+
   await loadCalendarData();
   buildFilterSidebar();
   populateBlockManualUnits();

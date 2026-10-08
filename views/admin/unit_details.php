@@ -79,6 +79,7 @@ $stayCategory = trim((string)($unit['stay_category'] ?? 'Long term'));
 $leaseRate = (float)($unit['lease_rate'] ?? 0);
 $resellingPrice = (float)($unit['resellling_price'] ?? $unit['reselling_price'] ?? 0);
 $currentOwnerId = $unit['unit_owner_id'] !== null ? (int)$unit['unit_owner_id'] : null;
+$isResale = (strcasecmp($listingType, 'Resale') === 0 || strcasecmp($currentStatus, 'Resale') === 0 || stripos($listingType, 'resell') !== false);
 
 $statusLower = strtolower($currentStatus);
 if ($statusLower === 'ready for occupancy') {
@@ -291,11 +292,11 @@ tailwind.config = {
               </div>
             </div>
             <div class="mt-3">
-              <p class="text-lg md:text-xl font-bold text-slate-900 leading-tight" id="displayStayCategory"><?= clean($stayCategory) ?></p>
+              <p class="text-lg md:text-xl font-bold text-slate-900 leading-tight" id="displayStayCategory"><?= $isResale ? '-' : clean($stayCategory) ?></p>
             </div>
           </div>
           <p class="text-xs text-slate-500 mt-3" id="displayStaySub">
-            <?= strtolower($stayCategory) === 'short term' ? 'Flexible short stay' : 'Standard 6-12+ mos lease' ?>
+            <?= $isResale ? '-' : (strtolower($stayCategory) === 'short term' ? 'Flexible short stay' : 'Standard 6-12+ mos lease') ?>
           </p>
         </div>
 

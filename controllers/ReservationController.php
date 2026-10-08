@@ -147,5 +147,138 @@ class ReservationController extends Controller {
 
         $this->json($result, $result['success'] ? 200 : 422);
     }
+
+    /**
+     * AJAX endpoint to update payment status (Admin Override).
+     */
+    public function updatePaymentStatus(): void {
+        $userSession = Middleware::requireRole(['admin']);
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $action = trim((string)$this->getPost('action', 'verify'));
+        $remarks = trim((string)$this->getPost('remarks', ''));
+
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
+            return;
+        }
+
+        $result = $this->reservationModel->updatePaymentStatus(
+            $reservationId,
+            $action,
+            $remarks,
+            (int)$userSession['user_id'],
+            (string)$userSession['full_name']
+        );
+
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to fetch reservation documents (Admin).
+     */
+    public function getDocuments(): void {
+        Middleware::requireRole(['admin']);
+
+        $reservationId = (int)($this->getQuery('reservation_id', 0) ?: $this->getQuery('id', 0));
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.', 'documents' => []], 400);
+            return;
+        }
+
+        $result = $this->reservationModel->getDocuments($reservationId);
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to save reservation documents (Admin).
+     */
+    public function saveDocuments(): void {
+        $userSession = Middleware::requireRole(['admin']);
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $rawDocs = $this->getPost('documents');
+
+        $documents = is_array($rawDocs) ? $rawDocs : json_decode((string)$rawDocs, true);
+        if ($reservationId <= 0 || !is_array($documents)) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID or documents payload.'], 400);
+            return;
+        }
+
+        $result = $this->reservationModel->saveDocuments(
+            $reservationId,
+            $documents,
+            (int)$userSession['user_id'],
+            'admin'
+        );
+
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to mark reservation as officially booked (Admin).
+     */
+    public function markOfficiallyBooked(): void {
+        $userSession = Middleware::requireRole(['admin']);
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int)$this->getPost('reservation_id', 0);
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
+            return;
+        }
+
+        $result = $this->reservationModel->markOfficiallyBooked(
+            $reservationId,
+            (int)$userSession['user_id'],
+            'admin'
+        );
+
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to cancel reservation (Admin).
+     */
+    public function cancelReservation(): void {
+        $userSession = Middleware::requireRole(['admin']);
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $remarks = trim((string)($this->getPost('remarks') ?? 'Cancelled by admin.'));
+
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
+            return;
+        }
+
+        $result = $this->reservationModel->cancelReservation(
+            $reservationId,
+            $remarks,
+            (int)$userSession['user_id'],
+            'admin'
+        );
+
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
 }
+
 

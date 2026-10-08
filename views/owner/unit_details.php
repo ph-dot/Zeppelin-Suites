@@ -78,6 +78,7 @@ $listingType = trim((string)($unit['listing_type'] ?? 'For Lease'));
 $stayCategory = trim((string)($unit['stay_category'] ?? 'Long term'));
 $leaseRate = (float)($unit['lease_rate'] ?? 0);
 $resellingPrice = (float)($unit['resellling_price'] ?? $unit['reselling_price'] ?? 0);
+$isResale = (strcasecmp($listingType, 'Resale') === 0 || strcasecmp($currentStatus, 'Resale') === 0 || stripos($listingType, 'resell') !== false);
 
 $statusLower = strtolower($currentStatus);
 if ($statusLower === 'ready for occupancy') {
@@ -291,18 +292,18 @@ tailwind.config = {
             <div class="flex items-center justify-between gap-2">
               <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Term Category</p>
               <div class="flex items-center gap-1.5">
-                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">Editable</span>
+                <span id="badgeStayCategory" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100 <?= $isResale ? 'hidden' : '' ?>">Editable</span>
                 <span class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </span>
               </div>
             </div>
             <div class="mt-3">
-              <p class="text-lg md:text-xl font-bold text-slate-900 leading-tight" id="displayStayCategory"><?= clean($stayCategory) ?></p>
+              <p class="text-lg md:text-xl font-bold text-slate-900 leading-tight" id="displayStayCategory"><?= $isResale ? '-' : clean($stayCategory) ?></p>
             </div>
           </div>
           <p class="text-xs text-slate-500 mt-3" id="displayStaySub">
-            <?= strtolower($stayCategory) === 'short term' ? 'Flexible short stay' : 'Standard 6-12+ mos lease' ?>
+            <?= $isResale ? '-' : (strtolower($stayCategory) === 'short term' ? 'Flexible short stay' : 'Standard 6-12+ mos lease') ?>
           </p>
         </div>
 
@@ -367,13 +368,13 @@ tailwind.config = {
           <div>
             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Lease Term Duration</p>
             <p class="text-sm font-semibold text-slate-900 mt-1 flex items-center gap-2" id="specStayCategory">
-              <span><?= clean($stayCategory) ?></span>
-              <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Editable</span>
+              <span><?= $isResale ? '-' : clean($stayCategory) ?></span>
+              <span id="specStayBadge" class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 <?= $isResale ? 'hidden' : '' ?>">Editable</span>
             </p>
           </div>
           <div>
-            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Lease Monthly Rate</p>
-            <p class="text-sm font-bold text-slate-900 font-mono mt-1" id="specLeaseRate"><?= peso($leaseRate, true) ?></p>
+            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider" id="specRateTitle"><?= $isResale ? 'Reselling Price' : 'Lease Monthly Rate' ?></p>
+            <p class="text-sm font-bold text-slate-900 font-mono mt-1" id="specLeaseRate"><?= $isResale ? peso($resellingPrice > 0 ? $resellingPrice : $leaseRate, true) : peso($leaseRate, true) ?></p>
           </div>
         </div>
       </div>
@@ -458,7 +459,7 @@ tailwind.config = {
       </div>
 
       <!-- LEASE HISTORY & UPCOMING CLIENTS TABLE -->
-      <div class="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs">
+      <div id="leaseHistorySection" class="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs <?= $isResale ? 'hidden' : '' ?>">
         <div class="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-gradient-to-r from-slate-50/80 via-white to-slate-50/40">
           <div>
             <div class="flex items-center gap-2">
@@ -612,7 +613,7 @@ tailwind.config = {
       </div>
 
       <!-- Stay Category -->
-      <div>
+      <div id="stayCategoryFieldGroup" class="<?= $isResale ? 'hidden' : '' ?>">
         <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
           Lease Term Duration <span class="text-red-500">*</span>
         </label>
@@ -723,8 +724,10 @@ function togglePricingInputs(userInitiated = false) {
   const reqResaleStar = document.getElementById('reqResaleStar');
   const leaseInput = document.getElementById('leaseRateInput');
   const resaleInput = document.getElementById('reselllingPriceInput');
+  const stayCategoryGroup = document.getElementById('stayCategoryFieldGroup');
 
   if (isResale) {
+    if (stayCategoryGroup) stayCategoryGroup.classList.add('hidden');
     if (resaleContainer) {
       resaleContainer.classList.remove('bg-slate-50/50', 'border-slate-200');
       resaleContainer.classList.add('bg-blue-50/30', 'border-blue-400', 'shadow-xs');
@@ -751,6 +754,7 @@ function togglePricingInputs(userInitiated = false) {
       setTimeout(() => resaleInput.focus(), 50);
     }
   } else {
+    if (stayCategoryGroup) stayCategoryGroup.classList.remove('hidden');
     if (leaseContainer) {
       leaseContainer.classList.remove('bg-slate-50/50', 'border-slate-200');
       leaseContainer.classList.add('bg-emerald-50/30', 'border-emerald-400', 'shadow-xs');
@@ -854,8 +858,23 @@ async function handleUnitUpdate(e) {
 
       document.getElementById('displayListingType').textContent = data.listing_type;
       document.getElementById('displayListingSub').textContent = isResale ? 'Listed for purchase / sale' : 'Offered for lease';
-      document.getElementById('displayStayCategory').textContent = data.stay_category;
-      document.getElementById('displayStaySub').textContent = (data.stay_category.toLowerCase() === 'short term') ? 'Flexible short stay' : 'Standard 6-12+ mos lease';
+      
+      const displayStay = document.getElementById('displayStayCategory');
+      if (displayStay) displayStay.textContent = isResale ? '-' : data.stay_category;
+      
+      const displayStaySub = document.getElementById('displayStaySub');
+      if (displayStaySub) displayStaySub.textContent = isResale ? '-' : ((data.stay_category.toLowerCase() === 'short term') ? 'Flexible short stay' : 'Standard 6-12+ mos lease');
+      
+      const badgeStay = document.getElementById('badgeStayCategory');
+      if (badgeStay) {
+        if (isResale) badgeStay.classList.add('hidden');
+        else badgeStay.classList.remove('hidden');
+      }
+
+      const specStayCat = document.getElementById('specStayCategory');
+      if (specStayCat) {
+        specStayCat.innerHTML = `<span>${isResale ? '-' : (data.stay_category || '')}</span>` + (!isResale ? '<span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Editable</span>' : '');
+      }
 
       const cardTitle = document.getElementById('cardRateTitle');
       const cardIcon = document.getElementById('cardRateIcon');
@@ -873,6 +892,17 @@ async function handleUnitUpdate(e) {
         if (cardIcon) cardIcon.className = 'w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0';
         if (displayRate) displayRate.textContent = data.lease_rate_formatted;
         if (displayRateSub) displayRateSub.textContent = 'Per month standard rate';
+      }
+
+      const specRateTitle = document.getElementById('specRateTitle');
+      if (specRateTitle) specRateTitle.textContent = isResale ? 'Reselling Price' : 'Lease Monthly Rate';
+      const specLeaseRate = document.getElementById('specLeaseRate');
+      if (specLeaseRate) specLeaseRate.textContent = isResale ? ((formattedResale !== '—') ? formattedResale : data.lease_rate_formatted) : data.lease_rate_formatted;
+
+      const leaseSection = document.getElementById('leaseHistorySection');
+      if (leaseSection) {
+        if (isResale) leaseSection.classList.add('hidden');
+        else leaseSection.classList.remove('hidden');
       }
 
       if (data.unit_current_status) {

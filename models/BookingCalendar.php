@@ -132,6 +132,11 @@ class BookingCalendar extends Model {
             return ['success' => false, 'message' => 'Start date and end date are required.'];
         }
 
+        $today = date('Y-m-d');
+        if ($startDate < $today) {
+            return ['success' => false, 'message' => 'Start date cannot be in the past. It must be today or a future date.'];
+        }
+
         if ($endDate < $startDate) {
             return ['success' => false, 'message' => 'End date cannot be earlier than start date.'];
         }

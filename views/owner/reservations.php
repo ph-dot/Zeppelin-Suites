@@ -21,16 +21,20 @@ if (!function_exists('peso')) {
 if (!function_exists('badge')) {
     function badge($value): string {
         $status = strtolower(trim((string)$value));
-        if (in_array($status, ['verified', 'reserved', 'requirements completed'], true)) {
-            return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200'>" . clean(ucwords($value)) . "</span>";
+        if (in_array($status, ['verified', 'reserved', 'requirements completed', 'active', 'officially booked'], true)) {
+            $label = ($status === 'verified') ? 'Verified' : 'Reserved';
+            return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200'>" . clean($label) . "</span>";
         }
-        if (in_array($status, ['pending review', 'submitted', 'under review', 'requirements pending'], true)) {
-            return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200'>" . clean(ucwords($value)) . "</span>";
+        if (in_array($status, ['pending review', 'under review', 'requirements pending', 'pending', 'in progress'], true)) {
+            return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200'>Pending</span>";
         }
-        if (in_array($status, ['rejected', 'cancelled'], true)) {
-            return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-200'>" . clean(ucwords($value)) . "</span>";
+        if ($status === 'submitted') {
+            return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200'>Submitted</span>";
         }
-        return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-50 text-slate-600 border border-slate-200'>" . clean(ucwords($value)) . "</span>";
+        if (in_array($status, ['rejected', 'cancelled', 'declined'], true)) {
+            return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-200'>" . clean(ucwords($status)) . "</span>";
+        }
+        return "<span class='text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-50 text-slate-600 border border-slate-200'>" . clean($value !== '' ? ucwords($value) : '—') . "</span>";
     }
 }
 
@@ -262,7 +266,20 @@ $totalCount = count($reservations);
                       </td>
 
                       <td class="px-4 py-3.5 whitespace-nowrap">
-                          <?= badge($row['reservation_status'] ?? 'submitted') ?>
+                          <?php
+                            $pStatus = strtolower(trim((string)($row['payment_status'] ?? '')));
+                            $rStatus = strtolower(trim((string)($row['reservation_status'] ?? 'submitted')));
+                            if (in_array($rStatus, ['reserved', 'requirements completed', 'officially booked', 'active', 'handover', 'moved in'], true)) {
+                                $resDisplay = 'Reserved';
+                            } elseif ($pStatus === 'verified' || in_array($rStatus, ['pending', 'requirements pending', 'in progress', 'under review'], true)) {
+                                $resDisplay = 'Pending';
+                            } elseif (in_array($rStatus, ['rejected', 'cancelled'], true)) {
+                                $resDisplay = ucwords($rStatus);
+                            } else {
+                                $resDisplay = 'Submitted';
+                            }
+                            echo badge($resDisplay);
+                          ?>
                       </td>
 
                       <td class="px-4 py-3.5 text-slate-500 text-xs whitespace-nowrap font-mono">

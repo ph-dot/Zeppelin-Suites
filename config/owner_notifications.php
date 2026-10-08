@@ -120,3 +120,29 @@ function notifyOwnerOfMaintenanceFeedback(string $ownerEmail, string $ownerName,
 
     return sendOwnerNotificationEmail($ownerEmail, $ownerName, $subject, $body);
 }
+
+/**
+ * Notify a newly moved-in tenant of unit handover completion with their login credentials.
+ */
+function notifyTenantOfHandover(string $tenantEmail, string $tenantName, string $unitDisplay, string $initialPassword): bool
+{
+    $subject = "Zeppelin Suites - Unit Handover Completed & Tenant Account Credentials";
+    $appUrl = rtrim((string)env('APP_URL', 'http://localhost/Zeppelin-Suites'), '/');
+    $loginUrl = $appUrl . '/login';
+
+    $body = "Dear {$tenantName},\n\n"
+        . "Congratulations! The unit handover for {$unitDisplay} at Zeppelin Suites has been formally completed.\n\n"
+        . "Your Tenant Portal account has been activated with the following credentials:\n"
+        . "--------------------------------------------------------\n"
+        . "Tenant Portal URL: {$loginUrl}\n"
+        . "Registered Email:  {$tenantEmail}\n"
+        . "Temporary Password: {$initialPassword}\n"
+        . "--------------------------------------------------------\n\n"
+        . "You can now log in to manage your tenant account, submit service & maintenance requests, and view announcements.\n\n"
+        . "For security purposes, please change your password after logging in for the first time.\n\n"
+        . "Welcome to Zeppelin Suites!\n\n"
+        . "Best regards,\n"
+        . "Zeppelin Suites Management Team";
+
+    return sendOwnerNotificationEmail($tenantEmail, $tenantName, $subject, $body);
+}

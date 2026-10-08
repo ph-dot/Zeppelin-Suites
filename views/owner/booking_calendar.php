@@ -509,11 +509,11 @@
       <div class="grid grid-cols-2 gap-3">
         <div class="space-y-1.5">
           <label class="text-xs font-semibold text-slate-700 block">Start Date <span class="text-red-400">*</span></label>
-          <input id="block_startDate" name="start_date" type="date" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" required>
+          <input id="block_startDate" name="start_date" type="date" min="<?= date('Y-m-d') ?>" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" required>
         </div>
         <div class="space-y-1.5">
           <label class="text-xs font-semibold text-slate-700 block">End Date <span class="text-red-400">*</span></label>
-          <input id="block_endDate" name="end_date" type="date" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" required>
+          <input id="block_endDate" name="end_date" type="date" min="<?= date('Y-m-d') ?>" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50" required>
         </div>
       </div>
 
@@ -1121,9 +1121,19 @@ function openBlockDatesModal(unitType, room, unitId, startDate) {
   document.getElementById("block_unitId").value = unitId || "";
   document.getElementById("block_unitTypeDisplay").textContent = unitType || "—";
   document.getElementById("block_roomDisplay").textContent = room ? "Room " + room : "—";
-  document.getElementById("block_startDate").value = startDate || "";
-  document.getElementById("block_endDate").value   = startDate || "";
-  document.getElementById("block_remarks").value   = "";
+
+  const today = toLocalISODate(new Date());
+  const startInput = document.getElementById("block_startDate");
+  const endInput = document.getElementById("block_endDate");
+
+  startInput.min = today;
+  endInput.min = today;
+
+  const validStart = (startDate && startDate >= today) ? startDate : today;
+  startInput.value = validStart;
+  endInput.value   = validStart;
+  endInput.min     = validStart;
+  document.getElementById("block_remarks").value = "";
 
   const defaultRadio = document.querySelector('input[name="block_type"][value="Not Available"]');
   if (defaultRadio) defaultRadio.checked = true;
@@ -1194,7 +1204,7 @@ async function handleSaveBlockDates(e) {
   fd.append("remarks", remarks);
 
   try {
-    const res = await fetch(`${BASE_URL}/unitOwnerPages/ActionsUOP/saveOwnerBlockedDate.php`, {
+    const res = await fetch(`${BASE_URL}/owner/booking-calendar/block`, {
       method: "POST",
       body: fd
     });
@@ -1304,7 +1314,7 @@ async function handleUnblockClick() {
   fd.append("block_id", block.blockId);
 
   try {
-    const res = await fetch(`${BASE_URL}/unitOwnerPages/ActionsUOP/deleteOwnerBlockedDate.php`, { method: "POST", body: fd });
+    const res = await fetch(`${BASE_URL}/owner/booking-calendar/unblock`, { method: "POST", body: fd });
     const data = await res.json();
     if (!data.success) {
       alert(data.message || "Could not unblock dates.");
@@ -1348,6 +1358,17 @@ function formatDisplayDate(str) {
 }
 
 (async function init() {
+  const startInput = document.getElementById("block_startDate");
+  const endInput = document.getElementById("block_endDate");
+  if (startInput && endInput) {
+    startInput.addEventListener("change", function() {
+      endInput.min = this.value;
+      if (endInput.value && endInput.value < this.value) {
+        endInput.value = this.value;
+      }
+    });
+  }
+
   await loadCalendarData();
   buildFilterSidebar();
   populateBlockManualUnits();

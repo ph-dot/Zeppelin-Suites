@@ -326,7 +326,7 @@ class Reservation extends Model {
             // 5. Check if user already exists in users_table by email
             $existingUser = $this->fetchOne("SELECT user_id, full_name, user_role, resident_status FROM users_table WHERE email = ? LIMIT 1", [$clientEmail]);
 
-            $defaultPassword = !empty($customPassword) ? $customPassword : 'password123';
+            $defaultPassword = !empty($customPassword) ? $customPassword : 'tenantzepellinsuites';
             $tenantUserId = 0;
 
             if ($existingUser) {
@@ -355,9 +355,19 @@ class Reservation extends Model {
 
             $this->commit();
 
+            $unitDisplay = trim(($res['unit_type'] ?? '') . ' ' . (!empty($res['unit_number']) ? 'Unit ' . $res['unit_number'] : ''));
+            if ($unitDisplay === '') {
+                $unitDisplay = 'Unit not specified';
+            }
+
+            // Send tenant account activation email with credentials
+            require_once __DIR__ . '/../config/owner_notifications.php';
+            $emailSent = notifyTenantOfHandover($clientEmail, $clientName, $unitDisplay, $defaultPassword);
+
             return [
                 'success' => true,
-                'message' => 'Handover completed! Reservation is now Moved In, unit status is Occupied, and tenant account is active.',
+                'message' => "Unit handover completed! Tenant account has been activated and login credentials (Email: {$clientEmail}, Password: {$defaultPassword}) have been sent to {$clientEmail}.",
+                'email_sent' => $emailSent,
                 'tenant'  => [
                     'user_id'  => $tenantUserId,
                     'name'     => $clientName,
@@ -1184,6 +1194,54 @@ class Reservation extends Model {
     }
 
     /**
+     * Check if payment, lease signing, and all documents are completed. If so, automatically mark as Officially Booked.
+     */
+    public function checkAndPromoteToOfficiallyBooked(int $reservationId, int $userId, string $userRole): bool {
+        $res = $this->getDetailsById($reservationId);
+        if (!$res) return false;
+
+        $statusLower = strtolower((string)($res['reservation_status'] ?? ''));
+        if (in_array($statusLower, ['reserved', 'handover', 'moved in', 'active', 'cancelled', 'rejected'], true)) {
+            return false;
+        }
+
+        $isPaymentVerified = strtolower((string)($res['payment_status'] ?? '')) === 'verified';
+        $isSigningComplete = strtolower((string)($res['lease_signing_status'] ?? '')) === 'completed';
+
+        $counts = $this->fetchOne(
+            "SELECT COUNT(*) AS total, SUM(CASE WHEN status = 'complete' THEN 1 ELSE 0 END) AS completed 
+             FROM reservation_documents WHERE reservation_id = ?",
+            [$reservationId]
+        );
+        $total = (int)($counts['total'] ?? 0);
+        $completed = (int)($counts['completed'] ?? 0);
+        $allDocsComplete = ($total > 0 && $completed === $total);
+
+        if ($isPaymentVerified && $isSigningComplete && $allDocsComplete) {
+            $now = date('Y-m-d H:i:s');
+            $this->execute(
+                "UPDATE reservation_table 
+                 SET reservation_status = 'reserved',
+                     officially_booked_at = ?,
+                     officially_booked_by = ?,
+                     officially_booked_by_role = ?
+                 WHERE reservation_id = ?",
+                [$now, $userId, $userRole, $reservationId]
+            );
+
+            if (!empty($res['unit_id'])) {
+                $this->execute(
+                    "UPDATE units_table SET unit_current_status = 'Reserved' WHERE unit_id = ?",
+                    [(int)$res['unit_id']]
+                );
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Mark lease signing as completed or reset status to pending.
      */
     public function updateLeaseSigningStatus(int $reservationId, string $action, string $remarks, int $userId, string $role): array {
@@ -1222,6 +1280,10 @@ class Reservation extends Model {
             return ['success' => false, 'message' => 'Failed to update lease signing status in database.'];
         }
 
+        if ($action === 'complete') {
+            $this->checkAndPromoteToOfficiallyBooked($reservationId, $userId, $role);
+        }
+
         return [
             'success'   => true,
             'message'   => $action === 'complete' ? 'Lease signing marked as completed successfully.' : 'Lease signing status reset to pending.',
@@ -1229,5 +1291,290 @@ class Reservation extends Model {
             'signed_at' => $now,
         ];
     }
+
+    /**
+     * Admin override: Verify (complete) or reject reservation payment.
+     */
+    public function updatePaymentStatus(int $reservationId, string $action, string $remarks, int $adminId, string $adminName): array {
+        $res = $this->findById($reservationId);
+        if (!$res) {
+            return ['success' => false, 'message' => 'Reservation record not found.'];
+        }
+
+        $action = strtolower(trim($action));
+        if (!in_array($action, ['verify', 'reject'], true)) {
+            return ['success' => false, 'message' => 'Invalid payment action.'];
+        }
+
+        $now = date('Y-m-d H:i:s');
+
+        if ($action === 'verify') {
+            $sql = "
+                UPDATE reservation_table
+                SET payment_status = 'verified',
+                    payment_verified_at = ?,
+                    admin_payment_remarks = ?,
+                    reservation_status = CASE 
+                        WHEN LOWER(reservation_status) = 'submitted' THEN 'pending' 
+                        ELSE reservation_status 
+                    END
+                WHERE reservation_id = ?
+            ";
+            $success = $this->execute($sql, [$now, $remarks, $reservationId]);
+            if (!$success) {
+                return ['success' => false, 'message' => 'Database error while verifying payment.'];
+            }
+
+            $this->checkAndPromoteToOfficiallyBooked($reservationId, $adminId, 'admin');
+
+            return [
+                'success'        => true,
+                'message'        => 'Payment marked as complete and verified successfully.',
+                'payment_status' => 'verified',
+                'verified_at'    => $now,
+            ];
+        }
+
+        // Reject / Not Received
+        $inquiryType = strtolower(trim((string)($res['inquiry_type'] ?? '')));
+        $releasedStatus = ($inquiryType === 'resale inquiry' || strpos($inquiryType, 'resale') !== false) 
+            ? 'Resale' 
+            : 'Ready for Occupancy';
+
+        $sql = "
+            UPDATE reservation_table
+            SET payment_status = 'rejected',
+                reservation_status = 'rejected',
+                payment_rejected_at = ?,
+                admin_payment_remarks = ?
+            WHERE reservation_id = ?
+        ";
+        $success = $this->execute($sql, [$now, $remarks, $reservationId]);
+        if (!$success) {
+            return ['success' => false, 'message' => 'Database error while rejecting payment.'];
+        }
+
+        // Release the unit back
+        if (!empty($res['unit_id'])) {
+            $this->execute("UPDATE units_table SET unit_current_status = ? WHERE unit_id = ?", [
+                $releasedStatus,
+                (int)$res['unit_id']
+            ]);
+        }
+
+        return [
+            'success'        => true,
+            'message'        => 'Payment marked as not received. Reservation has been rejected and the unit is released.',
+            'payment_status' => 'rejected',
+            'rejected_at'    => $now,
+        ];
+    }
+
+    /**
+     * Retrieve document tracking items for a reservation, initializing defaults if needed.
+     */
+    public function getDocuments(int $reservationId): array {
+        if ($reservationId <= 0) {
+            return ['success' => false, 'message' => 'Invalid reservation ID.', 'documents' => [], 'all_completed' => false];
+        }
+
+        $existing = $this->fetchAll(
+            "SELECT * FROM reservation_documents WHERE reservation_id = ? ORDER BY document_id ASC",
+            [$reservationId]
+        );
+
+        if (empty($existing)) {
+            $defaultDocs = [
+                ['key' => 'valid_id_1', 'name' => 'Valid ID #1'],
+                ['key' => 'valid_id_2', 'name' => 'Valid ID #2'],
+                ['key' => 'tin_number', 'name' => 'TIN Number'],
+                ['key' => 'reservation_agreement', 'name' => 'Reservation Agreement'],
+            ];
+
+            foreach ($defaultDocs as $d) {
+                $this->execute(
+                    "INSERT INTO reservation_documents (reservation_id, document_key, document_name, status, created_at) VALUES (?, ?, ?, 'pending', NOW())",
+                    [$reservationId, $d['key'], $d['name']]
+                );
+            }
+
+            $existing = $this->fetchAll(
+                "SELECT * FROM reservation_documents WHERE reservation_id = ? ORDER BY document_id ASC",
+                [$reservationId]
+            );
+        }
+
+        $allCompleted = !empty($existing);
+        foreach ($existing as $doc) {
+            if (($doc['status'] ?? '') !== 'complete') {
+                $allCompleted = false;
+                break;
+            }
+        }
+
+        return [
+            'success'       => true,
+            'documents'     => $existing,
+            'all_completed' => $allCompleted,
+        ];
+    }
+
+    /**
+     * Save/update document tracking items for a reservation.
+     */
+    public function saveDocuments(int $reservationId, array $documents, int $userId, string $userRole): array {
+        if ($reservationId <= 0 || empty($documents)) {
+            return ['success' => false, 'message' => 'Invalid reservation ID or empty documents list.'];
+        }
+
+        $now = date('Y-m-d H:i:s');
+
+        foreach ($documents as $doc) {
+            $docId = (int)($doc['document_id'] ?? 0);
+            if ($docId <= 0) continue;
+
+            $storage = in_array($doc['storage'] ?? '', ['dropbox', 'gdrive', 'other'], true) ? $doc['storage'] : null;
+            $storageOther = !empty($doc['storage_other_label']) ? trim((string)$doc['storage_other_label']) : null;
+            $docLink = !empty($doc['document_link']) ? trim((string)$doc['document_link']) : null;
+
+            // Automatically determine status: complete if link provided, pending if empty
+            $status = (!empty($docLink)) ? 'complete' : 'pending';
+
+            $this->execute(
+                "UPDATE reservation_documents 
+                 SET status = ?, 
+                     storage = ?, 
+                     storage_other_label = ?, 
+                     document_link = ?, 
+                     updated_by = ?, 
+                     updated_by_role = ?, 
+                     updated_at = ? 
+                 WHERE document_id = ? AND reservation_id = ?",
+                [$status, $storage, $storageOther, $docLink, $userId, $userRole, $now, $docId, $reservationId]
+            );
+        }
+
+        $counts = $this->fetchOne(
+            "SELECT COUNT(*) AS total, SUM(CASE WHEN status = 'complete' THEN 1 ELSE 0 END) AS completed 
+             FROM reservation_documents WHERE reservation_id = ?",
+            [$reservationId]
+        );
+
+        $total = (int)($counts['total'] ?? 0);
+        $completed = (int)($counts['completed'] ?? 0);
+        $allComplete = ($total > 0 && $completed === $total);
+
+        if ($allComplete) {
+            // Check if payment and lease signing are also finished to auto-promote to officially booked
+            $isPromoted = $this->checkAndPromoteToOfficiallyBooked($reservationId, $userId, $userRole);
+
+            if (!$isPromoted) {
+                $this->execute(
+                    "UPDATE reservation_table 
+                     SET requirements_updated_by = ?,
+                         requirements_updated_by_role = ?,
+                         requirements_updated_at = ?,
+                         reservation_status = CASE 
+                             WHEN LOWER(reservation_status) IN ('submitted', 'under review', 'pending review', 'requirements pending', 'requested', 'flagged for review') 
+                             THEN 'requirements completed' 
+                             ELSE reservation_status 
+                         END
+                     WHERE reservation_id = ?",
+                    [$userId, $userRole, $now, $reservationId]
+                );
+            }
+        } else {
+            $this->execute(
+                "UPDATE reservation_table 
+                 SET requirements_updated_by = ?,
+                     requirements_updated_by_role = ?,
+                     requirements_updated_at = ?,
+                     reservation_status = CASE 
+                         WHEN LOWER(reservation_status) = 'requirements completed' 
+                         THEN 'requirements pending' 
+                         ELSE reservation_status 
+                     END
+                 WHERE reservation_id = ?",
+                [$userId, $userRole, $now, $reservationId]
+            );
+        }
+
+        return [
+            'success'       => true,
+            'message'       => $allComplete ? 'All documents completed successfully!' : 'Document tracking updated successfully!',
+            'all_completed' => $allComplete,
+        ];
+    }
+
+    /**
+     * Mark reservation as officially booked (Admin).
+     */
+    public function markOfficiallyBooked(int $reservationId, int $userId, string $userRole): array {
+        $res = $this->getDetailsById($reservationId);
+        if (!$res) {
+            return ['success' => false, 'message' => 'Reservation not found.'];
+        }
+
+        $now = date('Y-m-d H:i:s');
+
+        $this->execute(
+            "UPDATE reservation_table 
+             SET reservation_status = 'reserved',
+                 officially_booked_at = ?,
+                 officially_booked_by = ?,
+                 officially_booked_by_role = ?
+             WHERE reservation_id = ?",
+            [$now, $userId, $userRole, $reservationId]
+        );
+
+        if (!empty($res['unit_id'])) {
+            $this->execute(
+                "UPDATE units_table SET unit_current_status = 'Reserved' WHERE unit_id = ?",
+                [(int)$res['unit_id']]
+            );
+        }
+
+        return ['success' => true, 'message' => 'Reservation marked as officially booked successfully!'];
+    }
+
+    /**
+     * Cancel a reservation and release the unit back to availability (Admin).
+     */
+    public function cancelReservation(int $reservationId, string $remarks, int $userId, string $userRole): array {
+        $res = $this->getDetailsById($reservationId);
+        if (!$res) {
+            return ['success' => false, 'message' => 'Reservation not found.'];
+        }
+
+        $inquiryType = strtolower(trim((string)($res['inquiry_type'] ?? '')));
+        $releasedStatus = ($inquiryType === 'resale inquiry' || strpos($inquiryType, 'resale') !== false) 
+            ? 'Resale' 
+            : 'Ready for Occupancy';
+
+        $now = date('Y-m-d H:i:s');
+
+        $this->execute(
+            "UPDATE reservation_table 
+             SET reservation_status = 'cancelled',
+                 cancellation_status = 'approved',
+                 cancelled_at = ?,
+                 cancelled_by = ?,
+                 cancelled_by_role = ?,
+                 admin_cancel_remarks = ?
+             WHERE reservation_id = ?",
+            [$now, $userId, $userRole, $remarks, $reservationId]
+        );
+
+        if (!empty($res['unit_id'])) {
+            $this->execute(
+                "UPDATE units_table SET unit_current_status = ? WHERE unit_id = ?",
+                [$releasedStatus, (int)$res['unit_id']]
+            );
+        }
+
+        return ['success' => true, 'message' => 'Reservation cancelled and unit released successfully!'];
+    }
 }
+
+
 

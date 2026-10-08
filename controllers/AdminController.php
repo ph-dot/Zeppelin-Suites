@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../core/Middleware.php';
 require_once __DIR__ . '/../models/Analytics.php';
+require_once __DIR__ . '/../models/Backup.php';
 require_once __DIR__ . '/../models/Reservation.php';
 require_once __DIR__ . '/../models/User.php';
 
@@ -354,6 +355,8 @@ class AdminController extends Controller {
         $additionalPhone = !empty($admin['additional_contact']) ? $admin['additional_contact'] : '—';
         $additionalEmail = !empty($admin['additional_email']) ? $admin['additional_email'] : '—';
         $pendingCounts = $this->analyticsModel->getPendingCounts();
+        $backupModel = new Backup();
+        $dbStats = $backupModel->getDatabaseStats();
         $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
 
         $this->render('admin/account', [
@@ -368,7 +371,63 @@ class AdminController extends Controller {
             'additionalEmail'     => $additionalEmail,
             'pendingInquiries'    => $pendingCounts['pending_inquiries'],
             'pendingReservations' => $pendingCounts['pending_reservations'],
+            'dbStats'             => $dbStats,
         ]);
+    }
+
+    /**
+     * Generate and download a full SQL database backup.
+     */
+    public function backupDownload(): void {
+        Middleware::requireRole(['admin']);
+        $backupModel = new Backup();
+        $sql = $backupModel->generateBackupSql();
+
+        $filename = 'zeppelin_suites_backup_' . date('Y-m-d_His') . '.sql';
+
+        header('Content-Type: application/sql; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($sql));
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        echo $sql;
+        exit;
+    }
+
+    /**
+     * Restore database from an uploaded SQL backup file.
+     */
+    public function restoreDatabase(): void {
+        Middleware::requireRole(['admin']);
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        if (empty($_FILES['backup_file']['tmp_name']) || !is_uploaded_file($_FILES['backup_file']['tmp_name'])) {
+            $this->json(['success' => false, 'message' => 'Please select a valid .sql backup file to upload.'], 400);
+            return;
+        }
+
+        $file = $_FILES['backup_file'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if ($ext !== 'sql') {
+            $this->json(['success' => false, 'message' => 'Only .sql backup files are allowed.'], 400);
+            return;
+        }
+
+        $sqlContent = file_get_contents($file['tmp_name']);
+        if ($sqlContent === false || trim($sqlContent) === '') {
+            $this->json(['success' => false, 'message' => 'Unable to read the uploaded backup file or the file is empty.'], 400);
+            return;
+        }
+
+        $backupModel = new Backup();
+        $result = $backupModel->restoreFromSql($sqlContent);
+
+        $this->json($result, $result['success'] ? 200 : 500);
     }
 
     /**
