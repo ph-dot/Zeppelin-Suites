@@ -825,7 +825,7 @@ $inquiries = $inquiries ?? [];
   function executeDecisionForm(action) {
     const form = document.createElement("form");
     form.method = "POST";
-    form.action = "<?= htmlspecialchars($baseUrl) ?>/unitOwnerPages/ActionsUOP/respondApprovalRequest.php";
+    form.action = "<?= htmlspecialchars($baseUrl) ?>/owner/inquiries/respond";
 
     const requestInput = document.createElement("input");
     requestInput.type = "hidden";

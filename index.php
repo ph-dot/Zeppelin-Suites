@@ -164,6 +164,9 @@ $router->get('/owner/overview', [UnitOwnerController::class, 'overview'], ['unit
 $router->get('/owner/units', [UnitOwnerController::class, 'units'], ['unit owner']);
 $router->get('/owner/units/view', [UnitOwnerController::class, 'showUnit'], ['unit owner']);
 $router->get('/owner/inquiries', [UnitOwnerController::class, 'inquiries'], ['unit owner']);
+$router->post('/owner/inquiries/respond', [UnitOwnerController::class, 'respondApproval'], ['unit owner']);
+$router->post('/unitOwnerPages/ActionsUOP/respondApprovalRequest.php', [UnitOwnerController::class, 'respondApproval'], ['unit owner']);
+$router->post('/ActionsUOP/respondApprovalRequest.php', [UnitOwnerController::class, 'respondApproval'], ['unit owner']);
 $router->get('/owner/reservations', [UnitOwnerController::class, 'reservations'], ['unit owner']);
 $router->get('/owner/reservations/view', [UnitOwnerController::class, 'showReservation'], ['unit owner']);
 $router->get('/owner/booking-calendar', [UnitOwnerController::class, 'calendar'], ['unit owner']);

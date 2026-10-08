@@ -697,4 +697,127 @@ class UnitOwner extends Model {
             return ['success' => false, 'message' => 'Failed to update profile: ' . $e->getMessage()];
         }
     }
+
+    /**
+     * Respond to an owner approval request (Approve or Decline).
+     */
+    public function respondApprovalRequest(int $ownerId, int $requestId, string $action, string $remarks = ''): array {
+        if ($ownerId <= 0 || $requestId <= 0 || !in_array($action, ['approve', 'decline'], true)) {
+            return ['success' => false, 'message' => 'Invalid request parameters.'];
+        }
+
+        $this->db->beginTransaction();
+
+        try {
+            $sql = "
+                SELECT 
+                    request_id,
+                    inq_id,
+                    unit_id,
+                    unit_owner_id,
+                    request_status
+                FROM owner_approval_requests
+                WHERE request_id = ?
+                  AND unit_owner_id = ?
+                FOR UPDATE
+            ";
+            $request = $this->fetchOne($sql, [$requestId, $ownerId]);
+
+            if (!$request) {
+                $this->db->rollBack();
+                return ['success' => false, 'message' => 'Approval request not found or unauthorized.'];
+            }
+
+            if (strtolower((string)$request['request_status']) !== 'pending') {
+                $this->db->rollBack();
+                return ['success' => false, 'message' => 'This request has already been responded to.'];
+            }
+
+            $inqId = (int)$request['inq_id'];
+            $unitId = (int)$request['unit_id'];
+
+            if ($action === 'approve') {
+                // Check if inquiry was already approved by another owner
+                $checkInqSql = "SELECT approval_status FROM inquiry_table WHERE inq_id = ? FOR UPDATE";
+                $inquiry = $this->fetchOne($checkInqSql, [$inqId]);
+
+                if ($inquiry && strtolower((string)$inquiry['approval_status']) === 'approved') {
+                    $this->execute(
+                        "UPDATE owner_approval_requests SET request_status = 'expired', responded_at = NOW() WHERE request_id = ?",
+                        [$requestId]
+                    );
+                    $this->db->commit();
+                    return ['success' => false, 'message' => 'Another unit owner already approved this inquiry first.'];
+                }
+
+                // 1. Approve this request
+                $this->execute(
+                    "UPDATE owner_approval_requests SET request_status = 'approved', owner_remarks = ?, responded_at = NOW() WHERE request_id = ?",
+                    [$remarks, $requestId]
+                );
+
+                // 2. Expire other pending requests for the same inquiry
+                $this->execute(
+                    "UPDATE owner_approval_requests SET request_status = 'expired', responded_at = NOW() WHERE inq_id = ? AND request_id != ? AND request_status = 'pending'",
+                    [$inqId, $requestId]
+                );
+
+                // 3. Generate reservation token and update inquiry
+                $reservationToken = bin2hex(random_bytes(32));
+                $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
+
+                $updateInqSql = "
+                    UPDATE inquiry_table
+                    SET approval_status = 'approved',
+                        approved_unit_id = ?,
+                        owner_remarks = ?,
+                        reservation_token = ?,
+                        reservation_token_expires_at = ?,
+                        approval_approved_at = NOW()
+                    WHERE inq_id = ?
+                ";
+                $this->execute($updateInqSql, [$unitId, $remarks, $reservationToken, $expiresAt, $inqId]);
+
+                $this->db->commit();
+
+                return ['success' => true, 'message' => 'Reservation request approved successfully.'];
+            }
+
+            if ($action === 'decline') {
+                // 1. Decline this request
+                $this->execute(
+                    "UPDATE owner_approval_requests SET request_status = 'declined', owner_remarks = ?, responded_at = NOW() WHERE request_id = ?",
+                    [$remarks, $requestId]
+                );
+
+                // 2. Check if all owner requests for this inquiry are now decided/no pending left
+                $pendingRow = $this->fetchOne(
+                    "SELECT COUNT(*) AS pending_count FROM owner_approval_requests WHERE inq_id = ? AND request_status = 'pending'",
+                    [$inqId]
+                );
+                $pendingCount = (int)($pendingRow['pending_count'] ?? 0);
+
+                if ($pendingCount === 0) {
+                    $this->execute(
+                        "UPDATE inquiry_table SET status = 'declined', approval_status = 'declined', owner_remarks = ? WHERE inq_id = ? AND approval_status != 'approved'",
+                        [$remarks, $inqId]
+                    );
+                }
+
+                $this->db->commit();
+
+                return ['success' => true, 'message' => 'Reservation request declined.'];
+            }
+
+            $this->db->rollBack();
+            return ['success' => false, 'message' => 'Invalid action specified.'];
+
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log('respondApprovalRequest error: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Database error occurred while processing approval: ' . $e->getMessage()];
+        }
+    }
 }

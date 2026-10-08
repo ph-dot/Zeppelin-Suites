@@ -312,4 +312,33 @@ class UnitOwnerController extends Controller {
             'toast'           => $toast,
         ]);
     }
+
+    /**
+     * Respond to an approval request (Approve or Decline).
+     */
+    public function respondApproval(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
+        $ownerId = (int)$userSession['user_id'];
+
+        $requestId = (int)$this->getPost('request_id', 0);
+        $action = strtolower(trim((string)$this->getPost('action', '')));
+        $remarks = trim((string)($this->getPost('remarks') ?? $this->getPost('owner_remarks') ?? ''));
+
+        if ($requestId <= 0 || !in_array($action, ['approve', 'decline'], true)) {
+            $_SESSION['error_message'] = "Invalid approval request or action.";
+            $this->redirect("{$baseUrl}/owner/inquiries");
+            return;
+        }
+
+        $result = $this->ownerModel->respondApprovalRequest($ownerId, $requestId, $action, $remarks);
+
+        if ($result['success']) {
+            $_SESSION['success_message'] = $result['message'];
+        } else {
+            $_SESSION['error_message'] = $result['message'];
+        }
+
+        $this->redirect("{$baseUrl}/owner/inquiries");
+    }
 }

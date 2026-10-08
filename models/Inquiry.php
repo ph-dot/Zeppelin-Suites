@@ -355,15 +355,21 @@ class Inquiry extends Model {
                 $latestMoveIn->modify('+30 days');
                 break;
             case 'within 1 month':
+                $latestMoveIn->modify('+1 month');
+                break;
             case 'next month (1-2 months)':
             case 'next month (1–2 months)':
+                $earliestMoveIn->modify('+1 month');
                 $latestMoveIn->modify('+2 months');
                 break;
             case 'within 1–3 months':
             case 'within 1-3 months':
+                $earliestMoveIn->modify('+1 month');
+                $latestMoveIn->modify('+3 months');
+                break;
             case 'in 2-3 months':
             case 'in 2–3 months':
-                $earliestMoveIn->modify('+1 month');
+                $earliestMoveIn->modify('+2 months');
                 $latestMoveIn->modify('+3 months');
                 break;
             case 'within 3–6 months':
@@ -373,6 +379,8 @@ class Inquiry extends Model {
                 $earliestMoveIn->modify('+3 months');
                 $latestMoveIn->modify('+6 months');
                 break;
+            case 'flexible / not sure yet':
+            case 'flexible':
             default:
                 $latestMoveIn->modify('+6 months');
                 break;
@@ -439,6 +447,9 @@ class Inquiry extends Model {
             }
 
             $availableDate = empty($busyEndDates) ? new \DateTime() : max($busyEndDates);
+            if ($availableDate < $earliestMoveIn) {
+                $availableDate = clone $earliestMoveIn;
+            }
             if ($availableDate < $today) {
                 $availableDate = clone $today;
             }
