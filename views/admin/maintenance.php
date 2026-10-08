@@ -659,6 +659,26 @@ tailwind.config = {
   </div>
 </div>
 
+<!-- STYLIZED MAINTENANCE STATUS POPUP NOTIFICATION -->
+<div id="maintenanceStatusModal" class="modal-backdrop fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4" onclick="handleMaintenanceStatusModalBackdrop(event)">
+  <div class="modal-card bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 sm:p-7 max-w-sm w-full text-center" onclick="event.stopPropagation()">
+    <!-- Icon Container -->
+    <div id="maintenanceStatusIcon" class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 border transition-all">
+    </div>
+    
+    <!-- Title -->
+    <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-1" id="maintenanceStatusTitle">Maintenance Updated</h3>
+    
+    <!-- Message Body -->
+    <p class="text-xs text-slate-500 mb-6 leading-relaxed" id="maintenanceStatusMessage">The maintenance ticket has been updated successfully.</p>
+    
+    <!-- Action Button -->
+    <button type="button" id="maintenanceStatusBtn" onclick="handleMaintenanceStatusConfirm()" class="btn-press w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-all shadow-sm active:scale-95">
+      Continue
+    </button>
+  </div>
+</div>
+
 <script>
 function syncSearch(val) {
   const mainSearch = document.getElementById('searchInput');
@@ -930,6 +950,64 @@ function handleModalBackdropClick(e, modalId) {
   }
 }
 
+let maintenanceStatusSuccess = false;
+let maintenanceReloadTimer = null;
+
+function showMaintenanceStatusModal(isSuccess, title, message) {
+  maintenanceStatusSuccess = isSuccess;
+  const modal = document.getElementById('maintenanceStatusModal');
+  const iconContainer = document.getElementById('maintenanceStatusIcon');
+  const titleEl = document.getElementById('maintenanceStatusTitle');
+  const msgEl = document.getElementById('maintenanceStatusMessage');
+  const btn = document.getElementById('maintenanceStatusBtn');
+
+  if (titleEl) titleEl.textContent = title;
+  if (msgEl) msgEl.textContent = message;
+
+  if (iconContainer) {
+    if (isSuccess) {
+      iconContainer.className = 'w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100 shadow-xs';
+      iconContainer.innerHTML = '<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+    } else {
+      iconContainer.className = 'w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 border border-rose-100 shadow-xs';
+      iconContainer.innerHTML = '<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>';
+    }
+  }
+
+  if (btn) {
+    btn.textContent = isSuccess ? 'Continue' : 'Dismiss';
+  }
+
+  if (modal) {
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  if (isSuccess) {
+    clearTimeout(maintenanceReloadTimer);
+    maintenanceReloadTimer = setTimeout(() => {
+      window.location.reload();
+    }, 2200);
+  }
+}
+
+function handleMaintenanceStatusConfirm() {
+  clearTimeout(maintenanceReloadTimer);
+  if (maintenanceStatusSuccess) {
+    window.location.reload();
+  } else {
+    const modal = document.getElementById('maintenanceStatusModal');
+    modal?.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+
+function handleMaintenanceStatusModalBackdrop(e) {
+  if (e.target === document.getElementById('maintenanceStatusModal')) {
+    handleMaintenanceStatusConfirm();
+  }
+}
+
 function saveMaintenanceUpdate() {
   const maintenanceId = document.getElementById('modalMaintenanceId').value;
   const status = document.getElementById('modalStatus').value;
@@ -937,12 +1015,12 @@ function saveMaintenanceUpdate() {
   const btn = document.getElementById('btnSaveMaintenance');
 
   if (!maintenanceId) {
-    alert('Maintenance ID not found.');
+    showMaintenanceStatusModal(false, 'Missing Ticket ID', 'Maintenance ID was not found. Please re-open the ticket and try again.');
     return;
   }
 
   btn.disabled = true;
-  btn.textContent = 'Saving...';
+  btn.innerHTML = '<svg class="w-4 h-4 animate-spin inline-block mr-1.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Saving...';
 
   const formData = new FormData();
   formData.append('maintenance_id', maintenanceId);
@@ -958,16 +1036,16 @@ function saveMaintenanceUpdate() {
     if (!response.ok) {
       throw new Error((data && data.message) ? data.message : 'Unable to update maintenance request.');
     }
-    alert(data && data.message ? data.message : 'Maintenance updated successfully.');
-    window.location.reload();
+    closeMaintenanceModal();
+    showMaintenanceStatusModal(true, 'Maintenance Updated', (data && data.message) ? data.message : 'Maintenance ticket has been successfully updated.');
   })
   .catch(error => {
     console.error(error);
-    alert(error.message || 'Something went wrong while updating maintenance request.');
+    showMaintenanceStatusModal(false, 'Update Failed', error.message || 'Something went wrong while updating maintenance request.');
   })
   .finally(() => {
     btn.disabled = false;
-    btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg> Save Update`;
+    btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg> Save Update';
   });
 }
 </script>

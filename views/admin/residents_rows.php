@@ -29,9 +29,4 @@ $viewResidentUrl = $baseUrl . '/admin/residents/view?id=' . $userId;
             <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center bg-slate-100 text-slate-500 border border-slate-200">Inactive</span>
         <?php endif; ?>
     </td>
-    <td class="px-4 py-3.5 text-center align-middle whitespace-nowrap">
-        <a href="<?= htmlspecialchars($viewResidentUrl) ?>"
-           class="btn-press text-xs font-semibold text-slate-500 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 rounded-full active:scale-95 transition-all inline-block"
-           onclick="event.stopPropagation()">View</a>
-    </td>
 </tr>

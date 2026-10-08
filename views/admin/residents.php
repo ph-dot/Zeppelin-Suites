@@ -161,13 +161,12 @@ if (!function_exists('e')) {
                 <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap cursor-pointer hover:text-slate-700 select-none align-middle" onclick="sortTable(3)">Role ↕</th>
                 <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap cursor-pointer hover:text-slate-700 select-none align-middle" onclick="sortTable(4)">Date Created ↕</th>
                 <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap align-middle cursor-pointer hover:text-slate-700 select-none" onclick="sortTable(5)">Status ↕</th>
-                <th class="text-center px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-20 align-middle">Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50" id="empBody">
               <?php if (empty($residents)): ?>
                 <tr>
-                  <td colspan="7" class="px-4 py-10 text-center text-slate-500 text-sm">No residents found.</td>
+                  <td colspan="6" class="px-4 py-10 text-center text-slate-500 text-sm">No residents found.</td>
                 </tr>
               <?php else: ?>
                 <?php foreach ($residents as $resident): ?>
