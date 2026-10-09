@@ -1,0 +1,43 @@
+# ==========================================
+# Zeppelin Suites - Root Security & URL Rewriting
+# ==========================================
+
+# 1. Disable directory browsing across all folders
+Options -Indexes
+
+# 2. Block direct HTTP access to sensitive environment files and metadata
+<FilesMatch "^\.env|^\.git|\.(sql|md|log|json|lock)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /Zeppelin-Suites/
+
+    # 3. Block direct HTTP access to MVC architecture directories
+    RewriteRule ^(config|controllers|core|models|views)/ - [F,L,NC]
+
+    # 4. 301 Redirect any legacy /public/... URL to clean root URL
+    RewriteRule ^public/?$ /Zeppelin-Suites/ [R=301,L]
+    RewriteRule ^public/(.*)$ /Zeppelin-Suites/$1 [R=301,L]
+
+    # 4b. 301 Redirect legacy media paths to new organized images structure
+    RewriteRule ^uploads/(.*)$ /Zeppelin-Suites/images/$1 [R=301,L]
+    RewriteRule ^vrTourImages/(.*)$ /Zeppelin-Suites/images/vrTourImages/$1 [R=301,L]
+
+    # 5. Prevent loop if already rewriting to index.php
+    RewriteRule ^index\.php$ - [L]
+
+    # 6. If requested file or directory physically exists, serve it directly (assets, uploads, images)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # 7. Forward all other requests to Front Controller
+    RewriteRule . index.php [L,QSA]
+</IfModule>

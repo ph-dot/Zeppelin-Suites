@@ -1,0 +1,168 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * Zeppelin Suites - About Us View
+ *
+ * @var string $baseUrl
+ * @var string $pageTitle
+ * @var string $activePage
+ */
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><?= htmlspecialchars($pageTitle ?? 'Zeppelin Suites — About Us') ?></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+    * { font-family: "Geist", sans-serif; }
+    .btn-primary { transition: all 0.15s ease; }
+    .btn-primary:active { transform: scale(0.95); }
+  </style>
+</head>
+<body class="bg-white text-zinc-900">
+
+  <!-- ── NAV ──────────────────────────────────────────────── -->
+  <?php include __DIR__ . '/../components/public_navbar.php'; ?>
+
+  <!-- ── GET TO KNOW US HERO ───────────────────────────────── -->
+  <section class="px-6 md:px-16 lg:px-24 xl:px-32 pt-20 pb-16 text-center border-b border-zinc-100">
+    <h1 class="text-5xl md:text-6xl font-black uppercase text-zinc-900 tracking-tight">Get to Know Us!</h1>
+  </section>
+
+  <!-- ── MISSION — split layout ────────────────────────────── -->
+  <section class="px-6 md:px-16 lg:px-24 xl:px-32 py-20">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-14 items-center max-w-6xl mx-auto">
+      <div>
+        <p class="text-xs tracking-widest uppercase text-zinc-400 mb-3">Our Mission</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 mb-6 leading-snug">Redefining the Art of Urban Living</h2>
+        <p class="text-zinc-500 leading-relaxed mb-4">At Zeppelin Suites, our mission is to create a living experience
+          that transcends the ordinary. We believe a home should be more than four walls — it should be a sanctuary that
+          inspires, rejuvenates, and connects.</p>
+        <p class="text-zinc-500 leading-relaxed mb-4">Founded on the principles of design excellence, resident
+          well-being, and community, Zeppelin Suites is committed to delivering world-class service and an unmatched
+          quality of life in the heart of the city.</p>
+        <p class="text-zinc-500 leading-relaxed">Every detail of our suites and shared spaces has been meticulously
+          considered — from the natural light that floods our corridors to the carefully curated amenities that make
+          everyday life extraordinary.</p>
+      </div>
+      <div class="bg-zinc-100 rounded-2xl overflow-hidden aspect-4/3 flex items-center justify-center">
+        <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/zeppelin-suites-front.jpg" alt="Building" class="w-full h-full object-cover"
+          onerror="this.outerHTML='<span class=\'text-zinc-400 font-bold text-lg\'>IMG</span>'">
+      </div>
+    </div>
+  </section>
+
+  <!-- ── OUR VALUES ────────────────────────────────────────── -->
+  <section class="bg-zinc-50 py-20 px-6 md:px-16 lg:px-24 xl:px-32">
+    <div class="max-w-6xl mx-auto">
+      <p class="text-xs tracking-widest uppercase text-zinc-400 mb-3">What We Stand For</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 mb-12">Our Core Values</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        <div class="bg-white rounded-2xl p-7 border border-zinc-100 shadow-sm">
+          <div class="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+          </div>
+          <h3 class="font-bold text-zinc-900 mb-2 text-lg">Design Excellence</h3>
+          <p class="text-zinc-500 text-sm leading-relaxed">Every space is thoughtfully designed to balance beauty and
+            functionality, creating environments that feel as good as they look.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-7 border border-zinc-100 shadow-sm">
+          <div class="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <h3 class="font-bold text-zinc-900 mb-2 text-lg">Community First</h3>
+          <p class="text-zinc-500 text-sm leading-relaxed">We foster a sense of belonging through shared spaces, curated
+            events, and a team dedicated to the well-being of every resident.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-7 border border-zinc-100 shadow-sm">
+          <div class="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="font-bold text-zinc-900 mb-2 text-lg">Integrity & Trust</h3>
+          <p class="text-zinc-500 text-sm leading-relaxed">We operate with transparency, honoring our commitments to
+            residents, partners, and the surrounding community.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── AMENITIES ─────────────────────────────────────────── -->
+  <section class="px-6 md:px-16 lg:px-24 xl:px-32 py-20">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-14 items-center">
+      <div class="bg-zinc-100 rounded-2xl overflow-hidden aspect-4/3 flex items-center justify-center">
+        <img src="<?= htmlspecialchars($baseUrl) ?>/images/condo_photos/environment.jpg" alt="Amenities" class="w-full h-full object-cover"
+          onerror="this.outerHTML='<span class=\'text-zinc-400 font-bold text-lg\'>IMG</span>'">
+      </div>
+      <div>
+        <p class="text-xs tracking-widest uppercase text-zinc-400 mb-3">Lifestyle</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 mb-5 leading-snug">Amenities Built for Living Well</h2>
+        <p class="text-zinc-500 leading-relaxed mb-6">Zeppelin Suites is equipped with world-class amenities that
+          complement every aspect of your lifestyle — from wellness and recreation to work and socializing.</p>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Coffee shop and sports bar</span></li>
+          <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Helicopter deck and panoramic city views</span></li>
+          <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Co-working spaces and private meeting rooms with high-speed fiber internet</span></li>
+          <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Landscaped garden lounge and swimming pool social gatherings</span></li>
+          <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">24/7 concierge, security, and CCTV-monitored premises</span></li>
+          <li class="flex items-start gap-3"><span class="text-zinc-900 mt-0.5 font-bold shrink-0">✓</span><span class="text-zinc-600 text-sm">Car rental and chauffeur services</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── NEARBY FACILITIES ──────────────────────────────────── -->
+  <section class="bg-zinc-50 py-20 px-6 md:pb-36 lg:px-24 xl:px-32">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 mb-4">Nearby Facilities</h2>
+      <p class="text-zinc-500 mb-10 max-w-xl">Everything you need is within reach. Zeppelin Suites is strategically
+        located near major lifestyle, commercial, and educational destinations.</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="flex items-start gap-3 bg-white rounded-xl p-4 border border-zinc-100">
+          <span class="text-zinc-900 font-bold shrink-0">✓</span>
+          <div>
+            <p class="font-semibold text-zinc-900 text-sm">Premier Shopping Malls</p>
+            <p class="text-zinc-500 text-xs mt-0.5">SM City Clark and Marquee Mall within 10 - 15 minutes' drive</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3 bg-white rounded-xl p-4 border border-zinc-100">
+          <span class="text-zinc-900 font-bold shrink-0">✓</span>
+          <div>
+            <p class="font-semibold text-zinc-900 text-sm">Airport</p>
+            <p class="text-zinc-500 text-xs mt-0.5">Clark International Airport within 15 minutes' drive</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3 bg-white rounded-xl p-4 border border-zinc-100">
+          <span class="text-zinc-900 font-bold shrink-0">✓</span>
+          <div>
+            <p class="font-semibold text-zinc-900 text-sm">Within the heart of Angeles City</p>
+            <p class="text-zinc-500 text-xs mt-0.5">Zeppelin Suites is within easy reach of Angeles City's major road networks</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3 bg-white rounded-xl p-4 border border-zinc-100">
+          <span class="text-zinc-900 font-bold shrink-0">✓</span>
+          <div>
+            <p class="font-semibold text-zinc-900 text-sm">Dining & Entertainment Hubs</p>
+            <p class="text-zinc-500 text-xs mt-0.5">Rich Kapampangan food dining experience, cafés, and cultural venues</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PREMIUM FOOTER -->
+  <?php include __DIR__ . '/../components/public_footer.php'; ?>
+</body>
+</html>

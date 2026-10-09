@@ -1,0 +1,575 @@
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../core/Controller.php';
+require_once __DIR__ . '/../core/Middleware.php';
+require_once __DIR__ . '/../models/UnitOwner.php';
+require_once __DIR__ . '/../models/BookingCalendar.php';
+
+/**
+ * Zeppelin Suites - Unit Owner Controller
+ * Manages unit owner portal workflows: properties overview, units, leases, tenants, maintenance, and calendar.
+ * Pure MVC: strictly NO SQL queries in this controller.
+ */
+class UnitOwnerController extends Controller {
+    private UnitOwner $ownerModel;
+
+    public function __construct() {
+        $this->ownerModel = new UnitOwner();
+    }
+
+    /**
+     * Display Unit Owner Overview Dashboard.
+     */
+    public function overview(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
+        $ownerId = (int)$userSession['user_id'];
+
+        $overview = $this->ownerModel->getOverviewData($ownerId);
+
+        $this->render('owner/overview', [
+            'pageTitle'           => 'Zeppelin Suites — Unit Owner Overview',
+            'activeTab'           => 'overview',
+            'baseUrl'             => $baseUrl,
+            'ownerName'           => $userSession['full_name'],
+            'ownerInitial'        => $userSession['initial'],
+            'ownedUnits'          => $overview['ownedUnits'],
+            'occupiedUnits'       => $overview['occupiedUnits'],
+            'availableUnits'      => $overview['availableUnits'],
+            'reservedUnits'       => $overview['reservedUnits'],
+            'recentTenants'       => $overview['recentTenants'],
+            'maintenanceRequests' => $overview['maintenanceRequests'],
+            'reservationRequests' => $overview['reservationRequests'],
+        ]);
+    }
+
+    /**
+     * Display Owned Units List.
+     */
+    public function units(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
+        $ownerId = (int)$userSession['user_id'];
+
+        $units = $this->ownerModel->getOwnerUnits($ownerId);
+
+        $this->render('owner/units', [
+            'pageTitle'    => 'Zeppelin Suites — My Units',
+            'activeTab'    => 'units',
+            'baseUrl'      => $baseUrl,
+            'ownerName'    => $userSession['full_name'],
+            'ownerInitial' => $userSession['initial'],
+            'units'        => $units,
+        ]);
+    }
+
+    /**
+     * Display Single Owned Unit Details.
+     */
+    public function showUnit(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
+        $ownerId = (int)$userSession['user_id'];
+        $unitId = (int)($this->getQuery('id', 0) ?: $this->getQuery('unit_id', 0));
+
+        if ($unitId <= 0) {
+            $this->redirect("{$baseUrl}/owner/units");
+            return;
+        }
+
+        $details = $this->ownerModel->getUnitDetails($ownerId, $unitId);
+        if (!$details) {
+            $this->redirect("{$baseUrl}/owner/units");
+            return;
+        }
+
+        $this->render('owner/unit_details', [
+            'pageTitle'     => 'Zeppelin Suites — Unit #' . ($details['unit']['unit_number'] ?? ''),
+            'activeTab'     => 'units',
+            'baseUrl'       => $baseUrl,
+            'ownerName'     => $userSession['full_name'],
+            'ownerInitial'  => $userSession['initial'],
+            'unit'          => $details['unit'],
+            'activeTenant'  => $details['activeTenant'],
+            'pastTenants'   => $details['pastTenants'],
+            'leasesList'    => $details['leasesList'],
+            'latestMoveOut' => $details['latestMoveOut'],
+        ]);
+    }
+
+    /**
+     * Display Owner Inquiries / Approval Requests.
+     */
+    public function inquiries(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
+        $ownerId = (int)$userSession['user_id'];
+
+        $inquiries = $this->ownerModel->getOwnerInquiries($ownerId);
+
+        $this->render('owner/inquiries', [
+            'pageTitle'    => 'Zeppelin Suites — Inquiries',
+            'activeTab'    => 'inquiries',
+            'baseUrl'      => $baseUrl,
+            'ownerName'    => $userSession['full_name'],
+            'ownerInitial' => $userSession['initial'],
+            'inquiries'    => $inquiries,
+        ]);
+    }
+
+    /**
+     * Display Owner Leases & Reservations.
+     */
+    public function reservations(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
+        $ownerId = (int)$userSession['user_id'];
+
+        $reservations = $this->ownerModel->getOwnerReservations($ownerId);
+
+        $this->render('owner/reservations', [
+            'pageTitle'    => 'Zeppelin Suites — Lease Management',
+            'activeTab'    => 'reservations',
+            'baseUrl'      => $baseUrl,
+            'ownerName'    => $userSession['full_name'],
+            'ownerInitial' => $userSession['initial'],
+            'reservations' => $reservations,
+        ]);
+    }
+
+    /**
+     * Display Single Reservation Detail for Owner.
+     */
+    public function showReservation(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
+        $ownerId = (int)$userSession['user_id'];
+        $resId = (int)($this->getQuery('reservation_id', 0) ?: $this->getQuery('id', 0));
+
+        if ($resId <= 0) {
+            $this->redirect("{$baseUrl}/owner/reservations");
+            return;
+        }
+
+        $res = $this->ownerModel->getReservationDetails($ownerId, $resId);
+        if (!$res) {
+            $this->redirect("{$baseUrl}/owner/reservations");
+            return;
+        }
+
+        $this->render('owner/view_reservation', [
+            'pageTitle'    => 'Zeppelin Suites — View Reservation #' . $resId,
+            'activeTab'    => 'reservations',
+            'baseUrl'      => $baseUrl,
+            'ownerName'    => $userSession['full_name'],
+            'ownerInitial' => $userSession['initial'],
+            'reservation'  => $res,
+        ]);
+    }
+
+    /**
+     * Display Owner Booking Calendar.
+     */
+    public function calendar(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
+
+        $this->render('owner/booking_calendar', [
+            'pageTitle'    => 'Zeppelin Suites — Booking Calendar',
+            'activeTab'    => 'bookingcalendar',
+            'baseUrl'      => $baseUrl,
+            'ownerName'    => $userSession['full_name'],
+            'ownerInitial' => $userSession['initial'],
+        ]);
+    }
+
+    /**
+     * JSON Endpoint for Owner Booking Calendar.
+     */
+    public function calendarData(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $ownerId = (int)$userSession['user_id'];
+
+        try {
+            $data = $this->ownerModel->getCalendarData($ownerId);
+            $this->json(array_merge(['success' => true], $data), 200);
+        } catch (Throwable $e) {
+            $this->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * AJAX POST endpoint for Owner to block unit dates.
+     */
+    public function saveBlockedDate(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Method not allowed.'], 405);
+            return;
+        }
+
+        $unitId = (int)$this->getPost('unit_id', 0);
+        $startDate = (string)$this->getPost('start_date', '');
+        $endDate = (string)$this->getPost('end_date', '');
+        $blockType = (string)$this->getPost('block_type', 'Not Available');
+        $remarks = (string)$this->getPost('remarks', '');
+        $ownerId = (int)$userSession['user_id'];
+
+        $calendarModel = new BookingCalendar();
+        $result = $calendarModel->saveBlockedDate(
+            $unitId,
+            $startDate,
+            $endDate,
+            $blockType,
+            $remarks,
+            $ownerId,
+            'owner'
+        );
+
+        $status = $result['success'] ? 200 : 422;
+        $this->json($result, $status);
+    }
+
+    /**
+     * AJAX POST endpoint for Owner to unblock unit dates.
+     */
+    public function deleteBlockedDate(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Method not allowed.'], 405);
+            return;
+        }
+
+        $blockId = (int)$this->getPost('block_id', 0);
+        $calendarModel = new BookingCalendar();
+        $result = $calendarModel->deleteBlockedDate($blockId);
+
+        $status = $result['success'] ? 200 : 422;
+        $this->json($result, $status);
+    }
+
+    /**
+     * Display Owner Tenants Directory.
+     */
+    public function tenants(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
+        $ownerId = (int)$userSession['user_id'];
+
+        $tenants = $this->ownerModel->getOwnerTenants($ownerId);
+
+        $this->render('owner/tenants', [
+            'pageTitle'    => 'Zeppelin Suites — Tenants',
+            'activeTab'    => 'tenants',
+            'baseUrl'      => $baseUrl,
+            'ownerName'    => $userSession['full_name'],
+            'ownerInitial' => $userSession['initial'],
+            'tenants'      => $tenants,
+        ]);
+    }
+
+    /**
+     * Display Owner Maintenance Tickets.
+     */
+    public function maintenance(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
+        $ownerId = (int)$userSession['user_id'];
+
+        $maintData = $this->ownerModel->getOwnerMaintenance($ownerId);
+
+        $this->render('owner/maintenance', [
+            'pageTitle'          => 'Zeppelin Suites — Maintenance',
+            'activeTab'          => 'maintenance',
+            'baseUrl'            => $baseUrl,
+            'ownerName'          => $userSession['full_name'],
+            'ownerInitial'       => $userSession['initial'],
+            'unitTypeOptions'    => $maintData['unitTypeOptions'],
+            'ownerUnitsList'     => $maintData['ownerUnitsList'],
+            'tickets'            => $maintData['tickets'],
+            'activeTickets'      => $maintData['activeTickets'],
+            'unassignedTickets'  => $maintData['unassignedTickets'],
+            'closedTickets'      => $maintData['closedTickets'],
+            'totalTicketsCount'  => $maintData['totalTicketsCount'],
+            'activeCount'        => $maintData['activeCount'],
+            'unassignedCount'    => $maintData['unassignedCount'],
+            'closedCount'        => $maintData['closedCount'],
+        ]);
+    }
+
+    /**
+     * Display and Update Owner Account Settings.
+     */
+    public function account(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
+        $ownerId = (int)$userSession['user_id'];
+
+        $toast = null;
+        $activeSubTab = (string)$this->getQuery('tab', 'profile');
+        if (!in_array($activeSubTab, ['profile', 'payment'], true)) {
+            $activeSubTab = 'profile';
+        }
+
+        if ($this->isPost()) {
+            $action = (string)$this->getPost('action', '');
+            if ($action === 'update_profile') {
+                $result = $this->ownerModel->updateProfile($ownerId, $_POST);
+                $toast = [
+                    'type' => $result['success'] ? 'success' : 'error',
+                    'msg'  => $result['message'],
+                ];
+                if ($result['success'] && !empty($_POST['full_name'])) {
+                    $_SESSION['full_name'] = trim((string)$_POST['full_name']);
+                }
+            } elseif ($action === 'upload_gcash_qr') {
+                $activeSubTab = 'payment';
+                $result = $this->ownerModel->uploadGcashQr($ownerId, $_FILES['gcash_qr_image'] ?? []);
+                $toast = [
+                    'type' => $result['success'] ? 'success' : 'error',
+                    'msg'  => $result['message'],
+                ];
+            } elseif ($action === 'delete_gcash_qr') {
+                $activeSubTab = 'payment';
+                $result = $this->ownerModel->deleteGcashQr($ownerId);
+                $toast = [
+                    'type' => $result['success'] ? 'success' : 'error',
+                    'msg'  => $result['message'],
+                ];
+            }
+        }
+
+        $accountData = $this->ownerModel->getAccountData($ownerId);
+        if (!$accountData) {
+            $this->redirect("{$baseUrl}/owner/overview");
+            return;
+        }
+
+        $this->render('owner/account', [
+            'pageTitle'       => 'Zeppelin Suites — Account Settings',
+            'activeTab'       => 'account',
+            'activeSubTab'    => $activeSubTab,
+            'baseUrl'         => $baseUrl,
+            'ownerName'       => (string)($accountData['owner']['full_name'] ?? $userSession['full_name']),
+            'ownerInitial'    => $userSession['initial'],
+            'owner'           => $accountData['owner'],
+            'hasDobCol'       => $accountData['hasDobCol'],
+            'hasAddPhoneCol'  => $accountData['hasAddPhoneCol'],
+            'hasAddEmailCol'  => $accountData['hasAddEmailCol'],
+            'hasQrCol'        => $accountData['hasQrCol'],
+            'units'           => $accountData['units'],
+            'maintenance'     => $accountData['maintenance'],
+            'unitsCount'      => $accountData['unitsCount'],
+            'requestsCount'   => $accountData['requestsCount'],
+            'pendingRequests' => $accountData['pendingRequests'],
+            'toast'           => $toast,
+        ]);
+    }
+
+    /**
+     * Respond to an approval request (Approve or Decline).
+     */
+    public function respondApproval(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $baseUrl = rtrim((string)env('APP_URL', '/Zeppelin-Suites'), '/');
+        $ownerId = (int)$userSession['user_id'];
+
+        $requestId = (int)$this->getPost('request_id', 0);
+        $action = strtolower(trim((string)$this->getPost('action', '')));
+        $remarks = trim((string)($this->getPost('remarks') ?? $this->getPost('owner_remarks') ?? ''));
+
+        if ($requestId <= 0 || !in_array($action, ['approve', 'decline'], true)) {
+            $_SESSION['error_message'] = "Invalid approval request or action.";
+            $this->redirect("{$baseUrl}/owner/inquiries");
+            return;
+        }
+
+        $result = $this->ownerModel->respondApprovalRequest($ownerId, $requestId, $action, $remarks);
+
+        if ($result['success']) {
+            $_SESSION['success_message'] = $result['message'];
+        } else {
+            $_SESSION['error_message'] = $result['message'];
+        }
+
+        $this->redirect("{$baseUrl}/owner/inquiries");
+    }
+
+    /**
+     * AJAX update of owned unit settings (listing mode, stay category, lease rate, reselling price).
+     */
+    public function updateUnit(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $ownerId = (int)$userSession['user_id'];
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Method not allowed.'], 405);
+            return;
+        }
+
+        $unitId = (int)$this->getPost('unit_id', 0);
+        if ($unitId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid unit ID.'], 400);
+            return;
+        }
+
+        try {
+            $result = $this->ownerModel->updateUnitSettings($ownerId, $unitId, $_POST);
+            $this->json([
+                'success' => true,
+                'message' => 'Unit settings updated successfully!',
+                'data'    => $result,
+            ]);
+        } catch (\Throwable $e) {
+            $this->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * AJAX endpoint to confirm or set agreed lease signing date (Unit Owner).
+     */
+    public function confirmSigningDate(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $ownerId = (int)$userSession['user_id'];
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $date = trim((string)$this->getPost('confirmed_date', ''));
+
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
+            return;
+        }
+
+        $result = $this->ownerModel->confirmSigningDate($ownerId, $reservationId, $date);
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to complete or reset lease signing status (Unit Owner).
+     */
+    public function updateLeaseSigning(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $ownerId = (int)$userSession['user_id'];
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $action = trim((string)$this->getPost('action', 'complete'));
+        $remarks = trim((string)$this->getPost('remarks', ''));
+
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
+            return;
+        }
+
+        $result = $this->ownerModel->updateLeaseSigningStatus($ownerId, $reservationId, $action, $remarks);
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to mark payment complete or not received / reject (Unit Owner).
+     */
+    public function updatePaymentStatus(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $ownerId = (int)$userSession['user_id'];
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $action = trim((string)$this->getPost('action', 'verify'));
+        $remarks = trim((string)$this->getPost('remarks', ''));
+
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.'], 400);
+            return;
+        }
+
+        $result = $this->ownerModel->updatePaymentStatus($ownerId, $reservationId, $action, $remarks);
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to fetch reservation documents (Unit Owner).
+     */
+    public function getDocuments(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $ownerId = (int)$userSession['user_id'];
+
+        $reservationId = (int)($this->getQuery('reservation_id', 0) ?: $this->getQuery('id', 0));
+        if ($reservationId <= 0) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID.', 'documents' => []], 400);
+            return;
+        }
+
+        $result = $this->ownerModel->getDocuments($ownerId, $reservationId);
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to save reservation documents (Unit Owner).
+     */
+    public function saveDocuments(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $ownerId = (int)$userSession['user_id'];
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $rawDocs = $this->getPost('documents');
+
+        $documents = is_array($rawDocs) ? $rawDocs : json_decode((string)$rawDocs, true);
+        if ($reservationId <= 0 || !is_array($documents)) {
+            $this->json(['success' => false, 'message' => 'Invalid reservation ID or documents payload.'], 400);
+            return;
+        }
+
+        $result = $this->ownerModel->saveDocuments($ownerId, $reservationId, $documents);
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * AJAX endpoint to request cancellation for a reservation (Unit Owner).
+     */
+    public function requestCancellation(): void {
+        $userSession = Middleware::requireRole(['unit owner']);
+        $ownerId = (int)$userSession['user_id'];
+
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'Invalid request method.'], 405);
+            return;
+        }
+
+        $reservationId = (int)$this->getPost('reservation_id', 0);
+        $reason = trim((string)($this->getPost('reason') ?? $this->getPost('cancellation_reason') ?? ''));
+
+        if ($reservationId <= 0 || $reason === '') {
+            $this->json(['success' => false, 'message' => 'Reservation ID and cancellation reason are required.'], 400);
+            return;
+        }
+
+        $result = $this->ownerModel->requestCancellation($ownerId, $reservationId, $reason);
+        $this->json($result, $result['success'] ? 200 : 422);
+    }
+}
+
+
